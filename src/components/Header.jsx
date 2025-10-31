@@ -3,11 +3,10 @@ import { Plus, Download, Upload, FolderPlus, LogOut } from 'lucide-react';
 
 export default function Header({
     onExport,
-    onImportClick,
     onAddCategory,
     onAddStock,
     onOpenSettings,
-    onLogout
+    onLogout,
 }) {
     return (
         <div style={{ marginBottom: '2rem' }}>
@@ -62,25 +61,6 @@ export default function Header({
                         onMouseOut={(e) => e.currentTarget.style.background = 'rgb(21, 128, 61)'}
                     >
                         <Download size={18} /> Export
-                    </button>
-                    <button
-                        onClick={onImportClick}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgb(126, 34, 206)',
-                            borderRadius: '0.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontSize: '0.875rem',
-                            border: 'none',
-                            color: 'white',
-                            cursor: 'pointer'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(107, 33, 168)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(126, 34, 206)'}
-                    >
-                        <Upload size={18} /> Import
                     </button>
                     <button
                         onClick={onAddCategory}

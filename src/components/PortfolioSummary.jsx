@@ -3,14 +3,16 @@ import { Plus } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
 import { calculateStocksProfit, calculateTotalProfit } from '../utils/calculations';
 
-export default function PortfolioSummary({ 
-  stocks, 
-  dumpProfit, 
-  referralProfit, 
+export default function PortfolioSummary({
+  stocks,
+  dumpProfit,
+  referralProfit,
   bondsProfit,
+  visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true },  // Add this
   onAddDumpProfit,
   onAddReferralProfit,
-  onAddBondsProfit
+  onAddBondsProfit,
+  numberFormat
 }) {
   const stocksProfit = calculateStocksProfit(stocks);
   const totalProfit = calculateTotalProfit(stocks, dumpProfit, referralProfit, bondsProfit);
@@ -24,28 +26,28 @@ export default function PortfolioSummary({
       {/* Top Row - 4 items */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         {/* Total Portfolio Value */}
-        <SummaryCard 
+        <SummaryCard
           label="Total Portfolio:"
           value={formatNumber(totalPortfolio)}
           color="rgb(96, 165, 250)"
         />
 
         {/* Total Shares */}
-        <SummaryCard 
-          label="Total Shares:"
+        <SummaryCard
+          label="Total Stock:"
           value={formatNumber(totalShares)}
           color="rgb(251, 146, 60)"
         />
 
         {/* Total Sales */}
-        <SummaryCard 
-          label="Total Sales:"
+        <SummaryCard
+          label="Total Revenue:"
           value={formatNumber(totalSales)}
           color="rgb(168, 85, 247)"
         />
 
         {/* Total Profit */}
-        <SummaryCard 
+        <SummaryCard
           label="Total Profit:"
           value={formatNumber(totalProfit)}
           color={totalProfit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
@@ -55,47 +57,53 @@ export default function PortfolioSummary({
       {/* Bottom Row - 4 items */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         {/* Stock Profit */}
-        <SummaryCard 
+        <SummaryCard
           label="Stock Profit:"
           value={formatNumber(stocksProfit)}
           color={stocksProfit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
         />
 
         {/* Dump Profit */}
-        <SummaryCard 
-          label="Dump Profit:"
-          value={formatNumber(dumpProfit)}
-          color="rgb(52, 211, 153)"
-          button={{
-            onClick: onAddDumpProfit,
-            color: 'rgb(5, 150, 105)',
-            hoverColor: 'rgb(4, 120, 87)'
-          }}
-        />
+        {visibleProfits?.dumpProfit !== false && (
+          <SummaryCard
+            label="Dump Profit:"
+            value={formatNumber(dumpProfit)}
+            color="rgb(52, 211, 153)"
+            button={{
+              onClick: onAddDumpProfit,
+              color: 'rgb(5, 150, 105)',
+              hoverColor: 'rgb(4, 120, 87)'
+            }}
+          />
+        )}
 
         {/* Referral Profit */}
-        <SummaryCard 
-          label="Referral Profit:"
-          value={formatNumber(referralProfit)}
-          color="rgb(168, 85, 247)"
-          button={{
-            onClick: onAddReferralProfit,
-            color: 'rgb(126, 34, 206)',
-            hoverColor: 'rgb(107, 33, 168)'
-          }}
-        />
+        {visibleProfits?.referralProfit !== false && (
+          <SummaryCard
+            label="Referral Profit:"
+            value={formatNumber(referralProfit)}
+            color="rgb(168, 85, 247)"
+            button={{
+              onClick: onAddReferralProfit,
+              color: 'rgb(126, 34, 206)',
+              hoverColor: 'rgb(107, 33, 168)'
+            }}
+          />
+        )}
 
         {/* Bonds Profit */}
-        <SummaryCard 
-          label="Bonds Profit:"
-          value={formatNumber(bondsProfit)}
-          color="rgb(234, 179, 8)"
-          button={{
-            onClick: onAddBondsProfit,
-            color: 'rgb(161, 98, 7)',
-            hoverColor: 'rgb(133, 77, 14)'
-          }}
-        />
+        {visibleProfits?.bondsProfit !== false && (
+          <SummaryCard
+            label="Bonds Profit:"
+            value={formatNumber(bondsProfit)}
+            color="rgb(234, 179, 8)"
+            button={{
+              onClick: onAddBondsProfit,
+              color: 'rgb(161, 98, 7)',
+              hoverColor: 'rgb(133, 77, 14)'
+            }}
+          />
+        )}
       </div>
     </div>
   );

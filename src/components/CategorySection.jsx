@@ -11,12 +11,14 @@ export default function CategorySection({
   onToggleCollapse,
   onAddStock,
   onDeleteCategory,
+  onEditCategory,
   onBuy,
   onSell,
   onAdjust,
   onDelete,
   onHistory,
   onNotes,
+  onCalculate,
   onDragStart,
   onDragOver,
   onDrop,
@@ -83,6 +85,28 @@ export default function CategorySection({
           >
             <Plus size={12} /> Add Stock
           </button>
+          <button
+  onClick={(e) => {
+    e.stopPropagation();
+    onEditCategory(category);
+  }}
+  style={{
+    padding: '0.25rem 0.75rem',
+    background: 'rgb(147, 51, 234)',
+    color: 'white',
+    borderRadius: '0.375rem',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.75rem',
+    fontWeight: '500',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem'
+  }}
+  title="Edit Category"
+>
+  ✏️ Edit
+</button>
           {category !== 'Uncategorized' && (
             <button
               onClick={(e) => {
@@ -158,6 +182,7 @@ export default function CategorySection({
             onDelete={onDelete}
             onHistory={onHistory}
             onNotes={onNotes}
+            onCalculate={onCalculate}
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDrop={onDrop}

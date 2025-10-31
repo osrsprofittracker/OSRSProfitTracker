@@ -11,23 +11,23 @@ export function useStockNotes(userId) {
   }, [userId]);
 
   const fetchNotes = async () => {
-    const { data, error } = await supabase
-      .from('stock_notes')
-      .select('*')
-      .eq('user_id', userId);
-    
-    if (error) {
-      console.error('Error fetching notes:', error);
-    } else {
-      // Convert array to object with stock_id as key
-      const notesObj = {};
-      data.forEach(note => {
-        notesObj[note.stock_id] = note.note;
-      });
-      setNotes(notesObj);
-    }
-    setLoading(false);
-  };
+  const { data, error } = await supabase
+    .from('stock_notes')
+    .select('*')
+    .eq('user_id', userId);
+  
+  if (error) {
+    console.error('Error fetching notes:', error);
+    setNotes({});  // Set empty object on error
+  } else {
+    const notesObj = {};
+    (data || []).forEach(note => {
+      notesObj[note.stock_id] = note.note;
+    });
+    setNotes(notesObj);
+  }
+  setLoading(false);
+};
 
   const saveNote = async (stockId, noteText) => {
     const { data, error } = await supabase

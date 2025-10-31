@@ -13,6 +13,7 @@ export default function StockTable({
   onDelete,
   onHistory,
   onNotes,
+  onCalculate,
   onDragStart,
   onDragOver,
   onDrop,
@@ -35,10 +36,10 @@ export default function StockTable({
       boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
     }}>
       <table style={{ width: '100%', fontSize: '0.875rem', color: 'rgb(229, 231, 235)', borderCollapse: 'collapse' }}>
-        <TableHeader 
-          sortConfig={sortConfig} 
-          onSort={onSort} 
-          visibleColumns={visibleColumns} 
+        <TableHeader
+          sortConfig={sortConfig}
+          onSort={onSort}
+          visibleColumns={visibleColumns}
         />
         <tbody>
           {sortedStocks.map((stock, index) => (
@@ -53,6 +54,7 @@ export default function StockTable({
               onDelete={onDelete}
               onHistory={onHistory}
               onNotes={onNotes}
+              onCalculate={onCalculate}
               onDragStart={onDragStart}
               onDragOver={onDragOver}
               onDrop={onDrop}
@@ -140,6 +142,7 @@ function StockRow({
   onDelete,
   onHistory,
   onNotes,
+  onCalculate,
   onDragStart,
   onDragOver,
   onDrop,
@@ -270,6 +273,7 @@ function StockRow({
           onHistory={onHistory}
           onAdjust={onAdjust}
           onDelete={onDelete}
+          onCalculate={onCalculate}
         />
       </td>
     </tr>
@@ -316,7 +320,7 @@ function StatusBadge({ stock }) {
   }
 }
 
-function ActionButtons({ stock, onBuy, onSell, onHistory, onAdjust, onDelete }) {
+function ActionButtons({ stock, onBuy, onSell, onHistory, onAdjust, onDelete, onCalculate }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: '0.25rem' }}>
       <button
@@ -366,6 +370,22 @@ function ActionButtons({ stock, onBuy, onSell, onHistory, onAdjust, onDelete }) 
         onMouseOut={(e) => e.currentTarget.style.background = 'rgb(67, 56, 202)'}
       >
         📜
+      </button>
+      <button
+        onClick={() => onCalculate(stock)}
+        style={{
+          padding: '0.375rem 0.75rem',
+          background: 'rgb(59, 130, 246)',
+          color: 'white',
+          borderRadius: '0.375rem',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '0.75rem',
+          fontWeight: '500'
+        }}
+        title="Calculate time to target"
+      >
+        ⏱️ Calc
       </button>
       <button
         onClick={() => onAdjust(stock)}

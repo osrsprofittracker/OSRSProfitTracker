@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabase';
+import { useStocks } from './hooks/useStocks';
+import { useCategories } from './hooks/useCategories';
+import { useTransactions } from './hooks/useTransactions';
+import { useStockNotes } from './hooks/useStockNotes.js';
+import { useSettings } from './hooks/useSettings';
+import { useProfits } from './hooks/useProfits';
+import EditCategoryModal from './components/modals/EditCategoryModal';
+import TimeCalculatorModal from './components/modals/TimeCalculatorModal';
 import Header from './components/Header';
 import PortfolioSummary from './components/PortfolioSummary';
 import ChartButtons from './components/ChartButtons';
@@ -18,34 +26,38 @@ import NotesModal from './components/modals/NotesModal';
 import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
-import { 
-  STORAGE_KEY, 
-  DUMP_PROFIT_KEY, 
-  CATEGORIES_KEY, 
-  DEFAULT_STOCKS, 
+import {
+  STORAGE_KEY,
+  DUMP_PROFIT_KEY,
+  CATEGORIES_KEY,
+  DEFAULT_STOCKS,
   DEFAULT_CATEGORIES,
-  DEFAULT_VISIBLE_COLUMNS 
+  DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
 
 export default function MainApp({ session }) {  // Add session prop
   const userId = session.user.id;
   const userEmail = session.user.email;
-  // State
-  const [stocks, setStocks] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [dumpProfit, setDumpProfit] = useState(0);
-  const [referralProfit, setReferralProfit] = useState(0);
-  const [bondsProfit, setBondsProfit] = useState(0);
-  const [stockNotes, setStockNotes] = useState({});
-  const [theme, setTheme] = useState('dark');
-  const [numberFormat, setNumberFormat] = useState('compact');
-  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
+  // Custom hooks for Supabase
+  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock } = useStocks(userId);
+  const { categories, loading: categoriesLoading, addCategory: addCategoryToDB, deleteCategory: deleteCategoryFromDB } = useCategories(userId);
+  const { transactions, loading: transactionsLoading, addTransaction } = useTransactions(userId);
+  const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
+  const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
+  const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
+
+  // Destructure profits
+  const { dumpProfit, referralProfit, bondsProfit } = profits;
+
+  // Destructure settings
+  const { theme, numberFormat, visibleColumns, visibleProfits } = settings;
+
+  // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading;
 
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
@@ -63,78 +75,12 @@ export default function MainApp({ session }) {  // Add session prop
   const [showProfitChartModal, setShowProfitChartModal] = useState(false);
   const [showCategoryChartModal, setShowCategoryChartModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showTimeCalculatorModal, setShowTimeCalculatorModal] = useState(false);
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
 
   const [selectedStock, setSelectedStock] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [newStockCategory, setNewStockCategory] = useState('');
-
-  const fileInputRef = useRef(null);
-
-  // Load data on mount
-  useEffect(() => {
-    loadAllData();
-  }, []);
-
-  // Save data when changed
-  useEffect(() => {
-    if (dataLoaded && stocks.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stocks));
-    }
-  }, [stocks, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      localStorage.setItem('transactions', JSON.stringify(transactions));
-    }
-  }, [transactions, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      localStorage.setItem(DUMP_PROFIT_KEY, dumpProfit.toString());
-    }
-  }, [dumpProfit, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      localStorage.setItem('referralProfit', referralProfit.toString());
-    }
-  }, [referralProfit, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      localStorage.setItem('bondsProfit', bondsProfit.toString());
-    }
-  }, [bondsProfit, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded && categories.length > 0) {
-      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-    }
-  }, [categories, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      localStorage.setItem('stockNotes', JSON.stringify(stockNotes));
-    }
-  }, [stockNotes, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      localStorage.setItem('theme', theme);
-    }
-  }, [theme, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      localStorage.setItem('numberFormat', numberFormat);
-    }
-  }, [numberFormat, dataLoaded]);
-
-  useEffect(() => {
-    if (dataLoaded) {
-      localStorage.setItem('visibleColumns', JSON.stringify(visibleColumns));
-    }
-  }, [visibleColumns, dataLoaded]);
 
   // Timer update
   useEffect(() => {
@@ -143,100 +89,6 @@ export default function MainApp({ session }) {  // Add session prop
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  // Load all data from localStorage
-  const loadAllData = () => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    const savedCategories = localStorage.getItem(CATEGORIES_KEY);
-    const savedDumpProfit = localStorage.getItem(DUMP_PROFIT_KEY);
-    const savedReferralProfit = localStorage.getItem('referralProfit');
-    const savedBondsProfit = localStorage.getItem('bondsProfit');
-    const savedNotes = localStorage.getItem('stockNotes');
-    const savedTheme = localStorage.getItem('theme');
-    const savedNumberFormat = localStorage.getItem('numberFormat');
-    const savedVisibleColumns = localStorage.getItem('visibleColumns');
-    const savedTransactions = localStorage.getItem('transactions');
-
-    if (savedData) {
-      try {
-        setStocks(JSON.parse(savedData));
-      } catch (e) {
-        console.error('Failed to load stocks:', e);
-        setStocks(DEFAULT_STOCKS);
-      }
-    } else {
-      setStocks(DEFAULT_STOCKS);
-    }
-
-    if (savedCategories) {
-      try {
-        setCategories(JSON.parse(savedCategories));
-      } catch (e) {
-        console.error('Failed to load categories:', e);
-        setCategories(DEFAULT_CATEGORIES);
-      }
-    } else {
-      setCategories(DEFAULT_CATEGORIES);
-    }
-
-    if (savedDumpProfit) {
-      try {
-        setDumpProfit(parseFloat(savedDumpProfit));
-      } catch (e) {
-        console.error('Failed to load dump profit:', e);
-      }
-    }
-
-    if (savedReferralProfit) {
-      try {
-        setReferralProfit(parseFloat(savedReferralProfit));
-      } catch (e) {
-        console.error('Failed to load referral profit:', e);
-      }
-    }
-
-    if (savedBondsProfit) {
-      try {
-        setBondsProfit(parseFloat(savedBondsProfit));
-      } catch (e) {
-        console.error('Failed to load bonds profit:', e);
-      }
-    }
-
-    if (savedNotes) {
-      try {
-        setStockNotes(JSON.parse(savedNotes));
-      } catch (e) {
-        console.error('Failed to load notes:', e);
-      }
-    }
-
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-
-    if (savedNumberFormat) {
-      setNumberFormat(savedNumberFormat);
-    }
-
-    if (savedVisibleColumns) {
-      try {
-        setVisibleColumns(JSON.parse(savedVisibleColumns));
-      } catch (e) {
-        console.error('Failed to load visible columns:', e);
-      }
-    }
-
-    if (savedTransactions) {
-      try {
-        setTransactions(JSON.parse(savedTransactions));
-      } catch (e) {
-        console.error('Failed to load transactions:', e);
-      }
-    }
-
-    setDataLoaded(true);
-  };
 
   // Helper functions
   const highlightRow = (stockId) => {
@@ -253,8 +105,39 @@ export default function MainApp({ session }) {  // Add session prop
     });
   };
 
-   const handleLogout = async () => {
+  const handleLogout = async () => {
     await supabase.auth.signOut();
+  };
+
+  const handleEditCategory = async (newName) => {
+    if (newName === selectedCategory) {
+      setShowEditCategoryModal(false);
+      return;
+    }
+
+    // Update category name in database
+    const { error: updateError } = await supabase
+      .from('categories')
+      .update({ name: newName })
+      .eq('user_id', userId)
+      .eq('name', selectedCategory);
+
+    if (updateError) {
+      console.error('Error updating category:', updateError);
+      alert('Failed to update category');
+      return;
+    }
+
+    // Update all stocks with this category
+    const stocksToUpdate = stocks.filter(s => s.category === selectedCategory);
+    await Promise.all(
+      stocksToUpdate.map(s => updateStock(s.id, { category: newName }))
+    );
+
+    // Update categories list
+    setCategories(categories.map(c => c === selectedCategory ? newName : c));
+
+    setShowEditCategoryModal(false);
   };
 
   const toggleCategory = (category) => {
@@ -264,29 +147,23 @@ export default function MainApp({ session }) {  // Add session prop
     });
   };
 
-  // Stock operations
-  const handleBuy = (data) => {
+  const handleBuy = async (data) => {
     const { shares, price, startTimer } = data;
     const total = shares * price;
 
-    setStocks(stocks.map(s => {
-      if (s.id === selectedStock.id) {
-        const newShares = s.shares + shares;
-        const timerEndTime = (startTimer || shares >= s.limit4h) 
-          ? Date.now() + (4 * 60 * 60 * 1000) 
-          : s.timerEndTime;
-        return { 
-          ...s, 
-          totalCost: s.totalCost + total, 
-          shares: newShares, 
-          timerEndTime 
-        };
-      }
-      return s;
-    }));
+    const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
+    const newShares = selectedStock.shares + shares;
+    const timerEndTime = (startTimer || shares >= selectedStock.limit4h)
+      ? Date.now() + (4 * 60 * 60 * 1000)
+      : selectedStock.timerEndTime;
 
-    setTransactions([...transactions, {
-      id: Date.now(),
+    await updateStock(selectedStock.id, {
+      totalCost: selectedStock.totalCost + total,
+      shares: newShares,
+      timerEndTime
+    });
+
+    await addTransaction({
       stockId: selectedStock.id,
       stockName: selectedStock.name,
       type: 'buy',
@@ -294,35 +171,28 @@ export default function MainApp({ session }) {  // Add session prop
       price,
       total,
       date: new Date().toISOString()
-    }]);
+    });
 
     highlightRow(selectedStock.id);
     setShowBuyModal(false);
   };
 
-  const handleSell = (data) => {
+  const handleSell = async (data) => {
     const { shares, price } = data;
     const total = shares * price;
 
-    setStocks(stocks.map(s => {
-      if (s.id === selectedStock.id) {
-        const avgBuy = s.shares > 0 ? s.totalCost / s.shares : 0;
-        const costBasisOfSharesSold = avgBuy * shares;
+    const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
+    const costBasisOfSharesSold = avgBuy * shares;
 
-        return {
-          ...s,
-          shares: s.shares - shares,
-          totalCost: s.totalCost - costBasisOfSharesSold,
-          sharesSold: s.sharesSold + shares,
-          totalCostSold: s.totalCostSold + total,
-          totalCostBasisSold: (s.totalCostBasisSold || 0) + costBasisOfSharesSold
-        };
-      }
-      return s;
-    }));
+    await updateStock(selectedStock.id, {
+      shares: selectedStock.shares - shares,
+      totalCost: selectedStock.totalCost - costBasisOfSharesSold,
+      sharesSold: selectedStock.sharesSold + shares,
+      totalCostSold: selectedStock.totalCostSold + total,
+      totalCostBasisSold: (selectedStock.totalCostBasisSold || 0) + costBasisOfSharesSold
+    });
 
-    setTransactions([...transactions, {
-      id: Date.now(),
+    await addTransaction({
       stockId: selectedStock.id,
       stockName: selectedStock.name,
       type: 'sell',
@@ -330,30 +200,27 @@ export default function MainApp({ session }) {  // Add session prop
       price,
       total,
       date: new Date().toISOString()
-    }]);
+    });
 
     highlightRow(selectedStock.id);
     setShowSellModal(false);
   };
 
-  const handleAdjust = (data) => {
-    const { needed, category } = data;
-    setStocks(stocks.map(s =>
-      s.id === selectedStock.id ? { ...s, needed, category } : s
-    ));
+  const handleAdjust = async (data) => {
+    const { name, needed, category, limit4h } = data;
+    await updateStock(selectedStock.id, { name, needed, category, limit4h });
     highlightRow(selectedStock.id);
     setShowAdjustModal(false);
   };
 
-  const handleDelete = () => {
-    setStocks(stocks.filter(s => s.id !== selectedStock.id));
+  const handleDelete = async () => {
+    await deleteStock(selectedStock.id);
     setShowDeleteModal(false);
   };
 
-  const handleAddStock = (data) => {
+  const handleAddStock = async (data) => {
     const { name, category, limit4h, needed } = data;
-    setStocks([...stocks, {
-      id: Date.now(),
+    await addStockToDB({
       name,
       totalCost: 0,
       shares: 0,
@@ -364,51 +231,51 @@ export default function MainApp({ session }) {  // Add session prop
       needed,
       timerEndTime: null,
       category: category || 'Uncategorized',
-    }]);
+    });
     setNewStockCategory('');
     setShowNewStockModal(false);
   };
 
-  // Category operations
-  const handleAddCategory = (name) => {
+  const handleAddCategory = async (name) => {
     if (!name.trim()) return;
     if (!categories.includes(name)) {
-      setCategories([...categories, name]);
+      await addCategoryToDB(name);
     }
     setShowCategoryModal(false);
   };
 
-  const handleDeleteCategory = () => {
-    setStocks(stocks.map(s =>
-      s.category === selectedCategory ? { ...s, category: 'Uncategorized' } : s
-    ));
-    setCategories(categories.filter(c => c !== selectedCategory));
+  const handleDeleteCategory = async () => {
+    // Update stocks to Uncategorized
+    const stocksToUpdate = stocks.filter(s => s.category === selectedCategory);
+    await Promise.all(
+      stocksToUpdate.map(s => updateStock(s.id, { category: 'Uncategorized' }))
+    );
+
+    await deleteCategoryFromDB(selectedCategory);
     setShowDeleteCategoryModal(false);
   };
 
-  // Profit operations
-  const handleAddDumpProfit = (amount) => {
-    setDumpProfit(dumpProfit + amount);
+  const handleAddDumpProfit = async (amount) => {
+    await updateProfit('dumpProfit', amount);
     setShowDumpProfitModal(false);
   };
 
-  const handleAddReferralProfit = (amount) => {
-    setReferralProfit(referralProfit + amount);
+  const handleAddReferralProfit = async (amount) => {
+    await updateProfit('referralProfit', amount);
     setShowReferralProfitModal(false);
   };
 
-  const handleAddBondsProfit = (amount) => {
-    setBondsProfit(bondsProfit + amount);
+  const handleAddBondsProfit = async (amount) => {
+    await updateProfit('bondsProfit', amount);
     setShowBondsProfitModal(false);
   };
 
-  // Notes operations
-  const handleSaveNotes = (noteText) => {
-    setStockNotes({ ...stockNotes, [selectedStock.id]: noteText });
+  const handleSaveNotes = async (noteText) => {
+    await saveNote(selectedStock.id, noteText);
     setShowNotesModal(false);
   };
 
-  // Import/Export operations
+  // xport operations
   const exportData = () => {
     const exportObj = {
       stocks,
@@ -424,47 +291,6 @@ export default function MainApp({ session }) {  // Add session prop
     link.href = URL.createObjectURL(blob);
     link.download = `stock-backup-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
-  };
-
-  const importData = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const imported = JSON.parse(ev.target.result);
-        if (imported.stocks && Array.isArray(imported.stocks)) {
-          setStocks(imported.stocks);
-          if (imported.categories && Array.isArray(imported.categories)) {
-            setCategories(imported.categories);
-          }
-          if (imported.dumpProfit !== undefined) {
-            setDumpProfit(imported.dumpProfit);
-          }
-          if (imported.referralProfit !== undefined) {
-            setReferralProfit(imported.referralProfit);
-          }
-          if (imported.bondsProfit !== undefined) {
-            setBondsProfit(imported.bondsProfit);
-          }
-          if (imported.stockNotes) {
-            setStockNotes(imported.stockNotes);
-          }
-          if (imported.transactions && Array.isArray(imported.transactions)) {
-            setTransactions(imported.transactions);
-          }
-          alert('Data imported successfully!');
-        } else if (Array.isArray(imported)) {
-          setStocks(imported);
-          alert('Data imported successfully! (Legacy format - only stocks imported)');
-        } else {
-          alert('Invalid file format');
-        }
-      } catch (err) {
-        alert('Import failed: ' + err.message);
-      }
-    };
-    reader.readAsText(file);
   };
 
   // Drag and drop operations
@@ -484,7 +310,7 @@ export default function MainApp({ session }) {  // Add session prop
       if (!allCategories.includes('Uncategorized')) {
         allCategories.push('Uncategorized');
       }
-      
+
       const draggedIndex = allCategories.indexOf(draggedCategory);
       const targetIndex = allCategories.indexOf(targetCategory);
 
@@ -502,6 +328,33 @@ export default function MainApp({ session }) {  // Add session prop
     }
   };
 
+  const handleStockAction = (stock, action) => {
+    setSelectedStock(stock);
+    switch (action) {
+      case 'buy':
+        setShowBuyModal(true);
+        break;
+      case 'sell':
+        setShowSellModal(true);
+        break;
+      case 'adjust':
+        setShowAdjustModal(true);
+        break;
+      case 'delete':
+        setShowDeleteModal(true);
+        break;
+      case 'history':
+        setShowHistoryModal(true);
+        break;
+      case 'notes':
+        setShowNotesModal(true);
+        break;
+      case 'calculate':
+        handleCalculateTime(stock);
+        break;
+    }
+  };
+
   const handleStockDragStart = (e, stockId, sourceCategory) => {
     e.dataTransfer.setData('stockId', stockId.toString());
     e.dataTransfer.setData('sourceCategory', sourceCategory);
@@ -509,6 +362,39 @@ export default function MainApp({ session }) {  // Add session prop
 
   const handleStockDragOver = (e) => {
     e.preventDefault();
+  };
+
+  const handleCalculateTime = async (stock) => {
+    const stocksNeeded = stock.needed - stock.shares;
+    if (stocksNeeded <= 0) {
+      alert('Target already reached!');
+      setShowTimeCalculatorModal(false);
+      return;
+    }
+
+    const limit4h = stock.limit4h || 0;
+    if (limit4h <= 0) {
+      alert('Please set a 4-hour buy limit first!');
+      setShowTimeCalculatorModal(false);
+      return;
+    }
+
+    const periods4h = Math.ceil(stocksNeeded / limit4h);
+    const totalHours = periods4h * 4;
+    const days = Math.floor(totalHours / 24);
+    const hours = totalHours % 24;
+
+    setSelectedStock({
+      ...stock,
+      calculatedTime: {
+        periods4h,
+        totalHours,
+        days,
+        hours,
+        stocksNeeded
+      }
+    });
+    setShowTimeCalculatorModal(true);
   };
 
   const handleStockDrop = (e, targetStockId, targetCategory) => {
@@ -557,25 +443,24 @@ export default function MainApp({ session }) {  // Add session prop
     }}>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         {/* Show user email in top right */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'flex-end', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
           alignItems: 'center',
           marginBottom: '1rem'
         }}>
-          <span style={{ 
-            color: 'rgb(156, 163, 175)', 
-            fontSize: '0.875rem' 
+          <span style={{
+            color: 'rgb(156, 163, 175)',
+            fontSize: '0.875rem'
           }}>
-            Logged in as <span style={{ 
-              color: 'rgb(96, 165, 250)', 
-              fontWeight: '600' 
+            Logged in as <span style={{
+              color: 'rgb(96, 165, 250)',
+              fontWeight: '600'
             }}>{userEmail}</span>
           </span>
         </div>
         <Header
           onExport={exportData}
-          onImportClick={() => fileInputRef.current?.click()}
           onAddCategory={() => setShowCategoryModal(true)}
           onAddStock={() => {
             setNewStockCategory('');
@@ -584,22 +469,16 @@ export default function MainApp({ session }) {  // Add session prop
           onOpenSettings={() => setShowSettingsModal(true)}
           onLogout={handleLogout}
         />
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          accept=".json" 
-          onChange={importData} 
-          hidden 
-        />
-
         <PortfolioSummary
           stocks={stocks}
           dumpProfit={dumpProfit}
           referralProfit={referralProfit}
           bondsProfit={bondsProfit}
+          visibleProfits={visibleProfits}
           onAddDumpProfit={() => setShowDumpProfitModal(true)}
           onAddReferralProfit={() => setShowReferralProfitModal(true)}
           onAddBondsProfit={() => setShowBondsProfitModal(true)}
+          numberFormat={numberFormat}
         />
 
         <ChartButtons
@@ -622,6 +501,10 @@ export default function MainApp({ session }) {  // Add session prop
             onDeleteCategory={(cat) => {
               setSelectedCategory(cat);
               setShowDeleteCategoryModal(true);
+            }}
+            onEditCategory={(cat) => {
+              setSelectedCategory(cat);
+              setShowEditCategoryModal(true);
             }}
             onBuy={(stock) => {
               setSelectedStock(stock);
@@ -647,6 +530,7 @@ export default function MainApp({ session }) {  // Add session prop
               setSelectedStock(stock);
               setShowNotesModal(true);
             }}
+            onCalculate={handleCalculateTime} 
             onDragStart={handleCategoryDragStart}
             onDragOver={handleCategoryDragOver}
             onDrop={handleCategoryDrop}
@@ -781,12 +665,30 @@ export default function MainApp({ session }) {  // Add session prop
         <ModalContainer isOpen={showSettingsModal}>
           <SettingsModal
             theme={theme}
-            setTheme={setTheme}
+            onThemeChange={(newTheme) => updateSettings({ theme: newTheme })}
             numberFormat={numberFormat}
-            setNumberFormat={setNumberFormat}
+            onNumberFormatChange={(newFormat) => updateSettings({ numberFormat: newFormat })}
             visibleColumns={visibleColumns}
-            setVisibleColumns={setVisibleColumns}
+            onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
+            visibleProfits={visibleProfits}
+            onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}  // Add this
             onCancel={() => setShowSettingsModal(false)}
+          />
+        </ModalContainer>
+
+        <ModalContainer isOpen={showEditCategoryModal}>
+          <EditCategoryModal
+            category={selectedCategory}
+            categories={categories}
+            onConfirm={handleEditCategory}
+            onCancel={() => setShowEditCategoryModal(false)}
+          />
+        </ModalContainer>
+
+        <ModalContainer isOpen={showTimeCalculatorModal}>
+          <TimeCalculatorModal
+            stock={selectedStock}
+            onClose={() => setShowTimeCalculatorModal(false)}
           />
         </ModalContainer>
       </div>

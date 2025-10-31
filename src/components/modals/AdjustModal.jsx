@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 
 export default function AdjustModal({ stock, categories, onConfirm, onCancel }) {
+  const [name, setName] = useState(stock.name);
   const [needed, setNeeded] = useState(stock.needed.toString());
   const [category, setCategory] = useState(stock.category || 'Uncategorized');
+  const [limit4h, setLimit4h] = useState(stock.limit4h.toString());
 
   const handleConfirm = () => {
-    if (!needed) return;
+    if (!needed || !name.trim() || !limit4h) return;  // Update validation
     onConfirm({
+      name: name.trim(),
       needed: parseFloat(needed),
-      category
+      category,
+      limit4h: parseFloat(limit4h)
     });
   };
 
@@ -25,6 +29,51 @@ export default function AdjustModal({ stock, categories, onConfirm, onCancel }) 
         Adjust {stock.name}
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
+            Stock Name
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter stock name"
+            style={{
+              width: '100%',
+              padding: '0.5rem 1rem',
+              background: 'rgb(51, 65, 85)',
+              borderRadius: '0.5rem',
+              outline: 'none',
+              border: '2px solid transparent',
+              color: 'white'
+            }}
+            onFocus={(e) => e.target.style.borderColor = 'rgb(202, 138, 4)'}
+            onBlur={(e) => e.target.style.borderColor = 'transparent'}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
+            4H Limit
+          </label>
+          <input
+            type="number"
+            value={limit4h}
+            onChange={(e) => setLimit4h(e.target.value)}
+            placeholder="Enter 4h limit"
+            style={{
+              width: '100%',
+              padding: '0.5rem 1rem',
+              background: 'rgb(51, 65, 85)',
+              borderRadius: '0.5rem',
+              outline: 'none',
+              border: '2px solid transparent',
+              color: 'white'
+            }}
+            onFocus={(e) => e.target.style.borderColor = 'rgb(202, 138, 4)'}
+            onBlur={(e) => e.target.style.borderColor = 'transparent'}
+          />
+        </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
             Desired Stock
