@@ -125,5 +125,5 @@ export function useStocks(userId) {
     }
   };
 
-  return { stocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks };
+  return { stocks, setStocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks };
 }

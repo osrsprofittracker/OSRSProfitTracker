@@ -39,8 +39,8 @@ export default function MainApp({ session }) {  // Add session prop
   const userId = session.user.id;
   const userEmail = session.user.email;
   // Custom hooks for Supabase
-  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock } = useStocks(userId);
-  const { categories, loading: categoriesLoading, addCategory: addCategoryToDB, deleteCategory: deleteCategoryFromDB } = useCategories(userId);
+  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, setStocks } = useStocks(userId);
+  const { categories, loading: categoriesLoading, setCategories, addCategory, deleteCategory } = useCategories(userId);
   const { transactions, loading: transactionsLoading, addTransaction } = useTransactions(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
@@ -90,6 +90,25 @@ export default function MainApp({ session }) {  // Add session prop
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+  const ensureUncategorizedExists = async () => {
+    if (!userId || !dataLoaded) return;
+
+    // Check if Uncategorized exists in categories
+    if (!categories.includes('Uncategorized')) {
+      try {
+        // Add Uncategorized category using the hook's function
+        await addCategory('Uncategorized');
+        console.log('Created Uncategorized category');
+      } catch (error) {
+        console.error('Error ensuring Uncategorized category exists:', error);
+      }
+    }
+  };
+
+    ensureUncategorizedExists();
+  }, [userId, categories, dataLoaded, addCategory]);
+
   // Helper functions
   const highlightRow = (stockId) => {
     setHighlightedRows({ ...highlightedRows, [stockId]: true });
@@ -109,35 +128,53 @@ export default function MainApp({ session }) {  // Add session prop
     await supabase.auth.signOut();
   };
 
-  const handleEditCategory = async (newName) => {
-    if (newName === selectedCategory) {
+  const handleEditCategory = async (oldCategory, newCategory) => {
+    try {
+      // First update the category in the categories table
+      const { error: categoryError } = await supabase
+        .from('categories')
+        .update({ name: newCategory })
+        .eq('name', oldCategory)
+        .eq('user_id', userId);
+
+      if (categoryError) throw categoryError;
+
+      // Then update all stocks with the old category name
+      const { data: updatedStocksData, error: stocksError } = await supabase
+        .from('stocks')
+        .update({ category: newCategory })
+        .eq('category', oldCategory)
+        .eq('user_id', userId)
+        .select();
+
+      if (stocksError) throw stocksError;
+
+      // Update all states at once
+      setCategories(prevCategories =>
+        prevCategories.map(cat => cat === oldCategory ? newCategory : cat)
+      );
+
+      setStocks(prevStocks =>
+        prevStocks.map(stock =>
+          stock.category === oldCategory
+            ? { ...stock, category: newCategory }
+            : stock
+        )
+      );
+
+      setCollapsedCategories(prev => {
+        const newState = { ...prev };
+        newState[newCategory] = prev[oldCategory];
+        delete newState[oldCategory];
+        return newState;
+      });
+
       setShowEditCategoryModal(false);
-      return;
+      alert('Category updated successfully');
+    } catch (error) {
+      console.error('Error updating category:', error);
+      alert(`Failed to update category: ${error.message}`);
     }
-
-    // Update category name in database
-    const { error: updateError } = await supabase
-      .from('categories')
-      .update({ name: newName })
-      .eq('user_id', userId)
-      .eq('name', selectedCategory);
-
-    if (updateError) {
-      console.error('Error updating category:', updateError);
-      alert('Failed to update category');
-      return;
-    }
-
-    // Update all stocks with this category
-    const stocksToUpdate = stocks.filter(s => s.category === selectedCategory);
-    await Promise.all(
-      stocksToUpdate.map(s => updateStock(s.id, { category: newName }))
-    );
-
-    // Update categories list
-    setCategories(categories.map(c => c === selectedCategory ? newName : c));
-
-    setShowEditCategoryModal(false);
   };
 
   const toggleCategory = (category) => {
@@ -239,21 +276,56 @@ export default function MainApp({ session }) {  // Add session prop
   const handleAddCategory = async (name) => {
     if (!name.trim()) return;
     if (!categories.includes(name)) {
-      await addCategoryToDB(name);
+      await addCategory(name);
     }
     setShowCategoryModal(false);
   };
 
-  const handleDeleteCategory = async () => {
-    // Update stocks to Uncategorized
-    const stocksToUpdate = stocks.filter(s => s.category === selectedCategory);
-    await Promise.all(
-      stocksToUpdate.map(s => updateStock(s.id, { category: 'Uncategorized' }))
-    );
+  const handleDeleteCategory = async (categoryName) => {
+  try {
+    // Log the category name for debugging
+    console.log('Attempting to delete category:', categoryName);
 
-    await deleteCategoryFromDB(selectedCategory);
-    setShowDeleteCategoryModal(false);
-  };
+    // Check if category is valid
+    if (!categoryName) {
+      console.error('No category name provided');
+      alert('Invalid category');
+      return;
+    }
+
+    if (categoryName === 'Uncategorized') {
+      console.error('Attempted to delete Uncategorized');
+      alert('Cannot delete Uncategorized category');
+      return;
+    }
+
+    const result = await deleteCategory(categoryName);
+    
+    if (result.success) {
+      // Update stocks state
+      setStocks(prevStocks => 
+        prevStocks.map(stock => 
+          stock.category === categoryName 
+            ? { ...stock, category: 'Uncategorized' }
+            : stock
+        )
+      );
+
+      // Update collapsed categories
+      setCollapsedCategories(prev => {
+        const newState = { ...prev };
+        delete newState[categoryName];
+        return newState;
+      });
+
+      setShowDeleteCategoryModal(false);
+      alert('Category deleted successfully');
+    }
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    alert(`Failed to delete category: ${error.message}`);
+  }
+};
 
   const handleAddDumpProfit = async (amount) => {
     await updateProfit('dumpProfit', amount);
@@ -296,6 +368,7 @@ export default function MainApp({ session }) {  // Add session prop
   // Drag and drop operations
   const handleCategoryDragStart = (e, category) => {
     e.dataTransfer.setData('categoryName', category);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleCategoryDragOver = (e) => {
@@ -429,9 +502,9 @@ export default function MainApp({ session }) {  // Add session prop
   }, {});
 
   const uncategorized = stocks.filter(s => !s.category || !categories.includes(s.category));
-  if (uncategorized.length > 0) {
-    groupedStocks['Uncategorized'] = uncategorized;
-  }
+  if (!groupedStocks['Uncategorized']) {
+  groupedStocks['Uncategorized'] = [];
+}
 
   return (
     <div style={{
@@ -530,7 +603,7 @@ export default function MainApp({ session }) {  // Add session prop
               setSelectedStock(stock);
               setShowNotesModal(true);
             }}
-            onCalculate={handleCalculateTime} 
+            onCalculate={handleCalculateTime}
             onDragStart={handleCategoryDragStart}
             onDragOver={handleCategoryDragOver}
             onDrop={handleCategoryDrop}

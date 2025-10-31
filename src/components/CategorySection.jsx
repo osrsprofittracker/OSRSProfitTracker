@@ -50,11 +50,11 @@ export default function CategorySection({
           onClick={() => onToggleCollapse(category)}
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'move', flex: 1 }}
         >
-          <span style={{ 
-            fontSize: '1.25rem', 
-            transition: 'transform 0.2s', 
-            display: 'inline-block', 
-            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' 
+          <span style={{
+            fontSize: '1.25rem',
+            transition: 'transform 0.2s',
+            display: 'inline-block',
+            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'
           }}>
             ▼
           </span>
@@ -86,27 +86,27 @@ export default function CategorySection({
             <Plus size={12} /> Add Stock
           </button>
           <button
-  onClick={(e) => {
-    e.stopPropagation();
-    onEditCategory(category);
-  }}
-  style={{
-    padding: '0.25rem 0.75rem',
-    background: 'rgb(147, 51, 234)',
-    color: 'white',
-    borderRadius: '0.375rem',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '0.75rem',
-    fontWeight: '500',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem'
-  }}
-  title="Edit Category"
->
-  ✏️ Edit
-</button>
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditCategory(category);
+            }}
+            style={{
+              padding: '0.25rem 0.75rem',
+              background: 'rgb(147, 51, 234)',
+              color: 'white',
+              borderRadius: '0.375rem',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem'
+            }}
+            title="Edit Category"
+          >
+            ✏️ Edit
+          </button>
           {category !== 'Uncategorized' && (
             <button
               onClick={(e) => {
@@ -133,7 +133,7 @@ export default function CategorySection({
           )}
         </div>
       </div>
-      
+
       {!isCollapsed && (
         <>
           {/* Category Stats Header */}
@@ -146,28 +146,28 @@ export default function CategorySection({
             marginBottom: '0.5rem',
             border: '1px solid rgb(71, 85, 105)'
           }}>
-            <StatItem 
-              label="Total Cost" 
+            <StatItem
+              label="Total Cost"
               value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.totalCost, 0), numberFormat)}
               color="rgb(96, 165, 250)"
             />
-            <StatItem 
-              label="Total Shares" 
+            <StatItem
+              label="Total Shares"
               value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.shares, 0), numberFormat)}
               color="rgb(251, 146, 60)"
             />
-            <StatItem 
-              label="Total Profit" 
+            <StatItem
+              label="Total Profit"
               value={formatNumber(categoryStocks.reduce((sum, s) => sum + (s.totalCostSold - (s.totalCostBasisSold || 0)), 0), numberFormat)}
               color="rgb(52, 211, 153)"
             />
-            <StatItem 
-              label="Sold Shares" 
+            <StatItem
+              label="Sold Shares"
               value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.sharesSold, 0), numberFormat)}
               color="rgb(168, 85, 247)"
             />
-            <StatItem 
-              label="Sold Cost" 
+            <StatItem
+              label="Sold Cost"
               value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.totalCostSold, 0), numberFormat)}
               color="rgb(192, 132, 252)"
             />
