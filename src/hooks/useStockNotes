@@ -1,0 +1,72 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+
+export function useStockNotes(userId) {
+  const [notes, setNotes] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetchNotes();
+  }, [userId]);
+
+  const fetchNotes = async () => {
+    const { data, error } = await supabase
+      .from('stock_notes')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error fetching notes:', error);
+    } else {
+      // Convert array to object with stock_id as key
+      const notesObj = {};
+      data.forEach(note => {
+        notesObj[note.stock_id] = note.note;
+      });
+      setNotes(notesObj);
+    }
+    setLoading(false);
+  };
+
+  const saveNote = async (stockId, noteText) => {
+    const { data, error } = await supabase
+      .from('stock_notes')
+      .upsert({ 
+        user_id: userId, 
+        stock_id: stockId, 
+        note: noteText 
+      }, { 
+        onConflict: 'user_id,stock_id' 
+      })
+      .select();
+    
+    if (error) {
+      console.error('Error saving note:', error);
+      return false;
+    } else {
+      setNotes({ ...notes, [stockId]: noteText });
+      return true;
+    }
+  };
+
+  const deleteNote = async (stockId) => {
+    const { error } = await supabase
+      .from('stock_notes')
+      .delete()
+      .eq('stock_id', stockId)
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error deleting note:', error);
+      return false;
+    } else {
+      const newNotes = { ...notes };
+      delete newNotes[stockId];
+      setNotes(newNotes);
+      return true;
+    }
+  };
+
+  return { notes, loading, saveNote, deleteNote, refetch: fetchNotes };
+}
