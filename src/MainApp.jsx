@@ -39,8 +39,8 @@ export default function MainApp({ session }) {  // Add session prop
   const userId = session.user.id;
   const userEmail = session.user.email;
   // Custom hooks for Supabase
-  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, setStocks } = useStocks(userId);
-  const { categories, loading: categoriesLoading, setCategories, addCategory, deleteCategory } = useCategories(userId);
+  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks } = useStocks(userId);
+const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
   const { transactions, loading: transactionsLoading, addTransaction } = useTransactions(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
@@ -92,22 +92,60 @@ export default function MainApp({ session }) {  // Add session prop
 
   useEffect(() => {
   const ensureUncategorizedExists = async () => {
-    if (!userId || !dataLoaded) return;
+    // Only run after categories have finished loading
+    if (!userId || categoriesLoading) {
+      return;
+    }
 
-    // Check if Uncategorized exists in categories
-    if (!categories.includes('Uncategorized')) {
-      try {
-        // Add Uncategorized category using the hook's function
-        await addCategory('Uncategorized');
-        console.log('Created Uncategorized category');
-      } catch (error) {
-        console.error('Error ensuring Uncategorized category exists:', error);
+    console.log('Categories loaded. Checking Uncategorized. Categories:', categories);
+
+    // Check if Uncategorized exists in local state
+    if (categories.includes('Uncategorized')) {
+      console.log('Uncategorized already in categories list');
+      return;
+    }
+
+    try {
+      // Double-check database
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('name', 'Uncategorized')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking for Uncategorized:', error);
+        return;
       }
+
+      if (!data) {
+        console.log('Creating Uncategorized category...');
+        
+        const { data: insertData, error: insertError } = await supabase
+          .from('categories')
+          .insert([{
+            name: 'Uncategorized',
+            user_id: userId,
+            position: 0,
+            created_at: new Date().toISOString()
+          }])
+          .select();
+
+        if (insertError) {
+          console.error('Error creating Uncategorized:', insertError);
+        } else {
+          console.log('Successfully created Uncategorized:', insertData);
+          await fetchCategories();
+        }
+      }
+    } catch (error) {
+      console.error('Error in ensureUncategorizedExists:', error);
     }
   };
 
-    ensureUncategorizedExists();
-  }, [userId, categories, dataLoaded, addCategory]);
+  ensureUncategorizedExists();
+}, [userId, categoriesLoading, categories]);
 
   // Helper functions
   const highlightRow = (stockId) => {
@@ -129,53 +167,27 @@ export default function MainApp({ session }) {  // Add session prop
   };
 
   const handleEditCategory = async (oldCategory, newCategory) => {
-    try {
-      // First update the category in the categories table
-      const { error: categoryError } = await supabase
-        .from('categories')
-        .update({ name: newCategory })
-        .eq('name', oldCategory)
-        .eq('user_id', userId);
+  try {
+    await updateCategory(oldCategory, newCategory);
+    
+    // Refetch everything from database
+    await fetchCategories();
+    await refetch();
 
-      if (categoryError) throw categoryError;
+    setCollapsedCategories(prev => {
+      const newState = { ...prev };
+      newState[newCategory] = prev[oldCategory];
+      delete newState[oldCategory];
+      return newState;
+    });
 
-      // Then update all stocks with the old category name
-      const { data: updatedStocksData, error: stocksError } = await supabase
-        .from('stocks')
-        .update({ category: newCategory })
-        .eq('category', oldCategory)
-        .eq('user_id', userId)
-        .select();
-
-      if (stocksError) throw stocksError;
-
-      // Update all states at once
-      setCategories(prevCategories =>
-        prevCategories.map(cat => cat === oldCategory ? newCategory : cat)
-      );
-
-      setStocks(prevStocks =>
-        prevStocks.map(stock =>
-          stock.category === oldCategory
-            ? { ...stock, category: newCategory }
-            : stock
-        )
-      );
-
-      setCollapsedCategories(prev => {
-        const newState = { ...prev };
-        newState[newCategory] = prev[oldCategory];
-        delete newState[oldCategory];
-        return newState;
-      });
-
-      setShowEditCategoryModal(false);
-      alert('Category updated successfully');
-    } catch (error) {
-      console.error('Error updating category:', error);
-      alert(`Failed to update category: ${error.message}`);
-    }
-  };
+    setShowEditCategoryModal(false);
+    alert('Category updated successfully');
+  } catch (error) {
+    console.error('Error updating category:', error);
+    alert(`Failed to update category: ${error.message}`);
+  }
+};
 
   const toggleCategory = (category) => {
     setCollapsedCategories({
@@ -209,7 +221,7 @@ export default function MainApp({ session }) {  // Add session prop
       total,
       date: new Date().toISOString()
     });
-
+await refetch();
     highlightRow(selectedStock.id);
     setShowBuyModal(false);
   };
@@ -238,7 +250,7 @@ export default function MainApp({ session }) {  // Add session prop
       total,
       date: new Date().toISOString()
     });
-
+await refetch();
     highlightRow(selectedStock.id);
     setShowSellModal(false);
   };
@@ -246,47 +258,50 @@ export default function MainApp({ session }) {  // Add session prop
   const handleAdjust = async (data) => {
     const { name, needed, category, limit4h } = data;
     await updateStock(selectedStock.id, { name, needed, category, limit4h });
+    await refetch();
     highlightRow(selectedStock.id);
     setShowAdjustModal(false);
   };
 
   const handleDelete = async () => {
     await deleteStock(selectedStock.id);
+    await refetch();
     setShowDeleteModal(false);
   };
 
   const handleAddStock = async (data) => {
-    const { name, category, limit4h, needed } = data;
-    await addStockToDB({
-      name,
-      totalCost: 0,
-      shares: 0,
-      sharesSold: 0,
-      totalCostSold: 0,
-      totalCostBasisSold: 0,
-      limit4h,
-      needed,
-      timerEndTime: null,
-      category: category || 'Uncategorized',
-    });
-    setNewStockCategory('');
-    setShowNewStockModal(false);
-  };
+  const { name, category, limit4h, needed } = data;
+  await addStockToDB({
+    name,
+    totalCost: 0,
+    shares: 0,
+    sharesSold: 0,
+    totalCostSold: 0,
+    totalCostBasisSold: 0,
+    limit4h,
+    needed,
+    timerEndTime: null,
+    category: category || 'Uncategorized',
+  });
+  await refetch(); // Add this line to refresh stocks from database
+  setNewStockCategory('');
+  setShowNewStockModal(false);
+};
 
   const handleAddCategory = async (name) => {
-    if (!name.trim()) return;
-    if (!categories.includes(name)) {
-      await addCategory(name);
-    }
-    setShowCategoryModal(false);
-  };
+  if (!name.trim()) return;
+  if (!categories.includes(name)) {
+    await addCategory(name);
+    await fetchCategories();
+  }
+  setShowCategoryModal(false);
+};
 
-  const handleDeleteCategory = async (categoryName) => {
+  const handleDeleteCategory = async () => {
   try {
-    // Log the category name for debugging
+    const categoryName = selectedCategory;
     console.log('Attempting to delete category:', categoryName);
 
-    // Check if category is valid
     if (!categoryName) {
       console.error('No category name provided');
       alert('Invalid category');
@@ -302,14 +317,9 @@ export default function MainApp({ session }) {  // Add session prop
     const result = await deleteCategory(categoryName);
     
     if (result.success) {
-      // Update stocks state
-      setStocks(prevStocks => 
-        prevStocks.map(stock => 
-          stock.category === categoryName 
-            ? { ...stock, category: 'Uncategorized' }
-            : stock
-        )
-      );
+      // Refetch everything from database
+      await refetch();
+      await fetchCategories();
 
       // Update collapsed categories
       setCollapsedCategories(prev => {
@@ -375,31 +385,28 @@ export default function MainApp({ session }) {  // Add session prop
     e.preventDefault();
   };
 
-  const handleCategoryDrop = (e, targetCategory) => {
-    e.preventDefault();
-    const draggedCategory = e.dataTransfer.getData('categoryName');
-    if (draggedCategory && draggedCategory !== targetCategory) {
-      const allCategories = [...categories];
-      if (!allCategories.includes('Uncategorized')) {
-        allCategories.push('Uncategorized');
-      }
-
-      const draggedIndex = allCategories.indexOf(draggedCategory);
-      const targetIndex = allCategories.indexOf(targetCategory);
-
-      if (draggedIndex !== -1 && targetIndex !== -1) {
-        const newCategories = categories.filter(c => c !== 'Uncategorized');
-        const draggedCatIndex = newCategories.indexOf(draggedCategory);
-        const targetCatIndex = newCategories.indexOf(targetCategory);
-
-        if (draggedCatIndex !== -1 && targetCatIndex !== -1) {
-          newCategories.splice(draggedCatIndex, 1);
-          newCategories.splice(targetCatIndex, 0, draggedCategory);
-          setCategories(newCategories);
-        }
-      }
+  const handleCategoryDrop = async (e, targetCategory) => {
+  e.preventDefault();
+  const draggedCategory = e.dataTransfer.getData('categoryName');
+  
+  if (!draggedCategory || draggedCategory === targetCategory) return;
+  
+  try {
+    // Get the target position
+    const targetIndex = categories.indexOf(targetCategory);
+    
+    if (targetIndex === -1) {
+      console.error('Target category not found');
+      return;
     }
-  };
+    
+    await reorderCategories(draggedCategory, targetIndex);
+    await fetchCategories();
+  } catch (error) {
+    console.error('Error reordering categories:', error);
+    alert('Failed to reorder categories');
+  }
+};
 
   const handleStockAction = (stock, action) => {
     setSelectedStock(stock);
@@ -470,40 +477,48 @@ export default function MainApp({ session }) {  // Add session prop
     setShowTimeCalculatorModal(true);
   };
 
-  const handleStockDrop = (e, targetStockId, targetCategory) => {
-    e.preventDefault();
-    const draggedStockId = parseInt(e.dataTransfer.getData('stockId'));
-    const sourceCategory = e.dataTransfer.getData('sourceCategory');
+  const handleStockDrop = async (e, targetStockId, targetCategory) => {
+  e.preventDefault();
+  const draggedStockId = parseInt(e.dataTransfer.getData('stockId'));
+  const sourceCategory = e.dataTransfer.getData('sourceCategory');
 
-    if (draggedStockId !== targetStockId && sourceCategory === targetCategory) {
-      // Reorder within same category
-      const categoryStocks = stocks.filter(stock => stock.category === targetCategory);
-      const draggedIndex = categoryStocks.findIndex(stock => stock.id === draggedStockId);
-      const targetIndex = categoryStocks.findIndex(stock => stock.id === targetStockId);
+  if (draggedStockId === targetStockId) return;
 
-      const reordered = [...categoryStocks];
-      const [draggedStock] = reordered.splice(draggedIndex, 1);
-      reordered.splice(targetIndex, 0, draggedStock);
-
-      const otherStocks = stocks.filter(stock => stock.category !== targetCategory);
-      setStocks([...otherStocks, ...reordered]);
-    } else if (draggedStockId !== targetStockId && sourceCategory !== targetCategory) {
+  try {
+    if (sourceCategory !== targetCategory) {
       // Move to different category
-      setStocks(stocks.map(stock =>
-        stock.id === draggedStockId ? { ...stock, category: targetCategory } : stock
-      ));
+      const draggedStock = stocks.find(s => s.id === draggedStockId);
+      if (draggedStock) {
+        await updateStock(draggedStockId, { category: targetCategory });
+        await refetch();
+        highlightRow(draggedStockId);
+      }
+    } else {
+      // Reorder within same category
+      await reorderStocks(draggedStockId, targetStockId, targetCategory);
+      await refetch();
+      highlightRow(draggedStockId);
     }
-  };
+  } catch (error) {
+    console.error('Error handling stock drop:', error);
+    alert('Failed to move stock');
+  }
+};
 
   // Group stocks by category
-  const groupedStocks = categories.reduce((acc, cat) => {
-    acc[cat] = stocks.filter(s => s.category === cat);
-    return acc;
-  }, {});
+const groupedStocks = categories.reduce((acc, cat) => {
+  acc[cat] = stocks.filter(s => s.category === cat);
+  return acc;
+}, {});
 
-  const uncategorized = stocks.filter(s => !s.category || !categories.includes(s.category));
-  if (!groupedStocks['Uncategorized']) {
-  groupedStocks['Uncategorized'] = [];
+// If Uncategorized is not in categories list, add any orphaned stocks
+if (!categories.includes('Uncategorized')) {
+  const orphanedStocks = stocks.filter(s => 
+    s.category === 'Uncategorized' || !s.category || !categories.includes(s.category)
+  );
+  if (orphanedStocks.length > 0) {
+    groupedStocks['Uncategorized'] = orphanedStocks;
+  }
 }
 
   return (

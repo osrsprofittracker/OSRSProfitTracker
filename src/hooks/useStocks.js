@@ -11,32 +11,79 @@ export function useStocks(userId) {
   }, [userId]);
 
   const fetchStocks = async () => {
-  const { data, error } = await supabase
-    .from('stocks')
-    .select('*')
-    .eq('user_id', userId);
-  
-  if (error) {
-    console.error('Error fetching stocks:', error);
-    setStocks([]);  // Set empty array on error
-  } else {
-    // Convert snake_case to camelCase for the app
-    const formattedStocks = (data || []).map(stock => ({
+    const { data, error } = await supabase
+      .from('stocks')
+      .select('*')
+      .eq('user_id', userId)
+      .order('position', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching stocks:', error);
+      setStocks([]);
+    } else {
+      const formattedStocks = (data || []).map(stock => ({
+        id: stock.id,
+        name: stock.name,
+        totalCost: stock.total_cost,
+        shares: stock.shares,
+        sharesSold: stock.shares_sold,
+        totalCostSold: stock.total_cost_sold,
+        totalCostBasisSold: stock.total_cost_basis_sold,
+        limit4h: stock.limit4h,
+        needed: stock.needed,
+        timerEndTime: stock.timer_end_time,
+        category: stock.category,
+        position: stock.position
+      }));
+      setStocks(formattedStocks);
+    }
+    setLoading(false);
+  };
+
+  const reorderStocks = async (stockId, targetStockId, category) => {
+  try {
+    // Get all stocks in this category ordered by position
+    const { data: categoryStocks, error: fetchError } = await supabase
+      .from('stocks')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('category', category)
+      .order('position', { ascending: true });
+
+    if (fetchError) throw fetchError;
+
+    const movingStockIndex = categoryStocks.findIndex(s => s.id === stockId);
+    const targetStockIndex = categoryStocks.findIndex(s => s.id === targetStockId);
+
+    if (movingStockIndex === -1 || targetStockIndex === -1) return { success: false };
+
+    // Reorder the array
+    const reordered = [...categoryStocks];
+    const [movingStock] = reordered.splice(movingStockIndex, 1);
+    reordered.splice(targetStockIndex, 0, movingStock);
+
+    // Update all positions
+    const updates = reordered.map((stock, index) => ({
       id: stock.id,
-      name: stock.name,
-      totalCost: stock.total_cost,
-      shares: stock.shares,
-      sharesSold: stock.shares_sold,
-      totalCostSold: stock.total_cost_sold,
-      totalCostBasisSold: stock.total_cost_basis_sold,
-      limit4h: stock.limit4h,
-      needed: stock.needed,
-      timerEndTime: stock.timer_end_time,
-      category: stock.category
+      position: index
     }));
-    setStocks(formattedStocks);
+
+    // Update each stock's position
+    for (const update of updates) {
+      const { error } = await supabase
+        .from('stocks')
+        .update({ position: update.position })
+        .eq('id', update.id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error reordering stocks:', error);
+    throw error;
   }
-  setLoading(false);
 };
 
   const addStock = async (stock) => {
@@ -59,26 +106,13 @@ export function useStocks(userId) {
       .from('stocks')
       .insert([dbStock])
       .select();
-    
+
     if (error) {
       console.error('Error adding stock:', error);
       return null;
     } else {
-      const formattedStock = {
-        id: data[0].id,
-        name: data[0].name,
-        totalCost: data[0].total_cost,
-        shares: data[0].shares,
-        sharesSold: data[0].shares_sold,
-        totalCostSold: data[0].total_cost_sold,
-        totalCostBasisSold: data[0].total_cost_basis_sold,
-        limit4h: data[0].limit4h,
-        needed: data[0].needed,
-        timerEndTime: data[0].timer_end_time,
-        category: data[0].category
-      };
-      setStocks([...stocks, formattedStock]);
-      return formattedStock;
+      // Don't update local state - let caller refetch
+      return data[0];
     }
   };
 
@@ -93,18 +127,20 @@ export function useStocks(userId) {
     if (updates.timerEndTime !== undefined) dbUpdates.timer_end_time = updates.timerEndTime;
     if (updates.needed !== undefined) dbUpdates.needed = updates.needed;
     if (updates.category !== undefined) dbUpdates.category = updates.category;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.limit4h !== undefined) dbUpdates.limit4h = updates.limit4h;
 
     const { error } = await supabase
       .from('stocks')
       .update(dbUpdates)
       .eq('id', id)
       .eq('user_id', userId);
-    
+
     if (error) {
       console.error('Error updating stock:', error);
       return false;
     } else {
-      setStocks(stocks.map(s => s.id === id ? { ...s, ...updates } : s));
+      // Don't update local state - let caller refetch
       return true;
     }
   };
@@ -115,15 +151,15 @@ export function useStocks(userId) {
       .delete()
       .eq('id', id)
       .eq('user_id', userId);
-    
+
     if (error) {
       console.error('Error deleting stock:', error);
       return false;
     } else {
-      setStocks(stocks.filter(s => s.id !== id));
+      // Don't update local state - let caller refetch
       return true;
     }
   };
 
-  return { stocks, setStocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks };
+  return { stocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks };
 }
