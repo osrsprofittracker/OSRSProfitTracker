@@ -17,8 +17,8 @@ export function useCategories(userId) {
 
     if (error) throw error;
     
-    // Extract just the names from the category objects
-    const categoryNames = (data || []).map(cat => cat.name);
+    // Extract just the names from the category objects and ensure they're strings
+    const categoryNames = (data || []).map(cat => String(cat.name));
     setCategories(categoryNames);
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -37,8 +37,11 @@ const reorderCategories = async (categoryName, newPosition) => {
     if (fetchError) throw fetchError;
 
     // Find the category being moved
-    const movingCategoryIndex = allCategories.findIndex(cat => cat.name === categoryName);
-    if (movingCategoryIndex === -1) return { success: false };
+    const movingCategoryIndex = allCategories.findIndex(cat => String(cat.name) === String(categoryName));
+    if (movingCategoryIndex === -1) {
+      console.error('Category not found:', categoryName, 'Available:', allCategories.map(c => c.name));
+      return { success: false };
+    }
 
     // Reorder the array
     const reordered = [...allCategories];
@@ -74,7 +77,7 @@ const reorderCategories = async (categoryName, newPosition) => {
     const { data, error } = await supabase
       .from('categories')
       .insert([{ 
-        name, 
+        name: String(name), // Force conversion to string
         user_id: userId,
         created_at: new Date().toISOString() 
       }])

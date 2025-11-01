@@ -18,11 +18,43 @@ export default function Auth() {
 
     if (error) {
       alert(error.message);
-    } else {
-      alert('Account created successfully! You can now log in.');
-      setMode('login');
-      setPassword('');
+      setLoading(false);
+      return;
     }
+
+    // Create initial Uncategorized category for new user
+    if (data?.user?.id) {
+      const { error: categoryError } = await supabase
+        .from('categories')
+        .insert([{
+          name: 'Uncategorized',
+          user_id: data.user.id,
+          position: 0,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (categoryError) {
+        console.error('Error creating initial category:', categoryError);
+      }
+
+      // Create initial profits row for new user
+      const { error: profitsError } = await supabase
+        .from('profits')
+        .insert([{
+          user_id: data.user.id,
+          dump_profit: 0,
+          referral_profit: 0,
+          bonds_profit: 0
+        }]);
+
+      if (profitsError) {
+        console.error('Error creating initial profits:', profitsError);
+      }
+    }
+
+    alert('Account created successfully! You can now log in.');
+    setMode('login');
+    setPassword('');
     setLoading(false);
   };
 

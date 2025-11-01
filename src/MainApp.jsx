@@ -377,7 +377,7 @@ await refetch();
 
   // Drag and drop operations
   const handleCategoryDragStart = (e, category) => {
-    e.dataTransfer.setData('categoryName', category);
+    e.dataTransfer.setData('categoryName', String(category));
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -389,7 +389,7 @@ await refetch();
   e.preventDefault();
   const draggedCategory = e.dataTransfer.getData('categoryName');
   
-  if (!draggedCategory || draggedCategory === targetCategory) return;
+  if (!draggedCategory || draggedCategory === String(targetCategory)) return;
   
   try {
     // Get the target position
