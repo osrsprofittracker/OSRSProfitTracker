@@ -27,6 +27,8 @@ import NotesModal from './components/modals/NotesModal';
 import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
+import * as Sentry from "@sentry/react";
+
 import {
   STORAGE_KEY,
   DUMP_PROFIT_KEY,
@@ -36,7 +38,7 @@ import {
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
 
-export default function MainApp({ session }) {  // Add session prop
+export default function MainApp({ session }) { 
   const userId = session.user.id;
   const userEmail = session.user.email;
   // Custom hooks for Supabase
@@ -285,7 +287,7 @@ export default function MainApp({ session }) {  // Add session prop
       timerEndTime: null,
       category: category || 'Uncategorized',
     });
-    await refetch(); // Add this line to refresh stocks from database
+    await refetch();
     setNewStockCategory('');
     setShowNewStockModal(false);
   };
@@ -815,7 +817,7 @@ export default function MainApp({ session }) {  // Add session prop
             visibleColumns={visibleColumns}
             onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
             visibleProfits={visibleProfits}
-            onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}  // Add this
+            onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}  
             onCancel={() => setShowSettingsModal(false)}
           />
         </ModalContainer>
