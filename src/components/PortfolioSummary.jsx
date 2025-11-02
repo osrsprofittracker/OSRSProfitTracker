@@ -8,7 +8,7 @@ export default function PortfolioSummary({
   dumpProfit,
   referralProfit,
   bondsProfit,
-  visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true },  // Add this
+  visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true },
   onAddDumpProfit,
   onAddReferralProfit,
   onAddBondsProfit,

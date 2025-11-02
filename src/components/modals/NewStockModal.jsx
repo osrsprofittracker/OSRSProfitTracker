@@ -63,7 +63,6 @@ export default function NewStockModal({ categories, defaultCategory = '', onConf
           {categories.map(cat => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
-          <option value="Uncategorized">Uncategorized</option>
         </select>
         <input
           type="number"

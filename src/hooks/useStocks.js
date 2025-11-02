@@ -42,16 +42,8 @@ export function useStocks(userId) {
 
   const reorderStocks = async (stockId, targetStockId, category) => {
   try {
-    // Get all stocks in this category ordered by position
-    const { data: categoryStocks, error: fetchError } = await supabase
-      .from('stocks')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('category', category)
-      .order('position', { ascending: true });
-
-    if (fetchError) throw fetchError;
-
+    // Optimistically update UI first
+    const categoryStocks = stocks.filter(s => s.category === category);
     const movingStockIndex = categoryStocks.findIndex(s => s.id === stockId);
     const targetStockIndex = categoryStocks.findIndex(s => s.id === targetStockId);
 
@@ -62,22 +54,30 @@ export function useStocks(userId) {
     const [movingStock] = reordered.splice(movingStockIndex, 1);
     reordered.splice(targetStockIndex, 0, movingStock);
 
-    // Update all positions
+    // Update positions in a single RPC call or use upsert
     const updates = reordered.map((stock, index) => ({
       id: stock.id,
-      position: index
+      user_id: userId,
+      position: index,
+      // Include other required fields to avoid null errors
+      name: stock.name,
+      total_cost: stock.totalCost,
+      shares: stock.shares,
+      shares_sold: stock.sharesSold,
+      total_cost_sold: stock.totalCostSold,
+      total_cost_basis_sold: stock.totalCostBasisSold,
+      limit4h: stock.limit4h,
+      needed: stock.needed,
+      timer_end_time: stock.timerEndTime,
+      category: stock.category
     }));
 
-    // Update each stock's position
-    for (const update of updates) {
-      const { error } = await supabase
-        .from('stocks')
-        .update({ position: update.position })
-        .eq('id', update.id)
-        .eq('user_id', userId);
+    // Use upsert for batch update (faster than individual updates)
+    const { error } = await supabase
+      .from('stocks')
+      .upsert(updates, { onConflict: 'id' });
 
-      if (error) throw error;
-    }
+    if (error) throw error;
 
     return { success: true };
   } catch (error) {

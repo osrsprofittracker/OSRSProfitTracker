@@ -48,22 +48,21 @@ const reorderCategories = async (categoryName, newPosition) => {
     const [movingCategory] = reordered.splice(movingCategoryIndex, 1);
     reordered.splice(newPosition, 0, movingCategory);
 
-    // Update all positions in a transaction-like manner
+    // Update all positions with batch upsert
     const updates = reordered.map((cat, index) => ({
       id: cat.id,
-      position: index
+      user_id: userId,
+      name: cat.name,
+      position: index,
+      created_at: cat.created_at
     }));
 
-    // Update each category's position
-    for (const update of updates) {
-      const { error } = await supabase
-        .from('categories')
-        .update({ position: update.position })
-        .eq('id', update.id)
-        .eq('user_id', userId);
+    // Use upsert for batch update (much faster)
+    const { error } = await supabase
+      .from('categories')
+      .upsert(updates, { onConflict: 'id' });
 
-      if (error) throw error;
-    }
+    if (error) throw error;
 
     return { success: true };
   } catch (error) {

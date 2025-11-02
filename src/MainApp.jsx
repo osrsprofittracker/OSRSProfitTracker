@@ -6,6 +6,7 @@ import { useTransactions } from './hooks/useTransactions';
 import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
 import { useProfits } from './hooks/useProfits';
+import AltTimerModal from './components/modals/AltTimerModal';
 import EditCategoryModal from './components/modals/EditCategoryModal';
 import TimeCalculatorModal from './components/modals/TimeCalculatorModal';
 import Header from './components/Header';
@@ -40,7 +41,7 @@ export default function MainApp({ session }) {  // Add session prop
   const userEmail = session.user.email;
   // Custom hooks for Supabase
   const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks } = useStocks(userId);
-const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
+  const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
   const { transactions, loading: transactionsLoading, addTransaction } = useTransactions(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
@@ -50,7 +51,7 @@ const { categories, loading: categoriesLoading, addCategory, deleteCategory, upd
   const { dumpProfit, referralProfit, bondsProfit } = profits;
 
   // Destructure settings
-  const { theme, numberFormat, visibleColumns, visibleProfits } = settings;
+  const { theme, numberFormat, visibleColumns, visibleProfits, altAccountTimer } = settings;
 
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState({});
@@ -66,6 +67,7 @@ const { categories, loading: categoriesLoading, addCategory, deleteCategory, upd
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showNewStockModal, setShowNewStockModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showAltTimerModal, setShowAltTimerModal] = useState(false);
   const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
   const [showDumpProfitModal, setShowDumpProfitModal] = useState(false);
   const [showReferralProfitModal, setShowReferralProfitModal] = useState(false);
@@ -91,61 +93,61 @@ const { categories, loading: categoriesLoading, addCategory, deleteCategory, upd
   }, []);
 
   useEffect(() => {
-  const ensureUncategorizedExists = async () => {
-    // Only run after categories have finished loading
-    if (!userId || categoriesLoading) {
-      return;
-    }
-
-    console.log('Categories loaded. Checking Uncategorized. Categories:', categories);
-
-    // Check if Uncategorized exists in local state
-    if (categories.includes('Uncategorized')) {
-      console.log('Uncategorized already in categories list');
-      return;
-    }
-
-    try {
-      // Double-check database
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('name', 'Uncategorized')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking for Uncategorized:', error);
+    const ensureUncategorizedExists = async () => {
+      // Only run after categories have finished loading
+      if (!userId || categoriesLoading) {
         return;
       }
 
-      if (!data) {
-        console.log('Creating Uncategorized category...');
-        
-        const { data: insertData, error: insertError } = await supabase
-          .from('categories')
-          .insert([{
-            name: 'Uncategorized',
-            user_id: userId,
-            position: 0,
-            created_at: new Date().toISOString()
-          }])
-          .select();
+      console.log('Categories loaded. Checking Uncategorized. Categories:', categories);
 
-        if (insertError) {
-          console.error('Error creating Uncategorized:', insertError);
-        } else {
-          console.log('Successfully created Uncategorized:', insertData);
-          await fetchCategories();
-        }
+      // Check if Uncategorized exists in local state
+      if (categories.includes('Uncategorized')) {
+        console.log('Uncategorized already in categories list');
+        return;
       }
-    } catch (error) {
-      console.error('Error in ensureUncategorizedExists:', error);
-    }
-  };
 
-  ensureUncategorizedExists();
-}, [userId, categoriesLoading, categories]);
+      try {
+        // Double-check database
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('name', 'Uncategorized')
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error checking for Uncategorized:', error);
+          return;
+        }
+
+        if (!data) {
+          console.log('Creating Uncategorized category...');
+
+          const { data: insertData, error: insertError } = await supabase
+            .from('categories')
+            .insert([{
+              name: 'Uncategorized',
+              user_id: userId,
+              position: 0,
+              created_at: new Date().toISOString()
+            }])
+            .select();
+
+          if (insertError) {
+            console.error('Error creating Uncategorized:', insertError);
+          } else {
+            console.log('Successfully created Uncategorized:', insertData);
+            await fetchCategories();
+          }
+        }
+      } catch (error) {
+        console.error('Error in ensureUncategorizedExists:', error);
+      }
+    };
+
+    ensureUncategorizedExists();
+  }, [userId, categoriesLoading, categories]);
 
   // Helper functions
   const highlightRow = (stockId) => {
@@ -167,27 +169,27 @@ const { categories, loading: categoriesLoading, addCategory, deleteCategory, upd
   };
 
   const handleEditCategory = async (oldCategory, newCategory) => {
-  try {
-    await updateCategory(oldCategory, newCategory);
-    
-    // Refetch everything from database
-    await fetchCategories();
-    await refetch();
+    try {
+      await updateCategory(oldCategory, newCategory);
 
-    setCollapsedCategories(prev => {
-      const newState = { ...prev };
-      newState[newCategory] = prev[oldCategory];
-      delete newState[oldCategory];
-      return newState;
-    });
+      // Refetch everything from database
+      await fetchCategories();
+      await refetch();
 
-    setShowEditCategoryModal(false);
-    alert('Category updated successfully');
-  } catch (error) {
-    console.error('Error updating category:', error);
-    alert(`Failed to update category: ${error.message}`);
-  }
-};
+      setCollapsedCategories(prev => {
+        const newState = { ...prev };
+        newState[newCategory] = prev[oldCategory];
+        delete newState[oldCategory];
+        return newState;
+      });
+
+      setShowEditCategoryModal(false);
+      alert('Category updated successfully');
+    } catch (error) {
+      console.error('Error updating category:', error);
+      alert(`Failed to update category: ${error.message}`);
+    }
+  };
 
   const toggleCategory = (category) => {
     setCollapsedCategories({
@@ -221,7 +223,7 @@ const { categories, loading: categoriesLoading, addCategory, deleteCategory, upd
       total,
       date: new Date().toISOString()
     });
-await refetch();
+    await refetch();
     highlightRow(selectedStock.id);
     setShowBuyModal(false);
   };
@@ -250,7 +252,7 @@ await refetch();
       total,
       date: new Date().toISOString()
     });
-await refetch();
+    await refetch();
     highlightRow(selectedStock.id);
     setShowSellModal(false);
   };
@@ -270,72 +272,72 @@ await refetch();
   };
 
   const handleAddStock = async (data) => {
-  const { name, category, limit4h, needed } = data;
-  await addStockToDB({
-    name,
-    totalCost: 0,
-    shares: 0,
-    sharesSold: 0,
-    totalCostSold: 0,
-    totalCostBasisSold: 0,
-    limit4h,
-    needed,
-    timerEndTime: null,
-    category: category || 'Uncategorized',
-  });
-  await refetch(); // Add this line to refresh stocks from database
-  setNewStockCategory('');
-  setShowNewStockModal(false);
-};
+    const { name, category, limit4h, needed } = data;
+    await addStockToDB({
+      name,
+      totalCost: 0,
+      shares: 0,
+      sharesSold: 0,
+      totalCostSold: 0,
+      totalCostBasisSold: 0,
+      limit4h,
+      needed,
+      timerEndTime: null,
+      category: category || 'Uncategorized',
+    });
+    await refetch(); // Add this line to refresh stocks from database
+    setNewStockCategory('');
+    setShowNewStockModal(false);
+  };
 
   const handleAddCategory = async (name) => {
-  if (!name.trim()) return;
-  if (!categories.includes(name)) {
-    await addCategory(name);
-    await fetchCategories();
-  }
-  setShowCategoryModal(false);
-};
+    if (!name.trim()) return;
+    if (!categories.includes(name)) {
+      await addCategory(name);
+      await fetchCategories();
+    }
+    setShowCategoryModal(false);
+  };
 
   const handleDeleteCategory = async () => {
-  try {
-    const categoryName = selectedCategory;
-    console.log('Attempting to delete category:', categoryName);
+    try {
+      const categoryName = selectedCategory;
+      console.log('Attempting to delete category:', categoryName);
 
-    if (!categoryName) {
-      console.error('No category name provided');
-      alert('Invalid category');
-      return;
+      if (!categoryName) {
+        console.error('No category name provided');
+        alert('Invalid category');
+        return;
+      }
+
+      if (categoryName === 'Uncategorized') {
+        console.error('Attempted to delete Uncategorized');
+        alert('Cannot delete Uncategorized category');
+        return;
+      }
+
+      const result = await deleteCategory(categoryName);
+
+      if (result.success) {
+        // Refetch everything from database
+        await refetch();
+        await fetchCategories();
+
+        // Update collapsed categories
+        setCollapsedCategories(prev => {
+          const newState = { ...prev };
+          delete newState[categoryName];
+          return newState;
+        });
+
+        setShowDeleteCategoryModal(false);
+        alert('Category deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert(`Failed to delete category: ${error.message}`);
     }
-
-    if (categoryName === 'Uncategorized') {
-      console.error('Attempted to delete Uncategorized');
-      alert('Cannot delete Uncategorized category');
-      return;
-    }
-
-    const result = await deleteCategory(categoryName);
-    
-    if (result.success) {
-      // Refetch everything from database
-      await refetch();
-      await fetchCategories();
-
-      // Update collapsed categories
-      setCollapsedCategories(prev => {
-        const newState = { ...prev };
-        delete newState[categoryName];
-        return newState;
-      });
-
-      setShowDeleteCategoryModal(false);
-      alert('Category deleted successfully');
-    }
-  } catch (error) {
-    console.error('Error deleting category:', error);
-    alert(`Failed to delete category: ${error.message}`);
-  }
-};
+  };
 
   const handleAddDumpProfit = async (amount) => {
     await updateProfit('dumpProfit', amount);
@@ -350,6 +352,16 @@ await refetch();
   const handleAddBondsProfit = async (amount) => {
     await updateProfit('bondsProfit', amount);
     setShowBondsProfitModal(false);
+  };
+
+  const handleSetAltTimer = async (days) => {
+    const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
+    await updateSettings({ altAccountTimer: timerEndTime });
+    setShowAltTimerModal(false);
+  };
+
+  const handleResetAltTimer = async () => {
+    await updateSettings({ altAccountTimer: null });
   };
 
   const handleSaveNotes = async (noteText) => {
@@ -386,27 +398,27 @@ await refetch();
   };
 
   const handleCategoryDrop = async (e, targetCategory) => {
-  e.preventDefault();
-  const draggedCategory = e.dataTransfer.getData('categoryName');
-  
-  if (!draggedCategory || draggedCategory === String(targetCategory)) return;
-  
-  try {
-    // Get the target position
-    const targetIndex = categories.indexOf(targetCategory);
-    
-    if (targetIndex === -1) {
-      console.error('Target category not found');
-      return;
+    e.preventDefault();
+    const draggedCategory = e.dataTransfer.getData('categoryName');
+
+    if (!draggedCategory || draggedCategory === String(targetCategory)) return;
+
+    try {
+      // Get the target position
+      const targetIndex = categories.indexOf(targetCategory);
+
+      if (targetIndex === -1) {
+        console.error('Target category not found');
+        return;
+      }
+
+      await reorderCategories(draggedCategory, targetIndex);
+      await fetchCategories();
+    } catch (error) {
+      console.error('Error reordering categories:', error);
+      alert('Failed to reorder categories');
     }
-    
-    await reorderCategories(draggedCategory, targetIndex);
-    await fetchCategories();
-  } catch (error) {
-    console.error('Error reordering categories:', error);
-    alert('Failed to reorder categories');
-  }
-};
+  };
 
   const handleStockAction = (stock, action) => {
     setSelectedStock(stock);
@@ -444,6 +456,73 @@ await refetch();
     e.preventDefault();
   };
 
+  const handleStockDrop = async (e, targetStockId, targetCategory) => {
+    e.preventDefault();
+    const draggedStockId = parseInt(e.dataTransfer.getData('stockId'));
+    const sourceCategory = e.dataTransfer.getData('sourceCategory');
+
+    if (draggedStockId === targetStockId) return;
+
+    try {
+      if (sourceCategory !== targetCategory) {
+        // Move to different category - need to set proper position
+        const draggedStock = stocks.find(s => s.id === draggedStockId);
+        const targetCategoryStocks = stocks.filter(s => s.category === targetCategory);
+        const targetStockIndex = targetCategoryStocks.findIndex(s => s.id === targetStockId);
+
+        if (draggedStock) {
+          // Calculate new position: insert at target position
+          const newPosition = targetStockIndex !== -1 ? targetStockIndex : targetCategoryStocks.length;
+
+          // Update the stock's category and position
+          await updateStock(draggedStockId, {
+            category: targetCategory,
+            position: newPosition
+          });
+
+          // Now reorder all stocks in the target category to fix positions
+          const updatedTargetStocks = [
+            ...targetCategoryStocks.slice(0, newPosition),
+            draggedStock,
+            ...targetCategoryStocks.slice(newPosition)
+          ];
+
+          // Update all positions in target category
+          const updates = updatedTargetStocks.map((stock, index) => ({
+            id: stock.id === draggedStockId ? draggedStockId : stock.id,
+            user_id: userId,
+            position: index,
+            name: stock.id === draggedStockId ? draggedStock.name : stock.name,
+            total_cost: stock.id === draggedStockId ? draggedStock.totalCost : stock.totalCost,
+            shares: stock.id === draggedStockId ? draggedStock.shares : stock.shares,
+            shares_sold: stock.id === draggedStockId ? draggedStock.sharesSold : stock.sharesSold,
+            total_cost_sold: stock.id === draggedStockId ? draggedStock.totalCostSold : stock.totalCostSold,
+            total_cost_basis_sold: stock.id === draggedStockId ? draggedStock.totalCostBasisSold : stock.totalCostBasisSold,
+            limit4h: stock.id === draggedStockId ? draggedStock.limit4h : stock.limit4h,
+            needed: stock.id === draggedStockId ? draggedStock.needed : stock.needed,
+            timer_end_time: stock.id === draggedStockId ? draggedStock.timerEndTime : stock.timerEndTime,
+            category: targetCategory
+          }));
+
+          await supabase
+            .from('stocks')
+            .upsert(updates, { onConflict: 'id' });
+
+          await refetch();
+          highlightRow(draggedStockId);
+        }
+      } else {
+        // Reorder within same category
+        await reorderStocks(draggedStockId, targetStockId, targetCategory);
+        await refetch();
+        highlightRow(draggedStockId);
+      }
+    } catch (error) {
+      console.error('Error handling stock drop:', error);
+      alert('Failed to move stock');
+    }
+  };
+
   const handleCalculateTime = async (stock) => {
     const stocksNeeded = stock.needed - stock.shares;
     if (stocksNeeded <= 0) {
@@ -477,49 +556,21 @@ await refetch();
     setShowTimeCalculatorModal(true);
   };
 
-  const handleStockDrop = async (e, targetStockId, targetCategory) => {
-  e.preventDefault();
-  const draggedStockId = parseInt(e.dataTransfer.getData('stockId'));
-  const sourceCategory = e.dataTransfer.getData('sourceCategory');
-
-  if (draggedStockId === targetStockId) return;
-
-  try {
-    if (sourceCategory !== targetCategory) {
-      // Move to different category
-      const draggedStock = stocks.find(s => s.id === draggedStockId);
-      if (draggedStock) {
-        await updateStock(draggedStockId, { category: targetCategory });
-        await refetch();
-        highlightRow(draggedStockId);
-      }
-    } else {
-      // Reorder within same category
-      await reorderStocks(draggedStockId, targetStockId, targetCategory);
-      await refetch();
-      highlightRow(draggedStockId);
-    }
-  } catch (error) {
-    console.error('Error handling stock drop:', error);
-    alert('Failed to move stock');
-  }
-};
-
   // Group stocks by category
-const groupedStocks = categories.reduce((acc, cat) => {
-  acc[cat] = stocks.filter(s => s.category === cat);
-  return acc;
-}, {});
+  const groupedStocks = categories.reduce((acc, cat) => {
+    acc[cat] = stocks.filter(s => s.category === cat);
+    return acc;
+  }, {});
 
-// If Uncategorized is not in categories list, add any orphaned stocks
-if (!categories.includes('Uncategorized')) {
-  const orphanedStocks = stocks.filter(s => 
-    s.category === 'Uncategorized' || !s.category || !categories.includes(s.category)
-  );
-  if (orphanedStocks.length > 0) {
-    groupedStocks['Uncategorized'] = orphanedStocks;
+  // If Uncategorized is not in categories list, add any orphaned stocks
+  if (!categories.includes('Uncategorized')) {
+    const orphanedStocks = stocks.filter(s =>
+      s.category === 'Uncategorized' || !s.category || !categories.includes(s.category)
+    );
+    if (orphanedStocks.length > 0) {
+      groupedStocks['Uncategorized'] = orphanedStocks;
+    }
   }
-}
 
   return (
     <div style={{
@@ -570,9 +621,13 @@ if (!categories.includes('Uncategorized')) {
         />
 
         <ChartButtons
-          onShowProfitChart={() => setShowProfitChartModal(true)}
-          onShowCategoryChart={() => setShowCategoryChartModal(true)}
-        />
+  onShowProfitChart={() => setShowProfitChartModal(true)}
+  onShowCategoryChart={() => setShowCategoryChartModal(true)}
+  altAccountTimer={altAccountTimer}
+  onSetAltTimer={() => setShowAltTimerModal(true)}
+  onResetAltTimer={handleResetAltTimer}
+  currentTime={currentTime}
+/>
 
         {Object.entries(groupedStocks).map(([category, categoryStocks]) => (
           <CategorySection
@@ -619,9 +674,9 @@ if (!categories.includes('Uncategorized')) {
               setShowNotesModal(true);
             }}
             onCalculate={handleCalculateTime}
-            onDragStart={handleCategoryDragStart}
-            onDragOver={handleCategoryDragOver}
-            onDrop={handleCategoryDrop}
+            onDragStart={handleStockDragStart}
+            onDragOver={handleStockDragOver}
+            onDrop={handleStockDrop}
             highlightedRows={highlightedRows}
             sortConfig={sortConfig}
             onSort={handleSort}
@@ -777,6 +832,13 @@ if (!categories.includes('Uncategorized')) {
           <TimeCalculatorModal
             stock={selectedStock}
             onClose={() => setShowTimeCalculatorModal(false)}
+          />
+        </ModalContainer>
+
+        <ModalContainer isOpen={showAltTimerModal}>
+          <AltTimerModal
+            onConfirm={handleSetAltTimer}
+            onCancel={() => setShowAltTimerModal(false)}
           />
         </ModalContainer>
       </div>
