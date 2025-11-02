@@ -398,27 +398,27 @@ export default function MainApp({ session }) {  // Add session prop
   };
 
   const handleCategoryDrop = async (e, targetCategory) => {
-    e.preventDefault();
-    const draggedCategory = e.dataTransfer.getData('categoryName');
-
-    if (!draggedCategory || draggedCategory === String(targetCategory)) return;
-
-    try {
-      // Get the target position
-      const targetIndex = categories.indexOf(targetCategory);
-
-      if (targetIndex === -1) {
-        console.error('Target category not found');
-        return;
-      }
-
-      await reorderCategories(draggedCategory, targetIndex);
-      await fetchCategories();
-    } catch (error) {
-      console.error('Error reordering categories:', error);
-      alert('Failed to reorder categories');
+  e.preventDefault();
+  const draggedCategory = e.dataTransfer.getData('categoryName');
+  
+  if (!draggedCategory || draggedCategory === targetCategory) return;
+  
+  try {
+    // Get the target position
+    const targetIndex = categories.indexOf(targetCategory);
+    
+    if (targetIndex === -1) {
+      console.error('Target category not found');
+      return;
     }
-  };
+    
+    await reorderCategories(draggedCategory, targetIndex);
+    await fetchCategories();
+  } catch (error) {
+    console.error('Error reordering categories:', error);
+    alert('Failed to reorder categories');
+  }
+};
 
   const handleStockAction = (stock, action) => {
     setSelectedStock(stock);
