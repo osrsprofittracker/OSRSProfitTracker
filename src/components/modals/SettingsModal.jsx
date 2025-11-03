@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
 export default function SettingsModal({
   theme,
@@ -9,7 +10,8 @@ export default function SettingsModal({
   onVisibleColumnsChange,
   visibleProfits,
   onVisibleProfitsChange,
-  onCancel
+  onCancel,
+  onChangePassword
 }) {
   const columns = [
     { key: 'status', label: 'Status' },
@@ -207,6 +209,37 @@ export default function SettingsModal({
           </div>
         </div>
       </div>
+
+      {/* Change Password Link */}
+<div style={{ 
+  marginTop: '1.5rem',
+  paddingTop: '1rem',
+  paddingBottom: '1rem',
+  borderTop: '1px solid rgb(71, 85, 105)',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center'
+}}>
+        <button
+          type="button"
+          onClick={onChangePassword}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgb(96, 165, 250)',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            textDecoration: 'underline',
+            padding: 0
+          }}
+          onMouseOver={(e) => e.target.style.color = 'rgb(147, 197, 253)'}
+          onMouseOut={(e) => e.target.style.color = 'rgb(96, 165, 250)'}
+        >
+          🔒 Change Password
+        </button>
+      </div>
+
+      {/* Buttons */}
 
       {/* Done Button */}
       <div

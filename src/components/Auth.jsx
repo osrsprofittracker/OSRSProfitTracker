@@ -4,16 +4,24 @@ import { supabase } from '../lib/supabase';
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('login'); // 'login', 'signup', or 'reset'
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
+    // Create a fake email from username
+    const email = `${username}@stock-tracker.local`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username: username
+        }
+      }
     });
 
     if (error) {
@@ -62,6 +70,9 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
+    // Convert username to email format
+    const email = `${username}@stock-tracker.local`;
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -76,6 +87,9 @@ export default function Auth() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    // Convert username to email format
+    const email = `${username}@stock-tracker.local`;
 
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin,
@@ -107,16 +121,16 @@ export default function Auth() {
         maxWidth: '24rem',
         border: '1px solid rgb(51, 65, 85)'
       }}>
-        <h1 style={{ 
-          color: 'white', 
-          marginBottom: '0.5rem', 
-          fontSize: '1.5rem', 
+        <h1 style={{
+          color: 'white',
+          marginBottom: '0.5rem',
+          fontSize: '1.5rem',
           fontWeight: 'bold',
           textAlign: 'center'
         }}>
           Stock Portfolio Tracker
         </h1>
-        
+
         <p style={{
           color: 'rgb(156, 163, 175)',
           fontSize: '0.875rem',
@@ -139,15 +153,15 @@ export default function Auth() {
                 fontWeight: '500',
                 marginBottom: '0.5rem'
               }}>
-                Email
+                Username
               </label>
               <input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="yourusername"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                autoComplete="email"
+                autoComplete="username"
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -238,13 +252,13 @@ export default function Auth() {
                 fontWeight: '500',
                 marginBottom: '0.5rem'
               }}>
-                Email
+                Username
               </label>
               <input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 autoComplete="email"
                 style={{
@@ -347,75 +361,78 @@ export default function Auth() {
 
         {/* Reset Password Form */}
         {mode === 'reset' && (
-          <form onSubmit={handleResetPassword}>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{
-                display: 'block',
+          <div>
+            <div style={{
+              padding: '1.5rem',
+              background: 'rgba(96, 165, 250, 0.1)',
+              borderRadius: '0.5rem',
+              marginBottom: '1.5rem',
+              border: '1px solid rgba(96, 165, 250, 0.3)'
+            }}>
+              <h3 style={{
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem',
+                color: 'rgb(147, 197, 253)'
+              }}>
+                📧 Password Reset Assistance
+              </h3>
+              <p style={{
                 color: 'rgb(209, 213, 219)',
                 fontSize: '0.875rem',
-                fontWeight: '500',
-                marginBottom: '0.5rem'
+                lineHeight: '1.5',
+                marginBottom: '1rem'
               }}>
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  background: 'rgb(51, 65, 85)',
-                  border: '2px solid transparent',
-                  borderRadius: '0.5rem',
-                  color: 'white',
-                  outline: 'none',
-                  fontSize: '0.875rem',
-                  transition: 'border-color 0.2s'
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
-                onBlur={(e) => e.target.style.borderColor = 'transparent'}
-              />
+                For password reset assistance, please contact me on Discord:
+              </p>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '1rem',
+                background: 'rgb(51, 65, 85)',
+                borderRadius: '0.5rem',
+                marginBottom: '1rem'
+              }}>
+                <span style={{
+                  fontSize: '1.5rem'
+                }}>
+                  💬
+                </span>
+                <div>
+                  <div style={{
+                    fontSize: '0.875rem',
+                    color: 'rgb(156, 163, 175)',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Discord Username:
+                  </div>
+                  <div style={{
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
+                    color: 'rgb(96, 165, 250)',
+                    fontFamily: 'monospace'
+                  }}>
+                    eldiab
+                  </div>
+                </div>
+              </div>
               <p style={{
-                fontSize: '0.75rem',
                 color: 'rgb(156, 163, 175)',
-                marginTop: '0.5rem'
+                fontSize: '0.75rem',
+                lineHeight: '1.5'
               }}>
-                We'll send you a link to reset your password
+                Please include your username in the message so I can help you reset your password.
               </p>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                background: 'rgb(126, 34, 206)',
-                border: 'none',
-                borderRadius: '0.5rem',
-                color: 'white',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontWeight: '600',
-                opacity: loading ? 0.5 : 1,
-                fontSize: '0.875rem',
-                transition: 'opacity 0.2s',
-                marginBottom: '0.75rem'
-              }}
-            >
-              {loading ? 'Sending...' : 'Send Reset Link'}
-            </button>
 
             <button
               type="button"
               onClick={() => {
                 setMode('login');
+                setUsername('');
                 setPassword('');
               }}
-              disabled={loading}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -423,22 +440,23 @@ export default function Auth() {
                 border: 'none',
                 borderRadius: '0.5rem',
                 color: 'white',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 fontWeight: '600',
-                opacity: loading ? 0.5 : 1,
                 fontSize: '0.875rem',
-                transition: 'opacity 0.2s'
+                transition: 'background 0.2s'
               }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
             >
               Back to Login
             </button>
-          </form>
+          </div>
         )}
 
         {/* Toggle between Login/Signup */}
         {mode !== 'reset' && (
-          <div style={{ 
-            marginTop: '1.5rem', 
+          <div style={{
+            marginTop: '1.5rem',
             textAlign: 'center',
             paddingTop: '1.5rem',
             borderTop: '1px solid rgb(51, 65, 85)'
@@ -461,8 +479,8 @@ export default function Auth() {
               onMouseOver={(e) => !loading && (e.target.style.color = 'rgb(147, 197, 253)')}
               onMouseOut={(e) => e.target.style.color = 'rgb(96, 165, 250)'}
             >
-              {mode === 'login' 
-                ? "Don't have an account? Sign up" 
+              {mode === 'login'
+                ? "Don't have an account? Sign up"
                 : 'Already have an account? Log in'}
             </button>
           </div>

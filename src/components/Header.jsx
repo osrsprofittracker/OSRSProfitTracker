@@ -22,6 +22,27 @@ export default function Header({
                     Stock Portfolio Tracker
                 </h1>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
+    <a
+        href="https://buymeacoffee.com/osrsprofittracker"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+            padding: '0.5rem 1rem',
+            background: 'rgb(255, 221, 87)',
+            borderRadius: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            fontSize: '0.875rem',
+            border: 'none',
+            color: 'rgb(0, 0, 0)',
+            cursor: 'pointer',
+            textDecoration: 'none',
+            fontWeight: '500'
+        }}
+    >
+        ☕ Support
+    </a>
                     {onLogout && (
                         <button
                             onClick={onLogout}

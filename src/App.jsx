@@ -18,18 +18,20 @@ export default function App() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth event:', event);
-      
-      if (event === 'PASSWORD_RECOVERY') {
-        // User clicked the password reset link
-        setIsPasswordRecovery(true);
-      } else if (event === 'SIGNED_IN') {
-        setSession(session);
-        setIsPasswordRecovery(false);
-      } else {
-        setSession(session);
-      }
-    });
+  console.log('Auth event:', event);
+  
+  if (event === 'PASSWORD_RECOVERY') {
+    setIsPasswordRecovery(true);
+  } else if (event === 'SIGNED_IN') {
+    setSession(session);
+    setIsPasswordRecovery(false);
+  } else if (event === 'SIGNED_OUT') {
+    setSession(null);
+    setIsPasswordRecovery(false);
+  } else {
+    setSession(session);
+  }
+});
 
     return () => subscription.unsubscribe();
   }, []);

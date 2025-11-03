@@ -13,6 +13,7 @@ import Header from './components/Header';
 import PortfolioSummary from './components/PortfolioSummary';
 import ChartButtons from './components/ChartButtons';
 import CategorySection from './components/CategorySection';
+import ChangePasswordModal from './components/modals/ChangePasswordModal';
 import ModalContainer from './components/modals/ModalContainer';
 import BuyModal from './components/modals/BuyModal';
 import SellModal from './components/modals/SellModal';
@@ -38,7 +39,7 @@ import {
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
 
-export default function MainApp({ session }) { 
+export default function MainApp({ session }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
   // Custom hooks for Supabase
@@ -70,6 +71,7 @@ export default function MainApp({ session }) {
   const [showNewStockModal, setShowNewStockModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showAltTimerModal, setShowAltTimerModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
   const [showDumpProfitModal, setShowDumpProfitModal] = useState(false);
   const [showReferralProfitModal, setShowReferralProfitModal] = useState(false);
@@ -464,7 +466,31 @@ export default function MainApp({ session }) {
     const draggedStockId = parseInt(e.dataTransfer.getData('stockId'));
     const sourceCategory = e.dataTransfer.getData('sourceCategory');
 
-    if (draggedStockId === targetStockId) return;
+    // If targetStockId is null/undefined, we're dropping on category header
+    if (!targetStockId || draggedStockId === targetStockId) {
+      // Dropping on category header - move to end of category
+      if (!targetStockId && sourceCategory !== targetCategory) {
+        try {
+          const draggedStock = stocks.find(s => s.id === draggedStockId);
+          if (draggedStock) {
+            const targetCategoryStocks = stocks.filter(s => s.category === targetCategory);
+            const newPosition = targetCategoryStocks.length;
+
+            await updateStock(draggedStockId, {
+              category: targetCategory,
+              position: newPosition
+            });
+
+            await refetch();
+            highlightRow(draggedStockId);
+          }
+        } catch (error) {
+          console.error('Error moving stock to category:', error);
+          alert('Failed to move stock');
+        }
+      }
+      return;
+    }
 
     try {
       if (sourceCategory !== targetCategory) {
@@ -598,7 +624,7 @@ export default function MainApp({ session }) {
             Logged in as <span style={{
               color: 'rgb(96, 165, 250)',
               fontWeight: '600'
-            }}>{userEmail}</span>
+            }}>{session?.user?.user_metadata?.username || userEmail}</span>
           </span>
         </div>
         <Header
@@ -624,13 +650,13 @@ export default function MainApp({ session }) {
         />
 
         <ChartButtons
-  onShowProfitChart={() => setShowProfitChartModal(true)}
-  onShowCategoryChart={() => setShowCategoryChartModal(true)}
-  altAccountTimer={altAccountTimer}
-  onSetAltTimer={() => setShowAltTimerModal(true)}
-  onResetAltTimer={handleResetAltTimer}
-  currentTime={currentTime}
-/>
+          onShowProfitChart={() => setShowProfitChartModal(true)}
+          onShowCategoryChart={() => setShowCategoryChartModal(true)}
+          altAccountTimer={altAccountTimer}
+          onSetAltTimer={() => setShowAltTimerModal(true)}
+          onResetAltTimer={handleResetAltTimer}
+          currentTime={currentTime}
+        />
 
         {Object.entries(groupedStocks).map(([category, categoryStocks]) => (
           <CategorySection
@@ -817,8 +843,12 @@ export default function MainApp({ session }) {
             visibleColumns={visibleColumns}
             onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
             visibleProfits={visibleProfits}
-            onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}  
+            onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
             onCancel={() => setShowSettingsModal(false)}
+            onChangePassword={() => {
+              setShowSettingsModal(false);
+              setShowChangePasswordModal(true);
+            }}
           />
         </ModalContainer>
 
@@ -842,6 +872,12 @@ export default function MainApp({ session }) {
           <AltTimerModal
             onConfirm={handleSetAltTimer}
             onCancel={() => setShowAltTimerModal(false)}
+          />
+        </ModalContainer>
+
+        <ModalContainer isOpen={showChangePasswordModal}>
+          <ChangePasswordModal
+            onCancel={() => setShowChangePasswordModal(false)}
           />
         </ModalContainer>
       </div>
