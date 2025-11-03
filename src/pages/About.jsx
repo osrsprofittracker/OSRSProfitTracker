@@ -9,6 +9,24 @@ export default function About() {
       padding: '2rem'
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        {/* Back Button */}
+  <a 
+    href="/"
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      color: 'rgb(96, 165, 250)',
+      textDecoration: 'none',
+      marginBottom: '2rem',
+      fontSize: '0.875rem',
+      transition: 'color 0.2s'
+    }}
+    onMouseOver={(e) => e.target.style.color = 'rgb(147, 197, 253)'}
+    onMouseOut={(e) => e.target.style.color = 'rgb(96, 165, 250)'}
+  >
+    ← Back to App
+  </a>
         <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>About OSRS Profit Tracker</h1>
 
         <section style={{ marginBottom: '2rem' }}>

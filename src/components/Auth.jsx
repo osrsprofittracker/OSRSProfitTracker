@@ -359,6 +359,27 @@ export default function Auth() {
           </form>
         )}
 
+        {/* Legal Links */}
+        <div style={{
+          marginTop: '1.5rem',
+          paddingTop: '1.5rem',
+          borderTop: '1px solid rgb(51, 65, 85)',
+          fontSize: '0.75rem',
+          color: 'rgb(156, 163, 175)',
+          textAlign: 'center'
+        }}>
+          <p style={{ marginBottom: '0.5rem' }}>
+            By signing up, you agree to our{' '}
+            <a href="/terms" style={{ color: 'rgb(96, 165, 250)', textDecoration: 'underline' }}>
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a href="/privacy" style={{ color: 'rgb(96, 165, 250)', textDecoration: 'underline' }}>
+              Privacy Policy
+            </a>
+          </p>
+        </div>
+
         {/* Reset Password Form */}
         {mode === 'reset' && (
           <div>
