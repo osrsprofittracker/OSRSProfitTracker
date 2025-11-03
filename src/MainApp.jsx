@@ -40,7 +40,7 @@ import {
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
 
-export default function MainApp({ session }) {
+export default function MainApp({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
   // Custom hooks for Supabase
@@ -171,6 +171,9 @@ export default function MainApp({ session }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    if (onLogout) {
+      onLogout();
+    }
   };
 
   const handleEditCategory = async (oldCategory, newCategory) => {
