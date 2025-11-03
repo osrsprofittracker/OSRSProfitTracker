@@ -2,15 +2,38 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import * as Sentry from "@sentry/react";
 import App from './App.jsx'
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
+import CookiePolicy from './pages/CookiePolicy';
+import About from './pages/About';
+import Contact from './pages/Contact';
 import './index.css'
 import { initSentry } from './lib/sentry'
-
 
 // Initialize Sentry
 initSentry();
 
-// Wrap App with Sentry ErrorBoundary
-const AppWithSentry = Sentry.withErrorBoundary(App, {
+function Router() {
+  const path = window.location.pathname;
+
+  switch (path) {
+    case '/privacy':
+      return <PrivacyPolicy />;
+    case '/terms':
+      return <Terms />;
+    case '/cookies':
+      return <CookiePolicy />;
+    case '/about':
+      return <About />;
+    case '/contact':
+      return <Contact />;
+    default:
+      return <App />;
+  }
+}
+
+// Wrap Router with Sentry ErrorBoundary
+const RouterWithSentry = Sentry.withErrorBoundary(Router, {
   fallback: ({ error, resetError }) => (
     <div style={{
       minHeight: '100vh',
@@ -45,6 +68,6 @@ const AppWithSentry = Sentry.withErrorBoundary(App, {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AppWithSentry />
+    <RouterWithSentry />
   </React.StrictMode>,
 )

@@ -7,6 +7,7 @@ import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
 import { useProfits } from './hooks/useProfits';
 import AltTimerModal from './components/modals/AltTimerModal';
+import Footer from './components/Footer';
 import EditCategoryModal from './components/modals/EditCategoryModal';
 import TimeCalculatorModal from './components/modals/TimeCalculatorModal';
 import Header from './components/Header';
@@ -881,6 +882,7 @@ export default function MainApp({ session }) {
           />
         </ModalContainer>
       </div>
+      <Footer />
     </div>
   );
 }
