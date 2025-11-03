@@ -709,6 +709,9 @@ export default function MainApp({ session, onLogout }) {
             onCalculate={handleCalculateTime}
             onDragStart={handleStockDragStart}
             onDragOver={handleStockDragOver}
+            onCategoryDragStart={handleCategoryDragStart}
+            onCategoryDragOver={handleCategoryDragOver}
+            onCategoryDrop={handleCategoryDrop}
             onDrop={handleStockDrop}
             highlightedRows={highlightedRows}
             sortConfig={sortConfig}

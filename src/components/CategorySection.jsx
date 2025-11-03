@@ -22,6 +22,9 @@ export default function CategorySection({
   onDragStart,
   onDragOver,
   onDrop,
+  onCategoryDragStart,
+  onCategoryDragOver,
+  onCategoryDrop,
   highlightedRows,
   sortConfig,
   onSort,
@@ -44,9 +47,9 @@ export default function CategorySection({
       }}>
         <div
           draggable
-          onDragStart={(e) => onDragStart(e, category)}
-          onDragOver={onDragOver}
-          onDrop={(e) => onDrop(e, null, category)}
+          onDragStart={(e) => onCategoryDragStart(e, category)}
+          onDragOver={onCategoryDragOver}
+          onDrop={(e) => onCategoryDrop(e, category)}
           onClick={() => onToggleCollapse(category)}
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'move', flex: 1 }}
         >

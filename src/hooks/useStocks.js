@@ -41,50 +41,50 @@ export function useStocks(userId) {
   };
 
   const reorderStocks = async (stockId, targetStockId, category) => {
-  try {
-    // Optimistically update UI first
-    const categoryStocks = stocks.filter(s => s.category === category);
-    const movingStockIndex = categoryStocks.findIndex(s => s.id === stockId);
-    const targetStockIndex = categoryStocks.findIndex(s => s.id === targetStockId);
+    try {
+      // Optimistically update UI first
+      const categoryStocks = stocks.filter(s => s.category === category);
+      const movingStockIndex = categoryStocks.findIndex(s => s.id === stockId);
+      const targetStockIndex = categoryStocks.findIndex(s => s.id === targetStockId);
 
-    if (movingStockIndex === -1 || targetStockIndex === -1) return { success: false };
+      if (movingStockIndex === -1 || targetStockIndex === -1) return { success: false };
 
-    // Reorder the array
-    const reordered = [...categoryStocks];
-    const [movingStock] = reordered.splice(movingStockIndex, 1);
-    reordered.splice(targetStockIndex, 0, movingStock);
+      // Reorder the array
+      const reordered = [...categoryStocks];
+      const [movingStock] = reordered.splice(movingStockIndex, 1);
+      reordered.splice(targetStockIndex, 0, movingStock);
 
-    // Update positions in a single RPC call or use upsert
-    const updates = reordered.map((stock, index) => ({
-      id: stock.id,
-      user_id: userId,
-      position: index,
-      // Include other required fields to avoid null errors
-      name: stock.name,
-      total_cost: stock.totalCost,
-      shares: stock.shares,
-      shares_sold: stock.sharesSold,
-      total_cost_sold: stock.totalCostSold,
-      total_cost_basis_sold: stock.totalCostBasisSold,
-      limit4h: stock.limit4h,
-      needed: stock.needed,
-      timer_end_time: stock.timerEndTime,
-      category: stock.category
-    }));
+      // Update positions in a single RPC call or use upsert
+      const updates = reordered.map((stock, index) => ({
+        id: stock.id,
+        user_id: userId,
+        position: index,
+        // Include other required fields to avoid null errors
+        name: stock.name,
+        total_cost: stock.totalCost,
+        shares: stock.shares,
+        shares_sold: stock.sharesSold,
+        total_cost_sold: stock.totalCostSold,
+        total_cost_basis_sold: stock.totalCostBasisSold,
+        limit4h: stock.limit4h,
+        needed: stock.needed,
+        timer_end_time: stock.timerEndTime,
+        category: stock.category
+      }));
 
-    // Use upsert for batch update (faster than individual updates)
-    const { error } = await supabase
-      .from('stocks')
-      .upsert(updates, { onConflict: 'id' });
+      // Use upsert for batch update (faster than individual updates)
+      const { error } = await supabase
+        .from('stocks')
+        .upsert(updates, { onConflict: 'id' });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    return { success: true };
-  } catch (error) {
-    console.error('Error reordering stocks:', error);
-    throw error;
-  }
-};
+      return { success: true };
+    } catch (error) {
+      console.error('Error reordering stocks:', error);
+      throw error;
+    }
+  };
 
   const addStock = async (stock) => {
     // Convert camelCase to snake_case for database
@@ -146,18 +146,45 @@ export function useStocks(userId) {
   };
 
   const deleteStock = async (id) => {
-    const { error } = await supabase
-      .from('stocks')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
+    try {
+      // First, delete all related transactions
+      const { error: transError } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('stock_id', id)
+        .eq('user_id', userId);
 
-    if (error) {
-      console.error('Error deleting stock:', error);
+      if (transError) {
+        console.error('Error deleting transactions:', transError);
+      }
+
+      // Then delete the stock note
+      const { error: noteError } = await supabase
+        .from('stock_notes')
+        .delete()
+        .eq('stock_id', id)
+        .eq('user_id', userId);
+
+      if (noteError) {
+        console.error('Error deleting note:', noteError);
+      }
+
+      // Finally delete the stock itself
+      const { error } = await supabase
+        .from('stocks')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error deleting stock:', error);
+        return false;
+      } else {
+        return true;
+      }
+    } catch (error) {
+      console.error('Error in deleteStock:', error);
       return false;
-    } else {
-      // Don't update local state - let caller refetch
-      return true;
     }
   };
 
