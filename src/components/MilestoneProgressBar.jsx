@@ -33,7 +33,7 @@ export default function MilestoneProgressBar({
       border: '1px solid rgb(51, 65, 85)',
       overflow: 'hidden',
       boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-      height: '80px' // Taller to accommodate vertical layout
+      minHeight: '80px'
     }}>
       {/* Left side - Goals button and dropdown stacked */}
       <div style={{
@@ -101,7 +101,8 @@ export default function MilestoneProgressBar({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        gap: '0.375rem'
+        gap: '0.375rem',
+        minWidth: '0'
       }}>
         {/* Title */}
         <div style={{
@@ -154,12 +155,13 @@ export default function MilestoneProgressBar({
         {/* Progress Ba */}
         <div style={{
           width: '100%',
-          height: '8px', 
+          height: '12px',
           backgroundColor: 'rgb(51, 65, 85)',
           borderRadius: '4px',
           border: '1px solid rgb(71, 85, 105)',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          minWidth: '0'
         }}>
           {/* Actual progress bar */}
           <div style={{
@@ -168,11 +170,11 @@ export default function MilestoneProgressBar({
             left: 0,
             width: `${Math.min(percentage, 100)}%`,
             height: '100%',
-            backgroundColor: percentage >= 100
-              ? '#22c55e'  
-              : percentage > 75
-                ? '#eab308'  
-                : '#3b82f6', 
+            background: percentage < 10
+              ? 'rgb(59, 130, 246)'  // Solid blue for very low percentages
+              : `linear-gradient(90deg, 
+        rgb(59, 130, 246) 0%, 
+        rgb(34, 197, 94) 100%)`,
             transition: 'width 0.5s ease',
             borderRadius: '3px'
           }}></div>
