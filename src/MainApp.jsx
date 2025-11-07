@@ -210,53 +210,53 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const calculateMilestoneProgress = () => {
-  const getStartOfPeriod = (period) => {
-    const date = new Date();
-    switch (period) {
-      case 'day':
-        date.setHours(0, 0, 0, 0);
-        return date;
-      case 'week':
-        const day = date.getDay();
-        const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-        date.setDate(diff);
-        date.setHours(0, 0, 0, 0);
-        return date;
-      case 'month':
-        date.setDate(1);
-        date.setHours(0, 0, 0, 0);
-        return date;
-      case 'year':
-        date.setMonth(0, 1);
-        date.setHours(0, 0, 0, 0);
-        return date;
-      default:
-        return date;
-    }
-  };
+    const getStartOfPeriod = (period) => {
+      const date = new Date();
+      switch (period) {
+        case 'day':
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'week':
+          const day = date.getDay();
+          const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+          date.setDate(diff);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'month':
+          date.setDate(1);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'year':
+          date.setMonth(0, 1);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        default:
+          return date;
+      }
+    };
 
-  const calculatePeriodProfit = (period) => {
-    const startDate = getStartOfPeriod(period);
-    
-    // Filter profit history for this period
-    const periodProfits = profitHistory.filter(entry => {
-      const entryDate = new Date(entry.created_at);
-      return entryDate >= startDate;
-    });
+    const calculatePeriodProfit = (period) => {
+      const startDate = getStartOfPeriod(period);
 
-    // Sum all profits for this period
-    const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
-    
-    return Math.max(0, totalProfit);
-  };
+      // Filter profit history for this period
+      const periodProfits = profitHistory.filter(entry => {
+        const entryDate = new Date(entry.created_at);
+        return entryDate >= startDate;
+      });
 
-  return {
-    day: calculatePeriodProfit('day'),
-    week: calculatePeriodProfit('week'),
-    month: calculatePeriodProfit('month'),
-    year: calculatePeriodProfit('year')
+      // Sum all profits for this period
+      const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
+
+      return Math.max(0, totalProfit);
+    };
+
+    return {
+      day: calculatePeriodProfit('day'),
+      week: calculatePeriodProfit('week'),
+      month: calculatePeriodProfit('month'),
+      year: calculatePeriodProfit('year')
+    };
   };
-};
 
   const checkMilestoneAchievements = () => {
     const progress = calculateMilestoneProgress();
@@ -283,10 +283,10 @@ export default function MainApp({ session, onLogout }) {
   };
 
   useEffect(() => {
-  if (dataLoaded && milestones && profitHistory.length >= 0) {
-    checkMilestoneAchievements();
-  }
-}, [profitHistory, dataLoaded]);
+    if (dataLoaded && milestones && profitHistory.length >= 0) {
+      checkMilestoneAchievements();
+    }
+  }, [profitHistory, dataLoaded]);
 
   const handleUpdateMilestone = async (period, goal, enabled) => {
     await updateMilestone(period, goal, enabled);
@@ -329,7 +329,13 @@ export default function MainApp({ session, onLogout }) {
     setShowBuyModal(false);
   };
 
-  const milestoneProgress = dataLoaded ? calculateMilestoneProgress() : { day: 0, week: 0, month: 0, year: 0 };
+  const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
+
+  useEffect(() => {
+    if (dataLoaded) {
+      setMilestoneProgress(calculateMilestoneProgress());
+    }
+  }, [dataLoaded, profitHistory]);
 
   const handleSell = async (data) => {
     const { shares, price } = data;
@@ -337,6 +343,7 @@ export default function MainApp({ session, onLogout }) {
 
     const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
     const costBasisOfSharesSold = avgBuy * shares;
+    const profit = total - costBasisOfSharesSold;
 
     await updateStock(selectedStock.id, {
       shares: selectedStock.shares - shares,
@@ -355,6 +362,7 @@ export default function MainApp({ session, onLogout }) {
       total,
       date: new Date().toISOString()
     });
+    await addProfitEntry('stock', profit, selectedStock.id);
     await refetch();
     highlightRow(selectedStock.id);
     setShowSellModal(false);
@@ -443,28 +451,28 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleAddDumpProfit = async (amount) => {
-  const success = await updateProfit('dumpProfit', amount);
-  if (success) {
-    await addProfitEntry('dump', amount);
-  }
-  setShowDumpProfitModal(false);
-};
+    const success = await updateProfit('dumpProfit', amount);
+    if (success) {
+      await addProfitEntry('dump', amount);
+    }
+    setShowDumpProfitModal(false);
+  };
 
-const handleAddReferralProfit = async (amount) => {
-  const success = await updateProfit('referralProfit', amount);
-  if (success) {
-    await addProfitEntry('referral', amount);
-  }
-  setShowReferralProfitModal(false);
-};
+  const handleAddReferralProfit = async (amount) => {
+    const success = await updateProfit('referralProfit', amount);
+    if (success) {
+      await addProfitEntry('referral', amount);
+    }
+    setShowReferralProfitModal(false);
+  };
 
-const handleAddBondsProfit = async (amount) => {
-  const success = await updateProfit('bondsProfit', amount);
-  if (success) {
-    await addProfitEntry('bonds', amount);
-  }
-  setShowBondsProfitModal(false);
-};
+  const handleAddBondsProfit = async (amount) => {
+    const success = await updateProfit('bondsProfit', amount);
+    if (success) {
+      await addProfitEntry('bonds', amount);
+    }
+    setShowBondsProfitModal(false);
+  };
 
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
