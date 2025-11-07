@@ -6,6 +6,11 @@ import { useTransactions } from './hooks/useTransactions';
 import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
 import { useProfits } from './hooks/useProfits';
+import { useMilestones } from './hooks/useMilestones';
+import { useProfitHistory } from './hooks/useProfitHistory';
+import MilestoneProgressBar from './components/MilestoneProgressBar';
+import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
+import MilestoneCelebrationModal from './components/modals/MilestoneCelebrationModal';
 import AltTimerModal from './components/modals/AltTimerModal';
 import Footer from './components/Footer';
 import EditCategoryModal from './components/modals/EditCategoryModal';
@@ -50,6 +55,8 @@ export default function MainApp({ session, onLogout }) {
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
+  const { profitHistory, loading: profitHistoryLoading, addProfitEntry } = useProfitHistory(userId);
+  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, PRESET_GOALS } = useMilestones(userId);
 
   // Destructure profits
   const { dumpProfit, referralProfit, bondsProfit } = profits;
@@ -62,13 +69,16 @@ export default function MainApp({ session, onLogout }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading;
+  const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading && !milestonesLoading && !profitHistoryLoading;
 
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
+  const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [celebrationMilestone, setCelebrationMilestone] = useState(null);
   const [showNewStockModal, setShowNewStockModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showAltTimerModal, setShowAltTimerModal] = useState(false);
@@ -199,6 +209,89 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
+  const calculateMilestoneProgress = () => {
+  const getStartOfPeriod = (period) => {
+    const date = new Date();
+    switch (period) {
+      case 'day':
+        date.setHours(0, 0, 0, 0);
+        return date;
+      case 'week':
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+        date.setDate(diff);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      case 'month':
+        date.setDate(1);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      case 'year':
+        date.setMonth(0, 1);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      default:
+        return date;
+    }
+  };
+
+  const calculatePeriodProfit = (period) => {
+    const startDate = getStartOfPeriod(period);
+    
+    // Filter profit history for this period
+    const periodProfits = profitHistory.filter(entry => {
+      const entryDate = new Date(entry.created_at);
+      return entryDate >= startDate;
+    });
+
+    // Sum all profits for this period
+    const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
+    
+    return Math.max(0, totalProfit);
+  };
+
+  return {
+    day: calculatePeriodProfit('day'),
+    week: calculatePeriodProfit('week'),
+    month: calculatePeriodProfit('month'),
+    year: calculatePeriodProfit('year')
+  };
+};
+
+  const checkMilestoneAchievements = () => {
+    const progress = calculateMilestoneProgress();
+
+    Object.keys(milestones).forEach(period => {
+      const milestone = milestones[period];
+      if (milestone.enabled && progress[period] >= milestone.goal) {
+        // Check if we've already celebrated this milestone today
+        const today = new Date().toDateString();
+        const lastCelebration = milestoneHistory.find(
+          h => h.period === period && new Date(h.achieved_at).toDateString() === today
+        );
+
+        if (!lastCelebration) {
+          setCelebrationMilestone({
+            period,
+            goalAmount: milestone.goal,
+            actualAmount: progress[period]
+          });
+          recordMilestoneAchievement(period, milestone.goal, progress[period]);
+        }
+      }
+    });
+  };
+
+  useEffect(() => {
+  if (dataLoaded && milestones && profitHistory.length >= 0) {
+    checkMilestoneAchievements();
+  }
+}, [profitHistory, dataLoaded]);
+
+  const handleUpdateMilestone = async (period, goal, enabled) => {
+    await updateMilestone(period, goal, enabled);
+  };
+
   const toggleCategory = (category) => {
     setCollapsedCategories({
       ...collapsedCategories,
@@ -235,6 +328,8 @@ export default function MainApp({ session, onLogout }) {
     highlightRow(selectedStock.id);
     setShowBuyModal(false);
   };
+
+  const milestoneProgress = dataLoaded ? calculateMilestoneProgress() : { day: 0, week: 0, month: 0, year: 0 };
 
   const handleSell = async (data) => {
     const { shares, price } = data;
@@ -348,19 +443,28 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleAddDumpProfit = async (amount) => {
-    await updateProfit('dumpProfit', amount);
-    setShowDumpProfitModal(false);
-  };
+  const success = await updateProfit('dumpProfit', amount);
+  if (success) {
+    await addProfitEntry('dump', amount);
+  }
+  setShowDumpProfitModal(false);
+};
 
-  const handleAddReferralProfit = async (amount) => {
-    await updateProfit('referralProfit', amount);
-    setShowReferralProfitModal(false);
-  };
+const handleAddReferralProfit = async (amount) => {
+  const success = await updateProfit('referralProfit', amount);
+  if (success) {
+    await addProfitEntry('referral', amount);
+  }
+  setShowReferralProfitModal(false);
+};
 
-  const handleAddBondsProfit = async (amount) => {
-    await updateProfit('bondsProfit', amount);
-    setShowBondsProfitModal(false);
-  };
+const handleAddBondsProfit = async (amount) => {
+  const success = await updateProfit('bondsProfit', amount);
+  if (success) {
+    await addProfitEntry('bonds', amount);
+  }
+  setShowBondsProfitModal(false);
+};
 
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
@@ -653,9 +757,19 @@ export default function MainApp({ session, onLogout }) {
           numberFormat={numberFormat}
         />
 
+        <MilestoneProgressBar
+          milestones={milestones}
+          currentProgress={milestoneProgress}
+          selectedPeriod={selectedMilestonePeriod}
+          onPeriodChange={setSelectedMilestonePeriod}
+          onOpenModal={() => setShowMilestoneModal(true)}
+          numberFormat={numberFormat}
+        />
+
         <ChartButtons
           onShowProfitChart={() => setShowProfitChartModal(true)}
           onShowCategoryChart={() => setShowCategoryChartModal(true)}
+          onShowMilestones={() => setShowMilestoneModal(true)}
           altAccountTimer={altAccountTimer}
           onSetAltTimer={() => setShowAltTimerModal(true)}
           onResetAltTimer={handleResetAltTimer}
@@ -887,6 +1001,27 @@ export default function MainApp({ session, onLogout }) {
             onCancel={() => setShowChangePasswordModal(false)}
           />
         </ModalContainer>
+
+        <ModalContainer isOpen={showMilestoneModal}>
+          <MilestoneTrackerModal
+            milestones={milestones}
+            currentProgress={milestoneProgress}
+            onUpdateMilestone={handleUpdateMilestone}
+            onCancel={() => setShowMilestoneModal(false)}
+            numberFormat={numberFormat}
+            PRESET_GOALS={PRESET_GOALS}
+          />
+        </ModalContainer>
+
+        {celebrationMilestone && (
+          <MilestoneCelebrationModal
+            period={celebrationMilestone.period}
+            goalAmount={celebrationMilestone.goalAmount}
+            actualAmount={celebrationMilestone.actualAmount}
+            onClose={() => setCelebrationMilestone(null)}
+            numberFormat={numberFormat}
+          />
+        )}
       </div>
       <Footer />
     </div>

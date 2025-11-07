@@ -1,6 +1,77 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
+function ProfitCheckbox({ profit, checked, onChange }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  
+  return (
+    <label
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        padding: '0.5rem',
+        background: 'rgb(51, 65, 85)',
+        borderRadius: '0.5rem',
+        cursor: 'pointer',
+        position: 'relative'
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+      />
+      <span style={{ fontSize: '0.875rem', flex: 1 }}>{profit.label}</span>
+      <div
+        style={{ position: 'relative', display: 'inline-block' }}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '16px',
+            height: '16px',
+            borderRadius: '50%',
+            background: 'rgb(71, 85, 105)',
+            color: 'rgb(156, 163, 175)',
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+            cursor: 'help'
+          }}
+        >
+          i
+        </span>
+        {showTooltip && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '100%',
+              right: '0',
+              marginBottom: '0.5rem',
+              padding: '0.5rem 0.75rem',
+              background: 'rgb(15, 23, 42)',
+              border: '1px solid rgb(71, 85, 105)',
+              borderRadius: '0.5rem',
+              fontSize: '0.75rem',
+              color: 'rgb(209, 213, 219)',
+              whiteSpace: 'nowrap',
+              zIndex: 1000,
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            {profit.info}
+          </div>
+        )}
+      </div>
+    </label>
+  );
+}
+
 export default function SettingsModal({
   theme,
   onThemeChange,
