@@ -1,13 +1,13 @@
 import React from 'react';
 import { formatNumber } from '../utils/formatters';
 
-export default function MilestoneProgressBar({ 
-  milestones, 
-  currentProgress, 
-  selectedPeriod, 
+export default function MilestoneProgressBar({
+  milestones,
+  currentProgress,
+  selectedPeriod,
   onPeriodChange,
   onOpenModal,
-  numberFormat 
+  numberFormat
 }) {
   const periods = [
     { key: 'day', label: 'Day', emoji: '☀️' },
@@ -19,74 +19,107 @@ export default function MilestoneProgressBar({
   const currentMilestone = milestones[selectedPeriod];
   const progress = currentProgress[selectedPeriod] || 0;
   const percentage = currentMilestone?.goal > 0 ? Math.min((progress / currentMilestone.goal) * 100, 100) : 0;
-  const isComplete = progress >= currentMilestone?.goal;
+  const isComplete = currentMilestone && progress >= currentMilestone.goal;
 
   return (
     <div style={{
       display: 'flex',
       alignItems: 'stretch',
-      width: '100%',
-      maxWidth: '1400px',
-      margin: '1rem auto',
+      width: 'auto',
+      minWidth: '400px',
+      maxWidth: '450px',
       background: 'rgb(30, 41, 59)',
       borderRadius: '0.75rem',
       border: '1px solid rgb(51, 65, 85)',
       overflow: 'hidden',
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      height: '80px' // Taller to accommodate vertical layout
     }}>
-      {/* Period Selector Tabs */}
+      {/* Left side - Goals button and dropdown stacked */}
       <div style={{
+        background: 'rgb(15, 23, 42)',
+        borderRight: '1px solid rgb(51, 65, 85)',
+        padding: '0.5rem',
         display: 'flex',
         flexDirection: 'column',
-        background: 'rgb(15, 23, 42)',
-        borderRight: '1px solid rgb(51, 65, 85)'
+        gap: '0.25rem',
+        minWidth: '120px'
       }}>
-        {periods.map(period => (
-          <button
-            key={period.key}
-            onClick={() => onPeriodChange(period.key)}
-            style={{
-              flex: 1,
-              padding: '0.75rem 1.25rem',
-              background: selectedPeriod === period.key ? 'rgb(37, 99, 235)' : 'transparent',
-              border: 'none',
-              borderBottom: '1px solid rgb(51, 65, 85)',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: selectedPeriod === period.key ? '600' : '500',
-              textAlign: 'left',
-              transition: 'all 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseOver={(e) => {
-              if (selectedPeriod !== period.key) {
-                e.currentTarget.style.background = 'rgba(37, 99, 235, 0.2)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (selectedPeriod !== period.key) {
-                e.currentTarget.style.background = 'transparent';
-              }
-            }}
-          >
-            <span>{period.emoji}</span>
-            <span>{period.label}</span>
-          </button>
-        ))}
+        {/* Set Goals Button */}
+        <button
+          onClick={onOpenModal}
+          style={{
+            padding: '0.375rem 0.5rem',
+            background: 'linear-gradient(135deg, rgb(139, 92, 246), rgb(109, 40, 217))',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            borderRadius: '0.375rem',
+            transition: 'all 0.2s',
+            whiteSpace: 'nowrap'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgb(124, 58, 237), rgb(91, 33, 182))';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgb(139, 92, 246), rgb(109, 40, 217))';
+          }}
+        >
+          🎯 Set Goals
+        </button>
+
+        {/* Period Dropdown */}
+        <select
+          value={selectedPeriod}
+          onChange={(e) => onPeriodChange(e.target.value)}
+          style={{
+            background: 'rgb(51, 65, 85)',
+            color: 'white',
+            border: '1px solid rgb(71, 85, 105)',
+            borderRadius: '0.375rem',
+            padding: '0.375rem 0.25rem',
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+            outline: 'none',
+            flex: 1
+          }}
+        >
+          {periods.map(period => (
+            <option key={period.key} value={period.key}>
+              {period.emoji} {period.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Progress Bar Section */}
       <div style={{
         flex: 1,
-        padding: '1.25rem 1.5rem',
+        padding: '0.75rem 1rem',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        gap: '0.75rem'
+        gap: '0.375rem'
       }}>
+        {/* Title */}
+        <div style={{
+          fontSize: '0.875rem',
+          fontWeight: '700',
+          color: 'white',
+          textAlign: 'center',
+          marginBottom: '0.25rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          background: 'linear-gradient(90deg, rgb(139, 92, 246), rgb(59, 130, 246))',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>
+          🎯 Milestone Progress
+        </div>
+
         {/* Header with amount */}
         <div style={{
           display: 'flex',
@@ -95,14 +128,14 @@ export default function MilestoneProgressBar({
         }}>
           <div>
             <span style={{
-              fontSize: '1.5rem',
+              fontSize: '1.125rem',
               fontWeight: 'bold',
               color: isComplete ? 'rgb(34, 197, 94)' : 'white'
             }}>
               {formatNumber(progress, numberFormat)}
             </span>
             <span style={{
-              fontSize: '0.875rem',
+              fontSize: '0.75rem',
               color: 'rgb(156, 163, 175)',
               marginLeft: '0.5rem'
             }}>
@@ -110,74 +143,41 @@ export default function MilestoneProgressBar({
             </span>
           </div>
           <div style={{
-            fontSize: '1rem',
+            fontSize: '0.875rem',
             fontWeight: '600',
             color: isComplete ? 'rgb(34, 197, 94)' : 'white'
           }}>
             {percentage.toFixed(1)}%
-            {isComplete && ' 🎉'}
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Ba */}
         <div style={{
           width: '100%',
-          height: '1.5rem',
-          background: 'rgb(15, 23, 42)',
-          borderRadius: '0.75rem',
-          overflow: 'hidden',
-          border: '1px solid rgb(51, 65, 85)',
-          position: 'relative'
+          height: '8px', 
+          backgroundColor: 'rgb(51, 65, 85)',
+          borderRadius: '4px',
+          border: '1px solid rgb(71, 85, 105)',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
+          {/* Actual progress bar */}
           <div style={{
-            width: `${percentage}%`,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: `${Math.min(percentage, 100)}%`,
             height: '100%',
-            background: isComplete 
-              ? 'linear-gradient(90deg, rgb(34, 197, 94), rgb(22, 163, 74))'
-              : percentage > 75 
-                ? 'linear-gradient(90deg, rgb(234, 179, 8), rgb(202, 138, 4))'
-                : 'linear-gradient(90deg, rgb(59, 130, 246), rgb(37, 99, 235))',
+            backgroundColor: percentage >= 100
+              ? '#22c55e'  
+              : percentage > 75
+                ? '#eab308'  
+                : '#3b82f6', 
             transition: 'width 0.5s ease',
-            boxShadow: isComplete ? '0 0 10px rgba(34, 197, 94, 0.5)' : 'none'
+            borderRadius: '3px'
           }}></div>
         </div>
-
-        {/* Period label */}
-        <div style={{
-          fontSize: '0.75rem',
-          color: 'rgb(156, 163, 175)',
-          textAlign: 'center'
-        }}>
-          {periods.find(p => p.key === selectedPeriod)?.label} Milestone Progress
-        </div>
       </div>
-
-      {/* Milestones Button */}
-      <button
-        onClick={onOpenModal}
-        style={{
-          padding: '0 2rem',
-          background: 'linear-gradient(135deg, rgb(139, 92, 246), rgb(109, 40, 217))',
-          border: 'none',
-          color: 'white',
-          cursor: 'pointer',
-          fontSize: '1rem',
-          fontWeight: '600',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          transition: 'all 0.2s',
-          borderLeft: '1px solid rgb(51, 65, 85)'
-        }}
-        onMouseOver={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgb(124, 58, 237), rgb(91, 33, 182))';
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgb(139, 92, 246), rgb(109, 40, 217))';
-        }}
-      >
-        🎯 Milestones
-      </button>
     </div>
   );
 }

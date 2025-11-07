@@ -10,7 +10,6 @@ import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
 import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
-import MilestoneCelebrationModal from './components/modals/MilestoneCelebrationModal';
 import AltTimerModal from './components/modals/AltTimerModal';
 import Footer from './components/Footer';
 import EditCategoryModal from './components/modals/EditCategoryModal';
@@ -78,7 +77,6 @@ export default function MainApp({ session, onLogout }) {
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
-  const [celebrationMilestone, setCelebrationMilestone] = useState(null);
   const [showNewStockModal, setShowNewStockModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showAltTimerModal, setShowAltTimerModal] = useState(false);
@@ -109,21 +107,13 @@ export default function MainApp({ session, onLogout }) {
 
   useEffect(() => {
     const ensureUncategorizedExists = async () => {
-      // Only run after categories have finished loading
-      if (!userId || categoriesLoading) {
-        return;
-      }
+      if (!userId) return;
 
-      console.log('Categories loaded. Checking Uncategorized. Categories:', categories);
-
-      // Check if Uncategorized exists in local state
-      if (categories.includes('Uncategorized')) {
-        console.log('Uncategorized already in categories list');
-        return;
-      }
+      // Don't check categoriesLoading - let it run regardless
+      console.log('Ensuring Uncategorized exists. Categories:', categories);
 
       try {
-        // Double-check database
+        // Check database directly
         const { data, error } = await supabase
           .from('categories')
           .select('*')
@@ -139,21 +129,20 @@ export default function MainApp({ session, onLogout }) {
         if (!data) {
           console.log('Creating Uncategorized category...');
 
-          const { data: insertData, error: insertError } = await supabase
+          const { error: insertError } = await supabase
             .from('categories')
             .insert([{
               name: 'Uncategorized',
               user_id: userId,
               position: 0,
               created_at: new Date().toISOString()
-            }])
-            .select();
+            }]);
 
           if (insertError) {
             console.error('Error creating Uncategorized:', insertError);
           } else {
-            console.log('Successfully created Uncategorized:', insertData);
-            await fetchCategories();
+            console.log('Successfully created Uncategorized');
+            // Don't call fetchCategories here - let the hook handle it
           }
         }
       } catch (error) {
@@ -161,9 +150,11 @@ export default function MainApp({ session, onLogout }) {
       }
     };
 
-    ensureUncategorizedExists();
-  }, [userId, categoriesLoading, categories]);
-
+    // Only run once when userId changes
+    if (userId) {
+      ensureUncategorizedExists();
+    }
+  }, [userId]); // Remove categoriesLoading and categories from dependencies
   // Helper functions
   const highlightRow = (stockId) => {
     setHighlightedRows({ ...highlightedRows, [stockId]: true });
@@ -209,32 +200,8 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
-  const checkMilestoneAchievements = () => {
-    const progress = calculateMilestoneProgress();
-
-    Object.keys(milestones).forEach(period => {
-      const milestone = milestones[period];
-      if (milestone.enabled && progress[period] >= milestone.goal) {
-        // Check if we've already celebrated this milestone today
-        const today = new Date().toDateString();
-        const lastCelebration = milestoneHistory.find(
-          h => h.period === period && new Date(h.achieved_at).toDateString() === today
-        );
-
-        if (!lastCelebration) {
-          setCelebrationMilestone({
-            period,
-            goalAmount: milestone.goal,
-            actualAmount: progress[period]
-          });
-          recordMilestoneAchievement(period, milestone.goal, progress[period]);
-        }
-      }
-    });
-  };
-
-  useEffect(() => {
-    if (!dataLoaded || !profitHistory) return;
+  const calculateMilestoneProgress = () => {
+    if (!dataLoaded || !profitHistory) return { day: 0, week: 0, month: 0, year: 0 };
 
     const getStartOfPeriod = (period) => {
       const date = new Date();
@@ -267,6 +234,57 @@ export default function MainApp({ session, onLogout }) {
         return entryDate >= startDate && entry.profit_type !== 'bonds';
       });
       const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
+      return totalProfit;
+    };
+
+    return {
+      day: calculatePeriodProfit('day'),
+      week: calculatePeriodProfit('week'),
+      month: calculatePeriodProfit('month'),
+      year: calculatePeriodProfit('year')
+    };
+  };
+
+  useEffect(() => {
+    if (!profitHistory || profitHistoryLoading) return;
+
+    const getStartOfPeriod = (period) => {
+      const date = new Date();
+      switch (period) {
+        case 'day':
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'week':
+          const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
+          date.setDate(diff);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'month':
+          date.setDate(1);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'year':
+          date.setMonth(0, 1);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        default:
+          return date;
+      }
+    };
+
+    const calculatePeriodProfit = (period) => {
+      const startDate = getStartOfPeriod(period);
+
+      const periodProfits = profitHistory.filter(entry => {
+        const entryDate = new Date(entry.created_at);
+        const isInPeriod = entryDate >= startDate;
+        const isNotBonds = entry.profit_type !== 'bonds';
+
+        return isInPeriod && isNotBonds;
+      });
+
+      const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
+
       return Math.max(0, totalProfit);
     };
 
@@ -279,14 +297,6 @@ export default function MainApp({ session, onLogout }) {
 
     setMilestoneProgress(newProgress);
   }, [dataLoaded, profitHistory, milestones]);
-
-  const handleUpdateMilestone = async (period, goal, enabled) => {
-    await updateMilestone(period, goal, enabled);
-    if (success) {
-      // Recalculate milestone progress after updating
-      setMilestoneProgress(calculateMilestoneProgress());
-    }
-  };
 
   const toggleCategory = (category) => {
     setCollapsedCategories({
@@ -463,6 +473,14 @@ export default function MainApp({ session, onLogout }) {
       await addProfitEntry('bonds', amount);
     }
     setShowBondsProfitModal(false);
+  };
+
+  const handleUpdateMilestone = async (period, goal, enabled) => {
+    const success = await updateMilestone(period, goal, enabled);
+    if (success) {
+      // Recalculate milestone progress after updating
+      setMilestoneProgress(calculateMilestoneProgress());
+    }
   };
 
   const handleSetAltTimer = async (days) => {
@@ -756,24 +774,32 @@ export default function MainApp({ session, onLogout }) {
           numberFormat={numberFormat}
         />
 
-        <MilestoneProgressBar
-          milestones={milestones}
-          currentProgress={milestoneProgress}
-          selectedPeriod={selectedMilestonePeriod}
-          onPeriodChange={setSelectedMilestonePeriod}
-          onOpenModal={() => setShowMilestoneModal(true)}
-          numberFormat={numberFormat}
-        />
+        {/* Milestone Progress Bar and Chart Buttons Row */}
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          alignItems: 'flex-end',
+          marginBottom: '2rem',
+          flexWrap: 'wrap'
+        }}>
+          <MilestoneProgressBar
+            milestones={milestones}
+            currentProgress={milestoneProgress}
+            selectedPeriod={selectedMilestonePeriod}
+            onPeriodChange={setSelectedMilestonePeriod}
+            onOpenModal={() => setShowMilestoneModal(true)}
+            numberFormat={numberFormat}
+          />
 
-        <ChartButtons
-          onShowProfitChart={() => setShowProfitChartModal(true)}
-          onShowCategoryChart={() => setShowCategoryChartModal(true)}
-          onShowMilestones={() => setShowMilestoneModal(true)}
-          altAccountTimer={altAccountTimer}
-          onSetAltTimer={() => setShowAltTimerModal(true)}
-          onResetAltTimer={handleResetAltTimer}
-          currentTime={currentTime}
-        />
+          <ChartButtons
+            onShowProfitChart={() => setShowProfitChartModal(true)}
+            onShowCategoryChart={() => setShowCategoryChartModal(true)}
+            altAccountTimer={altAccountTimer}
+            onSetAltTimer={() => setShowAltTimerModal(true)}
+            onResetAltTimer={handleResetAltTimer}
+            currentTime={currentTime}
+          />
+        </div>
 
         {Object.entries(groupedStocks).map(([category, categoryStocks]) => (
           <CategorySection
@@ -1011,16 +1037,6 @@ export default function MainApp({ session, onLogout }) {
             PRESET_GOALS={PRESET_GOALS}
           />
         </ModalContainer>
-
-        {celebrationMilestone && (
-          <MilestoneCelebrationModal
-            period={celebrationMilestone.period}
-            goalAmount={celebrationMilestone.goalAmount}
-            actualAmount={celebrationMilestone.actualAmount}
-            onClose={() => setCelebrationMilestone(null)}
-            numberFormat={numberFormat}
-          />
-        )}
       </div>
       <Footer />
     </div>

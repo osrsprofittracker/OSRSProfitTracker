@@ -23,6 +23,7 @@ export function useCategories(userId) {
   } catch (error) {
     console.error('Error fetching categories:', error);
   }
+  setLoading(false)
 };
 
 const reorderCategories = async (categoryName, newPosition) => {
