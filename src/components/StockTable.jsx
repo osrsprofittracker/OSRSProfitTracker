@@ -197,8 +197,8 @@ function StockRow({
       <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
         {formatNumber(stock.shares, numberFormat)}
       </td>
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
-        {formatNumber(stock.totalCost, numberFormat)}
+      <td style={{ padding: '0.5rem 0.5rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', whiteSpace: 'nowrap' }}>
+        {formatNumber(stock.totalCostSold, numberFormat)}
       </td>
       {visibleColumns.avgBuy && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
@@ -221,7 +221,9 @@ function StockRow({
           padding: '0.5rem 0.75rem',
           textAlign: 'right',
           border: '1px solid rgb(51, 65, 85)',
-          color: profit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'
+          color: profit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)',
+          whiteSpace: 'nowrap',
+          minWidth: '90px'
         }}>
           {profit >= 0 ? '+' : ''}{formatNumber(profit, numberFormat)}
         </td>
@@ -284,37 +286,52 @@ function StatusBadge({ stock }) {
   if (stock.timerEndTime && stock.timerEndTime > Date.now()) {
     return (
       <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.25rem',
         padding: '0.25rem 0.5rem',
         background: 'rgb(202, 138, 4)',
         borderRadius: '0.25rem',
         fontSize: '0.75rem',
-        fontWeight: '600'
+        fontWeight: '600',
+        whiteSpace: 'nowrap'
       }}>
-        ⏰ TIMER
+        <span>⏰</span>
+        <span>TIMER</span>
       </span>
     );
   } else if (stock.shares < stock.needed) {
     return (
       <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.25rem',
         padding: '0.25rem 0.5rem',
         background: 'rgb(220, 38, 38)',
         borderRadius: '0.25rem',
         fontSize: '0.75rem',
-        fontWeight: '600'
+        fontWeight: '600',
+        whiteSpace: 'nowrap'
       }}>
-        🔴 LOW
+        <span>🔴</span>
+        <span>LOW</span>
       </span>
     );
   } else {
     return (
       <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.25rem',
         padding: '0.25rem 0.5rem',
         background: 'rgb(21, 128, 61)',
         borderRadius: '0.25rem',
         fontSize: '0.75rem',
-        fontWeight: '600'
+        fontWeight: '600',
+        whiteSpace: 'nowrap'
       }}>
-        🟢 OK
+        <span>🟢</span>
+        <span>OK</span>
       </span>
     );
   }

@@ -12,8 +12,8 @@ const DEFAULT_VISIBLE_COLUMNS = {
 };
 
 const DEFAULT_VISIBLE_PROFITS = {
-  dumpProfit: true,
-  referralProfit: true,
+  dumpProfit: false,
+  referralProfit: false,
   bondsProfit: true
 };
 

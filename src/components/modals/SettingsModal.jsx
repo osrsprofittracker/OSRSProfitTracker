@@ -179,47 +179,45 @@ export default function SettingsModal({
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {[
-              { key: 'dumpProfit', label: 'Dump Profit' },
-              { key: 'referralProfit', label: 'Referral Profit' },
-              { key: 'bondsProfit', label: 'Bonds Profit' },
+              {
+                key: 'dumpProfit',
+                label: 'Dump Profit',
+                info: 'Track profits from buying dumps on ge, like Omega Dumps OSRS or Flipping Utilities '
+              },
+              {
+                key: 'referralProfit',
+                label: 'Referral Profit',
+                info: 'Track income from referrering to other sellers or getting reffered.'
+              },
+              {
+                key: 'bondsProfit',
+                label: 'Bonds Profit',
+                info: 'Track profits from buying and selling OSRS bonds'
+              },
             ].map((profit) => (
-              <label
+              <ProfitCheckbox
                 key={profit.key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.5rem',
-                  background: 'rgb(51, 65, 85)',
-                  borderRadius: '0.5rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={visibleProfits?.[profit.key] !== false}
-                  onChange={(e) =>
-                    onVisibleProfitsChange({ ...visibleProfits, [profit.key]: e.target.checked })
-                  }
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                />
-                <span style={{ fontSize: '0.875rem' }}>{profit.label}</span>
-              </label>
+                profit={profit}
+                checked={visibleProfits?.[profit.key] !== false}
+                onChange={(e) =>
+                  onVisibleProfitsChange({ ...visibleProfits, [profit.key]: e.target.checked })
+                }
+              />
             ))}
           </div>
         </div>
       </div>
 
       {/* Change Password Link */}
-<div style={{ 
-  marginTop: '1.5rem',
-  paddingTop: '1rem',
-  paddingBottom: '1rem',
-  borderTop: '1px solid rgb(71, 85, 105)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center'
-}}>
+      <div style={{
+        marginTop: '1.5rem',
+        paddingTop: '1rem',
+        paddingBottom: '1rem',
+        borderTop: '1px solid rgb(71, 85, 105)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
         <button
           type="button"
           onClick={onChangePassword}
@@ -270,5 +268,7 @@ export default function SettingsModal({
         </button>
       </div>
     </div>
+
   );
+  
 }

@@ -22,67 +22,27 @@ export default function Header({
                     Stock Portfolio Tracker
                 </h1>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
-    <a
-        href="https://buymeacoffee.com/osrsprofittracker"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-            padding: '0.5rem 1rem',
-            background: 'rgb(255, 221, 87)',
-            borderRadius: '0.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            fontSize: '0.875rem',
-            border: 'none',
-            color: 'rgb(0, 0, 0)',
-            cursor: 'pointer',
-            textDecoration: 'none',
-            fontWeight: '500'
-        }}
-    >
-        ☕ Support
-    </a>
-                    {onLogout && (
-                        <button
-                            onClick={onLogout}
-                            style={{
-                                padding: '0.5rem 1rem',
-                                background: 'rgb(220, 38, 38)',
-                                borderRadius: '0.5rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                fontSize: '0.875rem',
-                                border: 'none',
-                                color: 'white',
-                                cursor: 'pointer'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.background = 'rgb(185, 28, 28)'}
-                            onMouseOut={(e) => e.currentTarget.style.background = 'rgb(220, 38, 38)'}
-                        >
-                            <LogOut size={18} /> Logout
-                        </button>
-                    )}
-                    <button
-                        onClick={onExport}
+                    <a
+                        href="https://buymeacoffee.com/osrsprofittracker"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
                             padding: '0.5rem 1rem',
-                            background: 'rgb(21, 128, 61)',
+                            background: 'rgb(255, 221, 87)',
                             borderRadius: '0.5rem',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.5rem',
                             fontSize: '0.875rem',
                             border: 'none',
-                            color: 'white',
-                            cursor: 'pointer'
+                            color: 'rgb(0, 0, 0)',
+                            cursor: 'pointer',
+                            textDecoration: 'none',
+                            fontWeight: '500'
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(22, 101, 52)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(21, 128, 61)'}
                     >
-                        <Download size={18} /> Export
-                    </button>
+                        ☕ Support
+                    </a>
                     <button
                         onClick={onAddCategory}
                         style={{
@@ -140,6 +100,46 @@ export default function Header({
                     >
                         ⚙️ Settings
                     </button>
+                    <button
+                        onClick={onExport}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            background: 'rgb(21, 128, 61)',
+                            borderRadius: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '0.875rem',
+                            border: 'none',
+                            color: 'white',
+                            cursor: 'pointer'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(22, 101, 52)'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(21, 128, 61)'}
+                    >
+                        <Download size={18} /> Export
+                    </button>
+                    {onLogout && (
+                        <button
+                            onClick={onLogout}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                background: 'rgb(220, 38, 38)',
+                                borderRadius: '0.5rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                fontSize: '0.875rem',
+                                border: 'none',
+                                color: 'white',
+                                cursor: 'pointer'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'rgb(185, 28, 28)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'rgb(220, 38, 38)'}
+                        >
+                            <LogOut size={18} /> Logout
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
