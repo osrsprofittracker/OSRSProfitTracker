@@ -778,8 +778,9 @@ export default function MainApp({ session, onLogout }) {
         <div style={{
           display: 'flex',
           gap: '1rem',
-          alignItems: 'flex-end',
-          marginBottom: '2rem',
+          alignItems: 'center',
+          marginBottom: '1.5rem',
+          marginTop: '1rem',
           flexWrap: 'wrap'
         }}>
           <MilestoneProgressBar

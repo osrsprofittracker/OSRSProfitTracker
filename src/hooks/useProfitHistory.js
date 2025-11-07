@@ -33,7 +33,7 @@ export function useProfitHistory(userId) {
       .insert([{
         user_id: userId,
         profit_type: profitType,
-        amount: amount,
+        amount: Math.round(Number(amount)),
         stock_id: stockId,
         created_at: new Date().toISOString()
       }]);

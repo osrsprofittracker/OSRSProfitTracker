@@ -33,7 +33,7 @@ export default function MilestoneProgressBar({
       border: '1px solid rgb(51, 65, 85)',
       overflow: 'hidden',
       boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-      minHeight: '80px'
+      minHeight: '80px',
     }}>
       {/* Left side - Goals button and dropdown stacked */}
       <div style={{
