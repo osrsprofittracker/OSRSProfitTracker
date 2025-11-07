@@ -44,20 +44,6 @@ export default function Auth({ onBack }) {
       if (categoryError) {
         console.error('Error creating initial category:', categoryError);
       }
-
-      // Create initial profits row for new user
-      const { error: profitsError } = await supabase
-        .from('profits')
-        .insert([{
-          user_id: data.user.id,
-          dump_profit: 0,
-          referral_profit: 0,
-          bonds_profit: 0
-        }]);
-
-      if (profitsError) {
-        console.error('Error creating initial profits:', profitsError);
-      }
     }
 
     alert('Account created successfully! You can now log in.');
