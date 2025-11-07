@@ -198,7 +198,7 @@ function StockRow({
         {formatNumber(stock.shares, numberFormat)}
       </td>
       <td style={{ padding: '0.5rem 0.5rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', whiteSpace: 'nowrap' }}>
-        {formatNumber(stock.totalCostSold, numberFormat)}
+        {formatNumber(stock.totalCost, numberFormat)}
       </td>
       {visibleColumns.avgBuy && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
