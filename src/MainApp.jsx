@@ -209,55 +209,6 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
-  const calculateMilestoneProgress = () => {
-    const getStartOfPeriod = (period) => {
-      const date = new Date();
-      switch (period) {
-        case 'day':
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'week':
-          const day = date.getDay();
-          const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-          date.setDate(diff);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'month':
-          date.setDate(1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'year':
-          date.setMonth(0, 1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        default:
-          return date;
-      }
-    };
-
-    const calculatePeriodProfit = (period) => {
-      const startDate = getStartOfPeriod(period);
-
-      // Filter profit history for this period
-      const periodProfits = profitHistory.filter(entry => {
-        const entryDate = new Date(entry.created_at);
-        return entryDate >= startDate;
-      });
-
-      // Sum all profits for this period
-      const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
-
-      return Math.max(0, totalProfit);
-    };
-
-    return {
-      day: calculatePeriodProfit('day'),
-      week: calculatePeriodProfit('week'),
-      month: calculatePeriodProfit('month'),
-      year: calculatePeriodProfit('year')
-    };
-  };
-
   const checkMilestoneAchievements = () => {
     const progress = calculateMilestoneProgress();
 
@@ -283,13 +234,58 @@ export default function MainApp({ session, onLogout }) {
   };
 
   useEffect(() => {
-    if (dataLoaded && milestones && profitHistory.length >= 0) {
-      checkMilestoneAchievements();
-    }
-  }, [profitHistory, dataLoaded]);
+    if (!dataLoaded || !profitHistory) return;
+
+    const getStartOfPeriod = (period) => {
+      const date = new Date();
+      switch (period) {
+        case 'day':
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'week':
+          const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
+          date.setDate(diff);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'month':
+          date.setDate(1);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        case 'year':
+          date.setMonth(0, 1);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        default:
+          return date;
+      }
+    };
+
+    const calculatePeriodProfit = (period) => {
+      const startDate = getStartOfPeriod(period);
+      const periodProfits = profitHistory.filter(entry => {
+        const entryDate = new Date(entry.created_at);
+        return entryDate >= startDate && entry.profit_type !== 'bonds';
+      });
+      const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
+      return Math.max(0, totalProfit);
+    };
+
+    const newProgress = {
+      day: calculatePeriodProfit('day'),
+      week: calculatePeriodProfit('week'),
+      month: calculatePeriodProfit('month'),
+      year: calculatePeriodProfit('year')
+    };
+
+    setMilestoneProgress(newProgress);
+  }, [dataLoaded, profitHistory, milestones]);
 
   const handleUpdateMilestone = async (period, goal, enabled) => {
     await updateMilestone(period, goal, enabled);
+    if (success) {
+      // Recalculate milestone progress after updating
+      setMilestoneProgress(calculateMilestoneProgress());
+    }
   };
 
   const toggleCategory = (category) => {
@@ -331,11 +327,6 @@ export default function MainApp({ session, onLogout }) {
 
   const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
 
-  useEffect(() => {
-    if (dataLoaded) {
-      setMilestoneProgress(calculateMilestoneProgress());
-    }
-  }, [dataLoaded, profitHistory]);
 
   const handleSell = async (data) => {
     const { shares, price } = data;
