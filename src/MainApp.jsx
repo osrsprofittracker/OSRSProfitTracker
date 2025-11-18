@@ -64,7 +64,11 @@ export default function MainApp({ session, onLogout }) {
   const { theme, numberFormat, visibleColumns, visibleProfits, altAccountTimer } = settings;
 
   // Local UI state
-  const [collapsedCategories, setCollapsedCategories] = useState({});
+  const [collapsedCategories, setCollapsedCategories] = useState(() => {
+  // Load collapsed state from localStorage on initial render
+  const saved = localStorage.getItem('collapsedCategories');
+  return saved ? JSON.parse(saved) : {};
+});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -299,11 +303,16 @@ export default function MainApp({ session, onLogout }) {
   }, [dataLoaded, profitHistory, milestones]);
 
   const toggleCategory = (category) => {
-    setCollapsedCategories({
-      ...collapsedCategories,
-      [category]: !collapsedCategories[category]
-    });
-  };
+  setCollapsedCategories(prev => {
+    const newState = {
+      ...prev,
+      [category]: !prev[category]
+    };
+    // Save to localStorage whenever state changes
+    localStorage.setItem('collapsedCategories', JSON.stringify(newState));
+    return newState;
+  });
+};
 
   const handleBuy = async (data) => {
     const { shares, price, startTimer } = data;
@@ -311,7 +320,7 @@ export default function MainApp({ session, onLogout }) {
 
     const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
     const newShares = selectedStock.shares + shares;
-    const timerEndTime = (startTimer || shares >= selectedStock.limit4h)
+    const timerEndTime = startTimer
       ? Date.now() + (4 * 60 * 60 * 1000)
       : selectedStock.timerEndTime;
 
@@ -678,37 +687,9 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleCalculateTime = async (stock) => {
-    const stocksNeeded = stock.needed - stock.shares;
-    if (stocksNeeded <= 0) {
-      alert('Target already reached!');
-      setShowTimeCalculatorModal(false);
-      return;
-    }
-
-    const limit4h = stock.limit4h || 0;
-    if (limit4h <= 0) {
-      alert('Please set a 4-hour buy limit first!');
-      setShowTimeCalculatorModal(false);
-      return;
-    }
-
-    const periods4h = Math.ceil(stocksNeeded / limit4h);
-    const totalHours = periods4h * 4;
-    const days = Math.floor(totalHours / 24);
-    const hours = totalHours % 24;
-
-    setSelectedStock({
-      ...stock,
-      calculatedTime: {
-        periods4h,
-        totalHours,
-        days,
-        hours,
-        stocksNeeded
-      }
-    });
-    setShowTimeCalculatorModal(true);
-  };
+  setSelectedStock(stock);
+  setShowTimeCalculatorModal(true);
+};
 
   // Group stocks by category
   const groupedStocks = categories.reduce((acc, cat) => {
