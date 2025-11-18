@@ -4,6 +4,8 @@ import { formatNumber } from '../../utils/formatters';
 export default function SellModal({ stock, onConfirm, onCancel }) {
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState('');
+  const [useTotal, setUseTotal] = useState(false);
+  const [totalAmount, setTotalAmount] = useState('');
 
   React.useEffect(() => {
     const avgSell = stock.sharesSold > 0 ? stock.totalCostSold / stock.sharesSold : 0;
@@ -11,28 +13,82 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
   }, [stock]);
 
   const handleConfirm = () => {
-    if (!shares || !price) return;
-    const sharesNum = parseFloat(shares);
-    
-    if (sharesNum > stock.shares) {
-      alert(`Cannot sell ${sharesNum} shares. You only have ${stock.shares} shares available.`);
-      return;
-    }
+    if (useTotal) {
+      if (!shares || !totalAmount) return;
+      const calculatedPrice = parseFloat(totalAmount) / parseFloat(shares);
+      const sharesNum = parseFloat(shares);
 
-    if (sharesNum <= 0) {
-      alert('Please enter a valid number of shares to sell.');
-      return;
-    }
+      if (sharesNum > stock.shares) {
+        alert(`Cannot sell ${sharesNum} shares. You only have ${stock.shares} shares available.`);
+        return;
+      }
 
-    onConfirm({
-      shares: sharesNum,
-      price: parseFloat(price)
-    });
+      if (sharesNum <= 0) {
+        alert('Please enter a valid number of shares to sell.');
+        return;
+      }
+
+      onConfirm({
+        shares: sharesNum,
+        price: calculatedPrice
+      });
+    } else {
+      if (!shares || !price) return;
+      const sharesNum = parseFloat(shares);
+
+      if (sharesNum > stock.shares) {
+        alert(`Cannot sell ${sharesNum} shares. You only have ${stock.shares} shares available.`);
+        return;
+      }
+
+      if (sharesNum <= 0) {
+        alert('Please enter a valid number of shares to sell.');
+        return;
+      }
+
+      onConfirm({
+        shares: sharesNum,
+        price: parseFloat(price)
+      });
+    }
+  };
+
+  const handleModeToggle = () => {
+    if (!useTotal && price && shares) {
+      setTotalAmount(Math.round(parseFloat(shares) * parseFloat(price)).toString());
+    } else if (useTotal && totalAmount && shares) {
+      setPrice((parseFloat(totalAmount) / parseFloat(shares)).toFixed(2));
+    }
+    setUseTotal(!useTotal);
+  };
+
+  const handlePriceChange = (value) => {
+    setPrice(value);
+    if (shares && value) {
+      setTotalAmount((parseFloat(shares) * parseFloat(value)).toFixed(0));
+    }
+  };
+
+  const formatTotalInput = (value) => {
+    if (!value) return '';
+    const digitsOnly = String(value).replace(/\D/g, '');
+    if (!digitsOnly) return '';
+    return digitsOnly.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const handleTotalInputChange = (value) => {
+    const numericValue = value.replace(/\./g, '');
+    setTotalAmount(numericValue);
+
+    if (shares && numericValue) {
+      setPrice((parseFloat(numericValue) / parseFloat(shares)).toFixed(2));
+    }
   };
 
   const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
   const expectedProfit = shares && price ? (parseFloat(price) - avgBuy) * parseFloat(shares) : 0;
   const profitPercent = avgBuy > 0 && price ? ((parseFloat(price) - avgBuy) / avgBuy * 100) : 0;
+  const calculatedTotal = !useTotal && shares && price ? (parseFloat(shares) * parseFloat(price)).toFixed(2) : null;
 
   return (
     <div style={{
@@ -46,7 +102,7 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
         Sell {stock.name}
       </h2>
-      
+
       <div style={{
         padding: '0.75rem',
         background: 'rgba(251, 146, 60, 0.1)',
@@ -85,6 +141,16 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
               ${parseFloat(price).toFixed(2)}
             </span>
           </div>
+          {!useTotal && calculatedTotal && (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+    <span style={{ fontSize: '0.875rem', color: 'rgb(209, 213, 219)' }}>
+      Total Revenue:
+    </span>
+    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'white' }}>
+      ${formatNumber(calculatedTotal)}
+    </span>
+  </div>
+)}
           <div style={{
             borderTop: '1px solid rgba(209, 213, 219, 0.2)',
             paddingTop: '0.5rem',
@@ -136,14 +202,40 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
-            Price per Share
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)' }}>
+              {useTotal ? 'Total Revenue' : 'Price per Share'}
+            </label>
+            <button
+              onClick={handleModeToggle}
+              style={{
+                padding: '0.375rem 0.75rem',
+                background: 'rgb(51, 65, 85)',
+                borderRadius: '0.5rem',
+                border: '1px solid rgb(71, 85, 105)',
+                color: 'rgb(226, 232, 240)',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = 'rgb(71, 85, 105)';
+                e.currentTarget.style.borderColor = 'rgb(100, 116, 139)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgb(51, 65, 85)';
+                e.currentTarget.style.borderColor = 'rgb(71, 85, 105)';
+              }}
+            >
+              ⇄ {useTotal ? 'Price' : 'Total'}
+            </button>
+          </div>
           <input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="Price"
+            type={useTotal ? "text" : "number"}
+            value={useTotal ? formatTotalInput(totalAmount) : price}
+            onChange={(e) => useTotal ? handleTotalInputChange(e.target.value) : handlePriceChange(e.target.value)}
+            placeholder={useTotal ? 'Total revenue' : 'Price per share'}
             style={{
               width: '100%',
               padding: '0.5rem 1rem',
