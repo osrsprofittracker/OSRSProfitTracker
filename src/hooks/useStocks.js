@@ -33,7 +33,8 @@ export function useStocks(userId) {
         needed: stock.needed,
         timerEndTime: stock.timer_end_time,
         category: stock.category,
-        position: stock.position
+        position: stock.position,
+        onHold: stock.on_hold || false
       }));
       setStocks(formattedStocks);
     }
@@ -129,6 +130,7 @@ export function useStocks(userId) {
     if (updates.category !== undefined) dbUpdates.category = updates.category;
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.limit4h !== undefined) dbUpdates.limit4h = updates.limit4h;
+    if (updates.onHold !== undefined) dbUpdates.on_hold = updates.onHold;
 
     const { error } = await supabase
       .from('stocks')

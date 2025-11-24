@@ -65,10 +65,10 @@ export default function MainApp({ session, onLogout }) {
 
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
-  // Load collapsed state from localStorage on initial render
-  const saved = localStorage.getItem('collapsedCategories');
-  return saved ? JSON.parse(saved) : {};
-});
+    // Load collapsed state from localStorage on initial render
+    const saved = localStorage.getItem('collapsedCategories');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -303,16 +303,16 @@ export default function MainApp({ session, onLogout }) {
   }, [dataLoaded, profitHistory, milestones]);
 
   const toggleCategory = (category) => {
-  setCollapsedCategories(prev => {
-    const newState = {
-      ...prev,
-      [category]: !prev[category]
-    };
-    // Save to localStorage whenever state changes
-    localStorage.setItem('collapsedCategories', JSON.stringify(newState));
-    return newState;
-  });
-};
+    setCollapsedCategories(prev => {
+      const newState = {
+        ...prev,
+        [category]: !prev[category]
+      };
+      // Save to localStorage whenever state changes
+      localStorage.setItem('collapsedCategories', JSON.stringify(newState));
+      return newState;
+    });
+  };
 
   const handleBuy = async (data) => {
     const { shares, price, startTimer } = data;
@@ -320,9 +320,27 @@ export default function MainApp({ session, onLogout }) {
 
     const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
     const newShares = selectedStock.shares + shares;
-    const timerEndTime = startTimer
-      ? Date.now() + (4 * 60 * 60 * 1000)
-      : selectedStock.timerEndTime;
+    let timerEndTime;
+    let newOnHold = selectedStock.onHold; // Track if we should update onHold status
+
+    if (startTimer) {
+      // If startTimer is checked, always start the timer and take off hold
+      timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
+      newOnHold = false; // Take it off hold when timer starts
+    } else {
+      // If startTimer is NOT checked, keep existing timer
+      timerEndTime = selectedStock.timerEndTime;
+    }
+
+    // Check if timer just ended and stock is still below needed
+    const timerJustEnded = selectedStock.timerEndTime && selectedStock.timerEndTime <= Date.now();
+    if (timerJustEnded && newShares < selectedStock.needed && selectedStock.onHold) {
+      // If timer ended, still below needed, and was on hold, keep it on hold
+      newOnHold = true;
+    } else if (newShares >= selectedStock.needed) {
+      // If we now have enough stock, take it off hold
+      newOnHold = false;
+    }
 
     await updateStock(selectedStock.id, {
       totalCost: selectedStock.totalCost + total,
@@ -379,8 +397,8 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleAdjust = async (data) => {
-    const { name, needed, category, limit4h } = data;
-    await updateStock(selectedStock.id, { name, needed, category, limit4h });
+    const { name, needed, category, limit4h, onHold } = data;
+    await updateStock(selectedStock.id, { name, needed, category, limit4h, onHold });
     await refetch();
     highlightRow(selectedStock.id);
     setShowAdjustModal(false);
@@ -687,9 +705,9 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleCalculateTime = async (stock) => {
-  setSelectedStock(stock);
-  setShowTimeCalculatorModal(true);
-};
+    setSelectedStock(stock);
+    setShowTimeCalculatorModal(true);
+  };
 
   // Group stocks by category
   const groupedStocks = categories.reduce((acc, cat) => {

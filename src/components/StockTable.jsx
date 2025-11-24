@@ -301,6 +301,27 @@ function StatusBadge({ stock }) {
       </span>
     );
   } else if (stock.shares < stock.needed) {
+    //Check if on hold first
+    if (stock.onHold) {
+      return (
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.25rem',
+          padding: '0.25rem 0.5rem',
+          background: 'rgb(79, 70, 229)',
+          borderRadius: '0.25rem',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }}>
+          <span>🔒</span>
+          <span>ON HOLD</span>
+        </span>
+      );
+    }
+    
+    // Otherwise show LOW
     return (
       <span style={{
         display: 'inline-flex',

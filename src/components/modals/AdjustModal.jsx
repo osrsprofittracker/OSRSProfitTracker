@@ -5,6 +5,7 @@ export default function AdjustModal({ stock, categories, onConfirm, onCancel }) 
   const [needed, setNeeded] = useState(stock.needed.toString());
   const [category, setCategory] = useState(stock.category || 'Uncategorized');
   const [limit4h, setLimit4h] = useState(stock.limit4h.toString());
+  const [onHold, setOnHold] = useState(stock.onHold || false);
 
   const handleConfirm = () => {
     if (!needed || !name.trim() || !limit4h) return;  // Update validation
@@ -12,7 +13,8 @@ export default function AdjustModal({ stock, categories, onConfirm, onCancel }) 
       name: name.trim(),
       needed: parseFloat(needed),
       category,
-      limit4h: parseFloat(limit4h)
+      limit4h: parseFloat(limit4h),
+      onHold
     });
   };
 
@@ -120,6 +122,27 @@ export default function AdjustModal({ stock, categories, onConfirm, onCancel }) 
             ))}
             <option value="Uncategorized">Uncategorized</option>
           </select>
+        </div>
+        <div>
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            cursor: 'pointer',
+            padding: '0.75rem',
+            background: 'rgb(51, 65, 85)',
+            borderRadius: '0.5rem'
+          }}>
+            <input
+              type="checkbox"
+              checked={onHold}
+              onChange={(e) => setOnHold(e.target.checked)}
+              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+            />
+            <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)' }}>
+              🔒 Put on hold (don't buy this stock)
+            </span>
+          </label>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
           <button
