@@ -31,7 +31,8 @@ export default function CategorySection({
   visibleColumns,
   stockNotes,
   currentTime,
-  numberFormat
+  numberFormat,
+  showCategoryStats
 }) {
   const categoryStocks = stocks.filter(s => s.category === category);
 
@@ -61,9 +62,79 @@ export default function CategorySection({
           }}>
             ▼
           </span>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'rgb(96, 165, 250)' }}>
-            {category} ({categoryStocks.length})
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'rgb(96, 165, 250)', margin: 0 }}>
+              {category} ({categoryStocks.length})
+            </h2>
+            {showCategoryStats && (() => {
+              const timerCount = categoryStocks.filter(s => s.timerEndTime && s.timerEndTime > Date.now()).length;
+              const okCount = categoryStocks.filter(s =>
+                (!s.timerEndTime || s.timerEndTime <= Date.now()) &&
+                s.shares >= s.needed &&
+                !s.onHold
+              ).length;
+              const holdCount = categoryStocks.filter(s => s.onHold).length;
+              const lowCount = categoryStocks.filter(s =>
+                (!s.timerEndTime || s.timerEndTime <= Date.now()) &&
+                s.shares < s.needed &&
+                !s.onHold
+              ).length;
+
+              return (
+                <div style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}>
+                  {timerCount > 0 && (
+                    <span style={{
+                      color: 'rgb(251, 146, 60)',
+                      background: 'rgba(251, 146, 60, 0.1)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid rgba(251, 146, 60, 0.3)'
+                    }}>
+                      ⏰{timerCount}
+                    </span>
+                  )}
+                  {okCount > 0 && (
+                    <span style={{
+                      color: 'rgb(34, 197, 94)',
+                      background: 'rgba(34, 197, 94, 0.1)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid rgba(34, 197, 94, 0.3)'
+                    }}>
+                      ✓{okCount}
+                    </span>
+                  )}
+                  {holdCount > 0 && (
+                    <span style={{
+                      color: 'rgb(79, 70, 229)',
+                      background: 'rgba(79, 70, 229, 0.1)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid rgba(79, 70, 229, 0.3)'
+                    }}>
+                      🔒{holdCount}
+                    </span>
+                  )}
+                  {lowCount > 0 && (
+                    <span style={{
+                      color: 'rgb(239, 68, 68)',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid rgba(239, 68, 68, 0.3)'
+                    }}>
+                      🔴{lowCount}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
@@ -198,6 +269,7 @@ export default function CategorySection({
             stockNotes={stockNotes}
             currentTime={currentTime}
             numberFormat={numberFormat}
+            showCategoryStats={showCategoryStats}
           />
         </>
       )}

@@ -108,12 +108,18 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
         background: 'rgba(251, 146, 60, 0.1)',
         border: '1px solid rgb(251, 146, 60)',
         borderRadius: '0.5rem',
-        marginBottom: '1rem',
-        textAlign: 'center'
+        marginBottom: '1rem'
       }}>
-        <span style={{ fontSize: '0.875rem', color: 'rgb(251, 146, 60)', fontWeight: '600' }}>
-          Available: {formatNumber(stock.shares)} shares
-        </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.875rem', color: 'rgb(251, 146, 60)', fontWeight: '600' }}>
+            Available: {formatNumber(stock.shares)} shares
+          </span>
+          {shares && parseFloat(shares) > 0 && (
+            <span style={{ fontSize: '0.875rem', color: 'rgb(156, 163, 175)', fontWeight: '500' }}>
+              After: {formatNumber(stock.shares - parseFloat(shares))} shares
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Profit Calculator */}
@@ -142,15 +148,15 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
             </span>
           </div>
           {!useTotal && calculatedTotal && (
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-    <span style={{ fontSize: '0.875rem', color: 'rgb(209, 213, 219)' }}>
-      Total Revenue:
-    </span>
-    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'white' }}>
-      ${formatNumber(calculatedTotal)}
-    </span>
-  </div>
-)}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.875rem', color: 'rgb(209, 213, 219)' }}>
+                Total Revenue:
+              </span>
+              <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'white' }}>
+                ${formatNumber(calculatedTotal)}
+              </span>
+            </div>
+          )}
           <div style={{
             borderTop: '1px solid rgba(209, 213, 219, 0.2)',
             paddingTop: '0.5rem',
@@ -177,9 +183,29 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
-            Shares (Max: {stock.shares?.toLocaleString()})
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)' }}>
+              Shares (Max: {stock.shares?.toLocaleString()})
+            </label>
+            <button
+              onClick={() => setShares(stock.shares.toString())}
+              style={{
+                padding: '0.25rem 0.75rem',
+                background: 'rgb(185, 28, 28)',
+                borderRadius: '0.375rem',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                transition: 'background 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgb(153, 27, 27)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgb(185, 28, 28)'}
+            >
+              ALL
+            </button>
+          </div>
           <input
             type="number"
             value={shares}

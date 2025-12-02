@@ -105,6 +105,24 @@ export default function BuyModal({ stock, onConfirm, onCancel }) {
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
         Buy {stock.name}
       </h2>
+      <div style={{
+        padding: '0.75rem',
+        background: 'rgba(34, 197, 94, 0.1)',
+        border: '1px solid rgb(34, 197, 94)',
+        borderRadius: '0.5rem',
+        marginBottom: '1rem'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.875rem', color: 'rgb(34, 197, 94)', fontWeight: '600' }}>
+            Current: {formatNumber(stock.shares)} shares
+          </span>
+          {shares && parseFloat(shares) > 0 && (
+            <span style={{ fontSize: '0.875rem', color: 'rgb(156, 163, 175)', fontWeight: '500' }}>
+              After: {formatNumber(stock.shares + parseFloat(shares))} shares
+            </span>
+          )}
+        </div>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>

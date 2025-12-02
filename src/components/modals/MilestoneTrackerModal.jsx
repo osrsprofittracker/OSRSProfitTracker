@@ -24,6 +24,7 @@ export default function MilestoneTrackerModal({
   const currentMilestone = milestones[selectedPeriod];
   const progress = currentProgress[selectedPeriod] || 0;
   const percentage = currentMilestone.goal > 0 ? (progress / currentMilestone.goal) * 100 : 0;
+  const displayPercentage = Math.min(percentage, 100);
   const isComplete = progress >= currentMilestone.goal;
 
   const getResetTime = (period) => {
@@ -159,7 +160,7 @@ export default function MilestoneTrackerModal({
             marginBottom: '1rem'
           }}>
             <div style={{
-              width: `${Math.min(percentage, 100)}%`,
+              width: `${displayPercentage}%`,
               height: '100%',
               background: isComplete 
                 ? 'linear-gradient(90deg, rgb(34, 197, 94), rgb(22, 163, 74))'

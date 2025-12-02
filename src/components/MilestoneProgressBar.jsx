@@ -18,7 +18,8 @@ export default function MilestoneProgressBar({
 
   const currentMilestone = milestones[selectedPeriod];
   const progress = currentProgress[selectedPeriod] || 0;
-  const percentage = currentMilestone?.goal > 0 ? Math.min((progress / currentMilestone.goal) * 100, 100) : 0;
+  const percentage = currentMilestone?.goal > 0 ? (progress / currentMilestone.goal) * 100 : 0;
+const displayPercentage = Math.min(percentage, 100); 
   const isComplete = currentMilestone && progress >= currentMilestone.goal;
 
   return (
@@ -168,7 +169,7 @@ export default function MilestoneProgressBar({
             position: 'absolute',
             top: 0,
             left: 0,
-            width: `${Math.min(percentage, 100)}%`,
+            width: `${displayPercentage}%`,
             height: '100%',
             background: percentage < 10
               ? 'rgb(59, 130, 246)'  // Solid blue for very low percentages

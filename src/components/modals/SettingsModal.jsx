@@ -81,6 +81,8 @@ export default function SettingsModal({
   onVisibleColumnsChange,
   visibleProfits,
   onVisibleProfitsChange,
+  showCategoryStats, 
+  onShowCategoryStatsChange,
   onCancel,
   onChangePassword
 }) {
@@ -277,6 +279,37 @@ export default function SettingsModal({
             ))}
           </div>
         </div>
+      </div>
+
+        {/* Category Statistics Section */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+          Category Display Options
+        </label>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem',
+            background: 'rgb(51, 65, 85)',
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={showCategoryStats}
+            onChange={(e) => onShowCategoryStatsChange(e.target.checked)}
+            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+          />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Show Category Statistics</div>
+            <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)' }}>
+              Display stock status counts (⏰Timer, ✓OK, 🔒Hold, 🔴Low) next to category names
+            </div>
+          </div>
+        </label>
       </div>
 
       {/* Change Password Link */}

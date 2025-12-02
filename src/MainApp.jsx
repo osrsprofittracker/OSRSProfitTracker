@@ -61,8 +61,7 @@ export default function MainApp({ session, onLogout }) {
   const { dumpProfit, referralProfit, bondsProfit } = profits;
 
   // Destructure settings
-  const { theme, numberFormat, visibleColumns, visibleProfits, altAccountTimer } = settings;
-
+  const { theme, numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats } = settings;
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
     // Load collapsed state from localStorage on initial render
@@ -859,6 +858,7 @@ export default function MainApp({ session, onLogout }) {
             stockNotes={stockNotes}
             currentTime={currentTime}
             numberFormat={numberFormat}
+            showCategoryStats={showCategoryStats}
           />
         ))}
 
@@ -990,6 +990,8 @@ export default function MainApp({ session, onLogout }) {
             onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
             visibleProfits={visibleProfits}
             onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
+            showCategoryStats={showCategoryStats}
+            onShowCategoryStatsChange={(value) => updateSettings({ showCategoryStats: value })}
             onCancel={() => setShowSettingsModal(false)}
             onChangePassword={() => {
               setShowSettingsModal(false);
