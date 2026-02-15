@@ -20,6 +20,16 @@ export const formatNumber = (num, numberFormat = 'compact') => {
   return (rounded / 1_000_000).toFixed(1) + ' M';
 };
 
+export function formatAvgPrice(value, numberFormat) {
+  if (value < 100000) {
+    // Below 100K: show with 2 decimals
+    return `$${value.toFixed(2)}`;
+  } else {
+    // Above 100K: use formatNumber
+    return `$${formatNumber(value, numberFormat)}`;
+  }
+}
+
 export const formatTimer = (endTime) => {
   if (!endTime) return '--:--:--';
   const remaining = endTime - Date.now();

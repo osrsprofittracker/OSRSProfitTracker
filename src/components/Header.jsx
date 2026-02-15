@@ -26,20 +26,7 @@ export default function Header({
                         href="https://buymeacoffee.com/osrsprofittracker"
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgb(255, 221, 87)',
-                            borderRadius: '0.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontSize: '0.875rem',
-                            border: 'none',
-                            color: 'rgb(0, 0, 0)',
-                            cursor: 'pointer',
-                            textDecoration: 'none',
-                            fontWeight: '500'
-                        }}
+                        className="link-support"
                     >
                         ☕ Support
                     </a>
@@ -62,62 +49,14 @@ export default function Header({
                     >
                         <FolderPlus size={18} /> Add Category
                     </button>
-                    <button
-                        onClick={onAddStock}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgb(29, 78, 216)',
-                            borderRadius: '0.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontSize: '0.875rem',
-                            border: 'none',
-                            color: 'white',
-                            cursor: 'pointer'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(30, 64, 175)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(29, 78, 216)'}
-                    >
+                    <button className="btn btn-primary" onClick={onAddStock}>
                         <Plus size={18} /> Add Stock
                     </button>
-                    <button
-                        onClick={onOpenSettings}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgb(71, 85, 105)',
-                            borderRadius: '0.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontSize: '0.875rem',
-                            border: 'none',
-                            color: 'white',
-                            cursor: 'pointer'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
-                    >
+                    <button className="btn btn-secondary" onClick={onOpenSettings}>
                         ⚙️ Settings
                     </button>
-                    <button
-                        onClick={onExport}
-                        style={{
-                            padding: '0.5rem 1rem',
-                            background: 'rgb(21, 128, 61)',
-                            borderRadius: '0.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontSize: '0.875rem',
-                            border: 'none',
-                            color: 'white',
-                            cursor: 'pointer'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(22, 101, 52)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(21, 128, 61)'}
-                    >
-                        <Download size={18} /> Export
+                    <button className="btn btn-success" onClick={onExport}>
+                        Export
                     </button>
                     {onLogout && (
                         <button
