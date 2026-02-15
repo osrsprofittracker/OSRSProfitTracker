@@ -3,25 +3,14 @@ import { supabase } from '../../lib/supabase';
 
 function ProfitCheckbox({ profit, checked, onChange }) {
   const [showTooltip, setShowTooltip] = useState(false);
-  
+
   return (
-    <label
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        padding: '0.5rem',
-        background: 'rgb(51, 65, 85)',
-        borderRadius: '0.5rem',
-        cursor: 'pointer',
-        position: 'relative'
-      }}
-    >
+    <label className="checkbox-label">
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+        className="checkbox-input"
       />
       <span style={{ fontSize: '0.875rem', flex: 1 }}>{profit.label}</span>
       <div
@@ -29,44 +18,8 @@ function ProfitCheckbox({ profit, checked, onChange }) {
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '16px',
-            height: '16px',
-            borderRadius: '50%',
-            background: 'rgb(71, 85, 105)',
-            color: 'rgb(156, 163, 175)',
-            fontSize: '0.75rem',
-            fontWeight: 'bold',
-            cursor: 'help'
-          }}
-        >
-          i
-        </span>
-        {showTooltip && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '100%',
-              right: '0',
-              marginBottom: '0.5rem',
-              padding: '0.5rem 0.75rem',
-              background: 'rgb(15, 23, 42)',
-              border: '1px solid rgb(71, 85, 105)',
-              borderRadius: '0.5rem',
-              fontSize: '0.75rem',
-              color: 'rgb(209, 213, 219)',
-              whiteSpace: 'nowrap',
-              zIndex: 1000,
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
-            }}
-          >
-            {profit.info}
-          </div>
-        )}
+        <span className="info-icon">i</span>
+        {showTooltip && <div className="tooltip">{profit.info}</div>}
       </div>
     </label>
   );
@@ -81,7 +34,7 @@ export default function SettingsModal({
   onVisibleColumnsChange,
   visibleProfits,
   onVisibleProfitsChange,
-  showCategoryStats, 
+  showCategoryStats,
   onShowCategoryStatsChange,
   onCancel,
   onChangePassword
@@ -169,33 +122,13 @@ export default function SettingsModal({
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               onClick={() => onNumberFormatChange('compact')}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                background: numberFormat === 'compact' ? 'rgb(37, 99, 235)' : 'rgb(71, 85, 105)',
-                borderRadius: '0.5rem',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'background 0.2s',
-              }}
+              className={`settings-format-btn ${numberFormat === 'compact' ? 'settings-format-btn-active' : 'settings-format-btn-inactive'}`}
             >
               Compact (100K, 1.5M)
             </button>
             <button
               onClick={() => onNumberFormatChange('full')}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                background: numberFormat === 'full' ? 'rgb(37, 99, 235)' : 'rgb(71, 85, 105)',
-                borderRadius: '0.5rem',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'background 0.2s',
-              }}
+              className={`settings-format-btn ${numberFormat === 'full' ? 'settings-format-btn-active' : 'settings-format-btn-inactive'}`}
             >
               Full (100,000, 1,500,000)
             </button>
@@ -281,7 +214,7 @@ export default function SettingsModal({
         </div>
       </div>
 
-        {/* Category Statistics Section */}
+      {/* Category Statistics Section */}
       <div style={{ marginBottom: '1.5rem' }}>
         <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
           Category Display Options
@@ -374,5 +307,5 @@ export default function SettingsModal({
     </div>
 
   );
-  
+
 }

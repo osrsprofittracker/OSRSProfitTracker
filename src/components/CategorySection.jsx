@@ -37,29 +37,17 @@ export default function CategorySection({
   const categoryStocks = stocks.filter(s => s.category === category);
 
   return (
-    <div style={{ marginBottom: '2rem' }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 0.5rem',
-        marginBottom: '0.5rem',
-        userSelect: 'none'
-      }}>
+    <div className="category-container">
+      <div className="category-header">
         <div
           draggable
           onDragStart={(e) => onCategoryDragStart(e, category)}
           onDragOver={onCategoryDragOver}
           onDrop={(e) => onCategoryDrop(e, category)}
           onClick={() => onToggleCollapse(category)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'move', flex: 1 }}
+          className="category-title"
         >
-          <span style={{
-            fontSize: '1.25rem',
-            transition: 'transform 0.2s',
-            display: 'inline-block',
-            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'
-          }}>
+          <span className={`collapse-icon ${isCollapsed ? 'collapse-icon-rotated' : ''}`}>
             ▼
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -165,19 +153,7 @@ export default function CategorySection({
                 e.stopPropagation();
                 onEditCategory(category);
               }}
-              style={{
-                padding: '0.25rem 0.75rem',
-                background: 'rgb(147, 51, 234)',
-                color: 'white',
-                borderRadius: '0.375rem',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem'
-              }}
+              className="btn-edit-category"
               title="Edit Category"
             >
               ✏️ Edit
@@ -189,20 +165,7 @@ export default function CategorySection({
                 e.stopPropagation();
                 onDeleteCategory(category);
               }}
-              style={{
-                padding: '0.25rem 0.75rem',
-                background: 'rgb(153, 27, 27)',
-                color: 'white',
-                fontSize: '0.75rem',
-                borderRadius: '0.25rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = 'rgb(127, 29, 29)'}
-              onMouseOut={(e) => e.currentTarget.style.background = 'rgb(153, 27, 27)'}
+              className="btn-delete-category"
             >
               <Trash2 size={12} /> Delete Category
             </button>
@@ -213,15 +176,7 @@ export default function CategorySection({
       {!isCollapsed && (
         <>
           {/* Category Stats Header */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            padding: '1rem',
-            background: 'rgba(51, 65, 85, 0.5)',
-            borderRadius: '0.5rem',
-            marginBottom: '0.5rem',
-            border: '1px solid rgb(71, 85, 105)'
-          }}>
+          <div className="category-stats">
             <StatItem
               label="Total Cost"
               value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.totalCost, 0), numberFormat)}
@@ -279,13 +234,9 @@ export default function CategorySection({
 
 function StatItem({ label, value, color }) {
   return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)', marginBottom: '0.25rem' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '1rem', fontWeight: 'bold', color }}>
-        {value}
-      </div>
+    <div className="stat-item">
+      <div className="stat-label">{label}</div>
+      <div className="stat-value" style={{ color }}>{value}</div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Auth from './components/Auth';
 import MainApp from './MainApp';
 import UpdatePassword from './components/UpdatePassword';
 import LandingPage from './pages/LandingPage';
+import './styles/components.css';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -40,15 +41,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'rgb(15, 23, 42)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white',
-        fontSize: '1.5rem'
-      }}>
+      <div className="loading-container">
         Loading...
       </div>
     );

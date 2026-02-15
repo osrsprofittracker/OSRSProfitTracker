@@ -11,57 +11,21 @@ export default function EditCategoryModal({ category, categories, onConfirm, onC
   };
 
   return (
-    <div style={{
-      background: 'rgb(30, 41, 59)',
-      padding: '1.5rem',
-      borderRadius: '0.75rem',
-      width: '28rem'
-    }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-        Edit Category
-      </h2>
+    <div className="modal-container">
+      <h2 className="modal-title">Edit Category</h2>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            marginBottom: '1rem',
-            background: 'rgb(51, 65, 85)',
-            border: 'none',
-            borderRadius: '0.375rem',
-            color: 'white'
-          }}
+          className="form-input"
           autoFocus
         />
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <button
-            type="button"
-            onClick={onCancel}
-            style={{
-              padding: '0.5rem 1rem',
-              background: 'rgb(51, 65, 85)',
-              color: 'white',
-              borderRadius: '0.375rem',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
+        <div className="modal-actions">
+          <button type="button" onClick={onCancel} className="btn-modal-cancel">
             Cancel
           </button>
-          <button
-            type="submit"
-            style={{
-              padding: '0.5rem 1rem',
-              background: 'rgb(59, 130, 246)',
-              color: 'white',
-              borderRadius: '0.375rem',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
+          <button type="submit" className="btn-modal-confirm">
             Save
           </button>
         </div>

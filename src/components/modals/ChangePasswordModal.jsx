@@ -59,25 +59,8 @@ export default function ChangePasswordModal({ onCancel }) {
   };
 
   return (
-    <div style={{
-      background: 'rgb(30, 41, 59)',
-      padding: '2rem',
-      borderRadius: '0.75rem',
-      width: '28rem',
-      maxWidth: '90vw',
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      border: '1px solid rgb(51, 65, 85)',
-      color: 'white'
-    }}>
-      <h2 style={{ 
-        fontSize: '1.5rem', 
-        fontWeight: 'bold', 
-        marginBottom: '1.5rem',
-        color: 'rgb(209, 213, 219)'
-      }}>
-        Change Password
-      </h2>
-
+    <div className="modal-container modal-container-lg">
+      <h2 className="modal-title">Change Password</h2>
       <form onSubmit={handleChangePassword}>
         <div style={{ display: 'grid', gap: '1rem' }}>
           <div>
