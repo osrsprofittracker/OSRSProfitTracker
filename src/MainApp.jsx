@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import HomePage from './pages/HomePage';
 import { supabase } from './lib/supabase';
 import { useStocks } from './hooks/useStocks';
 import { useCategories } from './hooks/useCategories';
@@ -68,6 +69,7 @@ export default function MainApp({ session, onLogout }) {
     const saved = localStorage.getItem('collapsedCategories');
     return saved ? JSON.parse(saved) : {};
   });
+  const [currentPage, setCurrentPage] = useState('home');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -724,7 +726,10 @@ export default function MainApp({ session, onLogout }) {
     }
   }
 
+
+
   return (
+
     <div style={{
       minHeight: '100vh',
       background: theme === 'dark' ? 'rgb(15, 23, 42)' : 'rgb(243, 244, 246)',
@@ -733,302 +738,333 @@ export default function MainApp({ session, onLogout }) {
       transition: 'background 0.3s, color 0.3s'
     }}>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        {/* Show user email in top right */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          marginBottom: '1rem'
-        }}>
-          <span style={{
-            color: 'rgb(156, 163, 175)',
-            fontSize: '0.875rem'
-          }}>
-            Logged in as <span style={{
-              color: 'rgb(96, 165, 250)',
-              fontWeight: '600'
-            }}>{session?.user?.user_metadata?.username || userEmail}</span>
-          </span>
-        </div>
-        <Header
-          onExport={exportData}
-          onAddCategory={() => setShowCategoryModal(true)}
-          onAddStock={() => {
-            setNewStockCategory('');
-            setShowNewStockModal(true);
-          }}
-          onOpenSettings={() => setShowSettingsModal(true)}
-          onLogout={handleLogout}
-        />
-        <PortfolioSummary
-          stocks={stocks}
-          dumpProfit={dumpProfit}
-          referralProfit={referralProfit}
-          bondsProfit={bondsProfit}
-          visibleProfits={visibleProfits}
-          onAddDumpProfit={() => setShowDumpProfitModal(true)}
-          onAddReferralProfit={() => setShowReferralProfitModal(true)}
-          onAddBondsProfit={() => setShowBondsProfitModal(true)}
-          numberFormat={numberFormat}
-        />
-
-        {/* Milestone Progress Bar and Chart Buttons Row */}
-        <div style={{
-          display: 'flex',
-          gap: '1rem',
-          alignItems: 'center',
-          marginBottom: '1.5rem',
-          marginTop: '1rem',
-          flexWrap: 'wrap'
-        }}>
-          <MilestoneProgressBar
-            milestones={milestones}
-            currentProgress={milestoneProgress}
-            selectedPeriod={selectedMilestonePeriod}
-            onPeriodChange={setSelectedMilestonePeriod}
-            onOpenModal={() => setShowMilestoneModal(true)}
-            numberFormat={numberFormat}
-          />
-
-          <ChartButtons
-            onShowProfitChart={() => setShowProfitChartModal(true)}
-            onShowCategoryChart={() => setShowCategoryChartModal(true)}
-            altAccountTimer={altAccountTimer}
-            onSetAltTimer={() => setShowAltTimerModal(true)}
-            onResetAltTimer={handleResetAltTimer}
-            currentTime={currentTime}
-          />
+        {/* Navigation tabs - separate row */}
+        <div className="page-nav" style={{ marginBottom: '1rem' }}>
+          <button
+            onClick={() => setCurrentPage('home')}
+            className={`page-nav-btn ${currentPage === 'home' ? 'page-nav-btn-active' : ''}`}
+          >
+            🏠 Home
+          </button>
+          <button
+            onClick={() => setCurrentPage('trade')}
+            className={`page-nav-btn ${currentPage === 'trade' ? 'page-nav-btn-active' : ''}`}
+          >
+            💼 Trade
+          </button>
         </div>
 
-        {Object.entries(groupedStocks).map(([category, categoryStocks]) => (
-          <CategorySection
-            key={category}
-            category={category}
-            stocks={categoryStocks}
-            categories={categories}
-            isCollapsed={collapsedCategories[category]}
-            onToggleCollapse={toggleCategory}
-            onAddStock={(cat) => {
-              setNewStockCategory(cat);
-              setShowNewStockModal(true);
-            }}
-            onDeleteCategory={(cat) => {
-              setSelectedCategory(cat);
-              setShowDeleteCategoryModal(true);
-            }}
-            onEditCategory={(cat) => {
-              setSelectedCategory(cat);
-              setShowEditCategoryModal(true);
-            }}
-            onBuy={(stock) => {
-              setSelectedStock(stock);
-              setShowBuyModal(true);
-            }}
-            onSell={(stock) => {
-              setSelectedStock(stock);
-              setShowSellModal(true);
-            }}
-            onAdjust={(stock) => {
-              setSelectedStock(stock);
-              setShowAdjustModal(true);
-            }}
-            onDelete={(stock) => {
-              setSelectedStock(stock);
-              setShowDeleteModal(true);
-            }}
-            onHistory={(stock) => {
-              setSelectedStock(stock);
-              setShowHistoryModal(true);
-            }}
-            onNotes={(stock) => {
-              setSelectedStock(stock);
-              setShowNotesModal(true);
-            }}
-            onCalculate={handleCalculateTime}
-            onDragStart={handleStockDragStart}
-            onDragOver={handleStockDragOver}
-            onCategoryDragStart={handleCategoryDragStart}
-            onCategoryDragOver={handleCategoryDragOver}
-            onCategoryDrop={handleCategoryDrop}
-            onDrop={handleStockDrop}
-            highlightedRows={highlightedRows}
-            sortConfig={sortConfig}
-            onSort={handleSort}
-            visibleColumns={visibleColumns}
-            stockNotes={stockNotes}
-            currentTime={currentTime}
-            numberFormat={numberFormat}
-            showCategoryStats={showCategoryStats}
-          />
-        ))}
-
-        {/* Modals */}
-        <ModalContainer isOpen={showBuyModal}>
-          <BuyModal
-            stock={selectedStock}
-            onConfirm={handleBuy}
-            onCancel={() => setShowBuyModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showSellModal}>
-          <SellModal
-            stock={selectedStock}
-            onConfirm={handleSell}
-            onCancel={() => setShowSellModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showAdjustModal}>
-          <AdjustModal
-            stock={selectedStock}
-            categories={categories}
-            onConfirm={handleAdjust}
-            onCancel={() => setShowAdjustModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showDeleteModal}>
-          <DeleteModal
-            stock={selectedStock}
-            onConfirm={handleDelete}
-            onCancel={() => setShowDeleteModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showNewStockModal}>
-          <NewStockModal
-            categories={categories}
-            defaultCategory={newStockCategory}
-            onConfirm={handleAddStock}
-            onCancel={() => setShowNewStockModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showCategoryModal}>
-          <CategoryModal
-            onConfirm={handleAddCategory}
-            onCancel={() => setShowCategoryModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showDeleteCategoryModal}>
-          <DeleteCategoryModal
-            category={selectedCategory}
-            onConfirm={handleDeleteCategory}
-            onCancel={() => setShowDeleteCategoryModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showDumpProfitModal}>
-          <ProfitModal
-            type="dump"
-            onConfirm={handleAddDumpProfit}
-            onCancel={() => setShowDumpProfitModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showReferralProfitModal}>
-          <ProfitModal
-            type="referral"
-            onConfirm={handleAddReferralProfit}
-            onCancel={() => setShowReferralProfitModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showBondsProfitModal}>
-          <ProfitModal
-            type="bonds"
-            onConfirm={handleAddBondsProfit}
-            onCancel={() => setShowBondsProfitModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showHistoryModal}>
-          <HistoryModal
-            stock={selectedStock}
-            transactions={transactions}
-            onCancel={() => setShowHistoryModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showNotesModal}>
-          <NotesModal
-            stock={selectedStock}
-            notes={stockNotes[selectedStock?.id]}
-            onConfirm={handleSaveNotes}
-            onCancel={() => setShowNotesModal(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showProfitChartModal}>
-          <ProfitChartModal
+        {/* User email in top right - positioned absolutely */}
+        <div style={{
+          position: 'absolute',
+          top: '2rem',
+          right: '2rem',
+          color: 'rgb(156, 163, 175)',
+          fontSize: '0.875rem',
+          zIndex: 10
+        }}>
+          Logged in as <span style={{
+            color: 'rgb(96, 165, 250)',
+            fontWeight: '600'
+          }}>{session?.user?.user_metadata?.username || userEmail}</span>
+        </div>
+        
+        {currentPage === 'home' ? (
+          <HomePage
             stocks={stocks}
-            dumpProfit={dumpProfit}
-            referralProfit={referralProfit}
-            bondsProfit={bondsProfit}
-            onCancel={() => setShowProfitChartModal(false)}
+            transactions={transactions}
+            profits={profits}
             numberFormat={numberFormat}
+            milestones={milestones}
+            milestoneProgress={milestoneProgress}
+            onNavigateToTrade={() => setCurrentPage('trade')}
+            onOpenMilestoneModal={() => setShowMilestoneModal(true)}
           />
-        </ModalContainer>
+        ) : (
+          <>
 
-        <ModalContainer isOpen={showCategoryChartModal}>
-          <CategoryChartModal
-            groupedStocks={groupedStocks}
-            onCancel={() => setShowCategoryChartModal(false)}
-            numberFormat={numberFormat}
-          />
-        </ModalContainer>
+            <Header
+              onExport={exportData}
+              onAddCategory={() => setShowCategoryModal(true)}
+              onAddStock={() => {
+                setNewStockCategory('');
+                setShowNewStockModal(true);
+              }}
+              onOpenSettings={() => setShowSettingsModal(true)}
+              onLogout={handleLogout}
+            />
+            <PortfolioSummary
+              stocks={stocks}
+              dumpProfit={dumpProfit}
+              referralProfit={referralProfit}
+              bondsProfit={bondsProfit}
+              visibleProfits={visibleProfits}
+              onAddDumpProfit={() => setShowDumpProfitModal(true)}
+              onAddReferralProfit={() => setShowReferralProfitModal(true)}
+              onAddBondsProfit={() => setShowBondsProfitModal(true)}
+              numberFormat={numberFormat}
+            />
 
-        <ModalContainer isOpen={showSettingsModal}>
-          <SettingsModal
-            theme={theme}
-            onThemeChange={(newTheme) => updateSettings({ theme: newTheme })}
-            numberFormat={numberFormat}
-            onNumberFormatChange={(newFormat) => updateSettings({ numberFormat: newFormat })}
-            visibleColumns={visibleColumns}
-            onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
-            visibleProfits={visibleProfits}
-            onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
-            showCategoryStats={showCategoryStats}
-            onShowCategoryStatsChange={(value) => updateSettings({ showCategoryStats: value })}
-            onCancel={() => setShowSettingsModal(false)}
-            onChangePassword={() => {
-              setShowSettingsModal(false);
-              setShowChangePasswordModal(true);
-            }}
-          />
-        </ModalContainer>
+            {/* Milestone Progress Bar and Chart Buttons Row */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              alignItems: 'center',
+              marginBottom: '1.5rem',
+              marginTop: '1rem',
+              flexWrap: 'wrap'
+            }}>
+              <MilestoneProgressBar
+                milestones={milestones}
+                currentProgress={milestoneProgress}
+                selectedPeriod={selectedMilestonePeriod}
+                onPeriodChange={setSelectedMilestonePeriod}
+                onOpenModal={() => setShowMilestoneModal(true)}
+                numberFormat={numberFormat}
+              />
 
-        <ModalContainer isOpen={showEditCategoryModal}>
-          <EditCategoryModal
-            category={selectedCategory}
-            categories={categories}
-            onConfirm={handleEditCategory}
-            onCancel={() => setShowEditCategoryModal(false)}
-          />
-        </ModalContainer>
+              <ChartButtons
+                onShowProfitChart={() => setShowProfitChartModal(true)}
+                onShowCategoryChart={() => setShowCategoryChartModal(true)}
+                altAccountTimer={altAccountTimer}
+                onSetAltTimer={() => setShowAltTimerModal(true)}
+                onResetAltTimer={handleResetAltTimer}
+                currentTime={currentTime}
+              />
+            </div>
 
-        <ModalContainer isOpen={showTimeCalculatorModal}>
-          <TimeCalculatorModal
-            stock={selectedStock}
-            onClose={() => setShowTimeCalculatorModal(false)}
-          />
-        </ModalContainer>
+            {Object.entries(groupedStocks).map(([category, categoryStocks]) => (
+              <CategorySection
+                key={category}
+                category={category}
+                stocks={categoryStocks}
+                categories={categories}
+                isCollapsed={collapsedCategories[category]}
+                onToggleCollapse={toggleCategory}
+                onAddStock={(cat) => {
+                  setNewStockCategory(cat);
+                  setShowNewStockModal(true);
+                }}
+                onDeleteCategory={(cat) => {
+                  setSelectedCategory(cat);
+                  setShowDeleteCategoryModal(true);
+                }}
+                onEditCategory={(cat) => {
+                  setSelectedCategory(cat);
+                  setShowEditCategoryModal(true);
+                }}
+                onBuy={(stock) => {
+                  setSelectedStock(stock);
+                  setShowBuyModal(true);
+                }}
+                onSell={(stock) => {
+                  setSelectedStock(stock);
+                  setShowSellModal(true);
+                }}
+                onAdjust={(stock) => {
+                  setSelectedStock(stock);
+                  setShowAdjustModal(true);
+                }}
+                onDelete={(stock) => {
+                  setSelectedStock(stock);
+                  setShowDeleteModal(true);
+                }}
+                onHistory={(stock) => {
+                  setSelectedStock(stock);
+                  setShowHistoryModal(true);
+                }}
+                onNotes={(stock) => {
+                  setSelectedStock(stock);
+                  setShowNotesModal(true);
+                }}
+                onCalculate={handleCalculateTime}
+                onDragStart={handleStockDragStart}
+                onDragOver={handleStockDragOver}
+                onCategoryDragStart={handleCategoryDragStart}
+                onCategoryDragOver={handleCategoryDragOver}
+                onCategoryDrop={handleCategoryDrop}
+                onDrop={handleStockDrop}
+                highlightedRows={highlightedRows}
+                sortConfig={sortConfig}
+                onSort={handleSort}
+                visibleColumns={visibleColumns}
+                stockNotes={stockNotes}
+                currentTime={currentTime}
+                numberFormat={numberFormat}
+                showCategoryStats={showCategoryStats}
+              />
+            ))}
 
-        <ModalContainer isOpen={showAltTimerModal}>
-          <AltTimerModal
-            onConfirm={handleSetAltTimer}
-            onCancel={() => setShowAltTimerModal(false)}
-          />
-        </ModalContainer>
+            {/* Modals */}
+            <ModalContainer isOpen={showBuyModal}>
+              <BuyModal
+                stock={selectedStock}
+                onConfirm={handleBuy}
+                onCancel={() => setShowBuyModal(false)}
+              />
+            </ModalContainer>
 
-        <ModalContainer isOpen={showChangePasswordModal}>
-          <ChangePasswordModal
-            onCancel={() => setShowChangePasswordModal(false)}
-          />
-        </ModalContainer>
+            <ModalContainer isOpen={showSellModal}>
+              <SellModal
+                stock={selectedStock}
+                onConfirm={handleSell}
+                onCancel={() => setShowSellModal(false)}
+              />
+            </ModalContainer>
 
+            <ModalContainer isOpen={showAdjustModal}>
+              <AdjustModal
+                stock={selectedStock}
+                categories={categories}
+                onConfirm={handleAdjust}
+                onCancel={() => setShowAdjustModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showDeleteModal}>
+              <DeleteModal
+                stock={selectedStock}
+                onConfirm={handleDelete}
+                onCancel={() => setShowDeleteModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showNewStockModal}>
+              <NewStockModal
+                categories={categories}
+                defaultCategory={newStockCategory}
+                onConfirm={handleAddStock}
+                onCancel={() => setShowNewStockModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showCategoryModal}>
+              <CategoryModal
+                onConfirm={handleAddCategory}
+                onCancel={() => setShowCategoryModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showDeleteCategoryModal}>
+              <DeleteCategoryModal
+                category={selectedCategory}
+                onConfirm={handleDeleteCategory}
+                onCancel={() => setShowDeleteCategoryModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showDumpProfitModal}>
+              <ProfitModal
+                type="dump"
+                onConfirm={handleAddDumpProfit}
+                onCancel={() => setShowDumpProfitModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showReferralProfitModal}>
+              <ProfitModal
+                type="referral"
+                onConfirm={handleAddReferralProfit}
+                onCancel={() => setShowReferralProfitModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showBondsProfitModal}>
+              <ProfitModal
+                type="bonds"
+                onConfirm={handleAddBondsProfit}
+                onCancel={() => setShowBondsProfitModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showHistoryModal}>
+              <HistoryModal
+                stock={selectedStock}
+                transactions={transactions}
+                onCancel={() => setShowHistoryModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showNotesModal}>
+              <NotesModal
+                stock={selectedStock}
+                notes={stockNotes[selectedStock?.id]}
+                onConfirm={handleSaveNotes}
+                onCancel={() => setShowNotesModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showProfitChartModal}>
+              <ProfitChartModal
+                stocks={stocks}
+                dumpProfit={dumpProfit}
+                referralProfit={referralProfit}
+                bondsProfit={bondsProfit}
+                onCancel={() => setShowProfitChartModal(false)}
+                numberFormat={numberFormat}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showCategoryChartModal}>
+              <CategoryChartModal
+                groupedStocks={groupedStocks}
+                onCancel={() => setShowCategoryChartModal(false)}
+                numberFormat={numberFormat}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showSettingsModal}>
+              <SettingsModal
+                theme={theme}
+                onThemeChange={(newTheme) => updateSettings({ theme: newTheme })}
+                numberFormat={numberFormat}
+                onNumberFormatChange={(newFormat) => updateSettings({ numberFormat: newFormat })}
+                visibleColumns={visibleColumns}
+                onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
+                visibleProfits={visibleProfits}
+                onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
+                showCategoryStats={showCategoryStats}
+                onShowCategoryStatsChange={(value) => updateSettings({ showCategoryStats: value })}
+                onCancel={() => setShowSettingsModal(false)}
+                onChangePassword={() => {
+                  setShowSettingsModal(false);
+                  setShowChangePasswordModal(true);
+                }}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showEditCategoryModal}>
+              <EditCategoryModal
+                category={selectedCategory}
+                categories={categories}
+                onConfirm={handleEditCategory}
+                onCancel={() => setShowEditCategoryModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showTimeCalculatorModal}>
+              <TimeCalculatorModal
+                stock={selectedStock}
+                onClose={() => setShowTimeCalculatorModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showAltTimerModal}>
+              <AltTimerModal
+                onConfirm={handleSetAltTimer}
+                onCancel={() => setShowAltTimerModal(false)}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showChangePasswordModal}>
+              <ChangePasswordModal
+                onCancel={() => setShowChangePasswordModal(false)}
+              />
+            </ModalContainer>
+
+
+          </>
+        )}
         <ModalContainer isOpen={showMilestoneModal}>
           <MilestoneTrackerModal
             milestones={milestones}
@@ -1039,8 +1075,10 @@ export default function MainApp({ session, onLogout }) {
             PRESET_GOALS={PRESET_GOALS}
           />
         </ModalContainer>
+
       </div>
       <Footer />
     </div>
+
   );
 }
