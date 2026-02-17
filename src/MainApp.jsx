@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import { supabase } from './lib/supabase';
 import { useStocks } from './hooks/useStocks';
 import { useCategories } from './hooks/useCategories';
 import { useTransactions } from './hooks/useTransactions';
+import { useGPTradedStats } from './hooks/useGPTradedStats';
 import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
 import { useProfits } from './hooks/useProfits';
@@ -52,6 +54,7 @@ export default function MainApp({ session, onLogout }) {
   const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks } = useStocks(userId);
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
   const { transactions, loading: transactionsLoading, addTransaction } = useTransactions(userId);
+  const { stats: gpTradedStats, loading: gpStatsLoading } = useGPTradedStats(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
@@ -73,7 +76,7 @@ export default function MainApp({ session, onLogout }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading && !milestonesLoading && !profitHistoryLoading;
+  const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading && !milestonesLoading && !profitHistoryLoading && !gpStatsLoading;
 
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
@@ -734,45 +737,154 @@ export default function MainApp({ session, onLogout }) {
       minHeight: '100vh',
       background: theme === 'dark' ? 'rgb(15, 23, 42)' : 'rgb(243, 244, 246)',
       color: theme === 'dark' ? 'white' : 'rgb(17, 24, 39)',
-      padding: '2rem',
       transition: 'background 0.3s, color 0.3s'
     }}>
-      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        {/* Navigation tabs - separate row */}
-        <div className="page-nav" style={{ marginBottom: '1rem' }}>
-          <button
-            onClick={() => setCurrentPage('home')}
-            className={`page-nav-btn ${currentPage === 'home' ? 'page-nav-btn-active' : ''}`}
+      {/* Top bar - full width edge to edge */}
+      <div style={{
+        background: 'rgb(22, 22, 29)',
+        borderBottom: '2px solid rgb(55, 65, 81)',
+        padding: '1rem 2rem',
+        marginBottom: '1.5rem'
+      }}>
+        <div style={{
+          maxWidth: '1600px',
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          {/* Left - Navigation tabs */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setCurrentPage('home')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: currentPage === 'home' ? 'rgb(168, 85, 247)' : 'transparent',
+                border: 'none',
+                borderRadius: '0.5rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'background 0.2s',
+                fontSize: '0.875rem'
+              }}
+              onMouseOver={(e) => {
+                if (currentPage !== 'home') {
+                  e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (currentPage !== 'home') {
+                  e.currentTarget.style.background = 'transparent';
+                }
+              }}
+            >
+              🏠 Home
+            </button>
+            <button
+              onClick={() => setCurrentPage('trade')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: currentPage === 'trade' ? 'rgb(168, 85, 247)' : 'transparent',
+                border: 'none',
+                borderRadius: '0.5rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'background 0.2s',
+                fontSize: '0.875rem'
+              }}
+              onMouseOver={(e) => {
+                if (currentPage !== 'trade') {
+                  e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (currentPage !== 'trade') {
+                  e.currentTarget.style.background = 'transparent';
+                }
+              }}
+            >
+              💼 Trade
+            </button>
+          </div>
+
+          {/* Center - Title */}
+          <h1 style={{
+            fontSize: '1.875rem',
+            fontWeight: 'bold',
+            background: 'linear-gradient(to right, rgb(96, 165, 250), rgb(192, 132, 252))',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            margin: 0
+          }}>
+            Stock Portfolio Tracker
+          </h1>
+
+          {/* Right - User info */}
+          <div style={{
+            color: 'rgb(156, 163, 175)',
+            fontSize: '0.875rem'
+          }}>
+            Logged in as <span style={{
+              color: 'rgb(96, 165, 250)',
+              fontWeight: '600'
+            }}>{session?.user?.user_metadata?.username || userEmail}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content container */}
+      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 2rem' }}>
+        {/* Action buttons - top right under the bar */}
+
+        {/* Action buttons - top right under the bar */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1.5rem' }}>
+          <a
+            href="https://buymeacoffee.com/osrsprofittracker"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-support"
           >
-            🏠 Home
+            ☕ Support
+          </a>
+          <button className="btn btn-success" onClick={exportData}>
+            Export
           </button>
           <button
-            onClick={() => setCurrentPage('trade')}
-            className={`page-nav-btn ${currentPage === 'trade' ? 'page-nav-btn-active' : ''}`}
+            onClick={() => setShowSettingsModal(true)}
+            className="btn btn-secondary"
           >
-            💼 Trade
+            ⚙️ Settings
+          </button>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: '0.5rem 1rem',
+              background: 'rgb(220, 38, 38)',
+              borderRadius: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '0.875rem',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'background 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgb(185, 28, 28)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgb(220, 38, 38)'}
+          >
+            <LogOut size={18} /> Logout
           </button>
         </div>
 
-        {/* User email in top right - positioned absolutely */}
-        <div style={{
-          position: 'absolute',
-          top: '2rem',
-          right: '2rem',
-          color: 'rgb(156, 163, 175)',
-          fontSize: '0.875rem',
-          zIndex: 10
-        }}>
-          Logged in as <span style={{
-            color: 'rgb(96, 165, 250)',
-            fontWeight: '600'
-          }}>{session?.user?.user_metadata?.username || userEmail}</span>
-        </div>
-        
         {currentPage === 'home' ? (
           <HomePage
             stocks={stocks}
             transactions={transactions}
+            gpTradedStats={gpTradedStats}
             profits={profits}
             numberFormat={numberFormat}
             milestones={milestones}
@@ -782,17 +894,25 @@ export default function MainApp({ session, onLogout }) {
           />
         ) : (
           <>
+            {/* Trade page specific buttons - top right under main buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <button
+                onClick={() => setShowCategoryModal(true)}
+                className="btn btn-primary"
+              >
+                Add Category
+              </button>
+              <button
+                onClick={() => {
+                  setNewStockCategory('');
+                  setShowNewStockModal(true);
+                }}
+                className="btn btn-success"
+              >
+                Add Stock
+              </button>
+            </div>
 
-            <Header
-              onExport={exportData}
-              onAddCategory={() => setShowCategoryModal(true)}
-              onAddStock={() => {
-                setNewStockCategory('');
-                setShowNewStockModal(true);
-              }}
-              onOpenSettings={() => setShowSettingsModal(true)}
-              onLogout={handleLogout}
-            />
             <PortfolioSummary
               stocks={stocks}
               dumpProfit={dumpProfit}
@@ -1013,25 +1133,7 @@ export default function MainApp({ session, onLogout }) {
               />
             </ModalContainer>
 
-            <ModalContainer isOpen={showSettingsModal}>
-              <SettingsModal
-                theme={theme}
-                onThemeChange={(newTheme) => updateSettings({ theme: newTheme })}
-                numberFormat={numberFormat}
-                onNumberFormatChange={(newFormat) => updateSettings({ numberFormat: newFormat })}
-                visibleColumns={visibleColumns}
-                onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
-                visibleProfits={visibleProfits}
-                onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
-                showCategoryStats={showCategoryStats}
-                onShowCategoryStatsChange={(value) => updateSettings({ showCategoryStats: value })}
-                onCancel={() => setShowSettingsModal(false)}
-                onChangePassword={() => {
-                  setShowSettingsModal(false);
-                  setShowChangePasswordModal(true);
-                }}
-              />
-            </ModalContainer>
+
 
             <ModalContainer isOpen={showEditCategoryModal}>
               <EditCategoryModal
@@ -1065,6 +1167,27 @@ export default function MainApp({ session, onLogout }) {
 
           </>
         )}
+
+        <ModalContainer isOpen={showSettingsModal}>
+          <SettingsModal
+            theme={theme}
+            onThemeChange={(newTheme) => updateSettings({ theme: newTheme })}
+            numberFormat={numberFormat}
+            onNumberFormatChange={(newFormat) => updateSettings({ numberFormat: newFormat })}
+            visibleColumns={visibleColumns}
+            onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
+            visibleProfits={visibleProfits}
+            onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
+            showCategoryStats={showCategoryStats}
+            onShowCategoryStatsChange={(value) => updateSettings({ showCategoryStats: value })}
+            onCancel={() => setShowSettingsModal(false)}
+            onChangePassword={() => {
+              setShowSettingsModal(false);
+              setShowChangePasswordModal(true);
+            }}
+          />
+        </ModalContainer>
+
         <ModalContainer isOpen={showMilestoneModal}>
           <MilestoneTrackerModal
             milestones={milestones}

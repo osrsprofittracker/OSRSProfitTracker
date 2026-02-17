@@ -1,39 +1,24 @@
 import React from 'react';
 import { formatNumber } from '../utils/formatters';
 
-export default function HomePage({ 
-  stocks, 
-  transactions, 
-  profits, 
+export default function HomePage({
+  stocks,
+  transactions,
+  gpTradedStats,
+  profits,
   numberFormat,
   milestones,
   milestoneProgress,
   onNavigateToTrade,
   onOpenMilestoneModal
 }) {
-  // Calculate GP traded
-  const totalGPTraded = transactions?.reduce((sum, t) => sum + (t.total || 0), 0) || 0;
-  
-  const weeklyGPTraded = transactions?.filter(t => {
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return new Date(t.date) >= weekAgo;
-  }).reduce((sum, t) => sum + (t.total || 0), 0) || 0;
-  
-  const monthlyGPTraded = transactions?.filter(t => {
-    const monthAgo = new Date();
-    monthAgo.setMonth(monthAgo.getMonth() - 1);
-    return new Date(t.date) >= monthAgo;
-  }).reduce((sum, t) => sum + (t.total || 0), 0) || 0;
+  // Use milestoneProgress for period profits (already calculated in MainApp)
+  const dayProfit = milestoneProgress?.day || 0;
+  const weekProfit = milestoneProgress?.week || 0;
+  const monthProfit = milestoneProgress?.month || 0;
+  const yearProfit = milestoneProgress?.year || 0;
 
-  // Calculate total unrealized profit from current holdings
-  const totalUnrealizedProfit = stocks?.reduce((sum, stock) => {
-    const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
-    const currentValue = stock.shares * avgBuy; // Since we don't have current_price, use cost basis
-    return sum + (stock.totalCostSold - stock.totalCostBasisSold);
-  }, 0) || 0;
-
-  // Calculate total realized profit (from sells)
+  // Calculate total realized profit (from sells) FIRST
   const totalRealizedProfit = stocks?.reduce((sum, stock) => {
     return sum + (stock.totalCostSold - (stock.totalCostBasisSold || 0));
   }, 0) || 0;
@@ -42,33 +27,39 @@ export default function HomePage({
   const { dumpProfit = 0, referralProfit = 0, bondsProfit = 0 } = profits || {};
   const totalProfit = totalRealizedProfit + dumpProfit + referralProfit + bondsProfit;
 
-  // Calculate inventory value (current holdings at cost basis)
-  const inventoryValue = stocks?.reduce((sum, stock) => 
+
+  // Use GP traded stats from the hook (calculated in database)
+  const dailyGPTraded = gpTradedStats?.daily || 0;
+  const weeklyGPTraded = gpTradedStats?.weekly || 0;
+  const monthlyGPTraded = gpTradedStats?.monthly || 0;
+  const yearlyGPTraded = gpTradedStats?.yearly || 0;
+  const totalGPTraded = gpTradedStats?.total || 0;
+
+  // Calculate inventory metrics
+  const inventoryValue = stocks?.reduce((sum, stock) =>
     sum + stock.totalCost, 0
   ) || 0;
 
-  // Total items in stock
   const itemsInStock = stocks?.reduce((sum, stock) => sum + stock.shares, 0) || 0;
-  
-  // Unrealized value (non-GE items - items without limit4h set)
-  const unrealizedValue = stocks?.filter(s => !s.limit4h).reduce((sum, stock) => 
-    sum + stock.totalCost, 0
-  ) || 0;
 
-  // Recent activity (last 5 transactions)
-  const recentActivity = transactions?.slice(0, 5) || [];
+  const uniqueItems = stocks?.filter(s => s.shares > 0).length || 0;
+
+  const averageValuePerItem = itemsInStock > 0 ? inventoryValue / itemsInStock : 0;
+
+  // Recent activity (last 10 transactions)
+  const recentActivity = transactions?.slice(0, 10) || [];
 
   // Top items by profit (based on realized profit from sells)
   const topItems = stocks
     ?.map(stock => {
       const realizedProfit = stock.totalCostSold - (stock.totalCostBasisSold || 0);
-      const margin = stock.totalCostBasisSold > 0 
-        ? ((realizedProfit / stock.totalCostBasisSold) * 100) 
+      const margin = stock.totalCostBasisSold > 0
+        ? ((realizedProfit / stock.totalCostBasisSold) * 100)
         : 0;
-      return { 
-        ...stock, 
-        profit: realizedProfit, 
-        margin 
+      return {
+        ...stock,
+        profit: realizedProfit,
+        margin
       };
     })
     .filter(stock => stock.sharesSold > 0) // Only show items that have been sold
@@ -77,69 +68,103 @@ export default function HomePage({
 
   return (
     <div className="home-container">
-      <div className="home-header">
-        <h1 className="home-title">Home Overview</h1>
-        <p className="home-subtitle">Your bulking summary, goals, and quick insights.</p>
-      </div>
-
-      <div className="home-actions">
-        <button onClick={onNavigateToTrade} className="btn btn-purple btn-large">
-          Go to Trade
-        </button>
-        <button className="btn btn-blue btn-large">
-          Open Analytics
-        </button>
+      <div className="home-page-header">
+        <div className="home-page-header-left">
+          <h1 className="home-title">Home Overview</h1>
+          <p className="home-subtitle">Your bulking summary, goals, and quick insights.</p>
+        </div>
+        <div className="home-page-header-right">
+          <button onClick={onNavigateToTrade} className="btn btn-purple btn-large">
+            Go to Trade
+          </button>
+        </div>
       </div>
 
       <div className="summary-grid">
         {/* Profit Card */}
-        <div className="summary-card">
+        <div className="summary-card profit-card">
           <div className="summary-card-header">
             <span className="summary-card-icon">💰</span>
-            <span className="summary-card-label">Profit</span>
+            <span className="summary-card-label">Daily Profit</span>
           </div>
-          <div className="summary-card-value">
-            {formatNumber(totalProfit, numberFormat)}
+          <div className="summary-card-value profit-main-value">
+            {formatNumber(dayProfit, numberFormat)}
           </div>
-          <div className="summary-card-detail">
-            Week: {formatNumber(weeklyGPTraded, numberFormat)}
+          <div className="profit-periods">
+            <div className="profit-period-item">
+              <span className="profit-period-label">Week</span>
+              <span className="profit-period-value">{formatNumber(weekProfit, numberFormat)}</span>
+            </div>
+            <div className="profit-period-divider"></div>
+            <div className="profit-period-item">
+              <span className="profit-period-label">Month</span>
+              <span className="profit-period-value">{formatNumber(monthProfit, numberFormat)}</span>
+            </div>
+            <div className="profit-period-divider"></div>
+            <div className="profit-period-item">
+              <span className="profit-period-label">Year</span>
+              <span className="profit-period-value">{formatNumber(yearProfit, numberFormat)}</span>
+            </div>
           </div>
-          <div className="summary-card-detail">
-            Month: {formatNumber(monthlyGPTraded, numberFormat)}
+          <div className="profit-total">
+            <span className="profit-total-label">Total Profit</span>
+            <span className="profit-total-value">{formatNumber(totalProfit, numberFormat)}</span>
           </div>
         </div>
 
         {/* GP Traded Card */}
-        <div className="summary-card">
+        <div className="summary-card gp-traded-card">
           <div className="summary-card-header">
             <span className="summary-card-icon">📈</span>
-            <span className="summary-card-label">GP Traded</span>
+            <span className="summary-card-label">Daily GP Traded</span>
           </div>
-          <div className="summary-card-value">
-            {formatNumber(totalGPTraded, numberFormat)}
+          <div className="summary-card-value gp-traded-main-value">
+            {formatNumber(dailyGPTraded, numberFormat)}
           </div>
-          <div className="summary-card-detail">
-            Week: {formatNumber(weeklyGPTraded, numberFormat)}
+          <div className="profit-periods">
+            <div className="profit-period-item">
+              <span className="profit-period-label">Week</span>
+              <span className="profit-period-value gp-traded-value">{formatNumber(weeklyGPTraded, numberFormat)}</span>
+            </div>
+            <div className="profit-period-divider"></div>
+            <div className="profit-period-item">
+              <span className="profit-period-label">Month</span>
+              <span className="profit-period-value gp-traded-value">{formatNumber(monthlyGPTraded, numberFormat)}</span>
+            </div>
+            <div className="profit-period-divider"></div>
+            <div className="profit-period-item">
+              <span className="profit-period-label">Year</span>
+              <span className="profit-period-value gp-traded-value">{formatNumber(yearlyGPTraded, numberFormat)}</span>
+            </div>
           </div>
-          <div className="summary-card-detail">
-            Month: {formatNumber(monthlyGPTraded, numberFormat)}
+          <div className="profit-total">
+            <span className="profit-total-label">Total GP Traded</span>
+            <span className="profit-total-value gp-traded-total">{formatNumber(totalGPTraded, numberFormat)}</span>
           </div>
         </div>
 
         {/* Inventory Card */}
-        <div className="summary-card">
+        <div className="summary-card inventory-card">
           <div className="summary-card-header">
             <span className="summary-card-icon">📦</span>
-            <span className="summary-card-label">Inventory</span>
+            <span className="summary-card-label">Total Inventory</span>
           </div>
-          <div className="summary-card-value">
+          <div className="summary-card-value inventory-main-value">
             {formatNumber(inventoryValue, numberFormat)}
           </div>
-          <div className="summary-card-detail">
-            Items in stock: {itemsInStock.toLocaleString()}
-          </div>
-          <div className="summary-card-detail">
-            Unrealized (Non-GE): {formatNumber(unrealizedValue, numberFormat)}
+          <div className="inventory-stats-grid">
+            <div className="inventory-stat-item">
+              <span className="inventory-stat-label">Total Items</span>
+              <span className="inventory-stat-value">{itemsInStock.toLocaleString()}</span>
+            </div>
+            <div className="inventory-stat-item">
+              <span className="inventory-stat-label">Unique Items</span>
+              <span className="inventory-stat-value">{uniqueItems}</span>
+            </div>
+            <div className="inventory-stat-item">
+              <span className="inventory-stat-label">Avg per Item</span>
+              <span className="inventory-stat-value">{formatNumber(averageValuePerItem, numberFormat)}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -170,9 +195,9 @@ export default function HomePage({
                     // Calculate profit for sell transactions
                     const stock = stocks?.find(s => s.id === transaction.stockId);
                     let profit = null;
-                    
+
                     if (transaction.type === 'sell' && stock) {
-                      const avgBuy = stock.totalCostBasisSold > 0 
+                      const avgBuy = stock.totalCostBasisSold > 0
                         ? (stock.totalCostBasisSold / (stock.sharesSold || 1))
                         : 0;
                       const costBasis = avgBuy * transaction.shares;
@@ -180,8 +205,8 @@ export default function HomePage({
                     }
 
                     return (
-                      <tr 
-                        key={idx} 
+                      <tr
+                        key={idx}
                         className={idx % 2 === 0 ? 'tr-even' : 'tr-odd'}
                       >
                         <td className="td-base">
@@ -241,11 +266,11 @@ export default function HomePage({
                       {percentage.toFixed(1)}%
                     </div>
                   </div>
-                  
-                  <div style={{ 
-                    width: '100%', 
-                    height: '8px', 
-                    background: 'rgb(51, 65, 85)', 
+
+                  <div style={{
+                    width: '100%',
+                    height: '8px',
+                    background: 'rgb(51, 65, 85)',
                     borderRadius: '4px',
                     overflow: 'hidden',
                     marginBottom: '0.5rem'
@@ -253,9 +278,9 @@ export default function HomePage({
                     <div style={{
                       width: `${displayPercentage}%`,
                       height: '100%',
-                      background: isComplete 
+                      background: isComplete
                         ? 'linear-gradient(90deg, rgb(34, 197, 94), rgb(22, 163, 74))'
-                        : percentage > 75 
+                        : percentage > 75
                           ? 'linear-gradient(90deg, rgb(234, 179, 8), rgb(202, 138, 4))'
                           : 'linear-gradient(90deg, rgb(59, 130, 246), rgb(37, 99, 235))',
                       transition: 'width 0.3s ease'
@@ -275,10 +300,8 @@ export default function HomePage({
             })}
           </div>
 
-           <button 
+          <button
             onClick={() => {
-              console.log('Button clicked!');
-              console.log('onOpenMilestoneModal:', onOpenMilestoneModal);
               if (onOpenMilestoneModal) {
                 onOpenMilestoneModal();
               } else {
@@ -293,35 +316,35 @@ export default function HomePage({
         </div>
       </div>
 
-        {/* Top Items by Profit */}
-        <div className="activity-section">
-          <h3 className="activity-section-title">
-            <span>🏆</span> Top Items (By Profit)
-          </h3>
-          <div className="activity-list">
-            {topItems.length === 0 ? (
-              <p className="activity-empty">No items sold yet</p>
-            ) : (
-              topItems.map((item, idx) => (
-                <div key={idx} className="activity-item">
-                  <div className="activity-item-left">
-                    <div className="activity-item-title">
-                      {item.name}
-                    </div>
-                    <div className="activity-item-subtitle">
-                      Sold: {item.sharesSold?.toLocaleString()} | Margin: {item.margin.toFixed(2)}%
-                    </div>
+      {/* Top Items by Profit */}
+      <div className="activity-section">
+        <h3 className="activity-section-title">
+          <span>🏆</span> Top Items (By Profit)
+        </h3>
+        <div className="activity-list">
+          {topItems.length === 0 ? (
+            <p className="activity-empty">No items sold yet</p>
+          ) : (
+            topItems.map((item, idx) => (
+              <div key={idx} className="activity-item">
+                <div className="activity-item-left">
+                  <div className="activity-item-title">
+                    {item.name}
                   </div>
-                  <div className="activity-item-right">
-                    <div className={`activity-item-value ${item.profit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative'}`}>
-                      {formatNumber(item.profit, numberFormat)}
-                    </div>
+                  <div className="activity-item-subtitle">
+                    Sold: {item.sharesSold?.toLocaleString()} | Margin: {item.margin.toFixed(2)}%
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+                <div className="activity-item-right">
+                  <div className={`activity-item-value ${item.profit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative'}`}>
+                    {formatNumber(item.profit, numberFormat)}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
+    </div>
   );
 }
