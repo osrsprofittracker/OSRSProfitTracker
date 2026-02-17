@@ -100,6 +100,7 @@ export default function MainApp({ session, onLogout }) {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showTimeCalculatorModal, setShowTimeCalculatorModal] = useState(false);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const [selectedStock, setSelectedStock] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -740,12 +741,7 @@ export default function MainApp({ session, onLogout }) {
       transition: 'background 0.3s, color 0.3s'
     }}>
       {/* Top bar - full width edge to edge */}
-      <div style={{
-        background: 'rgb(22, 22, 29)',
-        borderBottom: '2px solid rgb(55, 65, 81)',
-        padding: '1rem 2rem',
-        marginBottom: '1.5rem'
-      }}>
+      <div className="topbar">
         <div style={{
           maxWidth: '1600px',
           margin: '0 auto',
@@ -822,64 +818,55 @@ export default function MainApp({ session, onLogout }) {
             Stock Portfolio Tracker
           </h1>
 
-          {/* Right - User info */}
-          <div style={{
-            color: 'rgb(156, 163, 175)',
-            fontSize: '0.875rem'
-          }}>
-            Logged in as <span style={{
-              color: 'rgb(96, 165, 250)',
-              fontWeight: '600'
-            }}>{session?.user?.user_metadata?.username || userEmail}</span>
+          {/* Right - User dropdown */}
+          <div className="user-dropdown-wrapper">
+            <button
+              className="user-dropdown-trigger"
+              onClick={() => setUserMenuOpen(prev => !prev)}
+            >
+              <span className="user-dropdown-name">
+                {session?.user?.user_metadata?.username || userEmail}
+              </span>
+              <span className="user-dropdown-caret">▾</span>
+            </button>
+
+            {userMenuOpen && (
+              <div className="user-dropdown-menu">
+                <button
+                  className="user-dropdown-item"
+                  onClick={() => { setShowSettingsModal(true); setUserMenuOpen(false); }}
+                >
+                  ⚙️ Settings
+                </button>
+                <button
+                  className="user-dropdown-item"
+                  onClick={() => { exportData(); setUserMenuOpen(false); }}
+                >
+                  📥 Export Data
+                </button>
+                <a
+                  href="https://buymeacoffee.com/osrsprofittracker"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="user-dropdown-item user-dropdown-item--support"
+                  onClick={() => setUserMenuOpen(false)}
+                >
+                  ☕ Support Me
+                </a>
+                <button
+                  className="user-dropdown-item user-dropdown-item--danger"
+                  onClick={() => { handleLogout(); setUserMenuOpen(false); }}
+                >
+                  <LogOut size={14} /> Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main content container */}
       <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 2rem' }}>
-        {/* Action buttons - top right under the bar */}
-
-        {/* Action buttons - top right under the bar */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          <a
-            href="https://buymeacoffee.com/osrsprofittracker"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-support"
-          >
-            ☕ Support
-          </a>
-          <button className="btn btn-success" onClick={exportData}>
-            Export
-          </button>
-          <button
-            onClick={() => setShowSettingsModal(true)}
-            className="btn btn-secondary"
-          >
-            ⚙️ Settings
-          </button>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: '0.5rem 1rem',
-              background: 'rgb(220, 38, 38)',
-              borderRadius: '0.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              fontSize: '0.875rem',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              transition: 'background 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgb(185, 28, 28)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'rgb(220, 38, 38)'}
-          >
-            <LogOut size={18} /> Logout
-          </button>
-        </div>
-
         {currentPage === 'home' ? (
           <HomePage
             stocks={stocks}
