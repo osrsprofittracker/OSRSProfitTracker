@@ -44,6 +44,7 @@ export default function SettingsModal({
     { key: 'avgBuy', label: 'Avg Buy' },
     { key: 'avgSell', label: 'Avg Sell' },
     { key: 'profit', label: 'Profit' },
+    { key: 'desiredStock', label: 'Desired Stock' },
     { key: 'limit4h', label: '4H Limit' },
     { key: 'timer', label: 'Timer' },
     { key: 'notes', label: 'Notes' }

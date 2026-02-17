@@ -11,6 +11,7 @@ import { useSettings } from './hooks/useSettings';
 import { useProfits } from './hooks/useProfits';
 import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
+import CategoryQuickNav from './components/CategoryQuickNav';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
 import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
 import AltTimerModal from './components/modals/AltTimerModal';
@@ -515,6 +516,21 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
+  const handleQuickNavNavigate = (category) => {
+    // Expand if collapsed
+    if (collapsedCategories[category]) {
+      setCollapsedCategories(prev => ({ ...prev, [category]: false }));
+      // Wait for expand animation then scroll
+      setTimeout(() => {
+        const el = document.querySelector(`[data-category="${category}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else {
+      const el = document.querySelector(`[data-category="${category}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
     await updateSettings({ altAccountTimer: timerEndTime });
@@ -881,25 +897,12 @@ export default function MainApp({ session, onLogout }) {
           />
         ) : (
           <>
-            {/* Trade page specific buttons - top right under main buttons */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1.5rem' }}>
-              <button
-                onClick={() => setShowCategoryModal(true)}
-                className="btn btn-primary"
-              >
-                Add Category
-              </button>
-              <button
-                onClick={() => {
-                  setNewStockCategory('');
-                  setShowNewStockModal(true);
-                }}
-                className="btn btn-success"
-              >
-                Add Stock
-              </button>
-            </div>
-
+            <CategoryQuickNav
+              categories={categories}
+              collapsedCategories={collapsedCategories}
+              onNavigate={handleQuickNavNavigate}
+            />
+            
             <PortfolioSummary
               stocks={stocks}
               dumpProfit={dumpProfit}
@@ -939,6 +942,26 @@ export default function MainApp({ session, onLogout }) {
                 currentTime={currentTime}
               />
             </div>
+
+            {/* Category Actions */}
+            <div className="category-actions-row">
+              <button
+                onClick={() => setShowCategoryModal(true)}
+                className="btn btn-primary"
+              >
+                + Add Category
+              </button>
+              <button
+                onClick={() => {
+                  setNewStockCategory('');
+                  setShowNewStockModal(true);
+                }}
+                className="btn btn-success"
+              >
+                + Add Stock
+              </button>
+            </div>
+
 
             {Object.entries(groupedStocks).map(([category, categoryStocks]) => (
               <CategorySection
