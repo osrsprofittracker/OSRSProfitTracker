@@ -51,6 +51,7 @@ import {
 export default function MainApp({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
+  const version = "1.3.0";
   // Custom hooks for Supabase
   const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks } = useStocks(userId);
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
@@ -822,17 +823,27 @@ export default function MainApp({ session, onLogout }) {
           </div>
 
           {/* Center - Title */}
-          <h1 style={{
-            fontSize: '1.875rem',
-            fontWeight: 'bold',
-            background: 'linear-gradient(to right, rgb(96, 165, 250), rgb(192, 132, 252))',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            margin: 0
-          }}>
-            Stock Portfolio Tracker
-          </h1>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h1 style={{
+              fontSize: '1.875rem',
+              fontWeight: 'bold',
+              background: 'linear-gradient(to right, rgb(96, 165, 250), rgb(192, 132, 252))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              margin: 0
+            }}>
+              Stock Portfolio Tracker
+            </h1>
+            <a
+              href="https://github.com/osrsprofittracker/OSRSProfitTracker/releases"
+              target="_blank"
+              rel="noreferrer"
+              className="version-badge"
+            >
+              v{version}
+            </a>
+          </div>
 
           {/* Right - User dropdown */}
           <div className="user-dropdown-wrapper">
@@ -902,7 +913,7 @@ export default function MainApp({ session, onLogout }) {
               collapsedCategories={collapsedCategories}
               onNavigate={handleQuickNavNavigate}
             />
-            
+
             <PortfolioSummary
               stocks={stocks}
               dumpProfit={dumpProfit}

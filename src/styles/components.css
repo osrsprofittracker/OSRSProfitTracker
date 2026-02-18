@@ -1171,3 +1171,15 @@
     display: none;
   }
 }
+
+.version-badge {
+  font-size: 0.7rem;
+  color: rgb(100, 116, 139);
+  text-decoration: none;
+  transition: color 0.2s;
+  margin-top: -0.25rem;
+}
+
+.version-badge:hover {
+  color: rgb(96, 165, 250);
+}
