@@ -37,7 +37,6 @@ import NotesModal from './components/modals/NotesModal';
 import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
-import * as Sentry from "@sentry/react";
 
 import {
   STORAGE_KEY,

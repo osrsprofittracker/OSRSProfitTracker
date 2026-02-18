@@ -1,13 +1,6 @@
-import * as Sentry from "@sentry/react";
 import { supabase } from './supabase';
 
 export async function logError(error, context = {}) {
-  // Log to Sentry
-  Sentry.captureException(error, {
-    extra: context
-  });
-
-  // Also log to your own database (optional)
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -24,22 +17,22 @@ export async function logError(error, context = {}) {
   } catch (logError) {
     console.error('Failed to log error to database:', logError);
   }
-  if (typeof window !== 'undefined') {
-    window.addEventListener('unhandledrejection', (event) => {
-      logError(new Error(event.reason), {
-        type: 'unhandledRejection',
-        promise: true
-      });
-    });
+}
 
-    // Catch global errors
-    window.addEventListener('error', (event) => {
-      logError(event.error || new Error(event.message), {
-        type: 'globalError',
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno
-      });
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    logError(new Error(event.reason), {
+      type: 'unhandledRejection',
+      promise: true
     });
-  }
+  });
+
+  window.addEventListener('error', (event) => {
+    logError(event.error || new Error(event.message), {
+      type: 'globalError',
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno
+    });
+  });
 }
