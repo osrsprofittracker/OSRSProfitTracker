@@ -1,29 +1,97 @@
 import React, { useState } from 'react';
+import { formatNumber } from '../../utils/formatters';
 
 export default function BuyModal({ stock, onConfirm, onCancel }) {
   const [shares, setShares] = useState((stock.limit4h * 1).toString());
   const [price, setPrice] = useState('');
   const [startTimer, setStartTimer] = useState(true);
   const [multiplier, setMultiplier] = useState(1);
+  const [useTotal, setUseTotal] = useState(false);
+  const [totalAmount, setTotalAmount] = useState('');
 
   React.useEffect(() => {
     const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
-    setPrice((Math.round(avgBuy * 100) / 100).toFixed(0));
+    const avgPrice = (Math.round(avgBuy * 100) / 100).toFixed(0);
+    setPrice(avgPrice);
+    setTotalAmount((stock.limit4h * parseFloat(avgPrice)).toFixed(0));
   }, [stock]);
 
   const handleMultiplierChange = (mult) => {
     setMultiplier(mult);
-    setShares((stock.limit4h * mult).toString());
+    const newShares = stock.limit4h * mult;
+    setShares(newShares.toString());
+
+    if (price) {
+      setTotalAmount((newShares * parseFloat(price)).toFixed(0));
+    }
+  };
+
+  const handleModeToggle = () => {
+    if (!useTotal && price && shares) {
+      // Switching TO total mode - calculate total from current price
+      setTotalAmount(Math.round(parseFloat(shares) * parseFloat(price)).toString());
+    } else if (useTotal && totalAmount && shares) {
+      // Switching TO price mode - calculate price from current total
+      setPrice((parseFloat(totalAmount) / parseFloat(shares)).toFixed(2));
+    }
+    setUseTotal(!useTotal);
+  };
+
+  const handlePriceChange = (value) => {
+    setPrice(value);
+    if (shares && value) {
+      setTotalAmount((parseFloat(shares) * parseFloat(value)).toFixed(0));
+    }
+  };
+
+  const handleTotalChange = (value) => {
+    setTotalAmount(value);
+    if (shares && value) {
+      setPrice((parseFloat(value) / parseFloat(shares)).toFixed(0));
+    }
+  };
+
+  const formatTotalInput = (value) => {
+    if (!value) return '';
+    // Convert to string and remove all non-digit characters
+    const digitsOnly = String(value).replace(/\D/g, '');
+    if (!digitsOnly) return '';
+
+    // Add thousand separators with dots
+    return digitsOnly.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const handleTotalInputChange = (value) => {
+    const formatted = formatTotalInput(value);
+    const numericValue = value.replace(/\./g, '');
+    setTotalAmount(numericValue);
+
+    if (shares && numericValue) {
+      setPrice((parseFloat(numericValue) / parseFloat(shares)).toFixed(2));
+    }
   };
 
   const handleConfirm = () => {
-    if (!shares || !price) return;
-    onConfirm({
-      shares: parseFloat(shares),
-      price: parseFloat(price),
-      startTimer
-    });
+    if (useTotal) {
+      if (!shares || !totalAmount) return;
+      const calculatedPrice = parseFloat(totalAmount) / parseFloat(shares);
+      onConfirm({
+        shares: parseFloat(shares),
+        price: calculatedPrice,
+        startTimer
+      });
+    } else {
+      if (!shares || !price) return;
+      onConfirm({
+        shares: parseFloat(shares),
+        price: parseFloat(price),
+        startTimer
+      });
+    }
   };
+
+  const calculatedTotal = !useTotal && shares && price ? (parseFloat(shares) * parseFloat(price)).toFixed(2) : null;
+  const calculatedAvg = useTotal && shares && totalAmount ? (parseFloat(totalAmount) / parseFloat(shares)).toFixed(2) : null;
 
   return (
     <div style={{
@@ -37,6 +105,24 @@ export default function BuyModal({ stock, onConfirm, onCancel }) {
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
         Buy {stock.name}
       </h2>
+      <div style={{
+        padding: '0.75rem',
+        background: 'rgba(34, 197, 94, 0.1)',
+        border: '1px solid rgb(34, 197, 94)',
+        borderRadius: '0.5rem',
+        marginBottom: '1rem'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.875rem', color: 'rgb(34, 197, 94)', fontWeight: '600' }}>
+            Current: {formatNumber(stock.shares)} shares
+          </span>
+          {shares && parseFloat(shares) > 0 && (
+            <span style={{ fontSize: '0.875rem', color: 'rgb(156, 163, 175)', fontWeight: '500' }}>
+              After: {formatNumber(stock.shares + parseFloat(shares))} shares
+            </span>
+          )}
+        </div>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
@@ -89,14 +175,40 @@ export default function BuyModal({ stock, onConfirm, onCancel }) {
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
-            Price per Share
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)' }}>
+              {useTotal ? 'Total Cost' : 'Price per Share'}
+            </label>
+            <button
+              onClick={handleModeToggle}
+              style={{
+                padding: '0.375rem 0.75rem',
+                background: 'rgb(51, 65, 85)',
+                borderRadius: '0.5rem',
+                border: '1px solid rgb(71, 85, 105)',
+                color: 'rgb(226, 232, 240)',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = 'rgb(71, 85, 105)';
+                e.currentTarget.style.borderColor = 'rgb(100, 116, 139)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgb(51, 65, 85)';
+                e.currentTarget.style.borderColor = 'rgb(71, 85, 105)';
+              }}
+            >
+              ⇄ {useTotal ? 'Price' : 'Total'}
+            </button>
+          </div>
           <input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="Price"
+            type={useTotal ? "text" : "number"}
+            value={useTotal ? formatTotalInput(totalAmount) : price}
+            onChange={(e) => useTotal ? handleTotalInputChange(e.target.value) : handlePriceChange(e.target.value)}
+            placeholder={useTotal ? 'Total cost' : 'Price per share'}
             style={{
               width: '100%',
               padding: '0.5rem 1rem',
@@ -109,6 +221,32 @@ export default function BuyModal({ stock, onConfirm, onCancel }) {
             onFocus={(e) => e.target.style.borderColor = 'rgb(34, 197, 94)'}
             onBlur={(e) => e.target.style.borderColor = 'transparent'}
           />
+          {useTotal && price && (
+            <div style={{
+              background: 'rgba(234, 88, 12, 0.1)',
+              border: '1px solid rgb(251, 146, 60)',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 0.75rem',
+              marginTop: '0.5rem',
+              textAlign: 'center'
+            }}>
+              <span style={{ fontSize: '1.25rem', color: 'rgb(251, 146, 60)' }}>Avg: </span>
+              <span style={{ fontSize: '1.25rem', color: 'rgb(251, 146, 60)', fontWeight: '500' }}>${price}</span>
+            </div>
+          )}
+          {!useTotal && calculatedTotal && (
+            <div style={{
+              background: 'rgba(234, 88, 12, 0.1)',
+              border: '1px solid rgb(251, 146, 60)',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 0.75rem',
+              marginTop: '0.5rem',
+              textAlign: 'center'
+            }}>
+              <span style={{ fontSize: '1.25rem', color: 'rgb(251, 146, 60)' }}>Total: </span>
+              <span style={{ fontSize: '1.25rem', color: 'rgb(251, 146, 60)', fontWeight: '500' }}>${formatNumber(parseFloat(calculatedTotal), 'full')}</span>
+            </div>
+          )}
         </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
           <input

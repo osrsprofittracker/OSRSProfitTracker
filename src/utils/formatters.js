@@ -1,21 +1,34 @@
 export const formatNumber = (num, numberFormat = 'compact') => {
   if (num == null || isNaN(num)) return '-';
 
+  // Round to nearest integer first
+  const rounded = Math.round(num);
+
   if (numberFormat === 'full') {
-    return num.toLocaleString();
+    return rounded.toLocaleString();
   }
 
   // Compact format
-  if (num < 100_000) {
-    return num.toLocaleString();
+  if (rounded < 100_000) {
+    return rounded.toLocaleString();
   }
 
-  if (num < 10_000_000) {
-    return (num / 1_000).toFixed(0) + ' K';
+  if (rounded < 10_000_000) {
+    return (rounded / 1_000).toFixed(0) + ' K';
   }
 
-  return (num / 1_000_000).toFixed(1) + ' M';
+  return (rounded / 1_000_000).toFixed(1) + ' M';
 };
+
+export function formatAvgPrice(value, numberFormat) {
+  if (value < 100000) {
+    // Below 100K: show with 2 decimals
+    return `$${value.toFixed(2)}`;
+  } else {
+    // Above 100K: use formatNumber
+    return `$${formatNumber(value, numberFormat)}`;
+  }
+}
 
 export const formatTimer = (endTime) => {
   if (!endTime) return '--:--:--';

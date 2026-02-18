@@ -22,45 +22,107 @@ export default function CategorySection({
   onDragStart,
   onDragOver,
   onDrop,
+  onCategoryDragStart,
+  onCategoryDragOver,
+  onCategoryDrop,
   highlightedRows,
   sortConfig,
   onSort,
   visibleColumns,
   stockNotes,
   currentTime,
-  numberFormat
+  numberFormat,
+  showCategoryStats
 }) {
   const categoryStocks = stocks.filter(s => s.category === category);
 
   return (
-    <div style={{ marginBottom: '2rem' }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 0.5rem',
-        marginBottom: '0.5rem',
-        userSelect: 'none'
-      }}>
+    <div className="category-container" data-category={category}>
+      <div className="category-header">
         <div
           draggable
-          onDragStart={(e) => onDragStart(e, category)}
-          onDragOver={onDragOver}
-          onDrop={(e) => onDrop(e, null, category)}
+          onDragStart={(e) => onCategoryDragStart(e, category)}
+          onDragOver={onCategoryDragOver}
+          onDrop={(e) => onCategoryDrop(e, category)}
           onClick={() => onToggleCollapse(category)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'move', flex: 1 }}
+          className="category-title"
         >
-          <span style={{
-            fontSize: '1.25rem',
-            transition: 'transform 0.2s',
-            display: 'inline-block',
-            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'
-          }}>
+          <span className={`collapse-icon ${isCollapsed ? 'collapse-icon-rotated' : ''}`}>
             ▼
           </span>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'rgb(96, 165, 250)' }}>
-            {category} ({categoryStocks.length})
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'rgb(96, 165, 250)', margin: 0 }}>
+              {category} ({categoryStocks.length})
+            </h2>
+            {showCategoryStats && (() => {
+              const timerCount = categoryStocks.filter(s => s.timerEndTime && s.timerEndTime > Date.now()).length;
+              const okCount = categoryStocks.filter(s =>
+                (!s.timerEndTime || s.timerEndTime <= Date.now()) &&
+                s.shares >= s.needed &&
+                !s.onHold
+              ).length;
+              const holdCount = categoryStocks.filter(s => s.onHold).length;
+              const lowCount = categoryStocks.filter(s =>
+                (!s.timerEndTime || s.timerEndTime <= Date.now()) &&
+                s.shares < s.needed &&
+                !s.onHold
+              ).length;
+
+              return (
+                <div style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}>
+                  {timerCount > 0 && (
+                    <span style={{
+                      color: 'rgb(251, 146, 60)',
+                      background: 'rgba(251, 146, 60, 0.1)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid rgba(251, 146, 60, 0.3)'
+                    }}>
+                      ⏰{timerCount}
+                    </span>
+                  )}
+                  {okCount > 0 && (
+                    <span style={{
+                      color: 'rgb(34, 197, 94)',
+                      background: 'rgba(34, 197, 94, 0.1)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid rgba(34, 197, 94, 0.3)'
+                    }}>
+                      ✓{okCount}
+                    </span>
+                  )}
+                  {holdCount > 0 && (
+                    <span style={{
+                      color: 'rgb(79, 70, 229)',
+                      background: 'rgba(79, 70, 229, 0.1)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid rgba(79, 70, 229, 0.3)'
+                    }}>
+                      🔒{holdCount}
+                    </span>
+                  )}
+                  {lowCount > 0 && (
+                    <span style={{
+                      color: 'rgb(239, 68, 68)',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid rgba(239, 68, 68, 0.3)'
+                    }}>
+                      🔴{lowCount}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
@@ -91,19 +153,7 @@ export default function CategorySection({
                 e.stopPropagation();
                 onEditCategory(category);
               }}
-              style={{
-                padding: '0.25rem 0.75rem',
-                background: 'rgb(147, 51, 234)',
-                color: 'white',
-                borderRadius: '0.375rem',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem'
-              }}
+              className="btn-edit-category"
               title="Edit Category"
             >
               ✏️ Edit
@@ -115,20 +165,7 @@ export default function CategorySection({
                 e.stopPropagation();
                 onDeleteCategory(category);
               }}
-              style={{
-                padding: '0.25rem 0.75rem',
-                background: 'rgb(153, 27, 27)',
-                color: 'white',
-                fontSize: '0.75rem',
-                borderRadius: '0.25rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = 'rgb(127, 29, 29)'}
-              onMouseOut={(e) => e.currentTarget.style.background = 'rgb(153, 27, 27)'}
+              className="btn-delete-category"
             >
               <Trash2 size={12} /> Delete Category
             </button>
@@ -139,15 +176,7 @@ export default function CategorySection({
       {!isCollapsed && (
         <>
           {/* Category Stats Header */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            padding: '1rem',
-            background: 'rgba(51, 65, 85, 0.5)',
-            borderRadius: '0.5rem',
-            marginBottom: '0.5rem',
-            border: '1px solid rgb(71, 85, 105)'
-          }}>
+          <div className="category-stats">
             <StatItem
               label="Total Cost"
               value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.totalCost, 0), numberFormat)}
@@ -195,6 +224,7 @@ export default function CategorySection({
             stockNotes={stockNotes}
             currentTime={currentTime}
             numberFormat={numberFormat}
+            showCategoryStats={showCategoryStats}
           />
         </>
       )}
@@ -204,13 +234,9 @@ export default function CategorySection({
 
 function StatItem({ label, value, color }) {
   return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)', marginBottom: '0.25rem' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '1rem', fontWeight: 'bold', color }}>
-        {value}
-      </div>
+    <div className="stat-item">
+      <div className="stat-label">{label}</div>
+      <div className="stat-value" style={{ color }}>{value}</div>
     </div>
   );
 }

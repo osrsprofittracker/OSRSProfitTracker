@@ -10,7 +10,7 @@ export async function logError(error, context = {}) {
   // Also log to your own database (optional)
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     await supabase.from('error_logs').insert({
       error_message: error.message,
       error_stack: error.stack,
@@ -23,5 +23,23 @@ export async function logError(error, context = {}) {
     });
   } catch (logError) {
     console.error('Failed to log error to database:', logError);
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('unhandledrejection', (event) => {
+      logError(new Error(event.reason), {
+        type: 'unhandledRejection',
+        promise: true
+      });
+    });
+
+    // Catch global errors
+    window.addEventListener('error', (event) => {
+      logError(event.error || new Error(event.message), {
+        type: 'globalError',
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+      });
+    });
   }
 }

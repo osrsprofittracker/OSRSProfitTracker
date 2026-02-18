@@ -6,14 +6,15 @@ const DEFAULT_VISIBLE_COLUMNS = {
   avgBuy: true,
   avgSell: true,
   profit: true,
+  desiredStock: true,
   timer: true,
   notes: true,
   limit4h: true
 };
 
 const DEFAULT_VISIBLE_PROFITS = {
-  dumpProfit: true,
-  referralProfit: true,
+  dumpProfit: false,
+  referralProfit: false,
   bondsProfit: true
 };
 
@@ -23,7 +24,8 @@ export function useSettings(userId) {
     numberFormat: 'compact',
     visibleColumns: DEFAULT_VISIBLE_COLUMNS,
     visibleProfits: DEFAULT_VISIBLE_PROFITS,
-    altAccountTimer: null
+    altAccountTimer: null,
+    showCategoryStats: false
   });
   const [loading, setLoading] = useState(true);
 
@@ -49,9 +51,10 @@ export function useSettings(userId) {
       setSettings({
         theme: data.theme || 'dark',
         numberFormat: data.number_format || 'compact',
-        visibleColumns: data.visible_columns || DEFAULT_VISIBLE_COLUMNS,
+        visibleColumns: { ...DEFAULT_VISIBLE_COLUMNS, ...data.visible_columns },
         visibleProfits: data.visible_profits || DEFAULT_VISIBLE_PROFITS.bondsProfit,
-        altAccountTimer: data.alt_account_timer
+        altAccountTimer: data.alt_account_timer,
+        showCategoryStats: data.show_category_stats || false
       });
     } else {
       const { error: insertError } = await supabase
@@ -62,7 +65,8 @@ export function useSettings(userId) {
           number_format: 'compact',
           visible_columns: DEFAULT_VISIBLE_COLUMNS,
           visible_profits: DEFAULT_VISIBLE_PROFITS,
-          alt_account_timer: null
+          alt_account_timer: null,
+          show_category_stats: false
         }]);
 
       if (insertError) {
@@ -81,7 +85,8 @@ export function useSettings(userId) {
       number_format: newSettings.numberFormat,
       visible_columns: newSettings.visibleColumns,
       visible_profits: newSettings.visibleProfits,
-      alt_account_timer: newSettings.altAccountTimer
+      alt_account_timer: newSettings.altAccountTimer,
+      show_category_stats: newSettings.showCategoryStats
     };
 
     const { error } = await supabase

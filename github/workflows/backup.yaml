@@ -1,0 +1,68 @@
+name: supabase-backup
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *" # Runs every day at midnight
+
+jobs:
+  run_db_backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_ENABLED: ${{ vars.BACKUP_ENABLED }} # Repository variable (true or false)
+    steps:
+      - name: Check if backups are enabled
+        run: |
+          if [ "$BACKUP_ENABLED" != "true" ]; then
+            echo "Backups are disabled. Exiting workflow."
+            exit 0
+          fi
+
+      - name: Checkout repository
+        if: env.BACKUP_ENABLED == 'true'
+        uses: actions/checkout@v3
+
+      - name: Setup Supabase CLI
+        if: env.BACKUP_ENABLED == 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Create timestamp folder
+        if: env.BACKUP_ENABLED == 'true'
+        run: |
+          TIMESTAMP=$(date +%Y-%m-%d)
+          mkdir -p prisma/backups/$TIMESTAMP
+          echo "BACKUP_DIR=prisma/backups/$TIMESTAMP" >> $GITHUB_ENV
+
+      - name: Backup roles
+        if: env.BACKUP_ENABLED == 'true'
+        run: supabase db dump --db-url "$SUPABASE_DB_URL" -f $BACKUP_DIR/roles.sql --role-only
+
+      - name: Backup schema
+        if: env.BACKUP_ENABLED == 'true'
+        run: supabase db dump --db-url "$SUPABASE_DB_URL" -f $BACKUP_DIR/schema.sql
+
+      - name: Backup data
+        if: env.BACKUP_ENABLED == 'true'
+        run: supabase db dump --db-url "$SUPABASE_DB_URL" -f $BACKUP_DIR/data.sql --data-only --use-copy
+
+      - name: Commit backups
+        if: env.BACKUP_ENABLED == 'true'
+        run: |
+          git clone https://x-access-token:${{ secrets.BACKUP_REPO_TOKEN }}@github.com/osrsprofittracker/OSRSProfitTracker-Backups.git backup-repo
+          cp -r $BACKUP_DIR backup-repo/
+          cd backup-repo
+          find . -maxdepth 1 -type d -mtime +7 -not -name "." -exec rm -rf {} +
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add .
+          git commit -m "Supabase backup $(date +%Y-%m-%d)" || echo "No changes"
+          git push

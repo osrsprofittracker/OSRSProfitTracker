@@ -1,17 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import * as Sentry from "@sentry/react";
 import App from './App.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import CookiePolicy from './pages/CookiePolicy';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import ErrorBoundary from './components/ErrorBoundary';
+import './styles/components.css';
 import './index.css'
-import { initSentry } from './lib/sentry'
-
-// Initialize Sentry
-initSentry();
+import './lib/errorLogger' // Import to activate global error handlers
 
 function Router() {
   const path = window.location.pathname;
@@ -32,42 +30,10 @@ function Router() {
   }
 }
 
-// Wrap Router with Sentry ErrorBoundary
-const RouterWithSentry = Sentry.withErrorBoundary(Router, {
-  fallback: ({ error, resetError }) => (
-    <div style={{
-      minHeight: '100vh',
-      background: 'rgb(15, 23, 42)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexDirection: 'column',
-      gap: '1rem',
-      color: 'white',
-      padding: '2rem'
-    }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Something went wrong</h2>
-      <p style={{ color: 'rgb(156, 163, 175)' }}>The error has been reported to our team.</p>
-      <button
-        onClick={resetError}
-        style={{
-          padding: '0.5rem 1rem',
-          background: 'rgb(29, 78, 216)',
-          borderRadius: '0.5rem',
-          border: 'none',
-          color: 'white',
-          cursor: 'pointer'
-        }}
-      >
-        Try again
-      </button>
-    </div>
-  ),
-  showDialog: false,
-});
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterWithSentry />
+    <ErrorBoundary>
+      <Router />
+    </ErrorBoundary>
   </React.StrictMode>,
 )

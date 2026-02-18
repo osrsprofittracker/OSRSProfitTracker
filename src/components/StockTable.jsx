@@ -1,6 +1,6 @@
 import React from 'react';
 import { Edit3, Trash2, GripVertical } from 'lucide-react';
-import { formatNumber, formatTimer } from '../utils/formatters';
+import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { sortStocks } from '../utils/calculations';
 
@@ -28,14 +28,8 @@ export default function StockTable({
   const sortedStocks = sortStocks(stocks, sortConfig);
 
   return (
-    <div style={{
-      background: 'rgba(30, 41, 59, 0.7)',
-      border: '1px solid rgb(51, 65, 85)',
-      borderRadius: '0.5rem',
-      overflowX: 'auto',
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-    }}>
-      <table style={{ width: '100%', fontSize: '0.875rem', color: 'rgb(229, 231, 235)', borderCollapse: 'collapse' }}>
+    <div className="table-container">
+      <table className="table-base">
         <TableHeader
           sortConfig={sortConfig}
           onSort={onSort}
@@ -82,7 +76,7 @@ function TableHeader({ sortConfig, onSort, visibleColumns }) {
     { label: 'Total Sold Price', key: 'totalCostSold', visible: true },
     { label: 'Avg Sell', key: 'avgSell', visible: visibleColumns.avgSell },
     { label: 'Profit', key: 'profit', visible: visibleColumns.profit },
-    { label: 'Desired Stock', key: 'needed', visible: true },
+    { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock },
     { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h },
     { label: 'Timer', key: 'timer', visible: visibleColumns.timer },
     { label: 'Notes', key: null, visible: visibleColumns.notes },
@@ -90,32 +84,14 @@ function TableHeader({ sortConfig, onSort, visibleColumns }) {
   ];
 
   return (
-    <thead style={{ background: 'rgb(30, 41, 59)', borderBottom: '1px solid rgb(51, 65, 85)' }}>
+    <thead className="thead-base">
       <tr>
-        <th style={{ padding: '0.5rem', width: '2rem', border: '1px solid rgb(51, 65, 85)' }}></th>
+        <th className="th-icon-empty"></th>
         {columns.filter(col => col.visible).map((col) => (
           <th
             key={col.label}
             onClick={() => col.key && onSort(col.key)}
-            style={{
-              padding: '0.5rem 0.75rem',
-              textAlign: 'left',
-              fontWeight: '600',
-              color: 'rgb(209, 213, 219)',
-              border: '1px solid rgb(51, 65, 85)',
-              fontSize: '0.75rem',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              cursor: col.key ? 'pointer' : 'default',
-              userSelect: 'none',
-              position: 'relative'
-            }}
-            onMouseOver={(e) => {
-              if (col.key) e.currentTarget.style.background = 'rgb(51, 65, 85)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'transparent';
-            }}
+            className={`th-base ${col.key ? 'th-sortable' : ''}`}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               {col.label}
@@ -160,28 +136,11 @@ function StockRow({
 
   return (
     <tr
-      style={{
-        background: isHighlighted
-          ? 'rgba(96, 165, 250, 0.3)'
-          : (index % 2 ? 'rgba(30, 41, 59, 0.5)' : 'rgba(15, 23, 42, 0.4)'),
-        cursor: 'move',
-        transition: 'background 0.3s',
-        boxShadow: isHighlighted ? '0 0 20px rgba(96, 165, 250, 0.5)' : 'none'
-      }}
+      className={`tr-base ${isHighlighted ? 'tr-highlighted' : (index % 2 ? 'tr-even' : 'tr-odd')}`}
       draggable
       onDragStart={(e) => onDragStart(e, stock.id, category)}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, stock.id, category)}
-      onMouseOver={(e) => {
-        if (!isHighlighted) {
-          e.currentTarget.style.background = 'rgba(51, 65, 85, 0.4)';
-        }
-      }}
-      onMouseOut={(e) => {
-        if (!isHighlighted) {
-          e.currentTarget.style.background = index % 2 ? 'rgba(30, 41, 59, 0.5)' : 'rgba(15, 23, 42, 0.4)';
-        }
-      }}
     >
       <td style={{ padding: '0.5rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
         <GripVertical size={16} style={{ color: 'rgb(107, 114, 128)', margin: '0 auto' }} />
@@ -197,12 +156,12 @@ function StockRow({
       <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
         {formatNumber(stock.shares, numberFormat)}
       </td>
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+      <td style={{ padding: '0.5rem 0.5rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', whiteSpace: 'nowrap' }}>
         {formatNumber(stock.totalCost, numberFormat)}
       </td>
       {visibleColumns.avgBuy && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
-          ${avgBuy.toFixed(2)}
+          {formatAvgPrice(avgBuy, numberFormat)}
         </td>
       )}
       <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
@@ -213,16 +172,11 @@ function StockRow({
       </td>
       {visibleColumns.avgSell && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
-          ${avgSell.toFixed(2)}
+          {formatAvgPrice(avgSell, numberFormat)}
         </td>
       )}
       {visibleColumns.profit && (
-        <td style={{
-          padding: '0.5rem 0.75rem',
-          textAlign: 'right',
-          border: '1px solid rgb(51, 65, 85)',
-          color: profit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'
-        }}>
+        <td className={`td-base td-right ${profit >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
           {profit >= 0 ? '+' : ''}{formatNumber(profit, numberFormat)}
         </td>
       )}
@@ -235,13 +189,7 @@ function StockRow({
         </td>
       )}
       {visibleColumns.timer && (
-        <td style={{
-          padding: '0.5rem 0.75rem',
-          textAlign: 'center',
-          border: '1px solid rgb(51, 65, 85)',
-          fontFamily: 'monospace',
-          color: isTimerActive ? 'rgb(251, 146, 60)' : 'rgb(156, 163, 175)'
-        }}>
+        <td className={`td-base td-center td-timer ${isTimerActive ? 'td-timer-active' : 'td-timer-inactive'}`}>
           {timerDisplay}
         </td>
       )}
@@ -249,17 +197,7 @@ function StockRow({
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
           <button
             onClick={() => onNotes(stock)}
-            style={{
-              padding: '0.25rem 0.75rem',
-              background: stockNotes[stock.id] ? 'rgb(168, 85, 247)' : 'rgb(71, 85, 105)',
-              color: 'white',
-              fontSize: '0.75rem',
-              borderRadius: '0.25rem',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = stockNotes[stock.id] ? 'rgb(147, 51, 234)' : 'rgb(51, 65, 85)'}
-            onMouseOut={(e) => e.currentTarget.style.background = stockNotes[stock.id] ? 'rgb(168, 85, 247)' : 'rgb(71, 85, 105)'}
+            className={`btn btn-sm ${stockNotes[stock.id] ? 'btn-purple' : 'btn-secondary'}`}
           >
             {stockNotes[stock.id] ? '📝 Edit' : '➕ Add'}
           </button>
@@ -283,38 +221,32 @@ function StockRow({
 function StatusBadge({ stock }) {
   if (stock.timerEndTime && stock.timerEndTime > Date.now()) {
     return (
-      <span style={{
-        padding: '0.25rem 0.5rem',
-        background: 'rgb(202, 138, 4)',
-        borderRadius: '0.25rem',
-        fontSize: '0.75rem',
-        fontWeight: '600'
-      }}>
-        ⏰ TIMER
+      <span className="badge badge-timer">
+        <span>⏰</span>
+        <span>TIMER</span>
       </span>
     );
   } else if (stock.shares < stock.needed) {
+    if (stock.onHold) {
+      return (
+        <span className="badge badge-hold">
+          <span>🔒</span>
+          <span>ON HOLD</span>
+        </span>
+      );
+    }
+
     return (
-      <span style={{
-        padding: '0.25rem 0.5rem',
-        background: 'rgb(220, 38, 38)',
-        borderRadius: '0.25rem',
-        fontSize: '0.75rem',
-        fontWeight: '600'
-      }}>
-        🔴 LOW
+      <span className="badge badge-low">
+        <span>🔴</span>
+        <span>LOW</span>
       </span>
     );
   } else {
     return (
-      <span style={{
-        padding: '0.25rem 0.5rem',
-        background: 'rgb(21, 128, 61)',
-        borderRadius: '0.25rem',
-        fontSize: '0.75rem',
-        fontWeight: '600'
-      }}>
-        🟢 OK
+      <span className="badge badge-ok">
+        <span>🟢</span>
+        <span>OK</span>
       </span>
     );
   }
@@ -322,107 +254,23 @@ function StatusBadge({ stock }) {
 
 function ActionButtons({ stock, onBuy, onSell, onHistory, onAdjust, onDelete, onCalculate }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.25rem' }}>
-      <button
-        onClick={() => onBuy(stock)}
-        style={{
-          padding: '0.25rem 0.75rem',
-          background: 'rgb(21, 128, 61)',
-          color: 'white',
-          fontSize: '0.75rem',
-          borderRadius: '0.25rem',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(22, 101, 52)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(21, 128, 61)'}
-      >
+    <div className="action-buttons">
+      <button className="btn btn-success btn-sm" onClick={() => onBuy(stock)}>
         Buy
       </button>
-      <button
-        onClick={() => onSell(stock)}
-        style={{
-          padding: '0.25rem 0.75rem',
-          background: 'rgb(185, 28, 28)',
-          color: 'white',
-          fontSize: '0.75rem',
-          borderRadius: '0.25rem',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(153, 27, 27)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(185, 28, 28)'}
-      >
+      <button className="btn btn-sell btn-sm" onClick={() => onSell(stock)}>
         Sell
       </button>
-      <button
-        onClick={() => onHistory(stock)}
-        style={{
-          padding: '0.25rem 0.75rem',
-          background: 'rgb(67, 56, 202)',
-          color: 'white',
-          fontSize: '0.75rem',
-          borderRadius: '0.25rem',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(55, 48, 163)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(67, 56, 202)'}
-      >
+      <button className="btn btn-info btn-sm" onClick={() => onHistory(stock)}>
         📜
       </button>
-      <button
-        onClick={() => onCalculate(stock)}
-        style={{
-          padding: '0.375rem 0.75rem',
-          background: 'rgb(59, 130, 246)',
-          color: 'white',
-          borderRadius: '0.375rem',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '0.75rem',
-          fontWeight: '500'
-        }}
-        title="Calculate time to target"
-      >
+      <button className="btn btn-blue btn-sm" onClick={() => onCalculate(stock)}>
         ⏱️ Calc
       </button>
-      <button
-        onClick={() => onAdjust(stock)}
-        style={{
-          padding: '0.25rem 0.75rem',
-          background: 'rgb(202, 138, 4)',
-          color: 'white',
-          fontSize: '0.75rem',
-          borderRadius: '0.25rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.25rem',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(161, 98, 7)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(202, 138, 4)'}
-      >
-        <Edit3 size={12} /> Adjust
+      <button className="btn btn-warning btn-sm" onClick={() => onAdjust(stock)}>
+        Adjust
       </button>
-      <button
-        onClick={() => onDelete(stock)}
-        style={{
-          padding: '0.25rem 0.75rem',
-          background: 'rgb(127, 29, 29)',
-          color: 'white',
-          fontSize: '0.75rem',
-          borderRadius: '0.25rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.25rem',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.background = 'rgb(69, 10, 10)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'rgb(127, 29, 29)'}
-      >
+      <button className="btn btn-danger btn-sm" onClick={() => onDelete(stock)}>
         <Trash2 size={12} />
       </button>
     </div>

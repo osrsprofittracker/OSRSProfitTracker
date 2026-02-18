@@ -1,6 +1,30 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
+function ProfitCheckbox({ profit, checked, onChange }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <label className="checkbox-label">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="checkbox-input"
+      />
+      <span style={{ fontSize: '0.875rem', flex: 1 }}>{profit.label}</span>
+      <div
+        style={{ position: 'relative', display: 'inline-block' }}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        <span className="info-icon">i</span>
+        {showTooltip && <div className="tooltip">{profit.info}</div>}
+      </div>
+    </label>
+  );
+}
+
 export default function SettingsModal({
   theme,
   onThemeChange,
@@ -10,6 +34,8 @@ export default function SettingsModal({
   onVisibleColumnsChange,
   visibleProfits,
   onVisibleProfitsChange,
+  showCategoryStats,
+  onShowCategoryStatsChange,
   onCancel,
   onChangePassword
 }) {
@@ -18,6 +44,7 @@ export default function SettingsModal({
     { key: 'avgBuy', label: 'Avg Buy' },
     { key: 'avgSell', label: 'Avg Sell' },
     { key: 'profit', label: 'Profit' },
+    { key: 'desiredStock', label: 'Desired Stock' },
     { key: 'limit4h', label: '4H Limit' },
     { key: 'timer', label: 'Timer' },
     { key: 'notes', label: 'Notes' }
@@ -96,33 +123,13 @@ export default function SettingsModal({
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               onClick={() => onNumberFormatChange('compact')}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                background: numberFormat === 'compact' ? 'rgb(37, 99, 235)' : 'rgb(71, 85, 105)',
-                borderRadius: '0.5rem',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'background 0.2s',
-              }}
+              className={`settings-format-btn ${numberFormat === 'compact' ? 'settings-format-btn-active' : 'settings-format-btn-inactive'}`}
             >
               Compact (100K, 1.5M)
             </button>
             <button
               onClick={() => onNumberFormatChange('full')}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                background: numberFormat === 'full' ? 'rgb(37, 99, 235)' : 'rgb(71, 85, 105)',
-                borderRadius: '0.5rem',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'background 0.2s',
-              }}
+              className={`settings-format-btn ${numberFormat === 'full' ? 'settings-format-btn-active' : 'settings-format-btn-inactive'}`}
             >
               Full (100,000, 1,500,000)
             </button>
@@ -179,47 +186,76 @@ export default function SettingsModal({
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {[
-              { key: 'dumpProfit', label: 'Dump Profit' },
-              { key: 'referralProfit', label: 'Referral Profit' },
-              { key: 'bondsProfit', label: 'Bonds Profit' },
+              {
+                key: 'dumpProfit',
+                label: 'Dump Profit',
+                info: 'Track profits from buying dumps on ge, like Omega Dumps OSRS or Flipping Utilities '
+              },
+              {
+                key: 'referralProfit',
+                label: 'Referral Profit',
+                info: 'Track income from referrering to other sellers or getting reffered.'
+              },
+              {
+                key: 'bondsProfit',
+                label: 'Bonds Profit',
+                info: 'Track profits from buying and selling OSRS bonds'
+              },
             ].map((profit) => (
-              <label
+              <ProfitCheckbox
                 key={profit.key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.5rem',
-                  background: 'rgb(51, 65, 85)',
-                  borderRadius: '0.5rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={visibleProfits?.[profit.key] !== false}
-                  onChange={(e) =>
-                    onVisibleProfitsChange({ ...visibleProfits, [profit.key]: e.target.checked })
-                  }
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                />
-                <span style={{ fontSize: '0.875rem' }}>{profit.label}</span>
-              </label>
+                profit={profit}
+                checked={visibleProfits?.[profit.key] !== false}
+                onChange={(e) =>
+                  onVisibleProfitsChange({ ...visibleProfits, [profit.key]: e.target.checked })
+                }
+              />
             ))}
           </div>
         </div>
       </div>
 
+      {/* Category Statistics Section */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+          Category Display Options
+        </label>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem',
+            background: 'rgb(51, 65, 85)',
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={showCategoryStats}
+            onChange={(e) => onShowCategoryStatsChange(e.target.checked)}
+            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+          />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Show Category Statistics</div>
+            <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)' }}>
+              Display stock status counts (⏰Timer, ✓OK, 🔒Hold, 🔴Low) next to category names
+            </div>
+          </div>
+        </label>
+      </div>
+
       {/* Change Password Link */}
-<div style={{ 
-  marginTop: '1.5rem',
-  paddingTop: '1rem',
-  paddingBottom: '1rem',
-  borderTop: '1px solid rgb(71, 85, 105)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center'
-}}>
+      <div style={{
+        marginTop: '1.5rem',
+        paddingTop: '1rem',
+        paddingBottom: '1rem',
+        borderTop: '1px solid rgb(71, 85, 105)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
         <button
           type="button"
           onClick={onChangePassword}
@@ -270,5 +306,7 @@ export default function SettingsModal({
         </button>
       </div>
     </div>
+
   );
+
 }
