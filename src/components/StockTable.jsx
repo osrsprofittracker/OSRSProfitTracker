@@ -76,7 +76,7 @@ function TableHeader({ sortConfig, onSort, visibleColumns }) {
     { label: 'Total Sold Price', key: 'totalCostSold', visible: true },
     { label: 'Avg Sell', key: 'avgSell', visible: visibleColumns.avgSell },
     { label: 'Profit', key: 'profit', visible: visibleColumns.profit },
-    { label: 'Desired Stock', key: 'needed', visible: true },
+    { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock },
     { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h },
     { label: 'Timer', key: 'timer', visible: visibleColumns.timer },
     { label: 'Notes', key: null, visible: visibleColumns.notes },

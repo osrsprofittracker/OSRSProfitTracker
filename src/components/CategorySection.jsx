@@ -37,7 +37,7 @@ export default function CategorySection({
   const categoryStocks = stocks.filter(s => s.category === category);
 
   return (
-    <div className="category-container">
+    <div className="category-container" data-category={category}>
       <div className="category-header">
         <div
           draggable

@@ -6,6 +6,7 @@ const DEFAULT_VISIBLE_COLUMNS = {
   avgBuy: true,
   avgSell: true,
   profit: true,
+  desiredStock: true,
   timer: true,
   notes: true,
   limit4h: true
@@ -50,7 +51,7 @@ export function useSettings(userId) {
       setSettings({
         theme: data.theme || 'dark',
         numberFormat: data.number_format || 'compact',
-        visibleColumns: data.visible_columns || DEFAULT_VISIBLE_COLUMNS,
+        visibleColumns: { ...DEFAULT_VISIBLE_COLUMNS, ...data.visible_columns },
         visibleProfits: data.visible_profits || DEFAULT_VISIBLE_PROFITS.bondsProfit,
         altAccountTimer: data.alt_account_timer,
         showCategoryStats: data.show_category_stats || false
