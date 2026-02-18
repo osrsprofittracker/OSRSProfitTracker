@@ -46,7 +46,6 @@ export default function SettingsModal({
     { key: 'profit', label: 'Profit' },
     { key: 'desiredStock', label: 'Desired Stock' },
     { key: 'limit4h', label: '4H Limit' },
-    { key: 'timer', label: 'Timer' },
     { key: 'notes', label: 'Notes' }
   ];
 

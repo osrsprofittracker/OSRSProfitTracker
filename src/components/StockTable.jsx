@@ -78,7 +78,6 @@ function TableHeader({ sortConfig, onSort, visibleColumns }) {
     { label: 'Profit', key: 'profit', visible: visibleColumns.profit },
     { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock },
     { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h },
-    { label: 'Timer', key: 'timer', visible: visibleColumns.timer },
     { label: 'Notes', key: null, visible: visibleColumns.notes },
     { label: 'Actions', key: null, visible: true }
   ];
@@ -188,11 +187,6 @@ function StockRow({
           {formatNumber(stock.limit4h, numberFormat)}
         </td>
       )}
-      {visibleColumns.timer && (
-        <td className={`td-base td-center td-timer ${isTimerActive ? 'td-timer-active' : 'td-timer-inactive'}`}>
-          {timerDisplay}
-        </td>
-      )}
       {visibleColumns.notes && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
           <button
@@ -221,10 +215,12 @@ function StockRow({
 function StatusBadge({ stock }) {
   if (stock.timerEndTime && stock.timerEndTime > Date.now()) {
     return (
-      <span className="badge badge-timer">
-        <span>⏰</span>
-        <span>TIMER</span>
-      </span>
+      <div className="td-center">
+        <span className="badge badge-timer">
+          <span>⏰</span>
+          <span>{formatTimer(stock.timerEndTime)}</span>
+        </span>
+      </div>
     );
   } else if (stock.shares < stock.needed) {
     if (stock.onHold) {

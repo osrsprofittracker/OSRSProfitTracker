@@ -7,7 +7,6 @@ const DEFAULT_VISIBLE_COLUMNS = {
   avgSell: true,
   profit: true,
   desiredStock: true,
-  timer: true,
   notes: true,
   limit4h: true
 };
