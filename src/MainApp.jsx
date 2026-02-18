@@ -66,7 +66,7 @@ export default function MainApp({ session, onLogout }) {
   const { dumpProfit, referralProfit, bondsProfit } = profits;
 
   // Destructure settings
-  const { theme, numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats } = settings;
+  const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats } = settings;
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
     // Load collapsed state from localStorage on initial render
@@ -752,9 +752,8 @@ export default function MainApp({ session, onLogout }) {
 
     <div style={{
       minHeight: '100vh',
-      background: theme === 'dark' ? 'rgb(15, 23, 42)' : 'rgb(243, 244, 246)',
-      color: theme === 'dark' ? 'white' : 'rgb(17, 24, 39)',
-      transition: 'background 0.3s, color 0.3s'
+      background: 'rgb(15, 23, 42)',
+      color: 'white'
     }}>
       {/* Top bar - full width edge to edge */}
       <div className="topbar">
@@ -1190,8 +1189,6 @@ export default function MainApp({ session, onLogout }) {
 
         <ModalContainer isOpen={showSettingsModal}>
           <SettingsModal
-            theme={theme}
-            onThemeChange={(newTheme) => updateSettings({ theme: newTheme })}
             numberFormat={numberFormat}
             onNumberFormatChange={(newFormat) => updateSettings({ numberFormat: newFormat })}
             visibleColumns={visibleColumns}
