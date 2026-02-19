@@ -517,17 +517,21 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleQuickNavNavigate = (category) => {
-    // Expand if collapsed
+    const scrollToCategory = () => {
+      const el = document.querySelector(`[data-category="${category}"]`);
+      if (el) {
+        const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
+        const offset = topbarHeight + 16;
+        const top = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    };
+
     if (collapsedCategories[category]) {
       setCollapsedCategories(prev => ({ ...prev, [category]: false }));
-      // Wait for expand animation then scroll
-      setTimeout(() => {
-        const el = document.querySelector(`[data-category="${category}"]`);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      setTimeout(scrollToCategory, 100);
     } else {
-      const el = document.querySelector(`[data-category="${category}"]`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToCategory();
     }
   };
 
