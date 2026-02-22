@@ -27,16 +27,18 @@ export function useProfitHistory(userId) {
     setLoading(false);
   };
 
-  const addProfitEntry = async (profitType, amount, stockId = null) => {
-    const { error } = await supabase
+  const addProfitEntry = async (profitType, amount, stockId = null, transactionId = null) => {
+    const { data, error } = await supabase
       .from('profit_history')
       .insert([{
         user_id: userId,
         profit_type: profitType,
         amount: Math.round(Number(amount)),
         stock_id: stockId,
+        transaction_id: transactionId,
         created_at: new Date().toISOString()
-      }]);
+      }])
+      .select();
 
     if (error) {
       console.error('Error adding profit entry:', error);
@@ -44,7 +46,7 @@ export function useProfitHistory(userId) {
     }
 
     await fetchProfitHistory();
-    return true;
+    return data?.[0] ?? null;
   };
 
   return { profitHistory, loading, addProfitEntry, refetch: fetchProfitHistory };

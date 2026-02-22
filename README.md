@@ -35,7 +35,6 @@ A web-based tool for Old School RuneScape players to track investments, monitor 
 Planned and in-progress features. Have an idea? [Open a feature request](../../issues/new/choose).
 
 - [ ] GE price API integration
-- [ ] History Page with filters and undo button
 - [ ] Investment Page
 - [ ] Analytics Page
 - [ ] Mobile improvements

@@ -11,7 +11,6 @@ export default function StockTable({
   onSell,
   onAdjust,
   onDelete,
-  onHistory,
   onNotes,
   onCalculate,
   onDragStart,
@@ -46,7 +45,6 @@ export default function StockTable({
               onSell={onSell}
               onAdjust={onAdjust}
               onDelete={onDelete}
-              onHistory={onHistory}
               onNotes={onNotes}
               onCalculate={onCalculate}
               onDragStart={onDragStart}
@@ -115,7 +113,6 @@ function StockRow({
   onSell,
   onAdjust,
   onDelete,
-  onHistory,
   onNotes,
   onCalculate,
   onDragStart,
@@ -202,7 +199,6 @@ function StockRow({
           stock={stock}
           onBuy={onBuy}
           onSell={onSell}
-          onHistory={onHistory}
           onAdjust={onAdjust}
           onDelete={onDelete}
           onCalculate={onCalculate}
@@ -248,7 +244,7 @@ function StatusBadge({ stock }) {
   }
 }
 
-function ActionButtons({ stock, onBuy, onSell, onHistory, onAdjust, onDelete, onCalculate }) {
+function ActionButtons({ stock, onBuy, onSell, onAdjust, onDelete, onCalculate }) {
   return (
     <div className="action-buttons">
       <button className="btn btn-success btn-sm" onClick={() => onBuy(stock)}>
@@ -256,9 +252,6 @@ function ActionButtons({ stock, onBuy, onSell, onHistory, onAdjust, onDelete, on
       </button>
       <button className="btn btn-sell btn-sm" onClick={() => onSell(stock)}>
         Sell
-      </button>
-      <button className="btn btn-info btn-sm" onClick={() => onHistory(stock)}>
-        📜
       </button>
       <button className="btn btn-blue btn-sm" onClick={() => onCalculate(stock)}>
         ⏱️ Calc

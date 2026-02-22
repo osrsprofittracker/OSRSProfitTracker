@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
+import HistoryPage from './pages/HistoryPage';
 import { supabase } from './lib/supabase';
 import { useStocks } from './hooks/useStocks';
 import { useCategories } from './hooks/useCategories';
@@ -32,7 +33,6 @@ import NewStockModal from './components/modals/NewStockModal';
 import CategoryModal from './components/modals/CategoryModal';
 import DeleteCategoryModal from './components/modals/DeleteCategoryModal';
 import ProfitModal from './components/modals/ProfitModal';
-import HistoryModal from './components/modals/HistoryModal';
 import NotesModal from './components/modals/NotesModal';
 import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
@@ -50,11 +50,16 @@ import {
 export default function MainApp({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
-  const version = "1.3.0";
+  const version = "1.4.0";
   // Custom hooks for Supabase
   const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks } = useStocks(userId);
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
-  const { transactions, loading: transactionsLoading, addTransaction } = useTransactions(userId);
+  const {
+    transactions, loading: transactionsLoading, addTransaction,
+    pagedTransactions, pagedLoading, totalCount, totalPages,
+    page, pageSize, filters, goToPage, changePageSize, applyFilters, initPaged,
+    sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
+  } = useTransactions(userId);
   const { stats: gpTradedStats, loading: gpStatsLoading } = useGPTradedStats(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
@@ -94,7 +99,6 @@ export default function MainApp({ session, onLogout }) {
   const [showDumpProfitModal, setShowDumpProfitModal] = useState(false);
   const [showReferralProfitModal, setShowReferralProfitModal] = useState(false);
   const [showBondsProfitModal, setShowBondsProfitModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showProfitChartModal, setShowProfitChartModal] = useState(false);
   const [showCategoryChartModal, setShowCategoryChartModal] = useState(false);
@@ -387,7 +391,7 @@ export default function MainApp({ session, onLogout }) {
       totalCostBasisSold: (selectedStock.totalCostBasisSold || 0) + costBasisOfSharesSold
     });
 
-    await addTransaction({
+    const newTransaction = await addTransaction({
       stockId: selectedStock.id,
       stockName: selectedStock.name,
       type: 'sell',
@@ -396,7 +400,15 @@ export default function MainApp({ session, onLogout }) {
       total,
       date: new Date().toISOString()
     });
-    await addProfitEntry('stock', profit, selectedStock.id);
+
+    const profitEntry = await addProfitEntry('stock', profit, selectedStock.id, newTransaction?.id ?? null);
+
+    if (newTransaction && profitEntry) {
+      await supabase
+        .from('transactions')
+        .update({ profit_history_id: profitEntry.id })
+        .eq('id', newTransaction.id);
+    }
     await refetch();
     highlightRow(selectedStock.id);
     setShowSellModal(false);
@@ -617,9 +629,6 @@ export default function MainApp({ session, onLogout }) {
       case 'delete':
         setShowDeleteModal(true);
         break;
-      case 'history':
-        setShowHistoryModal(true);
-        break;
       case 'notes':
         setShowNotesModal(true);
         break;
@@ -822,6 +831,28 @@ export default function MainApp({ session, onLogout }) {
             >
               💼 Trade
             </button>
+            <button
+              onClick={() => setCurrentPage('history')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: currentPage === 'history' ? 'rgb(168, 85, 247)' : 'transparent',
+                border: 'none',
+                borderRadius: '0.5rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'background 0.2s',
+                fontSize: '0.875rem'
+              }}
+              onMouseOver={(e) => {
+                if (currentPage !== 'history') e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                if (currentPage !== 'history') e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              📜 History
+            </button>
           </div>
 
           {/* Center - Title */}
@@ -900,6 +931,7 @@ export default function MainApp({ session, onLogout }) {
           <HomePage
             stocks={stocks}
             transactions={transactions}
+            profitHistory={profitHistory}
             gpTradedStats={gpTradedStats}
             profits={profits}
             numberFormat={numberFormat}
@@ -907,6 +939,27 @@ export default function MainApp({ session, onLogout }) {
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => setCurrentPage('trade')}
             onOpenMilestoneModal={() => setShowMilestoneModal(true)}
+          />
+        ) : currentPage === 'history' ? (
+          <HistoryPage
+            pagedTransactions={pagedTransactions}
+            profitHistory={profitHistory}
+            pagedLoading={pagedLoading}
+            totalCount={totalCount}
+            stocks={stocks}
+            totalPages={totalPages}
+            page={page}
+            pageSize={pageSize}
+            filters={filters}
+            onGoToPage={goToPage}
+            onChangePageSize={changePageSize}
+            onApplyFilters={applyFilters}
+            onInit={initPaged}
+            numberFormat={numberFormat}
+            sortConfig={historySortConfig}
+            onApplySort={applySort}
+            onReset={resetPaged}
+            onUndo={undoTransaction}
           />
         ) : (
           <>
@@ -1012,10 +1065,6 @@ export default function MainApp({ session, onLogout }) {
                   setSelectedStock(stock);
                   setShowDeleteModal(true);
                 }}
-                onHistory={(stock) => {
-                  setSelectedStock(stock);
-                  setShowHistoryModal(true);
-                }}
                 onNotes={(stock) => {
                   setSelectedStock(stock);
                   setShowNotesModal(true);
@@ -1117,14 +1166,6 @@ export default function MainApp({ session, onLogout }) {
                 type="bonds"
                 onConfirm={handleAddBondsProfit}
                 onCancel={() => setShowBondsProfitModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showHistoryModal}>
-              <HistoryModal
-                stock={selectedStock}
-                transactions={transactions}
-                onCancel={() => setShowHistoryModal(false)}
               />
             </ModalContainer>
 
