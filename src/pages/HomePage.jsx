@@ -10,7 +10,8 @@ export default function HomePage({
   milestones,
   milestoneProgress,
   onNavigateToTrade,
-  onOpenMilestoneModal
+  onOpenMilestoneModal,
+  profitHistory
 }) {
   // Use milestoneProgress for period profits (already calculated in MainApp)
   const dayProfit = milestoneProgress?.day || 0;
@@ -192,16 +193,12 @@ export default function HomePage({
                 </thead>
                 <tbody>
                   {recentActivity.map((transaction, idx) => {
-                    // Calculate profit for sell transactions
-                    const stock = stocks?.find(s => s.id === transaction.stockId);
+                    // Look up exact profit from profit_history via transaction_id
                     let profit = null;
 
-                    if (transaction.type === 'sell' && stock) {
-                      const avgBuy = stock.totalCostBasisSold > 0
-                        ? (stock.totalCostBasisSold / (stock.sharesSold || 1))
-                        : 0;
-                      const costBasis = avgBuy * transaction.shares;
-                      profit = transaction.total - costBasis;
+                    if (transaction.type === 'sell') {
+                      const entry = profitHistory?.find(p => p.transaction_id === transaction.id);
+                      if (entry) profit = entry.amount;
                     }
 
                     return (

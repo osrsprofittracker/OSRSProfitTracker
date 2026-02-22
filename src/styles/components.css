@@ -111,6 +111,7 @@
 
 .badge-timer {
   background: rgb(202, 138, 4);
+  color: black;
 }
 
 .badge-hold {
@@ -1182,4 +1183,517 @@
 
 .version-badge:hover {
   color: rgb(96, 165, 250);
+}
+
+/* History Page */
+.history-page {
+  padding: 2rem 0 4rem;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.history-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.history-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.history-subtitle {
+  color: rgb(100, 116, 139);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.history-search {
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.375rem;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  width: 200px;
+  transition: border-color 0.15s;
+}
+
+.history-search::placeholder {
+  color: rgb(100, 116, 139);
+}
+
+.history-search:focus {
+  outline: none;
+  border-color: rgb(96, 165, 250);
+}
+
+.history-filter-group {
+  display: flex;
+  background: rgb(15, 23, 42);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.history-filter-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: rgb(148, 163, 184);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.history-filter-btn:hover {
+  color: white;
+  background: rgb(30, 41, 59);
+}
+
+.history-filter-btn--all.history-filter-btn--active {
+  background: rgb(37, 99, 235);
+  color: white;
+}
+
+.history-filter-btn--buy.history-filter-btn--active {
+  background: rgb(21, 128, 61);
+  color: white;
+}
+
+.history-filter-btn--sell.history-filter-btn--active {
+  background: rgb(185, 28, 28);
+  color: white;
+}
+
+.history-page-size {
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.375rem;
+  color: rgb(209, 213, 219);
+  padding: 0.5rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* Table */
+.history-table-wrapper {
+  background: rgb(15, 23, 42);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table thead th {
+  background: rgb(30, 41, 59);
+  color: rgb(100, 116, 139);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.875rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgb(51, 65, 85);
+}
+
+.history-th--right {
+  text-align: right !important;
+}
+
+.history-row {
+  border-bottom: 1px solid rgb(22, 32, 48);
+  transition: background 0.1s;
+}
+
+.history-row--buy {
+  border-left: 3px solid rgb(34, 197, 94);
+}
+
+.history-row--sell {
+  border-left: 3px solid rgb(239, 68, 68);
+}
+
+.history-row:hover {
+  background: rgb(30, 41, 59);
+}
+
+.history-row:last-child {
+  border-bottom: none;
+}
+
+.history-cell {
+  padding: 0.75rem 1rem;
+  color: rgb(209, 213, 219);
+  font-size: 0.875rem;
+}
+
+.history-cell--date {
+  color: rgb(148, 163, 184);
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.history-cell--name {
+  font-weight: 500;
+  color: white;
+}
+
+.history-cell--right {
+  text-align: right;
+}
+
+.history-cell--bold {
+  font-weight: 600;
+}
+
+.history-time {
+  color: rgb(100, 116, 139);
+  font-size: 0.75rem;
+}
+
+.history-type-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  letter-spacing: 0.06em;
+}
+
+.history-type-badge--buy {
+  background: rgba(21, 128, 61, 0.25);
+  color: rgb(134, 239, 172);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.history-type-badge--sell {
+  background: rgba(185, 28, 28, 0.25);
+  color: rgb(252, 165, 165);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.history-total--buy {
+  color: rgb(134, 239, 172);
+}
+
+.history-total--sell {
+  color: rgb(252, 165, 165);
+}
+
+.history-empty {
+  text-align: center;
+  color: rgb(100, 116, 139);
+  padding: 4rem;
+  font-size: 0.875rem;
+}
+
+/* Pagination */
+.history-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.history-pagination-info {
+  color: rgb(100, 116, 139);
+  font-size: 0.8rem;
+}
+
+.history-pagination-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.history-page-btn {
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.375rem;
+  color: rgb(209, 213, 219);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-page-btn:hover:not(:disabled) {
+  background: rgb(51, 65, 85);
+  color: white;
+  border-color: rgb(71, 85, 105);
+}
+
+.history-page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.history-page-btn--active {
+  background: rgb(96, 165, 250);
+  border-color: rgb(96, 165, 250);
+  color: rgb(15, 23, 42);
+  font-weight: 700;
+}
+
+.history-page-btn--active:hover {
+  background: rgb(96, 165, 250) !important;
+}
+
+.history-refresh-btn {
+  height: 2.25rem;
+  width: 2.25rem;
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.375rem;
+  color: rgb(209, 213, 219);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.history-refresh-btn:hover:not(:disabled) {
+  background: rgb(51, 65, 85);
+}
+
+.history-refresh-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.history-cell--muted {
+  color: rgb(100, 116, 139);
+}
+
+/* Filter panel */
+.history-filter-toggle {
+  padding: 0.5rem 0.875rem;
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.375rem;
+  color: rgb(209, 213, 219);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.15s;
+}
+
+.history-filter-toggle:hover {
+  background: rgb(51, 65, 85);
+}
+
+.history-filter-toggle--active {
+  background: rgb(51, 65, 85);
+  border-color: rgb(96, 165, 250);
+}
+
+.history-filter-toggle--has-filters {
+  border-color: rgb(96, 165, 250);
+  color: rgb(96, 165, 250);
+}
+
+.history-filter-panel {
+  background: rgb(22, 32, 48);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.history-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.history-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.history-filter-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(100, 116, 139);
+}
+
+.history-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgb(51, 65, 85);
+}
+
+.history-filter-apply {
+  padding: 0.5rem 1.25rem;
+  background: rgb(37, 99, 235);
+  border: none;
+  border-radius: 0.375rem;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.history-filter-apply:hover {
+  background: rgb(29, 78, 216);
+}
+
+.history-filter-reset {
+  padding: 0.5rem 1.25rem;
+  background: transparent;
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.375rem;
+  color: rgb(148, 163, 184);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.history-filter-reset:hover {
+  background: rgb(51, 65, 85);
+  color: white;
+}
+
+/* Sortable headers */
+.history-th--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.history-th--sortable:hover {
+  color: white;
+  background: rgb(51, 65, 85);
+}
+
+.history-sort-icon {
+  margin-left: 0.25rem;
+  font-size: 0.65rem;
+  color: rgb(71, 85, 105);
+}
+
+.history-sort-icon--active {
+  color: rgb(96, 165, 250);
+}
+
+.history-undo-btn {
+  background: transparent;
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.375rem;
+  color: rgb(148, 163, 184);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.history-undo-btn:hover {
+  background: rgb(185, 28, 28);
+  border-color: rgb(239, 68, 68);
+  color: white;
+}
+
+.history-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.history-modal {
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.history-modal p {
+  color: white;
+  margin: 0;
+}
+
+.history-modal-sub {
+  color: rgb(148, 163, 184) !important;
+  font-size: 0.875rem;
+}
+
+.history-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.history-modal-confirm {
+  flex: 1;
+  padding: 0.5rem;
+  background: rgb(37, 99, 235);
+  border: none;
+  border-radius: 0.375rem;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.history-modal-confirm--danger {
+  background: rgb(185, 28, 28);
+}
+
+.history-modal-confirm:hover {
+  opacity: 0.9;
+}
+
+.history-modal-cancel {
+  flex: 1;
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.375rem;
+  color: rgb(148, 163, 184);
+  cursor: pointer;
+}
+
+.history-modal-cancel:hover {
+  background: rgb(51, 65, 85);
+  color: white;
 }

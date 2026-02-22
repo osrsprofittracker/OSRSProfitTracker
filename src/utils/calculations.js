@@ -68,10 +68,6 @@ export const sortStocks = (stocks, sortConfig) => {
         aVal = a.limit4h;
         bVal = b.limit4h;
         break;
-      case 'timer':
-        aVal = a.timerEndTime || 0;
-        bVal = b.timerEndTime || 0;
-        break;
       default:
         return 0;
     }

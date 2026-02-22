@@ -26,8 +26,6 @@ function ProfitCheckbox({ profit, checked, onChange }) {
 }
 
 export default function SettingsModal({
-  theme,
-  onThemeChange,
   numberFormat,
   onNumberFormatChange,
   visibleColumns,
@@ -46,7 +44,6 @@ export default function SettingsModal({
     { key: 'profit', label: 'Profit' },
     { key: 'desiredStock', label: 'Desired Stock' },
     { key: 'limit4h', label: '4H Limit' },
-    { key: 'timer', label: 'Timer' },
     { key: 'notes', label: 'Notes' }
   ];
 
@@ -74,46 +71,6 @@ export default function SettingsModal({
           marginBottom: '1.5rem',
         }}
       >
-        {/* Theme */}
-        <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
-            Theme
-          </label>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={() => onThemeChange('dark')}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                background: theme === 'dark' ? 'rgb(37, 99, 235)' : 'rgb(71, 85, 105)',
-                borderRadius: '0.5rem',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'background 0.2s',
-              }}
-            >
-              🌙 Dark
-            </button>
-            <button
-              onClick={() => onThemeChange('light')}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                background: theme === 'light' ? 'rgb(37, 99, 235)' : 'rgb(71, 85, 105)',
-                borderRadius: '0.5rem',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: '500',
-                transition: 'background 0.2s',
-              }}
-            >
-              ☀️ Light
-            </button>
-          </div>
-        </div>
 
         {/* Number Format */}
         <div>

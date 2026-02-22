@@ -7,7 +7,6 @@ const DEFAULT_VISIBLE_COLUMNS = {
   avgSell: true,
   profit: true,
   desiredStock: true,
-  timer: true,
   notes: true,
   limit4h: true
 };
@@ -20,7 +19,6 @@ const DEFAULT_VISIBLE_PROFITS = {
 
 export function useSettings(userId) {
   const [settings, setSettings] = useState({
-    theme: 'dark',
     numberFormat: 'compact',
     visibleColumns: DEFAULT_VISIBLE_COLUMNS,
     visibleProfits: DEFAULT_VISIBLE_PROFITS,
@@ -49,7 +47,6 @@ export function useSettings(userId) {
 
     if (data) {
       setSettings({
-        theme: data.theme || 'dark',
         numberFormat: data.number_format || 'compact',
         visibleColumns: { ...DEFAULT_VISIBLE_COLUMNS, ...data.visible_columns },
         visibleProfits: data.visible_profits || DEFAULT_VISIBLE_PROFITS.bondsProfit,
@@ -61,7 +58,6 @@ export function useSettings(userId) {
         .from('user_settings')
         .insert([{
           user_id: userId,
-          theme: 'dark',
           number_format: 'compact',
           visible_columns: DEFAULT_VISIBLE_COLUMNS,
           visible_profits: DEFAULT_VISIBLE_PROFITS,
@@ -81,7 +77,6 @@ export function useSettings(userId) {
 
     const dbData = {
       user_id: userId,
-      theme: newSettings.theme,
       number_format: newSettings.numberFormat,
       visible_columns: newSettings.visibleColumns,
       visible_profits: newSettings.visibleProfits,

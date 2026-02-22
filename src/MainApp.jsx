@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
+import HistoryPage from './pages/HistoryPage';
 import { supabase } from './lib/supabase';
 import { useStocks } from './hooks/useStocks';
 import { useCategories } from './hooks/useCategories';
@@ -32,12 +33,10 @@ import NewStockModal from './components/modals/NewStockModal';
 import CategoryModal from './components/modals/CategoryModal';
 import DeleteCategoryModal from './components/modals/DeleteCategoryModal';
 import ProfitModal from './components/modals/ProfitModal';
-import HistoryModal from './components/modals/HistoryModal';
 import NotesModal from './components/modals/NotesModal';
 import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
-import * as Sentry from "@sentry/react";
 
 import {
   STORAGE_KEY,
@@ -51,11 +50,16 @@ import {
 export default function MainApp({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
-  const version = "1.3.0";
+  const version = "1.4.0";
   // Custom hooks for Supabase
   const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks } = useStocks(userId);
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
-  const { transactions, loading: transactionsLoading, addTransaction } = useTransactions(userId);
+  const {
+    transactions, loading: transactionsLoading, addTransaction,
+    pagedTransactions, pagedLoading, totalCount, totalPages,
+    page, pageSize, filters, goToPage, changePageSize, applyFilters, initPaged,
+    sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
+  } = useTransactions(userId);
   const { stats: gpTradedStats, loading: gpStatsLoading } = useGPTradedStats(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
@@ -67,7 +71,7 @@ export default function MainApp({ session, onLogout }) {
   const { dumpProfit, referralProfit, bondsProfit } = profits;
 
   // Destructure settings
-  const { theme, numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats } = settings;
+  const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats } = settings;
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
     // Load collapsed state from localStorage on initial render
@@ -95,7 +99,6 @@ export default function MainApp({ session, onLogout }) {
   const [showDumpProfitModal, setShowDumpProfitModal] = useState(false);
   const [showReferralProfitModal, setShowReferralProfitModal] = useState(false);
   const [showBondsProfitModal, setShowBondsProfitModal] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [showProfitChartModal, setShowProfitChartModal] = useState(false);
   const [showCategoryChartModal, setShowCategoryChartModal] = useState(false);
@@ -388,7 +391,7 @@ export default function MainApp({ session, onLogout }) {
       totalCostBasisSold: (selectedStock.totalCostBasisSold || 0) + costBasisOfSharesSold
     });
 
-    await addTransaction({
+    const newTransaction = await addTransaction({
       stockId: selectedStock.id,
       stockName: selectedStock.name,
       type: 'sell',
@@ -397,7 +400,15 @@ export default function MainApp({ session, onLogout }) {
       total,
       date: new Date().toISOString()
     });
-    await addProfitEntry('stock', profit, selectedStock.id);
+
+    const profitEntry = await addProfitEntry('stock', profit, selectedStock.id, newTransaction?.id ?? null);
+
+    if (newTransaction && profitEntry) {
+      await supabase
+        .from('transactions')
+        .update({ profit_history_id: profitEntry.id })
+        .eq('id', newTransaction.id);
+    }
     await refetch();
     highlightRow(selectedStock.id);
     setShowSellModal(false);
@@ -518,17 +529,21 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleQuickNavNavigate = (category) => {
-    // Expand if collapsed
+    const scrollToCategory = () => {
+      const el = document.querySelector(`[data-category="${category}"]`);
+      if (el) {
+        const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
+        const offset = topbarHeight + 16;
+        const top = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    };
+
     if (collapsedCategories[category]) {
       setCollapsedCategories(prev => ({ ...prev, [category]: false }));
-      // Wait for expand animation then scroll
-      setTimeout(() => {
-        const el = document.querySelector(`[data-category="${category}"]`);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      setTimeout(scrollToCategory, 100);
     } else {
-      const el = document.querySelector(`[data-category="${category}"]`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToCategory();
     }
   };
 
@@ -613,9 +628,6 @@ export default function MainApp({ session, onLogout }) {
         break;
       case 'delete':
         setShowDeleteModal(true);
-        break;
-      case 'history':
-        setShowHistoryModal(true);
         break;
       case 'notes':
         setShowNotesModal(true);
@@ -753,9 +765,8 @@ export default function MainApp({ session, onLogout }) {
 
     <div style={{
       minHeight: '100vh',
-      background: theme === 'dark' ? 'rgb(15, 23, 42)' : 'rgb(243, 244, 246)',
-      color: theme === 'dark' ? 'white' : 'rgb(17, 24, 39)',
-      transition: 'background 0.3s, color 0.3s'
+      background: 'rgb(15, 23, 42)',
+      color: 'white'
     }}>
       {/* Top bar - full width edge to edge */}
       <div className="topbar">
@@ -819,6 +830,28 @@ export default function MainApp({ session, onLogout }) {
               }}
             >
               💼 Trade
+            </button>
+            <button
+              onClick={() => setCurrentPage('history')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: currentPage === 'history' ? 'rgb(168, 85, 247)' : 'transparent',
+                border: 'none',
+                borderRadius: '0.5rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'background 0.2s',
+                fontSize: '0.875rem'
+              }}
+              onMouseOver={(e) => {
+                if (currentPage !== 'history') e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                if (currentPage !== 'history') e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              📜 History
             </button>
           </div>
 
@@ -898,6 +931,7 @@ export default function MainApp({ session, onLogout }) {
           <HomePage
             stocks={stocks}
             transactions={transactions}
+            profitHistory={profitHistory}
             gpTradedStats={gpTradedStats}
             profits={profits}
             numberFormat={numberFormat}
@@ -905,6 +939,27 @@ export default function MainApp({ session, onLogout }) {
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => setCurrentPage('trade')}
             onOpenMilestoneModal={() => setShowMilestoneModal(true)}
+          />
+        ) : currentPage === 'history' ? (
+          <HistoryPage
+            pagedTransactions={pagedTransactions}
+            profitHistory={profitHistory}
+            pagedLoading={pagedLoading}
+            totalCount={totalCount}
+            stocks={stocks}
+            totalPages={totalPages}
+            page={page}
+            pageSize={pageSize}
+            filters={filters}
+            onGoToPage={goToPage}
+            onChangePageSize={changePageSize}
+            onApplyFilters={applyFilters}
+            onInit={initPaged}
+            numberFormat={numberFormat}
+            sortConfig={historySortConfig}
+            onApplySort={applySort}
+            onReset={resetPaged}
+            onUndo={undoTransaction}
           />
         ) : (
           <>
@@ -1010,10 +1065,6 @@ export default function MainApp({ session, onLogout }) {
                   setSelectedStock(stock);
                   setShowDeleteModal(true);
                 }}
-                onHistory={(stock) => {
-                  setSelectedStock(stock);
-                  setShowHistoryModal(true);
-                }}
                 onNotes={(stock) => {
                   setSelectedStock(stock);
                   setShowNotesModal(true);
@@ -1118,14 +1169,6 @@ export default function MainApp({ session, onLogout }) {
               />
             </ModalContainer>
 
-            <ModalContainer isOpen={showHistoryModal}>
-              <HistoryModal
-                stock={selectedStock}
-                transactions={transactions}
-                onCancel={() => setShowHistoryModal(false)}
-              />
-            </ModalContainer>
-
             <ModalContainer isOpen={showNotesModal}>
               <NotesModal
                 stock={selectedStock}
@@ -1191,8 +1234,6 @@ export default function MainApp({ session, onLogout }) {
 
         <ModalContainer isOpen={showSettingsModal}>
           <SettingsModal
-            theme={theme}
-            onThemeChange={(newTheme) => updateSettings({ theme: newTheme })}
             numberFormat={numberFormat}
             onNumberFormatChange={(newFormat) => updateSettings({ numberFormat: newFormat })}
             visibleColumns={visibleColumns}
