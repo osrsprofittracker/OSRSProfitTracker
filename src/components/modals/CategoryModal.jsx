@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 
-export default function CategoryModal({ onConfirm, onCancel }) {
+export default function CategoryModal({ defaultIsInvestment = false, onConfirm, onCancel }) {
   const [name, setName] = useState('');
+  const [isInvestment, setIsInvestment] = useState(defaultIsInvestment || false);
 
   const handleConfirm = () => {
     if (!name.trim()) return;
-    onConfirm(name);
+    onConfirm(name, isInvestment);
   };
 
   return (
@@ -36,6 +37,15 @@ export default function CategoryModal({ onConfirm, onCancel }) {
           onFocus={(e) => e.target.style.borderColor = 'rgb(79, 70, 229)'}
           onBlur={(e) => e.target.style.borderColor = 'transparent'}
         />
+        <label className="checkbox-investment">
+          <input
+            type="checkbox"
+            checked={isInvestment}
+            onChange={(e) => setIsInvestment(e.target.checked)}
+            className="checkbox-input"
+          />
+          <span className="checkbox-investment-text">📈 Mark as Investment</span>
+        </label>
         <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
           <button
             onClick={handleConfirm}

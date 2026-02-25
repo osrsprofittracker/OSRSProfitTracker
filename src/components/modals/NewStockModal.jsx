@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 
-export default function NewStockModal({ categories, defaultCategory = '', onConfirm, onCancel }) {
+export default function NewStockModal({ categories, defaultCategory = '', defaultIsInvestment = false, onConfirm, onCancel }) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState(defaultCategory);
   const [limit4h, setLimit4h] = useState('');
   const [needed, setNeeded] = useState('');
+  const [isInvestment, setIsInvestment] = useState(defaultIsInvestment || false);
+
+  const filteredCategories = categories.filter(c => c.isInvestment === isInvestment).map(c => c.name);
 
   const handleConfirm = () => {
     if (!name.trim() || !limit4h) return;
@@ -12,7 +15,8 @@ export default function NewStockModal({ categories, defaultCategory = '', onConf
       name,
       category: category || 'Uncategorized',
       limit4h: parseFloat(limit4h),
-      needed: parseFloat(needed) || 0
+      needed: parseFloat(needed) || 0,
+      isInvestment
     });
   };
 
@@ -60,7 +64,7 @@ export default function NewStockModal({ categories, defaultCategory = '', onConf
           onBlur={(e) => e.target.style.borderColor = 'transparent'}
         >
           <option value="">Select category</option>
-          {categories.map(cat => (
+          {filteredCategories.map(cat => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
@@ -98,6 +102,15 @@ export default function NewStockModal({ categories, defaultCategory = '', onConf
           onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
           onBlur={(e) => e.target.style.borderColor = 'transparent'}
         />
+        <label className="checkbox-investment">
+          <input
+            type="checkbox"
+            checked={isInvestment}
+            onChange={(e) => setIsInvestment(e.target.checked)}
+            className="checkbox-input"
+          />
+          <span className="checkbox-investment-text">📈 Mark as Investment</span>
+        </label>
         <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
           <button
             onClick={handleConfirm}

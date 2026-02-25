@@ -6,15 +6,22 @@ export default function AdjustModal({ stock, categories, onConfirm, onCancel }) 
   const [category, setCategory] = useState(stock.category || 'Uncategorized');
   const [limit4h, setLimit4h] = useState(stock.limit4h.toString());
   const [onHold, setOnHold] = useState(stock.onHold || false);
+  const [isInvestment, setIsInvestment] = useState(stock.isInvestment || false);
+  const [targetCategory, setTargetCategory] = useState('Uncategorized');
+
+  const modeChanged = isInvestment !== (stock.isInvestment || false);
+  const targetCategories = categories.filter(c => c.isInvestment === isInvestment).map(c => c.name);
+  const currentCategories = categories.filter(c => c.isInvestment === (stock.isInvestment || false)).map(c => c.name);
 
   const handleConfirm = () => {
-    if (!needed || !name.trim() || !limit4h) return;  // Update validation
+    if (!needed || !name.trim() || !limit4h) return;
     onConfirm({
       name: name.trim(),
       needed: parseFloat(needed),
-      category,
+      category: modeChanged ? targetCategory : category,
       limit4h: parseFloat(limit4h),
-      onHold
+      onHold,
+      isInvestment
     });
   };
 
@@ -100,11 +107,11 @@ export default function AdjustModal({ stock, categories, onConfirm, onCancel }) 
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
-            Category
+            {modeChanged ? 'Target Category' : 'Category'}
           </label>
           <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            value={modeChanged ? targetCategory : category}
+            onChange={(e) => modeChanged ? setTargetCategory(e.target.value) : setCategory(e.target.value)}
             style={{
               width: '100%',
               padding: '0.5rem 1rem',
@@ -117,12 +124,20 @@ export default function AdjustModal({ stock, categories, onConfirm, onCancel }) 
             onFocus={(e) => e.target.style.borderColor = 'rgb(202, 138, 4)'}
             onBlur={(e) => e.target.style.borderColor = 'transparent'}
           >
-            {categories.map(cat => (
+            {(modeChanged ? targetCategories : currentCategories).map(cat => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
-            <option value="Uncategorized">Uncategorized</option>
           </select>
         </div>
+        <label className="checkbox-investment">
+          <input
+            type="checkbox"
+            checked={isInvestment}
+            onChange={(e) => setIsInvestment(e.target.checked)}
+            className="checkbox-input"
+          />
+          <span className="checkbox-investment-text">📈 Mark as Investment</span>
+        </label>
         <div>
           <label style={{
             display: 'flex',
