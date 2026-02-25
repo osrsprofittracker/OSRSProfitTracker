@@ -29,7 +29,12 @@ export function useSettings(userId) {
 
   useEffect(() => {
     if (!userId) return;
-    fetchSettings();
+    let cancelled = false;
+    const run = async () => {
+      if (!cancelled) await fetchSettings();
+    };
+    run();
+    return () => { cancelled = true; };
   }, [userId]);
 
   const fetchSettings = async () => {
@@ -63,9 +68,9 @@ export function useSettings(userId) {
           visible_profits: DEFAULT_VISIBLE_PROFITS,
           alt_account_timer: null,
           show_category_stats: false
-        }]);
+        }], { onConflict: 'user_id', ignoreDuplicates: true });
 
-      if (insertError) {
+      if (insertError && insertError.code !== '23505') {
         console.error('Error creating initial settings:', insertError);
       }
     }

@@ -6,165 +6,173 @@ export function useCategories(userId) {
   const [loading, setLoading] = useState(true);
 
   const fetchCategories = async () => {
-  try {
-    if (!userId) return;
+    try {
+      if (!userId) return;
 
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('user_id', userId)
-      .order('position', { ascending: true });
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', userId)
+        .order('position', { ascending: true });
 
-    if (error) throw error;
-    
-    // Extract just the names from the category objects and ensure they're strings
-    const categoryNames = (data || []).map(cat => String(cat.name));
-    setCategories(categoryNames);
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-  }
-  setLoading(false)
-};
+      if (error) throw error;
 
-const reorderCategories = async (categoryName, newPosition) => {
-  try {
-    // Get all categories for this user ordered by position
-    const { data: allCategories, error: fetchError } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('user_id', userId)
-      .order('position', { ascending: true });
-
-    if (fetchError) throw fetchError;
-
-    // Find the category being moved
-    const movingCategoryIndex = allCategories.findIndex(cat => String(cat.name) === String(categoryName));
-    if (movingCategoryIndex === -1) {
-      console.error('Category not found:', categoryName, 'Available:', allCategories.map(c => c.name));
-      return { success: false };
+      // Store full objects so is_investment is accessible
+      const categoryObjects = (data || []).map(cat => ({
+        id: cat.id,
+        name: String(cat.name),
+        isInvestment: cat.is_investment || false,
+        position: cat.position,
+        created_at: cat.created_at
+      }));
+      setCategories(categoryObjects);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
+    setLoading(false);
+  };
 
-    // Reorder the array
-    const reordered = [...allCategories];
-    const [movingCategory] = reordered.splice(movingCategoryIndex, 1);
-    reordered.splice(newPosition, 0, movingCategory);
+  const reorderCategories = async (categoryName, newPosition, isInvestment = false) => {
+    try {
+      const { data: allCategories, error: fetchError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', userId)
+        .order('position', { ascending: true });
 
-    // Update all positions with batch upsert
-    const updates = reordered.map((cat, index) => ({
-      id: cat.id,
-      user_id: userId,
-      name: cat.name,
-      position: index,
-      created_at: cat.created_at
-    }));
+      if (fetchError) throw fetchError;
 
-    // Use upsert for batch update (much faster)
-    const { error } = await supabase
-      .from('categories')
-      .upsert(updates, { onConflict: 'id' });
+      // Only reorder within the same mode
+      const modeCategories = allCategories.filter(cat => cat.is_investment === isInvestment);
+      const otherCategories = allCategories.filter(cat => cat.is_investment !== isInvestment);
 
-    if (error) throw error;
+      const movingCategoryIndex = modeCategories.findIndex(cat =>
+        String(cat.name) === String(categoryName)
+      );
+      if (movingCategoryIndex === -1) {
+        console.error('Category not found:', categoryName);
+        return { success: false };
+      }
 
-    return { success: true };
-  } catch (error) {
-    console.error('Error reordering categories:', error);
-    throw error;
-  }
-};
+      const reordered = [...modeCategories];
+      const [movingCategory] = reordered.splice(movingCategoryIndex, 1);
+      reordered.splice(newPosition, 0, movingCategory);
 
-  const addCategory = async (name) => {
-  try {
-    const { data, error } = await supabase
-      .from('categories')
-      .insert([{ 
-        name: String(name), // Force conversion to string
+      // Reassign positions only within this mode, starting from 0
+      const updates = reordered.map((cat, index) => ({
+        id: cat.id,
         user_id: userId,
-        created_at: new Date().toISOString() 
-      }])
-      .select()
-      .single();
+        name: cat.name,
+        position: index,
+        is_investment: cat.is_investment,
+        created_at: cat.created_at
+      }));
 
-    if (error) throw error;
+      const { error } = await supabase
+        .from('categories')
+        .upsert(updates, { onConflict: 'id' });
 
-    console.log('New category added to DB:', data);
+      if (error) throw error;
 
-    // Don't update local state - let the caller refetch
-    return data;
-  } catch (error) {
-    console.error('Error adding category:', error);
-    throw error;
-  }
-};
+      return { success: true };
+    } catch (error) {
+      console.error('Error reordering categories:', error);
+      throw error;
+    }
+  };
+
+  const addCategory = async (name, isInvestment = false) => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert([{
+          name: String(name),
+          user_id: userId,
+          is_investment: isInvestment,
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Error adding category:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     fetchCategories();
   }, [userId]);
 
-  const updateCategory = async (oldName, newName) => {
-  try {
-    // Update category name
-    const { error: categoryError } = await supabase
-      .from('categories')
-      .update({ name: newName })
-      .eq('name', oldName)
-      .eq('user_id', userId);
+  const updateCategory = async (oldName, newName, isInvestment = false) => {
+    try {
+      const { error: categoryError } = await supabase
+        .from('categories')
+        .update({ name: newName })
+        .eq('name', oldName)
+        .eq('user_id', userId)
+        .eq('is_investment', isInvestment);
 
-    if (categoryError) throw categoryError;
+      if (categoryError) throw categoryError;
 
-    // Update all stocks with old category
-    const { error: stocksError } = await supabase
-      .from('stocks')
-      .update({ category: newName })
-      .eq('category', oldName)
-      .eq('user_id', userId);
+      // Update all stocks with old category
+      const { error: stocksError } = await supabase
+        .from('stocks')
+        .update({ category: newName })
+        .eq('category', oldName)
+        .eq('user_id', userId)
+        .eq('is_investment', isInvestment);
 
-    if (stocksError) throw stocksError;
+      if (stocksError) throw stocksError;
 
-    // Don't update local state - let the caller refetch
-    return { success: true };
-  } catch (error) {
-    console.error('Error updating category:', error);
-    throw error;
-  }
-};
+      // Don't update local state - let the caller refetch
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  };
 
-  const deleteCategory = async (name) => {
-  if (name === 'Uncategorized') {
-    throw new Error('Cannot delete Uncategorized category');
-  }
-
-  try {
-    // First move all stocks to Uncategorized
-    const { error: stocksError } = await supabase
-      .from('stocks')
-      .update({ category: 'Uncategorized' })
-      .eq('category', name)
-      .eq('user_id', userId);
-
-    if (stocksError) {
-      console.error('Error moving stocks:', stocksError);
-      throw stocksError;
+  const deleteCategory = async (name, isInvestment = false) => {
+    if (name === 'Uncategorized') {
+      throw new Error('Cannot delete Uncategorized category');
     }
 
-    // Then delete the category
-    const { error: deleteError } = await supabase
-      .from('categories')
-      .delete()
-      .eq('name', name)
-      .eq('user_id', userId);
+    try {
+      const { error: stocksError } = await supabase
+        .from('stocks')
+        .update({ category: 'Uncategorized' })
+        .eq('category', name)
+        .eq('user_id', userId)
+        .eq('is_investment', isInvestment);
 
-    if (deleteError) {
-      console.error('Error deleting category:', deleteError);
-      throw deleteError;
+      if (stocksError) {
+        console.error('Error moving stocks:', stocksError);
+        throw stocksError;
+      }
+
+      const { error: deleteError } = await supabase
+        .from('categories')
+        .delete()
+        .eq('name', name)
+        .eq('user_id', userId)
+        .eq('is_investment', isInvestment);
+
+      if (deleteError) {
+        console.error('Error deleting category:', deleteError);
+        throw deleteError;
+      }
+
+      // Don't update local state - let the caller refetch
+      return { success: true };
+    } catch (error) {
+      console.error('Error in deleteCategory:', error);
+      throw error;
     }
-
-    // Don't update local state - let the caller refetch
-    return { success: true };
-  } catch (error) {
-    console.error('Error in deleteCategory:', error);
-    throw error;
-  }
-};
+  };
 
   return {
     categories,

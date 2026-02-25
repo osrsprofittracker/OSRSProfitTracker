@@ -34,7 +34,8 @@ export function useStocks(userId) {
         timerEndTime: stock.timer_end_time,
         category: stock.category,
         position: stock.position,
-        onHold: stock.on_hold || false
+        onHold: stock.on_hold || false,
+        isInvestment: stock.is_investment || false,
       }));
       setStocks(formattedStocks);
     }
@@ -60,7 +61,6 @@ export function useStocks(userId) {
         id: stock.id,
         user_id: userId,
         position: index,
-        // Include other required fields to avoid null errors
         name: stock.name,
         total_cost: stock.totalCost,
         shares: stock.shares,
@@ -70,7 +70,8 @@ export function useStocks(userId) {
         limit4h: stock.limit4h,
         needed: stock.needed,
         timer_end_time: stock.timerEndTime,
-        category: stock.category
+        category: stock.category,
+        is_investment: stock.isInvestment || false,
       }));
 
       // Use upsert for batch update (faster than individual updates)
@@ -100,7 +101,8 @@ export function useStocks(userId) {
       limit4h: stock.limit4h,
       needed: stock.needed,
       timer_end_time: stock.timerEndTime,
-      category: stock.category
+      category: stock.category,
+      is_investment: stock.isInvestment || false,
     };
 
     const { data, error } = await supabase
@@ -131,6 +133,7 @@ export function useStocks(userId) {
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.limit4h !== undefined) dbUpdates.limit4h = updates.limit4h;
     if (updates.onHold !== undefined) dbUpdates.on_hold = updates.onHold;
+    if (updates.isInvestment !== undefined) dbUpdates.is_investment = updates.isInvestment;
 
     const { error } = await supabase
       .from('stocks')
