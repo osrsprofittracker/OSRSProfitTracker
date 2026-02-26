@@ -37,6 +37,8 @@ import NotesModal from './components/modals/NotesModal';
 import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
+import ChangelogModal from './components/modals/ChangeLogModal';
+import { CURRENT_VERSION } from './data/changelog';
 
 import {
   STORAGE_KEY,
@@ -51,6 +53,7 @@ export default function MainApp({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
   const version = "1.5.0";
+  const [showChangelog, setShowChangelog] = useState(false);
   // Custom hooks for Supabase
   const [tradeMode, setTradeMode] = useState('trade');
 
@@ -321,6 +324,19 @@ export default function MainApp({ session, onLogout }) {
 
     setMilestoneProgress(newProgress);
   }, [dataLoaded, profitHistory, milestones]);
+
+  useEffect(() => {
+    const storageKey = `lastSeenVersion_${userId}`;
+    const lastSeen = localStorage.getItem(storageKey);
+    if (lastSeen !== CURRENT_VERSION) {
+      setShowChangelog(true);
+    }
+  }, [userId]);
+
+  const handleCloseChangelog = () => {
+    localStorage.setItem(`lastSeenVersion_${userId}`, CURRENT_VERSION);
+    setShowChangelog(false);
+  };
 
   const toggleCategory = (category) => {
     setCollapsedCategories(prev => {
@@ -1289,6 +1305,10 @@ export default function MainApp({ session, onLogout }) {
               setShowChangePasswordModal(true);
             }}
           />
+        </ModalContainer>
+
+        <ModalContainer isOpen={showChangelog}>
+          <ChangelogModal onClose={handleCloseChangelog} />
         </ModalContainer>
 
         <ModalContainer isOpen={showMilestoneModal}>

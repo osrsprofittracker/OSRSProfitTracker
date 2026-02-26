@@ -1774,3 +1774,97 @@
   font-weight: 500;
   color: rgb(209, 213, 219);
 }
+
+/* Changelog Modal */
+.changelog-modal {
+  width: 34rem;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.changelog-header {
+  flex-shrink: 0;
+}
+
+.changelog-body {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding-right: 0.25rem;
+}
+
+.changelog-release {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.changelog-release-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgb(51, 65, 85);
+  padding-bottom: 0.5rem;
+}
+
+.changelog-version {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgb(209, 213, 219);
+}
+
+.changelog-date {
+  font-size: 0.8rem;
+  color: rgb(100, 116, 139);
+}
+
+.changelog-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+}
+
+.changelog-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.changelog-item-text {
+  font-size: 0.875rem;
+  color: rgb(203, 213, 225);
+  line-height: 1.5;
+}
+
+.changelog-badge {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.25rem;
+  margin-top: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.changelog-badge--new {
+  background: rgb(29, 78, 216);
+  color: white;
+}
+
+.changelog-badge--fix {
+  background: rgb(185, 28, 28);
+  color: white;
+}
+
+.changelog-badge--improved {
+  background: rgb(22, 101, 52);
+  color: white;
+}
