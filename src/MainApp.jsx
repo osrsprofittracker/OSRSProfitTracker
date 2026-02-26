@@ -37,6 +37,8 @@ import NotesModal from './components/modals/NotesModal';
 import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
+import ChangelogModal from './components/modals/ChangelogModal';
+import { CURRENT_VERSION } from './data/changelog';
 
 import {
   STORAGE_KEY,
@@ -50,8 +52,16 @@ import {
 export default function MainApp({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
-  const version = "1.4.0";
+  const version = "1.5.0";
+  const [showChangelog, setShowChangelog] = useState(false);
   // Custom hooks for Supabase
+  const [tradeMode, setTradeMode] = useState('trade');
+
+  const switchTradeMode = (mode) => {
+    refetch();
+    fetchCategories();
+    setTradeMode(mode);
+  };
   const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks } = useStocks(userId);
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
   const {
@@ -79,6 +89,14 @@ export default function MainApp({ session, onLogout }) {
     return saved ? JSON.parse(saved) : {};
   });
   const [currentPage, setCurrentPage] = useState('home');
+
+  const navigateToPage = (page) => {
+    if (page === 'trade') {
+      refetch();
+      fetchCategories();
+    }
+    setCurrentPage(page);
+  };
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -121,10 +139,9 @@ export default function MainApp({ session, onLogout }) {
 
   useEffect(() => {
     const ensureUncategorizedExists = async () => {
-      if (!userId) return;
 
       // Don't check categoriesLoading - let it run regardless
-      console.log('Ensuring Uncategorized exists. Categories:', categories);
+      console.log('Ensuring Uncategorized exists. Categories:');
 
       try {
         // Check database directly
@@ -132,31 +149,26 @@ export default function MainApp({ session, onLogout }) {
           .from('categories')
           .select('*')
           .eq('user_id', userId)
-          .eq('name', 'Uncategorized')
-          .maybeSingle();
+          .eq('name', 'Uncategorized');
 
         if (error) {
           console.error('Error checking for Uncategorized:', error);
           return;
         }
 
-        if (!data) {
-          console.log('Creating Uncategorized category...');
+        const hasTrading = data?.some(c => c.is_investment === false);
+        const hasInvestment = data?.some(c => c.is_investment === true);
 
+        const toInsert = [];
+        if (!hasTrading) toInsert.push({ name: 'Uncategorized', user_id: userId, is_investment: false, position: 0, created_at: new Date().toISOString() });
+        if (!hasInvestment) toInsert.push({ name: 'Uncategorized', user_id: userId, is_investment: true, position: 0, created_at: new Date().toISOString() });
+        for (const row of toInsert) {
           const { error: insertError } = await supabase
             .from('categories')
-            .insert([{
-              name: 'Uncategorized',
-              user_id: userId,
-              position: 0,
-              created_at: new Date().toISOString()
-            }]);
+            .upsert(row, { onConflict: 'user_id,name,is_investment', ignoreDuplicates: true });
 
           if (insertError) {
             console.error('Error creating Uncategorized:', insertError);
-          } else {
-            console.log('Successfully created Uncategorized');
-            // Don't call fetchCategories here - let the hook handle it
           }
         }
       } catch (error) {
@@ -166,7 +178,7 @@ export default function MainApp({ session, onLogout }) {
 
     // Only run once when userId changes
     if (userId) {
-      ensureUncategorizedExists();
+      ensureUncategorizedExists().then(() => fetchCategories());
     }
   }, [userId]); // Remove categoriesLoading and categories from dependencies
   // Helper functions
@@ -193,7 +205,8 @@ export default function MainApp({ session, onLogout }) {
 
   const handleEditCategory = async (oldCategory, newCategory) => {
     try {
-      await updateCategory(oldCategory, newCategory);
+      const isInvestment = categories.find(c => c.name === oldCategory && c.isInvestment === (tradeMode === 'investment'))?.isInvestment || false;
+      await updateCategory(oldCategory, newCategory, isInvestment);
 
       // Refetch everything from database
       await fetchCategories();
@@ -312,6 +325,19 @@ export default function MainApp({ session, onLogout }) {
     setMilestoneProgress(newProgress);
   }, [dataLoaded, profitHistory, milestones]);
 
+  useEffect(() => {
+    const storageKey = `lastSeenVersion_${userId}`;
+    const lastSeen = localStorage.getItem(storageKey);
+    if (lastSeen !== CURRENT_VERSION) {
+      setShowChangelog(true);
+    }
+  }, [userId]);
+
+  const handleCloseChangelog = () => {
+    localStorage.setItem(`lastSeenVersion_${userId}`, CURRENT_VERSION);
+    setShowChangelog(false);
+  };
+
   const toggleCategory = (category) => {
     setCollapsedCategories(prev => {
       const newState = {
@@ -415,8 +441,8 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleAdjust = async (data) => {
-    const { name, needed, category, limit4h, onHold } = data;
-    await updateStock(selectedStock.id, { name, needed, category, limit4h, onHold });
+    const { name, needed, category, limit4h, onHold, isInvestment } = data;
+    await updateStock(selectedStock.id, { name, needed, category, limit4h, onHold, isInvestment });
     await refetch();
     highlightRow(selectedStock.id);
     setShowAdjustModal(false);
@@ -429,7 +455,7 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleAddStock = async (data) => {
-    const { name, category, limit4h, needed } = data;
+    const { name, category, limit4h, needed, isInvestment } = data;
     await addStockToDB({
       name,
       totalCost: 0,
@@ -441,16 +467,17 @@ export default function MainApp({ session, onLogout }) {
       needed,
       timerEndTime: null,
       category: category || 'Uncategorized',
+      isInvestment: isInvestment || false,
     });
     await refetch();
     setNewStockCategory('');
     setShowNewStockModal(false);
   };
 
-  const handleAddCategory = async (name) => {
+  const handleAddCategory = async (name, isInvestment = false) => {
     if (!name.trim()) return;
-    if (!categories.includes(name)) {
-      await addCategory(name);
+    if (!categories.some(c => c.name === name && c.isInvestment === isInvestment)) {
+      await addCategory(name, isInvestment);
       await fetchCategories();
     }
     setShowCategoryModal(false);
@@ -473,7 +500,7 @@ export default function MainApp({ session, onLogout }) {
         return;
       }
 
-      const result = await deleteCategory(categoryName);
+      const result = await deleteCategory(categoryName, tradeMode === 'investment');
 
       if (result.success) {
         // Refetch everything from database
@@ -599,14 +626,17 @@ export default function MainApp({ session, onLogout }) {
 
     try {
       // Get the target position
-      const targetIndex = categories.indexOf(targetCategory);
+      const filteredForMode = categories.filter(c =>
+        c.name === 'Uncategorized' || (tradeMode === 'investment' ? c.isInvestment : !c.isInvestment)
+      );
+      const targetIndex = filteredForMode.findIndex(c => c.name === targetCategory);
 
       if (targetIndex === -1) {
         console.error('Target category not found');
         return;
       }
 
-      await reorderCategories(draggedCategory, targetIndex);
+      await reorderCategories(draggedCategory, targetIndex, tradeMode === 'investment');
       await fetchCategories();
     } catch (error) {
       console.error('Error reordering categories:', error);
@@ -743,20 +773,28 @@ export default function MainApp({ session, onLogout }) {
     setShowTimeCalculatorModal(true);
   };
 
-  // Group stocks by category
-  const groupedStocks = categories.reduce((acc, cat) => {
-    acc[cat] = stocks.filter(s => s.category === cat);
+
+
+  const filteredStocks = stocks.filter(s =>
+    tradeMode === 'investment' ? s.isInvestment : !s.isInvestment
+  );
+  const filteredCategories = categories.filter(c =>
+    tradeMode === 'investment' ? c.isInvestment : !c.isInvestment
+  );
+
+  const categoryNames = filteredCategories.map(c => c.name);
+
+  const groupedStocks = filteredCategories.reduce((acc, cat) => {
+    acc[cat.name] = filteredStocks.filter(s => s.category === cat.name);
     return acc;
   }, {});
 
-  // If Uncategorized is not in categories list, add any orphaned stocks
-  if (!categories.includes('Uncategorized')) {
-    const orphanedStocks = stocks.filter(s =>
-      s.category === 'Uncategorized' || !s.category || !categories.includes(s.category)
-    );
-    if (orphanedStocks.length > 0) {
-      groupedStocks['Uncategorized'] = orphanedStocks;
-    }
+  // Add uncategorized investment/trade stocks that have no matching category
+  const uncategorizedFiltered = filteredStocks.filter(s =>
+    s.category === 'Uncategorized' || !s.category || !categoryNames.includes(s.category)
+  );
+  if (uncategorizedFiltered.length > 0 && !filteredCategories.some(c => c.name === 'Uncategorized')) {
+    groupedStocks['Uncategorized'] = uncategorizedFiltered;
   }
 
 
@@ -780,7 +818,7 @@ export default function MainApp({ session, onLogout }) {
           {/* Left - Navigation tabs */}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
-              onClick={() => setCurrentPage('home')}
+              onClick={() => navigateToPage('home')}
               style={{
                 padding: '0.75rem 1.5rem',
                 background: currentPage === 'home' ? 'rgb(168, 85, 247)' : 'transparent',
@@ -806,7 +844,7 @@ export default function MainApp({ session, onLogout }) {
               🏠 Home
             </button>
             <button
-              onClick={() => setCurrentPage('trade')}
+              onClick={() => navigateToPage('trade')}
               style={{
                 padding: '0.75rem 1.5rem',
                 background: currentPage === 'trade' ? 'rgb(168, 85, 247)' : 'transparent',
@@ -832,7 +870,7 @@ export default function MainApp({ session, onLogout }) {
               💼 Trade
             </button>
             <button
-              onClick={() => setCurrentPage('history')}
+              onClick={() => navigateToPage('history')}
               style={{
                 padding: '0.75rem 1.5rem',
                 background: currentPage === 'history' ? 'rgb(168, 85, 247)' : 'transparent',
@@ -937,7 +975,7 @@ export default function MainApp({ session, onLogout }) {
             numberFormat={numberFormat}
             milestones={milestones}
             milestoneProgress={milestoneProgress}
-            onNavigateToTrade={() => setCurrentPage('trade')}
+            onNavigateToTrade={() => navigateToPage('trade')}
             onOpenMilestoneModal={() => setShowMilestoneModal(true)}
           />
         ) : currentPage === 'history' ? (
@@ -964,7 +1002,7 @@ export default function MainApp({ session, onLogout }) {
         ) : (
           <>
             <CategoryQuickNav
-              categories={categories}
+              categories={categoryNames}
               collapsedCategories={collapsedCategories}
               onNavigate={handleQuickNavNavigate}
             />
@@ -1008,6 +1046,23 @@ export default function MainApp({ session, onLogout }) {
                 currentTime={currentTime}
               />
             </div>
+            {/* Trade Mode Toggle */}
+            <div className="trade-mode-toggle-wrapper">
+              <div className="trade-mode-toggle">
+                <button
+                  className={`trade-mode-btn ${tradeMode === 'trade' ? 'active' : ''}`}
+                  onClick={() => switchTradeMode('trade')}
+                >
+                  💼 Trading
+                </button>
+                <button
+                  className={`trade-mode-btn ${tradeMode === 'investment' ? 'active' : ''}`}
+                  onClick={() => switchTradeMode('investment')}
+                >
+                  📈 Investments
+                </button>
+              </div>
+            </div>
 
             {/* Category Actions */}
             <div className="category-actions-row">
@@ -1034,7 +1089,7 @@ export default function MainApp({ session, onLogout }) {
                 key={category}
                 category={category}
                 stocks={categoryStocks}
-                categories={categories}
+                categories={categoryNames}
                 isCollapsed={collapsedCategories[category]}
                 onToggleCollapse={toggleCategory}
                 onAddStock={(cat) => {
@@ -1125,6 +1180,7 @@ export default function MainApp({ session, onLogout }) {
               <NewStockModal
                 categories={categories}
                 defaultCategory={newStockCategory}
+                defaultIsInvestment={tradeMode === 'investment'}
                 onConfirm={handleAddStock}
                 onCancel={() => setShowNewStockModal(false)}
               />
@@ -1132,6 +1188,7 @@ export default function MainApp({ session, onLogout }) {
 
             <ModalContainer isOpen={showCategoryModal}>
               <CategoryModal
+                defaultIsInvestment={tradeMode === 'investment'}
                 onConfirm={handleAddCategory}
                 onCancel={() => setShowCategoryModal(false)}
               />
@@ -1202,7 +1259,7 @@ export default function MainApp({ session, onLogout }) {
             <ModalContainer isOpen={showEditCategoryModal}>
               <EditCategoryModal
                 category={selectedCategory}
-                categories={categories}
+                categories={categoryNames}
                 onConfirm={handleEditCategory}
                 onCancel={() => setShowEditCategoryModal(false)}
               />
@@ -1248,6 +1305,10 @@ export default function MainApp({ session, onLogout }) {
               setShowChangePasswordModal(true);
             }}
           />
+        </ModalContainer>
+
+        <ModalContainer isOpen={showChangelog}>
+          <ChangelogModal onClose={handleCloseChangelog} />
         </ModalContainer>
 
         <ModalContainer isOpen={showMilestoneModal}>
