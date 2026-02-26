@@ -37,7 +37,7 @@ import NotesModal from './components/modals/NotesModal';
 import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
-import ChangelogModal from './components/modals/ChangeLogModal';
+import ChangelogModal from './components/modals/ChangelogModal';
 import { CURRENT_VERSION } from './data/changelog';
 
 import {
