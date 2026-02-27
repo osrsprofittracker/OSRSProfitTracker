@@ -65,7 +65,6 @@ export function calculateGETax(itemId, pricePerItem) {
  */
 export function calculateUnrealizedProfit(stock, latestHigh, itemId) {
   if (latestHigh == null || stock.shares <= 0) return null;
-  if (stock.totalCost <= 0 || stock.shares <= 0) return null;
 
   const avgBuyPrice = stock.totalCost / stock.shares;
   const taxPerItem = calculateGETax(itemId, latestHigh);
