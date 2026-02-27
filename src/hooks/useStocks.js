@@ -15,6 +15,7 @@ export function useStocks(userId) {
       .from('stocks')
       .select('*')
       .eq('user_id', userId)
+      .eq('archived', false)
       .order('position', { ascending: true });
 
     if (error) {
@@ -36,6 +37,7 @@ export function useStocks(userId) {
         position: stock.position,
         onHold: stock.on_hold || false,
         isInvestment: stock.is_investment || false,
+        itemId: stock.item_id || null,
       }));
       setStocks(formattedStocks);
     }
@@ -103,6 +105,7 @@ export function useStocks(userId) {
       timer_end_time: stock.timerEndTime,
       category: stock.category,
       is_investment: stock.isInvestment || false,
+      item_id: stock.itemId || null,
     };
 
     const { data, error } = await supabase
@@ -134,6 +137,7 @@ export function useStocks(userId) {
     if (updates.limit4h !== undefined) dbUpdates.limit4h = updates.limit4h;
     if (updates.onHold !== undefined) dbUpdates.on_hold = updates.onHold;
     if (updates.isInvestment !== undefined) dbUpdates.is_investment = updates.isInvestment;
+    if (updates.itemId !== undefined) dbUpdates.item_id = updates.itemId;
 
     const { error } = await supabase
       .from('stocks')
@@ -193,5 +197,52 @@ export function useStocks(userId) {
     }
   };
 
-  return { stocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks };
+  const archiveStock = async (id) => {
+    const { error } = await supabase
+      .from('stocks')
+      .update({ archived: true })
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) { console.error('Error archiving stock:', error); return false; }
+    return true;
+  };
+
+  const restoreStock = async (id) => {
+    const { error } = await supabase
+      .from('stocks')
+      .update({ archived: false })
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) { console.error('Error restoring stock:', error); return false; }
+    return true;
+  };
+
+  const fetchArchivedStocks = async () => {
+    const { data, error } = await supabase
+      .from('stocks')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('archived', true)
+      .order('name', { ascending: true });
+    if (error) { console.error('Error fetching archived stocks:', error); return []; }
+    return (data || []).map(stock => ({
+      id: stock.id,
+      name: stock.name,
+      totalCost: stock.total_cost,
+      shares: stock.shares,
+      sharesSold: stock.shares_sold,
+      totalCostSold: stock.total_cost_sold,
+      totalCostBasisSold: stock.total_cost_basis_sold,
+      limit4h: stock.limit4h,
+      needed: stock.needed,
+      timerEndTime: stock.timer_end_time,
+      category: stock.category,
+      position: stock.position,
+      onHold: stock.on_hold || false,
+      isInvestment: stock.is_investment || false,
+      itemId: stock.item_id || null,
+    }));
+  };
+
+    return { stocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
 }

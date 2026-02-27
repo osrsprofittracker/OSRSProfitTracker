@@ -258,7 +258,8 @@
 }
 
 .td-avg {
-  color: rgb(52, 211, 153); /* Green for sell price */
+  color: rgb(52, 211, 153);
+  /* Green for sell price */
 }
 
 /* Table Container */
@@ -906,7 +907,7 @@
   padding: 1.5rem;
   border-radius: 0.75rem;
   border: 1px solid rgb(51, 65, 85);
-  
+
 }
 
 .activity-section-title {
@@ -1119,6 +1120,8 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s, transform 0.2s;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .quick-nav-wrapper:hover .quick-nav-panel {
@@ -1867,4 +1870,10 @@
 .changelog-badge--improved {
   background: rgb(22, 101, 52);
   color: white;
+}
+
+.changelog-badge--tip {
+  background: rgba(251, 191, 36, 0.15);
+  color: rgb(251, 191, 36);
+  border: 1px solid rgba(251, 191, 36, 0.3);
 }
