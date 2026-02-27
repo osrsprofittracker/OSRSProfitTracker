@@ -44,6 +44,9 @@ export default function SettingsModal({
     { key: 'profit', label: 'Profit' },
     { key: 'desiredStock', label: 'Desired Stock' },
     { key: 'limit4h', label: '4H Limit' },
+    { key: 'geHigh', label: 'GE High' },
+    { key: 'geLow', label: 'GE Low' },
+    { key: 'unrealizedProfit', label: 'Unrealized Profit' },
     { key: 'notes', label: 'Notes' }
   ];
 

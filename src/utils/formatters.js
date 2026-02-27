@@ -9,7 +9,7 @@ export const formatNumber = (num, numberFormat = 'compact') => {
   }
 
   // Compact format
-  if (rounded < 100_000) {
+   if (rounded < 100_000) {
     return rounded.toLocaleString();
   }
 
@@ -17,7 +17,11 @@ export const formatNumber = (num, numberFormat = 'compact') => {
     return (rounded / 1_000).toFixed(0) + ' K';
   }
 
-  return (rounded / 1_000_000).toFixed(1) + ' M';
+  if (rounded < 1_000_000_000) {
+    return (rounded / 1_000_000).toFixed(2) + ' M';
+  }
+
+  return (rounded / 1_000_000_000).toFixed(2) + ' B';
 };
 
 export function formatAvgPrice(value, numberFormat) {

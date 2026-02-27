@@ -3,6 +3,7 @@ import { formatNumber } from '../utils/formatters';
 
 const EMPTY_FILTERS = {
   type: 'all',
+  mode: 'all',
   stockName: '',
   category: '',
   dateFrom: '',
@@ -94,7 +95,8 @@ export default function HistoryPage({
     appliedFilters.profitMin || appliedFilters.profitMax ||
     appliedFilters.qtyMin || appliedFilters.qtyMax ||
     appliedFilters.marginMin || appliedFilters.marginMax ||
-    appliedFilters.type !== 'all';
+    appliedFilters.type !== 'all' ||
+    appliedFilters.mode !== 'all';
   // Derive categories from existing transactions for the filter dropdown
   const categories = [...new Set(stocks.map(s => s.category).filter(Boolean))].sort();
 
@@ -153,6 +155,21 @@ export default function HistoryPage({
                     onClick={() => setLocalFilters(prev => ({ ...prev, type: f }))}
                   >
                     {f === 'all' ? 'All' : f === 'buy' ? 'Buys' : 'Sales'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="history-filter-field">
+              <label className="history-filter-label">Mode</label>
+              <div className="history-filter-group">
+                {['all', 'trade', 'investment'].map(m => (
+                  <button
+                    key={m}
+                    className={`history-filter-btn history-filter-btn--all ${localFilters.mode === m ? 'history-filter-btn--active' : ''}`}
+                    onClick={() => setLocalFilters(prev => ({ ...prev, mode: m }))}
+                  >
+                    {m === 'all' ? 'All' : m === 'trade' ? '💼 Trade' : '📈 Investment'}
                   </button>
                 ))}
               </div>
