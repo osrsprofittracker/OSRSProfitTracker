@@ -25,7 +25,8 @@ export default function StockTable({
   currentTime,
   numberFormat,
   geData = {},
-  geIconMap = {}
+  geIconMap = {},
+  onArchive
 }) {
   const sortedStocks = sortStocks(stocks, sortConfig);
 
@@ -50,6 +51,7 @@ export default function StockTable({
               onDelete={onDelete}
               onNotes={onNotes}
               onCalculate={onCalculate}
+              onArchive={onArchive}
               onDragStart={onDragStart}
               onDragOver={onDragOver}
               onDrop={onDrop}
@@ -132,7 +134,8 @@ function StockRow({
   currentTime,
   numberFormat,
   geData = {},
-  geIconMap = {}
+  geIconMap = {},
+  onArchive
 }) {
   const avgBuy = calculateAvgBuyPrice(stock);
   const avgSell = calculateAvgSellPrice(stock);
@@ -246,6 +249,7 @@ function StockRow({
           onAdjust={onAdjust}
           onDelete={onDelete}
           onCalculate={onCalculate}
+          onArchive={onArchive}
         />
       </td>
     </tr>
@@ -288,7 +292,7 @@ function StatusBadge({ stock }) {
   }
 }
 
-function ActionButtons({ stock, onBuy, onSell, onAdjust, onDelete, onCalculate }) {
+function ActionButtons({ stock, onBuy, onSell, onAdjust, onDelete, onCalculate, onArchive }) {
   return (
     <div className="action-buttons">
       <button className="btn btn-success btn-sm" onClick={() => onBuy(stock)}>
@@ -302,6 +306,9 @@ function ActionButtons({ stock, onBuy, onSell, onAdjust, onDelete, onCalculate }
       </button>
       <button className="btn btn-warning btn-sm" onClick={() => onAdjust(stock)}>
         Adjust
+      </button>
+      <button className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)} title="Archive">
+        📦 Archive
       </button>
       <button className="btn btn-danger btn-sm" onClick={() => onDelete(stock)}>
         <Trash2 size={12} />

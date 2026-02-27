@@ -53,19 +53,18 @@ import {
 export default function MainApp({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
-  const version = "1.5.0";
   const [showChangelog, setShowChangelog] = useState(false);
   // Custom hooks for Supabase
   const [tradeMode, setTradeMode] = useState('trade');
   // Update the destructure:
-const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices();
+  const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices();
 
   const switchTradeMode = (mode) => {
     refetch();
     fetchCategories();
     setTradeMode(mode);
   };
-  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks } = useStocks(userId);
+  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocks(userId);
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
   const {
     transactions, loading: transactionsLoading, addTransaction,
@@ -73,11 +72,11 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
     page, pageSize, filters, goToPage, changePageSize, applyFilters, initPaged,
     sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
   } = useTransactions(userId);
-  const { stats: gpTradedStats, loading: gpStatsLoading } = useGPTradedStats(userId);
+ const { stats: gpTradedStats, loading: gpStatsLoading, refetch: refetchGPStats } = useGPTradedStats(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
-  const { profitHistory, loading: profitHistoryLoading, addProfitEntry } = useProfitHistory(userId);
+  const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
   const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, PRESET_GOALS } = useMilestones(userId);
 
   // Destructure profits
@@ -98,6 +97,11 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
       refetch();
       fetchCategories();
     }
+    if (page === 'home') {
+    refetch();
+    refetchGPStats();
+    refetchProfitHistory();
+  }
     setCurrentPage(page);
   };
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -131,6 +135,39 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
   const [selectedStock, setSelectedStock] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [newStockCategory, setNewStockCategory] = useState('');
+
+  const [showArchive, setShowArchive] = useState(false);
+  const [archivedStocks, setArchivedStocks] = useState([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [showArchiveConfirmModal, setShowArchiveConfirmModal] = useState(false);
+  const [stockToArchive, setStockToArchive] = useState(null);
+
+  const handleOpenArchive = async () => {
+    setArchivedLoading(true);
+    const data = await fetchArchivedStocks();
+    setArchivedStocks(data);
+    setArchivedLoading(false);
+    setShowArchive(true);
+  };
+
+  const handleArchive = (stock) => {
+    setStockToArchive(stock);
+    setShowArchiveConfirmModal(true);
+  };
+
+  const handleConfirmArchive = async () => {
+    await archiveStock(stockToArchive.id);
+    await refetch();
+    setShowArchiveConfirmModal(false);
+    setStockToArchive(null);
+  };
+
+  const handleRestore = async (stock) => {
+    await restoreStock(stock.id);
+    const data = await fetchArchivedStocks();
+    setArchivedStocks(data);
+    await refetch();
+  };
 
   // Timer update
   useEffect(() => {
@@ -916,7 +953,7 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
               rel="noreferrer"
               className="version-badge"
             >
-              v{version}
+              v{CURRENT_VERSION}
             </a>
           </div>
 
@@ -1077,13 +1114,21 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
                 + Add Category
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   setNewStockCategory('');
+                  const data = await fetchArchivedStocks();
+                  setArchivedStocks(data);
                   setShowNewStockModal(true);
                 }}
                 className="btn btn-success"
               >
                 + Add Stock
+              </button>
+              <button
+                onClick={handleOpenArchive}
+                className="btn btn-secondary"
+              >
+                📦 Archive
               </button>
             </div>
 
@@ -1124,6 +1169,7 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
                   setSelectedStock(stock);
                   setShowDeleteModal(true);
                 }}
+                onArchive={handleArchive}
                 onNotes={(stock) => {
                   setSelectedStock(stock);
                   setShowNotesModal(true);
@@ -1154,6 +1200,7 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
                 stock={selectedStock}
                 onConfirm={handleBuy}
                 onCancel={() => setShowBuyModal(false)}
+                geData={gePrices}
               />
             </ModalContainer>
 
@@ -1190,6 +1237,11 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
                 defaultIsInvestment={tradeMode === 'investment'}
                 onConfirm={handleAddStock}
                 mapping={geMapping}
+                archivedStocks={archivedStocks}
+                onRestoreFromArchive={async (stock) => {
+                  await handleRestore(stock);
+                  setShowNewStockModal(false);
+                }}
                 onCancel={() => setShowNewStockModal(false)}
               />
             </ModalContainer>
@@ -1317,6 +1369,90 @@ const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices
 
         <ModalContainer isOpen={showChangelog}>
           <ChangelogModal onClose={handleCloseChangelog} />
+        </ModalContainer>
+
+        <ModalContainer isOpen={showArchive}>
+          <div style={{
+            background: 'rgb(30, 41, 59)',
+            padding: '1.5rem',
+            borderRadius: '0.75rem',
+            width: '36rem',
+            maxWidth: '90vw',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            border: '1px solid rgb(51, 65, 85)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>📦 Archive</h2>
+              <button onClick={() => setShowArchive(false)} className="btn btn-secondary btn-sm">Close</button>
+            </div>
+            {archivedLoading ? (
+              <p style={{ color: 'rgb(148, 163, 184)' }}>Loading...</p>
+            ) : archivedStocks.length === 0 ? (
+              <p style={{ color: 'rgb(148, 163, 184)' }}>No archived stocks.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {archivedStocks.map(stock => (
+                  <div key={stock.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.75rem 1rem', background: 'rgb(51, 65, 85)',
+                    borderRadius: '0.5rem', gap: '1rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                      {stock.itemId && geIconMap[stock.itemId] && (
+                        <img src={geIconMap[stock.itemId]} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain', imageRendering: 'pixelated' }} />
+                      )}
+                      <div>
+                        <div style={{ fontWeight: '600', color: 'white' }}>{stock.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgb(148, 163, 184)' }}>
+                          {stock.isInvestment ? '📈 Investment' : '💼 Trade'} · {stock.category}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRestore(stock)}
+                      className="btn btn-success btn-sm"
+                    >
+                      Restore
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </ModalContainer>
+
+        <ModalContainer isOpen={showArchiveConfirmModal}>
+          <div style={{
+            background: 'rgb(30, 41, 59)',
+            padding: '1.5rem',
+            borderRadius: '0.75rem',
+            width: '24rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            border: '1px solid rgb(51, 65, 85)'
+          }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Archive Stock</h2>
+            <p style={{ color: 'rgb(148, 163, 184)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
+              Are you sure you want to archive <strong style={{ color: 'white' }}>{stockToArchive?.name}</strong>? It will be removed from your trade screen but can be restored anytime.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={handleConfirmArchive}
+                className="btn btn-warning"
+                style={{ flex: 1 }}
+              >
+                📦 Archive
+              </button>
+              <button
+                onClick={() => { setShowArchiveConfirmModal(false); setStockToArchive(null); }}
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </ModalContainer>
 
         <ModalContainer isOpen={showMilestoneModal}>

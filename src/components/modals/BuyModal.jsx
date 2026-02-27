@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { formatNumber } from '../../utils/formatters';
 
-export default function BuyModal({ stock, onConfirm, onCancel }) {
+export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
   const [shares, setShares] = useState((stock.limit4h * 1).toString());
   const [price, setPrice] = useState('');
   const [startTimer, setStartTimer] = useState(true);
   const [multiplier, setMultiplier] = useState(1);
   const [useTotal, setUseTotal] = useState(false);
   const [totalAmount, setTotalAmount] = useState('');
+
+  const geLow = stock.itemId ? geData[stock.itemId]?.low : null;
 
   React.useEffect(() => {
     const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
@@ -179,6 +181,25 @@ export default function BuyModal({ stock, onConfirm, onCancel }) {
             <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)' }}>
               {useTotal ? 'Total Cost' : 'Price per Share'}
             </label>
+            {geLow && !useTotal && (
+              <button
+                onClick={() => handlePriceChange(geLow.toString())}
+                style={{
+                  padding: '0.2rem 0.5rem',
+                  background: 'rgb(51, 65, 85)',
+                  border: '1px solid rgb(71, 85, 105)',
+                  borderRadius: '0.375rem',
+                  color: 'rgb(134, 239, 172)',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: '500',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
+              >
+                GE Low: {geLow.toLocaleString()}
+              </button>
+            )}
             <button
               onClick={handleModeToggle}
               style={{

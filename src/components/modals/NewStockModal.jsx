@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 
-export default function NewStockModal({ categories, defaultCategory = '', defaultIsInvestment = false, mapping = [], onConfirm, onCancel }) {
+export default function NewStockModal({ categories, defaultCategory = '', defaultIsInvestment = false, mapping = [], archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
   const [stockType, setStockType] = useState('osrs'); // 'osrs' | 'custom'
   const [name, setName] = useState('');
   const [category, setCategory] = useState(defaultCategory);
@@ -40,6 +40,12 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
     setShowDropdown(false);
   };
 
+  const archivedMatch = itemId
+    ? archivedStocks.find(s => s.itemId === itemId && s.isInvestment === isInvestment)
+    : stockType === 'custom' && name.trim()
+      ? archivedStocks.find(s => !s.itemId && s.name.toLowerCase() === name.trim().toLowerCase() && s.isInvestment === isInvestment)
+      : null;
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
     setShowDropdown(true);
@@ -61,6 +67,7 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
   };
 
   const canConfirm = () => {
+    if (archivedMatch) return false;
     if (!limit4h) return false;
     if (stockType === 'osrs') return itemId !== null;
     return name.trim().length > 0;
@@ -176,6 +183,29 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
             onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
             onBlur={(e) => e.target.style.borderColor = 'transparent'}
           />
+        )}
+
+        {/* Archived match warning */}
+        {archivedMatch && (
+          <div style={{
+            background: 'rgba(251, 146, 60, 0.1)',
+            border: '1px solid rgb(251, 146, 60)',
+            borderRadius: '0.5rem',
+            padding: '0.75rem',
+          }}>
+            <div style={{ fontSize: '0.875rem', color: 'rgb(251, 146, 60)', marginBottom: '0.5rem' }}>
+              ⚠ <strong>{archivedMatch.name}</strong> is in your archive.
+            </div>
+            <button
+              onMouseDown={() => { onRestoreFromArchive(archivedMatch); }}
+              style={{
+                width: '100%', padding: '0.4rem', borderRadius: '0.5rem', border: 'none',
+                background: 'rgb(251, 146, 60)', color: 'white', cursor: 'pointer', fontWeight: '500', fontSize: '0.875rem'
+              }}
+            >
+              Restore from Archive instead
+            </button>
+          </div>
         )}
 
         {/* 4H Limit */}

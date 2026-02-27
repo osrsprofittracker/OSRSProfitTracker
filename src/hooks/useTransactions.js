@@ -9,7 +9,7 @@ export function useTransactions(userId) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState({ type: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' });
+  const [filters, setFilters] = useState({ type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' });
   const [sortConfig, setSortConfig] = useState({ key: 'date', dir: 'desc' });
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
@@ -19,7 +19,6 @@ export function useTransactions(userId) {
     fetchTransactions();
   }, [userId]);
 
-  // Original fetch - keeps existing behaviour
   const fetchTransactions = async () => {
     const { data, error } = await supabase
       .from('transactions')
@@ -81,6 +80,23 @@ export function useTransactions(userId) {
       const stockIds = (categoryStocks || []).map(s => s.id);
       if (stockIds.length > 0) {
         query = query.in('stock_id', stockIds);
+      } else {
+        setPagedTransactions([]);
+        setTotalCount(0);
+        setPagedLoading(false);
+        return;
+      }
+    }
+    if (activeFilters.mode && activeFilters.mode !== 'all') {
+      const isInvestment = activeFilters.mode === 'investment';
+      const { data: modeStocks } = await supabase
+        .from('stocks')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_investment', isInvestment);
+      const modeStockIds = (modeStocks || []).map(s => s.id);
+      if (modeStockIds.length > 0) {
+        query = query.in('stock_id', modeStockIds);
       } else {
         setPagedTransactions([]);
         setTotalCount(0);
