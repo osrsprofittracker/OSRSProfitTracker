@@ -12,6 +12,7 @@ import { useSettings } from './hooks/useSettings';
 import { useProfits } from './hooks/useProfits';
 import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
+import { useGEPrices } from './hooks/useGEPrices';
 import CategoryQuickNav from './components/CategoryQuickNav';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
 import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
@@ -56,6 +57,8 @@ export default function MainApp({ session, onLogout }) {
   const [showChangelog, setShowChangelog] = useState(false);
   // Custom hooks for Supabase
   const [tradeMode, setTradeMode] = useState('trade');
+  // Update the destructure:
+const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices();
 
   const switchTradeMode = (mode) => {
     refetch();
@@ -441,8 +444,8 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleAdjust = async (data) => {
-    const { name, needed, category, limit4h, onHold, isInvestment } = data;
-    await updateStock(selectedStock.id, { name, needed, category, limit4h, onHold, isInvestment });
+    const { name, needed, category, limit4h, onHold, isInvestment, itemId } = data;
+    await updateStock(selectedStock.id, { name, needed, category, limit4h, onHold, isInvestment, itemId });
     await refetch();
     highlightRow(selectedStock.id);
     setShowAdjustModal(false);
@@ -455,7 +458,7 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleAddStock = async (data) => {
-    const { name, category, limit4h, needed, isInvestment } = data;
+    const { name, category, limit4h, needed, isInvestment, itemId } = data;
     await addStockToDB({
       name,
       totalCost: 0,
@@ -468,6 +471,7 @@ export default function MainApp({ session, onLogout }) {
       timerEndTime: null,
       category: category || 'Uncategorized',
       isInvestment: isInvestment || false,
+      itemId: itemId || null,
     });
     await refetch();
     setNewStockCategory('');
@@ -1139,6 +1143,8 @@ export default function MainApp({ session, onLogout }) {
                 currentTime={currentTime}
                 numberFormat={numberFormat}
                 showCategoryStats={showCategoryStats}
+                geData={gePrices}
+                geIconMap={geIconMap}
               />
             ))}
 
@@ -1164,6 +1170,7 @@ export default function MainApp({ session, onLogout }) {
                 stock={selectedStock}
                 categories={categories}
                 onConfirm={handleAdjust}
+                mapping={geMapping}
                 onCancel={() => setShowAdjustModal(false)}
               />
             </ModalContainer>
@@ -1182,6 +1189,7 @@ export default function MainApp({ session, onLogout }) {
                 defaultCategory={newStockCategory}
                 defaultIsInvestment={tradeMode === 'investment'}
                 onConfirm={handleAddStock}
+                mapping={geMapping}
                 onCancel={() => setShowNewStockModal(false)}
               />
             </ModalContainer>

@@ -53,7 +53,13 @@ export function useSettings(userId) {
     if (data) {
       setSettings({
         numberFormat: data.number_format || 'compact',
-        visibleColumns: { ...DEFAULT_VISIBLE_COLUMNS, ...data.visible_columns },
+        visibleColumns: {
+          ...DEFAULT_VISIBLE_COLUMNS,
+          ...data.visible_columns,
+          geHigh: data.visible_columns?.geHigh ?? true,
+          geLow: data.visible_columns?.geLow ?? true,
+          unrealizedProfit: data.visible_columns?.unrealizedProfit ?? true,
+        },
         visibleProfits: data.visible_profits || DEFAULT_VISIBLE_PROFITS.bondsProfit,
         altAccountTimer: data.alt_account_timer,
         showCategoryStats: data.show_category_stats || false

@@ -2,6 +2,7 @@ import React from 'react';
 import { Edit3, Trash2, GripVertical } from 'lucide-react';
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
+import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { sortStocks } from '../utils/calculations';
 
 export default function StockTable({
@@ -22,7 +23,9 @@ export default function StockTable({
   visibleColumns,
   stockNotes,
   currentTime,
-  numberFormat
+  numberFormat,
+  geData = {},
+  geIconMap = {}
 }) {
   const sortedStocks = sortStocks(stocks, sortConfig);
 
@@ -55,6 +58,8 @@ export default function StockTable({
               stockNotes={stockNotes}
               currentTime={currentTime}
               numberFormat={numberFormat}
+              geData={geData}
+              geIconMap={geIconMap}
             />
           ))}
         </tbody>
@@ -76,6 +81,9 @@ function TableHeader({ sortConfig, onSort, visibleColumns }) {
     { label: 'Profit', key: 'profit', visible: visibleColumns.profit },
     { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock },
     { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h },
+    { label: 'GE High', key: null, visible: visibleColumns.geHigh },
+    { label: 'GE Low', key: null, visible: visibleColumns.geLow },
+    { label: 'Unreal. Profit', key: null, visible: visibleColumns.unrealizedProfit },
     { label: 'Notes', key: null, visible: visibleColumns.notes },
     { label: 'Actions', key: null, visible: true }
   ];
@@ -122,7 +130,9 @@ function StockRow({
   visibleColumns,
   stockNotes,
   currentTime,
-  numberFormat
+  numberFormat,
+  geData = {},
+  geIconMap = {}
 }) {
   const avgBuy = calculateAvgBuyPrice(stock);
   const avgSell = calculateAvgSellPrice(stock);
@@ -142,7 +152,16 @@ function StockRow({
         <GripVertical size={16} style={{ color: 'rgb(107, 114, 128)', margin: '0 auto' }} />
       </td>
       <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600', color: 'white', border: '1px solid rgb(51, 65, 85)' }}>
-        {stock.name}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          {stock.itemId && geIconMap[stock.itemId] && (
+            <img
+              src={geIconMap[stock.itemId]}
+              alt=""
+              style={{ width: '20px', height: '20px', objectFit: 'contain', imageRendering: 'pixelated' }}
+            />
+          )}
+          {stock.name}
+        </div>
       </td>
       {visibleColumns.status && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
@@ -176,14 +195,39 @@ function StockRow({
           {profit >= 0 ? '+' : ''}{formatNumber(profit, numberFormat)}
         </td>
       )}
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
-        {formatNumber(stock.needed, numberFormat)}
-      </td>
+      {visibleColumns.desiredStock !== false && (
+        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+          {formatNumber(stock.needed, numberFormat)}
+        </td>
+      )}
       {visibleColumns.limit4h && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
           {formatNumber(stock.limit4h, numberFormat)}
         </td>
       )}
+      {visibleColumns.geHigh && (
+        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
+          {stock.itemId && geData[stock.itemId]?.high != null
+            ? formatNumber(geData[stock.itemId].high, numberFormat)
+            : 'NA'}
+        </td>
+      )}
+      {visibleColumns.geLow && (
+        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
+          {stock.itemId && geData[stock.itemId]?.low != null
+            ? formatNumber(geData[stock.itemId].low, numberFormat)
+            : 'NA'}
+        </td>
+      )}
+      {visibleColumns.unrealizedProfit && (() => {
+        const latestHigh = stock.itemId ? geData[stock.itemId]?.high : null;
+        const unrealized = calculateUnrealizedProfit(stock, latestHigh, stock.itemId);
+        return (
+          <td className={`td-base td-right ${unrealized == null ? '' : unrealized >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
+            {unrealized == null ? 'NA' : `${unrealized >= 0 ? '+' : ''}${formatNumber(unrealized, numberFormat)}`}
+          </td>
+        );
+      })()}
       {visibleColumns.notes && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
           <button

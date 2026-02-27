@@ -36,6 +36,7 @@ export function useStocks(userId) {
         position: stock.position,
         onHold: stock.on_hold || false,
         isInvestment: stock.is_investment || false,
+        itemId: stock.item_id || null,
       }));
       setStocks(formattedStocks);
     }
@@ -103,6 +104,7 @@ export function useStocks(userId) {
       timer_end_time: stock.timerEndTime,
       category: stock.category,
       is_investment: stock.isInvestment || false,
+      item_id: stock.itemId || null,
     };
 
     const { data, error } = await supabase
@@ -134,6 +136,7 @@ export function useStocks(userId) {
     if (updates.limit4h !== undefined) dbUpdates.limit4h = updates.limit4h;
     if (updates.onHold !== undefined) dbUpdates.on_hold = updates.onHold;
     if (updates.isInvestment !== undefined) dbUpdates.is_investment = updates.isInvestment;
+    if (updates.itemId !== undefined) dbUpdates.item_id = updates.itemId;
 
     const { error } = await supabase
       .from('stocks')

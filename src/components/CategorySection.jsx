@@ -32,7 +32,9 @@ export default function CategorySection({
   stockNotes,
   currentTime,
   numberFormat,
-  showCategoryStats
+  showCategoryStats,
+  geData = {},
+  geIconMap = {}
 }) {
   const categoryStocks = stocks.filter(s => s.category === category);
 
@@ -225,6 +227,8 @@ export default function CategorySection({
             currentTime={currentTime}
             numberFormat={numberFormat}
             showCategoryStats={showCategoryStats}
+            geData={geData}
+            geIconMap={geIconMap}
           />
         </>
       )}

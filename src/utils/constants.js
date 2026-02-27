@@ -53,5 +53,8 @@ export const DEFAULT_VISIBLE_COLUMNS = {
   profit: true,
   timer: true,
   notes: true,
-  limit4h: true
+  limit4h: true,
+  geHigh: true,
+  geLow: true,
+  unrealizedProfit: true
 };
