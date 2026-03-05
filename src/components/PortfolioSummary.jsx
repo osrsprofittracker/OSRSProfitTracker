@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
 import { calculateStocksProfit, calculateTotalProfit } from '../utils/calculations';
+import { calculateUnrealizedProfit } from '../utils/taxUtils';
 
 export default function PortfolioSummary({
   stocks,
@@ -12,10 +13,20 @@ export default function PortfolioSummary({
   onAddDumpProfit,
   onAddReferralProfit,
   onAddBondsProfit,
-  numberFormat
+  numberFormat,
+  geData = {},
+  showUnrealisedProfitStats = false
 }) {
   const stocksProfit = calculateStocksProfit(stocks);
   const totalProfit = calculateTotalProfit(stocks, dumpProfit, referralProfit, bondsProfit);
+
+  const totalUnrealised = showUnrealisedProfitStats
+    ? stocks.reduce((sum, s) => {
+        const high = s.itemId ? geData[s.itemId]?.high : null;
+        const val = calculateUnrealizedProfit(s, high, s.itemId);
+        return sum + (val ?? 0);
+      }, 0)
+    : null;
 
   const totalPortfolio = stocks.reduce((sum, s) => sum + s.totalCost, 0);
   const totalShares = stocks.reduce((sum, s) => sum + s.shares, 0);
@@ -102,6 +113,15 @@ export default function PortfolioSummary({
               color: 'rgb(161, 98, 7)',
               hoverColor: 'rgb(133, 77, 14)'
             }}
+          />
+        )}
+
+        {/* Unrealised Profit */}
+        {showUnrealisedProfitStats && (
+          <SummaryCard
+            label="Unrealised Profit:"
+            value={`${totalUnrealised >= 0 ? '+' : ''}${formatNumber(totalUnrealised, numberFormat)}`}
+            color={totalUnrealised >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
           />
         )}
       </div>

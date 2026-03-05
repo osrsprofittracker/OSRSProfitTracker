@@ -7,14 +7,19 @@ export default function ModalContainer({ isOpen, children }) {
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(0, 0, 0, 0.6)',
-      backdropFilter: 'blur(4px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 50
+      zIndex: 200,
+      overflowY: 'auto',
     }}>
-      {children}
+      <div style={{
+        minHeight: '100%',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        padding: '2rem 1rem',
+        background: 'rgba(0, 0, 0, 0.7)',
+      }}>
+        {children}
+      </div>
     </div>
   );
 }

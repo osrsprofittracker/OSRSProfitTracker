@@ -34,6 +34,10 @@ export default function SettingsModal({
   onVisibleProfitsChange,
   showCategoryStats,
   onShowCategoryStatsChange,
+  showUnrealisedProfitStats,
+  onShowUnrealisedProfitStatsChange,
+  showCategoryUnrealisedProfit,
+  onShowCategoryUnrealisedProfitChange,
   onCancel,
   onChangePassword
 }) {
@@ -175,6 +179,37 @@ export default function SettingsModal({
         </div>
       </div>
 
+      {/* Stats Display Section */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+          Stats Display
+        </label>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem',
+            background: 'rgb(51, 65, 85)',
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={showUnrealisedProfitStats}
+            onChange={(e) => onShowUnrealisedProfitStatsChange(e.target.checked)}
+            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+          />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Show Unrealised Profit in Portfolio Stats</div>
+            <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)' }}>
+              Display total estimated unrealised profit in the top summary cards
+            </div>
+          </div>
+        </label>
+      </div>
+
       {/* Category Statistics Section */}
       <div style={{ marginBottom: '1.5rem' }}>
         <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
@@ -201,6 +236,31 @@ export default function SettingsModal({
             <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Show Category Statistics</div>
             <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)' }}>
               Display stock status counts (⏰Timer, ✓OK, 🔒Hold, 🔴Low) next to category names
+            </div>
+          </div>
+        </label>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem',
+            background: 'rgb(51, 65, 85)',
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+            marginTop: '0.5rem',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={showCategoryUnrealisedProfit}
+            onChange={(e) => onShowCategoryUnrealisedProfitChange(e.target.checked)}
+            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+          />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Show Unrealised Profit in Category Stats</div>
+            <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)' }}>
+              Display estimated unrealised profit per category based on live GE high prices
             </div>
           </div>
         </label>
