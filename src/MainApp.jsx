@@ -83,7 +83,8 @@ export default function MainApp({ session, onLogout }) {
   const { dumpProfit, referralProfit, bondsProfit } = profits;
 
   // Destructure settings
-  const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats } = settings;
+  const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats,
+          showUnrealisedProfitStats, showCategoryUnrealisedProfit } = settings;
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
     // Load collapsed state from localStorage on initial render
@@ -1058,6 +1059,8 @@ export default function MainApp({ session, onLogout }) {
               onAddReferralProfit={() => setShowReferralProfitModal(true)}
               onAddBondsProfit={() => setShowBondsProfitModal(true)}
               numberFormat={numberFormat}
+              geData={gePrices}
+              showUnrealisedProfitStats={showUnrealisedProfitStats}
             />
 
             {/* Milestone Progress Bar and Chart Buttons Row */}
@@ -1189,6 +1192,7 @@ export default function MainApp({ session, onLogout }) {
                 currentTime={currentTime}
                 numberFormat={numberFormat}
                 showCategoryStats={showCategoryStats}
+                showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
                 geData={gePrices}
                 geIconMap={geIconMap}
               />
@@ -1360,6 +1364,10 @@ export default function MainApp({ session, onLogout }) {
             onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
             showCategoryStats={showCategoryStats}
             onShowCategoryStatsChange={(value) => updateSettings({ showCategoryStats: value })}
+            showUnrealisedProfitStats={showUnrealisedProfitStats}
+            onShowUnrealisedProfitStatsChange={(v) => updateSettings({ showUnrealisedProfitStats: v })}
+            showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
+            onShowCategoryUnrealisedProfitChange={(v) => updateSettings({ showCategoryUnrealisedProfit: v })}
             onCancel={() => setShowSettingsModal(false)}
             onChangePassword={() => {
               setShowSettingsModal(false);

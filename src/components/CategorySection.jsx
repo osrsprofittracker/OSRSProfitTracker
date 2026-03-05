@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import StockTable from './StockTable';
 import { formatNumber } from '../utils/formatters';
+import { calculateUnrealizedProfit } from '../utils/taxUtils';
 
 export default function CategorySection({
   category,
@@ -33,6 +34,7 @@ export default function CategorySection({
   currentTime,
   numberFormat,
   showCategoryStats,
+  showCategoryUnrealisedProfit = false,
   geData = {},
   geIconMap = {},
   onArchive
@@ -205,6 +207,20 @@ export default function CategorySection({
               value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.totalCostSold, 0), numberFormat)}
               color="rgb(192, 132, 252)"
             />
+            {showCategoryUnrealisedProfit && (() => {
+              const total = categoryStocks.reduce((sum, s) => {
+                const high = s.itemId ? geData[s.itemId]?.high : null;
+                const val = calculateUnrealizedProfit(s, high, s.itemId);
+                return sum + (val ?? 0);
+              }, 0);
+              return (
+                <StatItem
+                  label="Unreal. Profit"
+                  value={`${total >= 0 ? '+' : ''}${formatNumber(total, numberFormat)}`}
+                  color={total >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
+                />
+              );
+            })()}
           </div>
 
           <StockTable
