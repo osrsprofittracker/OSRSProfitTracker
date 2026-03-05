@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { formatNumber } from '../../utils/formatters';
+import { formatNumber, parseMK } from '../../utils/formatters';
 
-export default function SellModal({ stock, onConfirm, onCancel }) {
+export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState('');
   const [useTotal, setUseTotal] = useState(false);
@@ -11,6 +11,11 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
     const avgSell = stock.sharesSold > 0 ? stock.totalCostSold / stock.sharesSold : 0;
     setPrice((Math.round(avgSell * 100) / 100).toFixed(0));
   }, [stock]);
+
+  const handleSharesBlur = () => {
+    const parsed = parseMK(shares);
+    setShares(parsed);
+  };
 
   const handleConfirm = () => {
     if (useTotal) {
@@ -84,6 +89,9 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
       setPrice((parseFloat(numericValue) / parseFloat(shares)).toFixed(2));
     }
   };
+
+  const geLow = stock.itemId ? geData[stock.itemId]?.low : null;
+  const geHigh = stock.itemId ? geData[stock.itemId]?.high : null;
 
   const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
   const expectedProfit = shares && price ? (parseFloat(price) - avgBuy) * parseFloat(shares) : 0;
@@ -207,13 +215,10 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
             </button>
           </div>
           <input
-            type="number"
+            type="text"
             value={shares}
             onChange={(e) => setShares(e.target.value)}
             placeholder="Number of shares"
-            max={stock.shares}
-            min="0"
-            step="1"
             style={{
               width: '100%',
               padding: '0.5rem 1rem',
@@ -224,7 +229,7 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
               color: 'white'
             }}
             onFocus={(e) => e.target.style.borderColor = 'rgb(239, 68, 68)'}
-            onBlur={(e) => e.target.style.borderColor = 'transparent'}
+            onBlur={(e) => { handleSharesBlur(); e.target.style.borderColor = 'transparent'; }}
           />
         </div>
         <div>
@@ -232,6 +237,48 @@ export default function SellModal({ stock, onConfirm, onCancel }) {
             <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)' }}>
               {useTotal ? 'Total Revenue' : 'Price per Share'}
             </label>
+            {!useTotal && (geLow || geHigh) && (
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                {geLow && (
+                  <button
+                    onClick={() => handlePriceChange(geLow.toString())}
+                    style={{
+                      padding: '0.2rem 0.5rem',
+                      background: 'rgb(51, 65, 85)',
+                      border: '1px solid rgb(71, 85, 105)',
+                      borderRadius: '0.375rem',
+                      color: 'rgb(134, 239, 172)',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
+                  >
+                    Low: {formatNumber(geLow)}
+                  </button>
+                )}
+                {geHigh && (
+                  <button
+                    onClick={() => handlePriceChange(geHigh.toString())}
+                    style={{
+                      padding: '0.2rem 0.5rem',
+                      background: 'rgb(51, 65, 85)',
+                      border: '1px solid rgb(71, 85, 105)',
+                      borderRadius: '0.375rem',
+                      color: 'rgb(147, 197, 253)',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
+                  >
+                    High: {formatNumber(geHigh)}
+                  </button>
+                )}
+              </div>
+            )}
             <button
               onClick={handleModeToggle}
               style={{
