@@ -1209,6 +1209,7 @@ export default function MainApp({ session, onLogout }) {
                 stock={selectedStock}
                 onConfirm={handleSell}
                 onCancel={() => setShowSellModal(false)}
+                geData={gePrices}
               />
             </ModalContainer>
 
