@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatNumber } from '../../utils/formatters';
+import { formatNumber, parseMK } from '../../utils/formatters';
 
 export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
   const [shares, setShares] = useState('');
@@ -11,6 +11,11 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
     const avgSell = stock.sharesSold > 0 ? stock.totalCostSold / stock.sharesSold : 0;
     setPrice((Math.round(avgSell * 100) / 100).toFixed(0));
   }, [stock]);
+
+  const handleSharesBlur = () => {
+    const parsed = parseMK(shares);
+    setShares(parsed);
+  };
 
   const handleConfirm = () => {
     if (useTotal) {
@@ -210,13 +215,10 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
             </button>
           </div>
           <input
-            type="number"
+            type="text"
             value={shares}
             onChange={(e) => setShares(e.target.value)}
             placeholder="Number of shares"
-            max={stock.shares}
-            min="0"
-            step="1"
             style={{
               width: '100%',
               padding: '0.5rem 1rem',
@@ -227,7 +229,7 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
               color: 'white'
             }}
             onFocus={(e) => e.target.style.borderColor = 'rgb(239, 68, 68)'}
-            onBlur={(e) => e.target.style.borderColor = 'transparent'}
+            onBlur={(e) => { handleSharesBlur(); e.target.style.borderColor = 'transparent'; }}
           />
         </div>
         <div>
