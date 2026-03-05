@@ -253,7 +253,7 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
                     onMouseOver={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
                     onMouseOut={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
                   >
-                    Low: {geLow.toLocaleString()}
+                    Low: {formatNumber(geLow)}
                   </button>
                 )}
                 {geHigh && (
@@ -272,7 +272,7 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
                     onMouseOver={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
                     onMouseOut={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
                   >
-                    High: {geHigh.toLocaleString()}
+                    High: {formatNumber(geHigh)}
                   </button>
                 )}
               </div>
