@@ -77,13 +77,14 @@ export default function MainApp({ session, onLogout }) {
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
   const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
-  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, PRESET_GOALS } = useMilestones(userId);
+  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestones(userId);
 
   // Destructure profits
   const { dumpProfit, referralProfit, bondsProfit } = profits;
 
   // Destructure settings
-  const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats } = settings;
+  const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats,
+          showUnrealisedProfitStats, showCategoryUnrealisedProfit } = settings;
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
     // Load collapsed state from localStorage on initial render
@@ -112,10 +113,12 @@ export default function MainApp({ session, onLogout }) {
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [milestoneInitialView, setMilestoneInitialView] = useState('main');
   const [showNewStockModal, setShowNewStockModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showAltTimerModal, setShowAltTimerModal] = useState(false);
@@ -363,6 +366,10 @@ export default function MainApp({ session, onLogout }) {
     };
 
     setMilestoneProgress(newProgress);
+
+    if (!milestonesLoading) {
+      recordCompletedPeriods(profitHistory, milestones);
+    }
   }, [dataLoaded, profitHistory, milestones]);
 
   useEffect(() => {
@@ -391,6 +398,8 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleBuy = async (data) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const { shares, price, startTimer } = data;
     const total = shares * price;
 
@@ -418,30 +427,36 @@ export default function MainApp({ session, onLogout }) {
       newOnHold = false;
     }
 
-    await updateStock(selectedStock.id, {
-      totalCost: selectedStock.totalCost + total,
-      shares: newShares,
-      timerEndTime
-    });
+    try {
+      await updateStock(selectedStock.id, {
+        totalCost: selectedStock.totalCost + total,
+        shares: newShares,
+        timerEndTime
+      });
 
-    await addTransaction({
-      stockId: selectedStock.id,
-      stockName: selectedStock.name,
-      type: 'buy',
-      shares,
-      price,
-      total,
-      date: new Date().toISOString()
-    });
-    await refetch();
-    highlightRow(selectedStock.id);
-    setShowBuyModal(false);
+      await addTransaction({
+        stockId: selectedStock.id,
+        stockName: selectedStock.name,
+        type: 'buy',
+        shares,
+        price,
+        total,
+        date: new Date().toISOString()
+      });
+      await refetch();
+      highlightRow(selectedStock.id);
+      setShowBuyModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
 
 
   const handleSell = async (data) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const { shares, price } = data;
     const total = shares * price;
 
@@ -449,35 +464,39 @@ export default function MainApp({ session, onLogout }) {
     const costBasisOfSharesSold = avgBuy * shares;
     const profit = total - costBasisOfSharesSold;
 
-    await updateStock(selectedStock.id, {
-      shares: selectedStock.shares - shares,
-      totalCost: selectedStock.totalCost - costBasisOfSharesSold,
-      sharesSold: selectedStock.sharesSold + shares,
-      totalCostSold: selectedStock.totalCostSold + total,
-      totalCostBasisSold: (selectedStock.totalCostBasisSold || 0) + costBasisOfSharesSold
-    });
+    try {
+      await updateStock(selectedStock.id, {
+        shares: selectedStock.shares - shares,
+        totalCost: selectedStock.totalCost - costBasisOfSharesSold,
+        sharesSold: selectedStock.sharesSold + shares,
+        totalCostSold: selectedStock.totalCostSold + total,
+        totalCostBasisSold: (selectedStock.totalCostBasisSold || 0) + costBasisOfSharesSold
+      });
 
-    const newTransaction = await addTransaction({
-      stockId: selectedStock.id,
-      stockName: selectedStock.name,
-      type: 'sell',
-      shares,
-      price,
-      total,
-      date: new Date().toISOString()
-    });
+      const newTransaction = await addTransaction({
+        stockId: selectedStock.id,
+        stockName: selectedStock.name,
+        type: 'sell',
+        shares,
+        price,
+        total,
+        date: new Date().toISOString()
+      });
 
-    const profitEntry = await addProfitEntry('stock', profit, selectedStock.id, newTransaction?.id ?? null);
+      const profitEntry = await addProfitEntry('stock', profit, selectedStock.id, newTransaction?.id ?? null);
 
-    if (newTransaction && profitEntry) {
-      await supabase
-        .from('transactions')
-        .update({ profit_history_id: profitEntry.id })
-        .eq('id', newTransaction.id);
+      if (newTransaction && profitEntry) {
+        await supabase
+          .from('transactions')
+          .update({ profit_history_id: profitEntry.id })
+          .eq('id', newTransaction.id);
+      }
+      await refetch();
+      highlightRow(selectedStock.id);
+      setShowSellModal(false);
+    } finally {
+      setIsSubmitting(false);
     }
-    await refetch();
-    highlightRow(selectedStock.id);
-    setShowSellModal(false);
   };
 
   const handleAdjust = async (data) => {
@@ -1017,7 +1036,8 @@ export default function MainApp({ session, onLogout }) {
             milestones={milestones}
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => navigateToPage('trade')}
-            onOpenMilestoneModal={() => setShowMilestoneModal(true)}
+            onOpenMilestoneModal={() => { setMilestoneInitialView('main'); setShowMilestoneModal(true); }}
+            onOpenMilestoneHistory={() => { setMilestoneInitialView('history'); setShowMilestoneModal(true); }}
           />
         ) : currentPage === 'history' ? (
           <HistoryPage
@@ -1058,6 +1078,8 @@ export default function MainApp({ session, onLogout }) {
               onAddReferralProfit={() => setShowReferralProfitModal(true)}
               onAddBondsProfit={() => setShowBondsProfitModal(true)}
               numberFormat={numberFormat}
+              geData={gePrices}
+              showUnrealisedProfitStats={showUnrealisedProfitStats}
             />
 
             {/* Milestone Progress Bar and Chart Buttons Row */}
@@ -1074,7 +1096,7 @@ export default function MainApp({ session, onLogout }) {
                 currentProgress={milestoneProgress}
                 selectedPeriod={selectedMilestonePeriod}
                 onPeriodChange={setSelectedMilestonePeriod}
-                onOpenModal={() => setShowMilestoneModal(true)}
+                onOpenModal={() => { setMilestoneInitialView('main'); setShowMilestoneModal(true); }}
                 numberFormat={numberFormat}
               />
 
@@ -1189,6 +1211,7 @@ export default function MainApp({ session, onLogout }) {
                 currentTime={currentTime}
                 numberFormat={numberFormat}
                 showCategoryStats={showCategoryStats}
+                showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
                 geData={gePrices}
                 geIconMap={geIconMap}
               />
@@ -1201,6 +1224,7 @@ export default function MainApp({ session, onLogout }) {
                 onConfirm={handleBuy}
                 onCancel={() => setShowBuyModal(false)}
                 geData={gePrices}
+                isSubmitting={isSubmitting}
               />
             </ModalContainer>
 
@@ -1209,6 +1233,8 @@ export default function MainApp({ session, onLogout }) {
                 stock={selectedStock}
                 onConfirm={handleSell}
                 onCancel={() => setShowSellModal(false)}
+                geData={gePrices}
+                isSubmitting={isSubmitting}
               />
             </ModalContainer>
 
@@ -1359,6 +1385,10 @@ export default function MainApp({ session, onLogout }) {
             onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
             showCategoryStats={showCategoryStats}
             onShowCategoryStatsChange={(value) => updateSettings({ showCategoryStats: value })}
+            showUnrealisedProfitStats={showUnrealisedProfitStats}
+            onShowUnrealisedProfitStatsChange={(v) => updateSettings({ showUnrealisedProfitStats: v })}
+            showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
+            onShowCategoryUnrealisedProfitChange={(v) => updateSettings({ showCategoryUnrealisedProfit: v })}
             onCancel={() => setShowSettingsModal(false)}
             onChangePassword={() => {
               setShowSettingsModal(false);
@@ -1459,6 +1489,8 @@ export default function MainApp({ session, onLogout }) {
           <MilestoneTrackerModal
             milestones={milestones}
             currentProgress={milestoneProgress}
+            milestoneHistory={milestoneHistory}
+            initialView={milestoneInitialView}
             onUpdateMilestone={handleUpdateMilestone}
             onCancel={() => setShowMilestoneModal(false)}
             numberFormat={numberFormat}

@@ -1,3 +1,16 @@
+export const parseMK = (value) => {
+  const str = String(value).trim().toLowerCase();
+  if (str.endsWith('m')) {
+    const num = parseFloat(str) * 1_000_000;
+    return isNaN(num) ? value : String(Math.round(num));
+  }
+  if (str.endsWith('k')) {
+    const num = parseFloat(str) * 1_000;
+    return isNaN(num) ? value : String(Math.round(num));
+  }
+  return value;
+};
+
 export const formatNumber = (num, numberFormat = 'compact') => {
   if (num == null || isNaN(num)) return '-';
 

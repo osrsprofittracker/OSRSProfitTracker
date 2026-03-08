@@ -23,7 +23,9 @@ export function useSettings(userId) {
     visibleColumns: DEFAULT_VISIBLE_COLUMNS,
     visibleProfits: DEFAULT_VISIBLE_PROFITS,
     altAccountTimer: null,
-    showCategoryStats: false
+    showCategoryStats: false,
+    showUnrealisedProfitStats: false,
+    showCategoryUnrealisedProfit: true,
   });
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +64,9 @@ export function useSettings(userId) {
         },
         visibleProfits: data.visible_profits || DEFAULT_VISIBLE_PROFITS.bondsProfit,
         altAccountTimer: data.alt_account_timer,
-        showCategoryStats: data.show_category_stats || false
+        showCategoryStats: data.show_category_stats || false,
+        showUnrealisedProfitStats: data.show_unrealised_profit_stats ?? false,
+        showCategoryUnrealisedProfit: data.show_category_unrealised_profit ?? true,
       });
     } else {
       const { error: insertError } = await supabase
@@ -92,7 +96,9 @@ export function useSettings(userId) {
       visible_columns: newSettings.visibleColumns,
       visible_profits: newSettings.visibleProfits,
       alt_account_timer: newSettings.altAccountTimer,
-      show_category_stats: newSettings.showCategoryStats
+      show_category_stats: newSettings.showCategoryStats,
+      show_unrealised_profit_stats: newSettings.showUnrealisedProfitStats,
+      show_category_unrealised_profit: newSettings.showCategoryUnrealisedProfit,
     };
 
     const { error } = await supabase

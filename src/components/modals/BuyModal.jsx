@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { formatNumber } from '../../utils/formatters';
+import { formatNumber, parseMK } from '../../utils/formatters';
 
-export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
+export default function BuyModal({ stock, onConfirm, onCancel, geData = {}, isSubmitting = false }) {
   const [shares, setShares] = useState((stock.limit4h * 1).toString());
   const [price, setPrice] = useState('');
   const [startTimer, setStartTimer] = useState(true);
@@ -10,6 +10,7 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
   const [totalAmount, setTotalAmount] = useState('');
 
   const geLow = stock.itemId ? geData[stock.itemId]?.low : null;
+  const geHigh = stock.itemId ? geData[stock.itemId]?.high : null;
 
   React.useEffect(() => {
     const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
@@ -17,6 +18,14 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
     setPrice(avgPrice);
     setTotalAmount((stock.limit4h * parseFloat(avgPrice)).toFixed(0));
   }, [stock]);
+
+  const handleSharesBlur = () => {
+    const parsed = parseMK(shares);
+    setShares(parsed);
+    if (price && parsed) {
+      setTotalAmount((parseFloat(parsed) * parseFloat(price)).toFixed(0));
+    }
+  };
 
   const handleMultiplierChange = (mult) => {
     setMultiplier(mult);
@@ -159,7 +168,7 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
             ))}
           </div>
           <input
-            type="number"
+            type="text"
             value={shares}
             onChange={(e) => setShares(e.target.value)}
             placeholder="Number of shares"
@@ -173,7 +182,7 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
               color: 'white'
             }}
             onFocus={(e) => e.target.style.borderColor = 'rgb(34, 197, 94)'}
-            onBlur={(e) => e.target.style.borderColor = 'transparent'}
+            onBlur={(e) => { handleSharesBlur(); e.target.style.borderColor = 'transparent'; }}
           />
         </div>
         <div>
@@ -181,24 +190,47 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
             <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)' }}>
               {useTotal ? 'Total Cost' : 'Price per Share'}
             </label>
-            {geLow && !useTotal && (
-              <button
-                onClick={() => handlePriceChange(geLow.toString())}
-                style={{
-                  padding: '0.2rem 0.5rem',
-                  background: 'rgb(51, 65, 85)',
-                  border: '1px solid rgb(71, 85, 105)',
-                  borderRadius: '0.375rem',
-                  color: 'rgb(134, 239, 172)',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  fontWeight: '500',
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
-              >
-                GE Low: {geLow.toLocaleString()}
-              </button>
+            {!useTotal && (geLow || geHigh) && (
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                {geLow && (
+                  <button
+                    onClick={() => handlePriceChange(geLow.toString())}
+                    style={{
+                      padding: '0.2rem 0.5rem',
+                      background: 'rgb(51, 65, 85)',
+                      border: '1px solid rgb(71, 85, 105)',
+                      borderRadius: '0.375rem',
+                      color: 'rgb(134, 239, 172)',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
+                  >
+                    Low: {formatNumber(geLow)}
+                  </button>
+                )}
+                {geHigh && (
+                  <button
+                    onClick={() => handlePriceChange(geHigh.toString())}
+                    style={{
+                      padding: '0.2rem 0.5rem',
+                      background: 'rgb(51, 65, 85)',
+                      border: '1px solid rgb(71, 85, 105)',
+                      borderRadius: '0.375rem',
+                      color: 'rgb(147, 197, 253)',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgb(71, 85, 105)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgb(51, 65, 85)'}
+                  >
+                    High: {formatNumber(geHigh)}
+                  </button>
+                )}
+              </div>
             )}
             <button
               onClick={handleModeToggle}
@@ -281,19 +313,21 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
         <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
           <button
             onClick={handleConfirm}
+            disabled={isSubmitting}
             style={{
               flex: 1,
               padding: '0.5rem 1rem',
-              background: 'rgb(21, 128, 61)',
+              background: isSubmitting ? 'rgb(100, 100, 100)' : 'rgb(21, 128, 61)',
               borderRadius: '0.5rem',
               transition: 'background 0.2s',
               border: 'none',
               color: 'white',
-              cursor: 'pointer',
-              fontWeight: '500'
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              fontWeight: '500',
+              opacity: isSubmitting ? 0.5 : 1
             }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgb(22, 101, 52)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'rgb(21, 128, 61)'}
+            onMouseOver={(e) => { if (!isSubmitting) e.currentTarget.style.background = 'rgb(22, 101, 52)'; }}
+            onMouseOut={(e) => { if (!isSubmitting) e.currentTarget.style.background = 'rgb(21, 128, 61)'; }}
           >
             Confirm
           </button>
