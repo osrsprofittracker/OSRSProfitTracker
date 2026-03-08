@@ -5,7 +5,8 @@
       "Bash(curl:*)",
       "Skill(new-branch)",
       "Bash(git checkout:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(grep:*)"
     ]
   }
 }
