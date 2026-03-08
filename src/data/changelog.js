@@ -1,6 +1,18 @@
-export const CURRENT_VERSION = "2.0.0";
+export const CURRENT_VERSION = "2.1.0";
 
 export const changelog = [
+  {
+    version: "2.1.0",
+    date: "2026-03-08",
+    changes: [
+      { type: "new", text: "GE High price button in buy and sell modals — one click to fill the current GE High price" },
+      { type: "new", text: "K/M shorthand input for quantities — type 10k or 2.5m instead of the full number" },
+      { type: "new", text: "Unrealised profit now shown in portfolio summary and per-category stats" },
+      { type: "new", text: "Milestone history — milestones are recorded when reached and viewable in a dedicated history panel" },
+      { type: "fix", text: "Double-clicking the confirm button in buy/sell modals no longer creates duplicate transactions" },
+      { type: "fix", text: "Modal centering restored after a layout regression" },
+    ],
+  },
   {
     version: "2.0.0",
     date: "2026-02-27",
