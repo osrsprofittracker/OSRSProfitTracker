@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { formatNumber, parseMK } from '../../utils/formatters';
 
-export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
+export default function BuyModal({ stock, onConfirm, onCancel, geData = {}, isSubmitting = false }) {
   const [shares, setShares] = useState((stock.limit4h * 1).toString());
   const [price, setPrice] = useState('');
   const [startTimer, setStartTimer] = useState(true);
@@ -313,19 +313,21 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {} }) {
         <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
           <button
             onClick={handleConfirm}
+            disabled={isSubmitting}
             style={{
               flex: 1,
               padding: '0.5rem 1rem',
-              background: 'rgb(21, 128, 61)',
+              background: isSubmitting ? 'rgb(100, 100, 100)' : 'rgb(21, 128, 61)',
               borderRadius: '0.5rem',
               transition: 'background 0.2s',
               border: 'none',
               color: 'white',
-              cursor: 'pointer',
-              fontWeight: '500'
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              fontWeight: '500',
+              opacity: isSubmitting ? 0.5 : 1
             }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgb(22, 101, 52)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'rgb(21, 128, 61)'}
+            onMouseOver={(e) => { if (!isSubmitting) e.currentTarget.style.background = 'rgb(22, 101, 52)'; }}
+            onMouseOut={(e) => { if (!isSubmitting) e.currentTarget.style.background = 'rgb(21, 128, 61)'; }}
           >
             Confirm
           </button>

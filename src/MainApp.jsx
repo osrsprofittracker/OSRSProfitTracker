@@ -113,6 +113,7 @@ export default function MainApp({ session, onLogout }) {
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -392,6 +393,8 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleBuy = async (data) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const { shares, price, startTimer } = data;
     const total = shares * price;
 
@@ -419,30 +422,36 @@ export default function MainApp({ session, onLogout }) {
       newOnHold = false;
     }
 
-    await updateStock(selectedStock.id, {
-      totalCost: selectedStock.totalCost + total,
-      shares: newShares,
-      timerEndTime
-    });
+    try {
+      await updateStock(selectedStock.id, {
+        totalCost: selectedStock.totalCost + total,
+        shares: newShares,
+        timerEndTime
+      });
 
-    await addTransaction({
-      stockId: selectedStock.id,
-      stockName: selectedStock.name,
-      type: 'buy',
-      shares,
-      price,
-      total,
-      date: new Date().toISOString()
-    });
-    await refetch();
-    highlightRow(selectedStock.id);
-    setShowBuyModal(false);
+      await addTransaction({
+        stockId: selectedStock.id,
+        stockName: selectedStock.name,
+        type: 'buy',
+        shares,
+        price,
+        total,
+        date: new Date().toISOString()
+      });
+      await refetch();
+      highlightRow(selectedStock.id);
+      setShowBuyModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
 
 
   const handleSell = async (data) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const { shares, price } = data;
     const total = shares * price;
 
@@ -450,35 +459,39 @@ export default function MainApp({ session, onLogout }) {
     const costBasisOfSharesSold = avgBuy * shares;
     const profit = total - costBasisOfSharesSold;
 
-    await updateStock(selectedStock.id, {
-      shares: selectedStock.shares - shares,
-      totalCost: selectedStock.totalCost - costBasisOfSharesSold,
-      sharesSold: selectedStock.sharesSold + shares,
-      totalCostSold: selectedStock.totalCostSold + total,
-      totalCostBasisSold: (selectedStock.totalCostBasisSold || 0) + costBasisOfSharesSold
-    });
+    try {
+      await updateStock(selectedStock.id, {
+        shares: selectedStock.shares - shares,
+        totalCost: selectedStock.totalCost - costBasisOfSharesSold,
+        sharesSold: selectedStock.sharesSold + shares,
+        totalCostSold: selectedStock.totalCostSold + total,
+        totalCostBasisSold: (selectedStock.totalCostBasisSold || 0) + costBasisOfSharesSold
+      });
 
-    const newTransaction = await addTransaction({
-      stockId: selectedStock.id,
-      stockName: selectedStock.name,
-      type: 'sell',
-      shares,
-      price,
-      total,
-      date: new Date().toISOString()
-    });
+      const newTransaction = await addTransaction({
+        stockId: selectedStock.id,
+        stockName: selectedStock.name,
+        type: 'sell',
+        shares,
+        price,
+        total,
+        date: new Date().toISOString()
+      });
 
-    const profitEntry = await addProfitEntry('stock', profit, selectedStock.id, newTransaction?.id ?? null);
+      const profitEntry = await addProfitEntry('stock', profit, selectedStock.id, newTransaction?.id ?? null);
 
-    if (newTransaction && profitEntry) {
-      await supabase
-        .from('transactions')
-        .update({ profit_history_id: profitEntry.id })
-        .eq('id', newTransaction.id);
+      if (newTransaction && profitEntry) {
+        await supabase
+          .from('transactions')
+          .update({ profit_history_id: profitEntry.id })
+          .eq('id', newTransaction.id);
+      }
+      await refetch();
+      highlightRow(selectedStock.id);
+      setShowSellModal(false);
+    } finally {
+      setIsSubmitting(false);
     }
-    await refetch();
-    highlightRow(selectedStock.id);
-    setShowSellModal(false);
   };
 
   const handleAdjust = async (data) => {
@@ -1205,6 +1218,7 @@ export default function MainApp({ session, onLogout }) {
                 onConfirm={handleBuy}
                 onCancel={() => setShowBuyModal(false)}
                 geData={gePrices}
+                isSubmitting={isSubmitting}
               />
             </ModalContainer>
 
@@ -1214,6 +1228,7 @@ export default function MainApp({ session, onLogout }) {
                 onConfirm={handleSell}
                 onCancel={() => setShowSellModal(false)}
                 geData={gePrices}
+                isSubmitting={isSubmitting}
               />
             </ModalContainer>
 

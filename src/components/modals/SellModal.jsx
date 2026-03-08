@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { formatNumber, parseMK } from '../../utils/formatters';
 
-export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
+export default function SellModal({ stock, onConfirm, onCancel, geData = {}, isSubmitting = false }) {
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState('');
   const [useTotal, setUseTotal] = useState(false);
@@ -325,32 +325,32 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {} }) {
         <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
           <button
             onClick={handleConfirm}
-            disabled={!shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0}
+            disabled={isSubmitting || !shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0}
             style={{
               flex: 1,
               padding: '0.5rem 1rem',
-              background: (!shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0)
+              background: (isSubmitting || !shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0)
                 ? 'rgb(100, 100, 100)'
                 : 'rgb(185, 28, 28)',
               borderRadius: '0.5rem',
               transition: 'background 0.2s',
               border: 'none',
               color: 'white',
-              cursor: (!shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0)
+              cursor: (isSubmitting || !shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0)
                 ? 'not-allowed'
                 : 'pointer',
               fontWeight: '500',
-              opacity: (!shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0)
+              opacity: (isSubmitting || !shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0)
                 ? 0.5
                 : 1
             }}
             onMouseOver={(e) => {
-              if (shares && parseFloat(shares) <= stock.shares && parseFloat(shares) > 0) {
+              if (!isSubmitting && shares && parseFloat(shares) <= stock.shares && parseFloat(shares) > 0) {
                 e.currentTarget.style.background = 'rgb(153, 27, 27)';
               }
             }}
             onMouseOut={(e) => {
-              if (shares && parseFloat(shares) <= stock.shares && parseFloat(shares) > 0) {
+              if (!isSubmitting && shares && parseFloat(shares) <= stock.shares && parseFloat(shares) > 0) {
                 e.currentTarget.style.background = 'rgb(185, 28, 28)';
               }
             }}
