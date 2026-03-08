@@ -11,6 +11,7 @@ export default function HomePage({
   milestoneProgress,
   onNavigateToTrade,
   onOpenMilestoneModal,
+  onOpenMilestoneHistory,
   profitHistory
 }) {
   // Use milestoneProgress for period profits (already calculated in MainApp)
@@ -309,6 +310,14 @@ export default function HomePage({
             style={{ width: '100%', marginTop: '1rem', justifyContent: 'center' }}
           >
             🎯 Edit Goals
+          </button>
+
+          <button
+            onClick={onOpenMilestoneHistory}
+            className="btn btn-secondary"
+            style={{ width: '100%', marginTop: '0.5rem', justifyContent: 'center' }}
+          >
+            📋 View History
           </button>
         </div>
       </div>

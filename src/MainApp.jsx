@@ -77,7 +77,7 @@ export default function MainApp({ session, onLogout }) {
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
   const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
-  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, PRESET_GOALS } = useMilestones(userId);
+  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestones(userId);
 
   // Destructure profits
   const { dumpProfit, referralProfit, bondsProfit } = profits;
@@ -118,6 +118,7 @@ export default function MainApp({ session, onLogout }) {
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [milestoneInitialView, setMilestoneInitialView] = useState('main');
   const [showNewStockModal, setShowNewStockModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showAltTimerModal, setShowAltTimerModal] = useState(false);
@@ -365,6 +366,10 @@ export default function MainApp({ session, onLogout }) {
     };
 
     setMilestoneProgress(newProgress);
+
+    if (!milestonesLoading) {
+      recordCompletedPeriods(profitHistory, milestones);
+    }
   }, [dataLoaded, profitHistory, milestones]);
 
   useEffect(() => {
@@ -1031,7 +1036,8 @@ export default function MainApp({ session, onLogout }) {
             milestones={milestones}
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => navigateToPage('trade')}
-            onOpenMilestoneModal={() => setShowMilestoneModal(true)}
+            onOpenMilestoneModal={() => { setMilestoneInitialView('main'); setShowMilestoneModal(true); }}
+            onOpenMilestoneHistory={() => { setMilestoneInitialView('history'); setShowMilestoneModal(true); }}
           />
         ) : currentPage === 'history' ? (
           <HistoryPage
@@ -1090,7 +1096,7 @@ export default function MainApp({ session, onLogout }) {
                 currentProgress={milestoneProgress}
                 selectedPeriod={selectedMilestonePeriod}
                 onPeriodChange={setSelectedMilestonePeriod}
-                onOpenModal={() => setShowMilestoneModal(true)}
+                onOpenModal={() => { setMilestoneInitialView('main'); setShowMilestoneModal(true); }}
                 numberFormat={numberFormat}
               />
 
@@ -1483,6 +1489,8 @@ export default function MainApp({ session, onLogout }) {
           <MilestoneTrackerModal
             milestones={milestones}
             currentProgress={milestoneProgress}
+            milestoneHistory={milestoneHistory}
+            initialView={milestoneInitialView}
             onUpdateMilestone={handleUpdateMilestone}
             onCancel={() => setShowMilestoneModal(false)}
             numberFormat={numberFormat}
