@@ -37,7 +37,8 @@ export function useTimeseries(itemId, timestep) {
     };
 
     fetchData();
-    return () => { cancelled = true; };
+    const interval = setInterval(fetchData, 60_000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [itemId, timestep]);
 
   return { data, loading, error };

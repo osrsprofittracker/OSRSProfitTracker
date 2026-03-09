@@ -1983,6 +1983,22 @@
   margin: 0;
 }
 
+.graphs-info-wiki-link {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(96, 165, 250);
+  text-decoration: none;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.graphs-info-wiki-link:hover {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: rgb(96, 165, 250);
+}
+
 .graphs-info-stats {
   display: flex;
   gap: 2rem;
@@ -2009,15 +2025,41 @@
 }
 
 .graphs-info-value--high {
-  color: rgb(96, 165, 250);
+  color: rgb(34, 197, 94);
 }
 
 .graphs-info-value--low {
-  color: rgb(52, 211, 153);
+  color: rgb(239, 68, 68);
 }
 
 .graphs-info-value--negative {
   color: rgb(248, 113, 113);
+}
+
+.graphs-info-stat--tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.graphs-info-stat-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: rgb(148, 163, 184);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.graphs-info-stat--tooltip:hover .graphs-info-stat-tooltip {
+  display: block;
 }
 
 .graphs-timeframe-bar {
@@ -2057,6 +2099,14 @@
   min-height: 400px;
   border-radius: 0.75rem;
   overflow: hidden;
+  position: relative;
+}
+
+.graphs-volume-container {
+  height: 250px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin-top: 1rem;
   position: relative;
 }
 
