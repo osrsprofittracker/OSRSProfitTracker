@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { createChart, LineSeries, HistogramSeries } from 'lightweight-charts';
+import { createChart, LineSeries, HistogramSeries, CandlestickSeries } from 'lightweight-charts';
 import { Star, Clock, Search } from 'lucide-react';
 import { useTimeseries } from '../hooks/useTimeseries';
 import { useGraphPreferences } from '../hooks/useGraphPreferences';
@@ -19,6 +19,7 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [timeframe, setTimeframe] = useState('1D');
+  const [chartMode, setChartMode] = useState('line');
 
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -32,10 +33,13 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
   const sellVolSeriesRef = useRef(null);
   const selectedItemRef = useRef(null);
   const chartDataRef = useRef([]);
+  const candleSeriesRef = useRef(null);
+  const chartModeRef = useRef('line');
 
   const { favorites, recents, addRecent, toggleFavorite, isFavorite } = useGraphPreferences(userId);
 
   selectedItemRef.current = selectedItem;
+  chartModeRef.current = chartMode;
 
   const tf = TIMEFRAMES.find(t => t.label === timeframe);
   const { data: rawData, loading, error } = useTimeseries(
@@ -53,6 +57,20 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
       .map(d => ({ ...d, timestamp: d.timestamp + tzOffsetSeconds }))
       .sort((a, b) => a.timestamp - b.timestamp);
   }, [rawData, tf]);
+
+  const candlestickData = useMemo(() => {
+    if (!chartData.length) return [];
+    return chartData
+      .filter(d => d.avgHighPrice != null && d.avgLowPrice != null)
+      .map((d, i, arr) => {
+        const high = d.avgHighPrice;
+        const low = d.avgLowPrice;
+        const close = (high + low) / 2;
+        const open = i === 0 ? low
+          : (arr[i - 1].avgHighPrice + arr[i - 1].avgLowPrice) / 2;
+        return { time: d.timestamp, open: Math.round(open), high: Math.round(high), low: Math.round(low), close: Math.round(close) };
+      });
+  }, [chartData]);
 
   chartDataRef.current = chartData;
 
@@ -158,9 +176,23 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
       priceLineVisible: false,
     });
 
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: 'rgb(34, 197, 94)',
+      downColor: 'rgb(239, 68, 68)',
+      borderUpColor: 'rgb(34, 197, 94)',
+      borderDownColor: 'rgb(239, 68, 68)',
+      wickUpColor: 'rgb(34, 197, 94)',
+      wickDownColor: 'rgb(239, 68, 68)',
+      priceFormat,
+      priceScaleId: 'right',
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+
     chartRef.current = chart;
     highSeriesRef.current = highSeries;
     lowSeriesRef.current = lowSeries;
+    candleSeriesRef.current = candleSeries;
 
     const ro = new ResizeObserver(entries => {
       for (const entry of entries) {
@@ -198,9 +230,18 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
         toolEl.style.display = 'none';
         return;
       }
-      const highStr = highNum != null ? highNum.toLocaleString() : '—';
-      const lowStr = lowNum != null ? lowNum.toLocaleString() : '—';
-      toolEl.innerHTML = `<span style="color:rgb(34,197,94)">High: ${highStr}</span><br/><span style="color:rgb(239,68,68)">Low: ${lowStr}</span>`;
+      if (chartModeRef.current === 'candle' && highNum != null && lowNum != null) {
+        const close = Math.round((nearest.avgHighPrice + nearest.avgLowPrice) / 2);
+        const idx = data.indexOf(nearest);
+        const open = idx <= 0
+          ? Math.round(nearest.avgLowPrice)
+          : Math.round((data[idx - 1].avgHighPrice + data[idx - 1].avgLowPrice) / 2);
+        toolEl.innerHTML = `<span style="color:rgb(148,163,184)">O: ${open.toLocaleString()}</span><br/><span style="color:rgb(34,197,94)">H: ${highNum.toLocaleString()}</span><br/><span style="color:rgb(239,68,68)">L: ${lowNum.toLocaleString()}</span><br/><span style="color:rgb(148,163,184)">C: ${close.toLocaleString()}</span>`;
+      } else {
+        const highStr = highNum != null ? highNum.toLocaleString() : '—';
+        const lowStr = lowNum != null ? lowNum.toLocaleString() : '—';
+        toolEl.innerHTML = `<span style="color:rgb(34,197,94)">High: ${highStr}</span><br/><span style="color:rgb(239,68,68)">Low: ${lowStr}</span>`;
+      }
       toolEl.style.display = 'block';
       const containerWidth = chartContainerRef.current.clientWidth;
       const tooltipWidth = 180;
@@ -322,6 +363,7 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
       volumeChart.remove();
       chartRef.current = null;
       volumeChartRef.current = null;
+      candleSeriesRef.current = null;
       if (toolEl.parentNode) toolEl.parentNode.removeChild(toolEl);
       if (volToolEl.parentNode) volToolEl.parentNode.removeChild(volToolEl);
     };
@@ -329,26 +371,33 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
 
   // Update chart data and time axis format based on timeframe
   useEffect(() => {
-    if (!highSeriesRef.current || !lowSeriesRef.current) return;
+    if (!highSeriesRef.current || !lowSeriesRef.current || !candleSeriesRef.current) return;
 
     // Clear charts when no item is selected
     if (!selectedItem) {
       highSeriesRef.current.setData([]);
       lowSeriesRef.current.setData([]);
+      candleSeriesRef.current.setData([]);
       if (buyVolSeriesRef.current) buyVolSeriesRef.current.setData([]);
       if (sellVolSeriesRef.current) sellVolSeriesRef.current.setData([]);
       return;
     }
 
-    const highData = chartData
-      .filter(d => d.avgHighPrice != null)
-      .map(d => ({ time: d.timestamp, value: d.avgHighPrice }));
-    const lowData = chartData
-      .filter(d => d.avgLowPrice != null)
-      .map(d => ({ time: d.timestamp, value: d.avgLowPrice }));
-
-    highSeriesRef.current.setData(highData);
-    lowSeriesRef.current.setData(lowData);
+    if (chartMode === 'candle') {
+      highSeriesRef.current.setData([]);
+      lowSeriesRef.current.setData([]);
+      candleSeriesRef.current.setData(candlestickData);
+    } else {
+      candleSeriesRef.current.setData([]);
+      const highData = chartData
+        .filter(d => d.avgHighPrice != null)
+        .map(d => ({ time: d.timestamp, value: d.avgHighPrice }));
+      const lowData = chartData
+        .filter(d => d.avgLowPrice != null)
+        .map(d => ({ time: d.timestamp, value: d.avgLowPrice }));
+      highSeriesRef.current.setData(highData);
+      lowSeriesRef.current.setData(lowData);
+    }
 
     // Volume data: buy (positive/green), sell (negative/red)
     if (buyVolSeriesRef.current && sellVolSeriesRef.current) {
@@ -377,7 +426,7 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
       });
       volumeChartRef.current.timeScale().fitContent();
     }
-  }, [chartData, timeframe, selectedItem]);
+  }, [chartData, timeframe, selectedItem, chartMode, candlestickData]);
 
   const handleSelectItem = (item) => {
     setSelectedItem(item);
@@ -658,6 +707,19 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
               {t.label}
             </button>
           ))}
+          <div className="graphs-timeframe-separator" />
+          <button
+            className={`graphs-timeframe-btn${chartMode === 'line' ? ' graphs-timeframe-btn--active' : ''}`}
+            onClick={() => setChartMode('line')}
+          >
+            Line
+          </button>
+          <button
+            className={`graphs-timeframe-btn${chartMode === 'candle' ? ' graphs-timeframe-btn--active' : ''}`}
+            onClick={() => setChartMode('candle')}
+          >
+            Candle
+          </button>
         </div>
       )}
 
