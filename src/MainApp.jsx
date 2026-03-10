@@ -1089,6 +1089,7 @@ export default function MainApp({ session, onLogout }) {
             prices={gePrices}
             iconMap={geIconMap}
             mappingLoading={mappingLoading}
+            userId={userId}
           />
         ) : (
           <>
