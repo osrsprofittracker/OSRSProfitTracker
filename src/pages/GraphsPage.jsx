@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createChart, LineSeries, HistogramSeries } from 'lightweight-charts';
+import { Star, Clock, Search } from 'lucide-react';
 import { useTimeseries } from '../hooks/useTimeseries';
+import { useGraphPreferences } from '../hooks/useGraphPreferences';
 import { calculateGETax } from '../utils/taxUtils';
 
 const TIMEFRAMES = [
@@ -12,7 +14,7 @@ const TIMEFRAMES = [
   { label: '1Y', timestep: '24h', filterDays: 365 },
 ];
 
-export default function GraphsPage({ mapping, prices, iconMap, mappingLoading }) {
+export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, userId }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -30,6 +32,8 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
   const sellVolSeriesRef = useRef(null);
   const selectedItemRef = useRef(null);
   const chartDataRef = useRef([]);
+
+  const { favorites, recents, addRecent, toggleFavorite, isFavorite } = useGraphPreferences(userId);
 
   selectedItemRef.current = selectedItem;
 
@@ -57,6 +61,41 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
     const q = searchQuery.toLowerCase();
     return mapping.filter(item => item.name.toLowerCase().includes(q)).slice(0, 50);
   }, [searchQuery, mapping]);
+
+  // Build dropdown sections
+  const dropdownSections = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const sections = [];
+
+    // Helper to find full mapping item from a preference
+    const findMappingItem = (pref) => mapping.find(m => m.id === pref.itemId);
+
+    if (!q) {
+      // Empty search: show recents then favorites
+      if (recents.length > 0) {
+        sections.push({
+          label: 'Recent',
+          icon: 'clock',
+          items: recents.map(r => findMappingItem(r)).filter(Boolean),
+        });
+      }
+      if (favorites.length > 0) {
+        sections.push({
+          label: 'Favorites',
+          icon: 'star',
+          items: favorites.map(f => findMappingItem(f)).filter(Boolean),
+        });
+      }
+    } else {
+      // Searching: show all results in one flat list (stars indicate favorites)
+      if (filteredItems.length > 0) {
+        sections.push({ label: 'Results', icon: 'search', items: filteredItems });
+      }
+    }
+    return sections;
+  }, [searchQuery, favorites, recents, filteredItems, mapping]);
+
+  const hasDropdownContent = dropdownSections.some(s => s.items.length > 0);
 
   // Click outside to close dropdown
   useEffect(() => {
@@ -140,7 +179,6 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
         toolEl.style.display = 'none';
         return;
       }
-      // Find the nearest data point in chartData for this timestamp
       const time = param.time;
       const data = chartDataRef.current;
       let nearest = null;
@@ -293,6 +331,15 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
   useEffect(() => {
     if (!highSeriesRef.current || !lowSeriesRef.current) return;
 
+    // Clear charts when no item is selected
+    if (!selectedItem) {
+      highSeriesRef.current.setData([]);
+      lowSeriesRef.current.setData([]);
+      if (buyVolSeriesRef.current) buyVolSeriesRef.current.setData([]);
+      if (sellVolSeriesRef.current) sellVolSeriesRef.current.setData([]);
+      return;
+    }
+
     const highData = chartData
       .filter(d => d.avgHighPrice != null)
       .map(d => ({ time: d.timestamp, value: d.avgHighPrice }));
@@ -330,12 +377,13 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
       });
       volumeChartRef.current.timeScale().fitContent();
     }
-  }, [chartData, timeframe]);
+  }, [chartData, timeframe, selectedItem]);
 
   const handleSelectItem = (item) => {
     setSelectedItem(item);
     setSearchQuery(item.name);
     setShowDropdown(false);
+    addRecent(item);
   };
 
   const handleSearchChange = (e) => {
@@ -344,6 +392,11 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
     if (!e.target.value.trim()) {
       setSelectedItem(null);
     }
+  };
+
+  const handleFavoriteClick = (e, item) => {
+    e.stopPropagation();
+    toggleFavorite(item);
   };
 
   const currentPrice = selectedItem && prices?.[selectedItem.id];
@@ -396,6 +449,41 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
     return `${days}d ${hours % 24}h ago`;
   };
 
+  const renderDropdownItem = (item, showFavStar) => (
+    <div
+      key={item.id}
+      className="graphs-dropdown-item"
+      onClick={() => handleSelectItem(item)}
+    >
+      {iconMap[item.id] && (
+        <img
+          src={iconMap[item.id]}
+          alt=""
+          className="graphs-dropdown-icon"
+        />
+      )}
+      <span className="graphs-dropdown-name">{item.name}</span>
+      {item.limit && (
+        <span className="graphs-dropdown-limit">Limit: {item.limit.toLocaleString()}</span>
+      )}
+      {showFavStar && (
+        <button
+          className={`graphs-favorite-star ${isFavorite(item.id) ? 'graphs-favorite-star--active' : ''}`}
+          onClick={(e) => handleFavoriteClick(e, item)}
+          title={isFavorite(item.id) ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <Star size={14} fill={isFavorite(item.id) ? 'currentColor' : 'none'} />
+        </button>
+      )}
+    </div>
+  );
+
+  const sectionIcon = (type) => {
+    if (type === 'star') return <Star size={12} />;
+    if (type === 'clock') return <Clock size={12} />;
+    return <Search size={12} />;
+  };
+
   return (
     <div className="graphs-page">
       <div className="graphs-header">
@@ -411,33 +499,50 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
           placeholder={mappingLoading ? 'Loading items...' : 'Search for an item...'}
           value={searchQuery}
           onChange={handleSearchChange}
-          onFocus={() => { if (searchQuery) setShowDropdown(true); }}
+          onFocus={() => setShowDropdown(true)}
           disabled={mappingLoading}
         />
-        {showDropdown && filteredItems.length > 0 && (
+        {showDropdown && hasDropdownContent && (
           <div className="graphs-dropdown" ref={dropdownRef}>
-            {filteredItems.map(item => (
-              <div
-                key={item.id}
-                className="graphs-dropdown-item"
-                onClick={() => handleSelectItem(item)}
-              >
-                {iconMap[item.id] && (
-                  <img
-                    src={iconMap[item.id]}
-                    alt=""
-                    style={{ width: 24, height: 24, marginRight: 8, imageRendering: 'pixelated' }}
-                  />
-                )}
-                <span>{item.name}</span>
-                {item.limit && (
-                  <span className="graphs-dropdown-limit">Limit: {item.limit.toLocaleString()}</span>
-                )}
+            {dropdownSections.map(section => (
+              <div key={section.label}>
+                <div className="graphs-dropdown-section-header">
+                  {sectionIcon(section.icon)}
+                  <span>{section.label}</span>
+                </div>
+                {section.items.map(item => renderDropdownItem(item, section.icon !== 'star'))}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {favorites.length > 0 && (
+        <div className="graphs-quick-access">
+          {favorites.map(fav => {
+            const item = mapping.find(m => m.id === fav.itemId);
+            if (!item) return null;
+            return (
+              <button
+                key={fav.itemId}
+                className={`graphs-quick-access-item ${selectedItem?.id === fav.itemId ? 'graphs-quick-access-item--active' : ''}`}
+                onClick={() => handleSelectItem(item)}
+                title={fav.itemName}
+              >
+                {iconMap[fav.itemId] ? (
+                  <img
+                    src={iconMap[fav.itemId]}
+                    alt={fav.itemName}
+                    className="graphs-quick-access-icon"
+                  />
+                ) : (
+                  <span className="graphs-quick-access-fallback">{fav.itemName.charAt(0)}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {selectedItem && (
         <div className="graphs-info-panel">
@@ -450,6 +555,13 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
               />
             )}
             <h3 className="graphs-info-name">{selectedItem.name}</h3>
+            <button
+              className={`graphs-favorite-star graphs-favorite-star--header ${isFavorite(selectedItem.id) ? 'graphs-favorite-star--active' : ''}`}
+              onClick={() => toggleFavorite(selectedItem)}
+              title={isFavorite(selectedItem.id) ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Star size={18} fill={isFavorite(selectedItem.id) ? 'currentColor' : 'none'} />
+            </button>
             <a
               className="graphs-info-wiki-link"
               href={`https://oldschool.runescape.wiki/w/${encodeURIComponent(selectedItem.name.replace(/ /g, '_'))}`}
@@ -552,7 +664,72 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading })
       <div className="graphs-chart-container" ref={chartContainerRef}>
         {!selectedItem && (
           <div className="graphs-empty-state">
-            Search for an item above to view its price chart
+            {(favorites.length > 0 || recents.length > 0) ? (
+              <div className="graphs-empty-cards">
+                {recents.length > 0 && (
+                  <div className="graphs-empty-section">
+                    <div className="graphs-empty-section-header">
+                      <Clock size={14} />
+                      <span>Recent</span>
+                    </div>
+                    <div className="graphs-empty-grid">
+                      {recents.map(rec => {
+                        const item = mapping.find(m => m.id === rec.itemId);
+                        if (!item) return null;
+                        return (
+                          <button
+                            key={rec.itemId}
+                            className="graphs-empty-card"
+                            onClick={() => handleSelectItem(item)}
+                          >
+                            {iconMap[rec.itemId] && (
+                              <img
+                                src={iconMap[rec.itemId]}
+                                alt=""
+                                className="graphs-empty-card-icon"
+                              />
+                            )}
+                            <span className="graphs-empty-card-name">{rec.itemName}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {favorites.length > 0 && (
+                  <div className="graphs-empty-section">
+                    <div className="graphs-empty-section-header">
+                      <Star size={14} />
+                      <span>Favorites</span>
+                    </div>
+                    <div className="graphs-empty-grid">
+                      {favorites.map(fav => {
+                        const item = mapping.find(m => m.id === fav.itemId);
+                        if (!item) return null;
+                        return (
+                          <button
+                            key={fav.itemId}
+                            className="graphs-empty-card"
+                            onClick={() => handleSelectItem(item)}
+                          >
+                            {iconMap[fav.itemId] && (
+                              <img
+                                src={iconMap[fav.itemId]}
+                                alt=""
+                                className="graphs-empty-card-icon"
+                              />
+                            )}
+                            <span className="graphs-empty-card-name">{fav.itemName}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              'Search for an item above to view its price chart'
+            )}
           </div>
         )}
         {loading && (
