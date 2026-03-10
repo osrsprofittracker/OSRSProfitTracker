@@ -6,7 +6,13 @@
       "Skill(new-branch)",
       "Bash(git checkout:*)",
       "Bash(npm run:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebFetch(domain:github.com)",
+      "Skill(commit)",
+      "WebFetch(domain:oldschool.runescape.wiki)",
+      "WebFetch(domain:prices.osrs.cloud)",
+      "WebFetch(domain:prices.runescape.wiki)",
+      "Bash(npm ls:*)"
     ]
   }
 }
