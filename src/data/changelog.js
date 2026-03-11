@@ -1,6 +1,20 @@
-export const CURRENT_VERSION = "2.1.0";
+export const CURRENT_VERSION = "2.2.0";
 
 export const changelog = [
+  {
+    version: "2.2.0",
+    date: "2026-03-12",
+    changes: [
+      { type: "new", text: "Item Price Charts page — search any OSRS item and view interactive price history with high/low lines" },
+      { type: "new", text: "Volume bars — buy and sell volume displayed beneath the price chart with synced time scales" },
+      { type: "new", text: "Crosshair tooltips — hover over the chart to see exact prices, volumes, and OHLC data" },
+      { type: "new", text: "Item info panel — live buy/sell prices, margin, potential profit, buy limit, high alch, and volume stats" },
+      { type: "new", text: "Candlestick chart mode — toggle between line and candlestick views for price data" },
+      { type: "new", text: "Graph favorites & recents — star items to pin them for quick access, with recent items tracked automatically" },
+      { type: "new", text: "Collapsible favorites bar — click the header to collapse or expand your favorites, state persists per account" },
+      { type: "new", text: "Drag-and-drop favorite reordering — drag favorites to rearrange them, order persists across sessions" },
+    ],
+  },
   {
     version: "2.1.0",
     date: "2026-03-08",

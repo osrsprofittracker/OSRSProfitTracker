@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
+import GraphsPage from './pages/GraphsPage';
 import { supabase } from './lib/supabase';
 import { useStocks } from './hooks/useStocks';
 import { useCategories } from './hooks/useCategories';
@@ -57,7 +58,7 @@ export default function MainApp({ session, onLogout }) {
   // Custom hooks for Supabase
   const [tradeMode, setTradeMode] = useState('trade');
   // Update the destructure:
-  const { prices: gePrices, mapping: geMapping, iconMap: geIconMap } = useGEPrices();
+  const { prices: gePrices, mapping: geMapping, iconMap: geIconMap, mappingLoading } = useGEPrices();
 
   const switchTradeMode = (mode) => {
     refetch();
@@ -951,6 +952,28 @@ export default function MainApp({ session, onLogout }) {
             >
               📜 History
             </button>
+            <button
+              onClick={() => navigateToPage('graphs')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: currentPage === 'graphs' ? 'rgb(168, 85, 247)' : 'transparent',
+                border: 'none',
+                borderRadius: '0.5rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'background 0.2s',
+                fontSize: '0.875rem'
+              }}
+              onMouseOver={(e) => {
+                if (currentPage !== 'graphs') e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                if (currentPage !== 'graphs') e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              📊 Graphs
+            </button>
           </div>
 
           {/* Center - Title */}
@@ -1059,6 +1082,14 @@ export default function MainApp({ session, onLogout }) {
             onApplySort={applySort}
             onReset={resetPaged}
             onUndo={undoTransaction}
+          />
+        ) : currentPage === 'graphs' ? (
+          <GraphsPage
+            mapping={geMapping}
+            prices={gePrices}
+            iconMap={geIconMap}
+            mappingLoading={mappingLoading}
+            userId={userId}
           />
         ) : (
           <>
