@@ -2235,11 +2235,41 @@
   flex-shrink: 0;
 }
 
+.graphs-favorites-section {
+  margin-bottom: 1.5rem;
+}
+
+.graphs-favorites-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: rgb(148, 163, 184);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  user-select: none;
+}
+
+.graphs-favorites-header:hover {
+  color: rgb(203, 213, 225);
+}
+
+.graphs-favorites-chevron {
+  transition: transform 0.2s;
+  margin-left: auto;
+}
+
+.graphs-favorites-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
 .graphs-quick-access {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
 }
 
 .graphs-quick-access-item {
@@ -2251,9 +2281,14 @@
   background: rgb(30, 41, 59);
   border: 1px solid rgb(51, 65, 85);
   border-radius: 0.5rem;
-  cursor: pointer;
+  cursor: grab;
   transition: all 0.15s;
   padding: 0;
+}
+
+.graphs-quick-access-item:active {
+  cursor: grabbing;
+  opacity: 0.6;
 }
 
 .graphs-quick-access-item:hover {

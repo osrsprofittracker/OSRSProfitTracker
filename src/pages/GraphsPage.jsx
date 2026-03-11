@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createChart, LineSeries, HistogramSeries, CandlestickSeries } from 'lightweight-charts';
-import { Star, Clock, Search } from 'lucide-react';
+import { Star, Clock, Search, ChevronDown } from 'lucide-react';
 import { useTimeseries } from '../hooks/useTimeseries';
 import { useGraphPreferences } from '../hooks/useGraphPreferences';
 import { calculateGETax } from '../utils/taxUtils';
@@ -36,7 +36,12 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
   const candleSeriesRef = useRef(null);
   const chartModeRef = useRef('line');
 
-  const { favorites, recents, addRecent, toggleFavorite, isFavorite } = useGraphPreferences(userId);
+  const { favorites, recents, addRecent, toggleFavorite, isFavorite, reorderFavorites } = useGraphPreferences(userId);
+
+  const [favoritesCollapsed, setFavoritesCollapsed] = useState(
+    () => localStorage.getItem(`graphsFavoritesCollapsed_${userId}`) === 'true'
+  );
+  const draggedFavRef = useRef(null);
 
   selectedItemRef.current = selectedItem;
   chartModeRef.current = chartMode;
@@ -428,6 +433,37 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
     }
   }, [chartData, timeframe, selectedItem, chartMode, candlestickData]);
 
+  const toggleFavoritesCollapsed = () => {
+    setFavoritesCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem(`graphsFavoritesCollapsed_${userId}`, String(next));
+      return next;
+    });
+  };
+
+  const handleFavDragStart = (e, itemId) => {
+    draggedFavRef.current = itemId;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleFavDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleFavDrop = (e, targetItemId) => {
+    e.preventDefault();
+    const draggedId = draggedFavRef.current;
+    draggedFavRef.current = null;
+    if (!draggedId || draggedId === targetItemId) return;
+    const ids = favorites.map(f => f.itemId);
+    const fromIdx = ids.indexOf(draggedId);
+    const toIdx = ids.indexOf(targetItemId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    ids.splice(fromIdx, 1);
+    ids.splice(toIdx, 0, draggedId);
+    reorderFavorites(ids);
+  };
+
   const handleSelectItem = (item) => {
     setSelectedItem(item);
     setSearchQuery(item.name);
@@ -567,29 +603,42 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
       </div>
 
       {favorites.length > 0 && (
-        <div className="graphs-quick-access">
-          {favorites.map(fav => {
-            const item = mapping.find(m => m.id === fav.itemId);
-            if (!item) return null;
-            return (
-              <button
-                key={fav.itemId}
-                className={`graphs-quick-access-item ${selectedItem?.id === fav.itemId ? 'graphs-quick-access-item--active' : ''}`}
-                onClick={() => handleSelectItem(item)}
-                title={fav.itemName}
-              >
-                {iconMap[fav.itemId] ? (
-                  <img
-                    src={iconMap[fav.itemId]}
-                    alt={fav.itemName}
-                    className="graphs-quick-access-icon"
-                  />
-                ) : (
-                  <span className="graphs-quick-access-fallback">{fav.itemName.charAt(0)}</span>
-                )}
-              </button>
-            );
-          })}
+        <div className="graphs-favorites-section">
+          <div className="graphs-favorites-header" onClick={toggleFavoritesCollapsed}>
+            <Star size={14} />
+            <span>Favorites ({favorites.length})</span>
+            <ChevronDown size={16} className={`graphs-favorites-chevron ${favoritesCollapsed ? 'graphs-favorites-chevron--collapsed' : ''}`} />
+          </div>
+          {!favoritesCollapsed && (
+            <div className="graphs-quick-access">
+              {favorites.map(fav => {
+                const item = mapping.find(m => m.id === fav.itemId);
+                if (!item) return null;
+                return (
+                  <button
+                    key={fav.itemId}
+                    className={`graphs-quick-access-item ${selectedItem?.id === fav.itemId ? 'graphs-quick-access-item--active' : ''}`}
+                    onClick={() => handleSelectItem(item)}
+                    title={fav.itemName}
+                    draggable
+                    onDragStart={(e) => handleFavDragStart(e, fav.itemId)}
+                    onDragOver={handleFavDragOver}
+                    onDrop={(e) => handleFavDrop(e, fav.itemId)}
+                  >
+                    {iconMap[fav.itemId] ? (
+                      <img
+                        src={iconMap[fav.itemId]}
+                        alt={fav.itemName}
+                        className="graphs-quick-access-icon"
+                      />
+                    ) : (
+                      <span className="graphs-quick-access-fallback">{fav.itemName.charAt(0)}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

@@ -19,10 +19,23 @@ export function useGraphPreferences(userId) {
       setRecents([]);
     } else {
       const rows = data || [];
-      const favs = rows
+      let favs = rows
         .filter(r => r.is_favorite)
         .sort((a, b) => new Date(b.favorited_at) - new Date(a.favorited_at))
         .map(r => ({ itemId: r.item_id, itemName: r.item_name, lastViewedAt: r.last_viewed_at, favoritedAt: r.favorited_at }));
+
+      // Apply stored ordering from localStorage
+      try {
+        const storedOrder = JSON.parse(localStorage.getItem(`graphsFavoritesOrder_${userId}`) || '[]');
+        if (storedOrder.length > 0) {
+          const orderMap = new Map(storedOrder.map((id, i) => [id, i]));
+          favs.sort((a, b) => {
+            const aIdx = orderMap.has(a.itemId) ? orderMap.get(a.itemId) : Infinity;
+            const bIdx = orderMap.has(b.itemId) ? orderMap.get(b.itemId) : Infinity;
+            return aIdx - bIdx;
+          });
+        }
+      } catch (e) { /* ignore malformed localStorage */ }
       const recs = rows
         .filter(r => !r.is_favorite && r.last_viewed_at)
         .sort((a, b) => new Date(b.last_viewed_at) - new Date(a.last_viewed_at))
@@ -96,6 +109,11 @@ export function useGraphPreferences(userId) {
     if (existing) {
       // Remove from favorites
       setFavorites(prev => prev.filter(f => f.itemId !== item.id));
+      // Remove from stored order
+      try {
+        const storedOrder = JSON.parse(localStorage.getItem(`graphsFavoritesOrder_${userId}`) || '[]');
+        localStorage.setItem(`graphsFavoritesOrder_${userId}`, JSON.stringify(storedOrder.filter(id => id !== item.id)));
+      } catch (e) { /* ignore */ }
       // It becomes a recent if it has lastViewedAt
       if (existing.lastViewedAt) {
         setRecents(prev => {
@@ -117,6 +135,11 @@ export function useGraphPreferences(userId) {
     } else {
       // Add to favorites
       setFavorites(prev => [{ itemId: item.id, itemName: item.name, lastViewedAt: now, favoritedAt: now }, ...prev]);
+      // Prepend to stored order
+      try {
+        const storedOrder = JSON.parse(localStorage.getItem(`graphsFavoritesOrder_${userId}`) || '[]');
+        localStorage.setItem(`graphsFavoritesOrder_${userId}`, JSON.stringify([item.id, ...storedOrder.filter(id => id !== item.id)]));
+      } catch (e) { /* ignore */ }
       // Remove from recents since it's now a favorite
       setRecents(prev => prev.filter(r => r.itemId !== item.id));
 
@@ -138,9 +161,20 @@ export function useGraphPreferences(userId) {
     }
   };
 
+  const reorderFavorites = useCallback((orderedItemIds) => {
+    localStorage.setItem(`graphsFavoritesOrder_${userId}`, JSON.stringify(orderedItemIds));
+    setFavorites(prev => {
+      const map = new Map(prev.map(f => [f.itemId, f]));
+      const reordered = orderedItemIds.map(id => map.get(id)).filter(Boolean);
+      // Append any that weren't in the ordered list
+      const remaining = prev.filter(f => !orderedItemIds.includes(f.itemId));
+      return [...reordered, ...remaining];
+    });
+  }, [userId]);
+
   const isFavorite = useCallback((itemId) => {
     return favorites.some(f => f.itemId === itemId);
   }, [favorites]);
 
-  return { favorites, recents, loading, addRecent, toggleFavorite, isFavorite };
+  return { favorites, recents, loading, addRecent, toggleFavorite, isFavorite, reorderFavorites };
 }
