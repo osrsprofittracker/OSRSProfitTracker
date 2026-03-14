@@ -11,6 +11,19 @@ export const parseMK = (value) => {
   return value;
 };
 
+export const handleMKInput = (value, setter) => {
+  const lower = value.toLowerCase();
+  if (lower.endsWith('k') || lower.endsWith('m')) {
+    const parsed = parseMK(value);
+    if (parsed !== value) {
+      setter(parsed);
+      return parsed;
+    }
+  }
+  setter(value);
+  return value;
+};
+
 export const formatNumber = (num, numberFormat = 'compact') => {
   if (num == null || isNaN(num)) return '-';
 

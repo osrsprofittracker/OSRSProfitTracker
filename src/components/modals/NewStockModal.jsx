@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { handleMKInput } from '../../utils/formatters';
 
 export default function NewStockModal({ categories, defaultCategory = '', defaultIsInvestment = false, mapping = [], archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
   const [stockType, setStockType] = useState('osrs'); // 'osrs' | 'custom'
@@ -210,10 +211,10 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
 
         {/* 4H Limit */}
         <input
-          type="number"
+          type="text"
           value={limit4h}
-          onChange={(e) => setLimit4h(e.target.value)}
-          placeholder="4H Limit"
+          onChange={(e) => handleMKInput(e.target.value, setLimit4h)}
+          placeholder="4H Limit (e.g. 10k)"
           style={inputStyle}
           onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
           onBlur={(e) => e.target.style.borderColor = 'transparent'}
@@ -221,10 +222,10 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
 
         {/* Desired Stock */}
         <input
-          type="number"
+          type="text"
           value={needed}
-          onChange={(e) => setNeeded(e.target.value)}
-          placeholder="Desired stock"
+          onChange={(e) => handleMKInput(e.target.value, setNeeded)}
+          placeholder="Desired stock (e.g. 100k)"
           style={inputStyle}
           onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
           onBlur={(e) => e.target.style.borderColor = 'transparent'}
