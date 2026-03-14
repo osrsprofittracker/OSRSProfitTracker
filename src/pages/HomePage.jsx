@@ -184,12 +184,12 @@ export default function HomePage({
               <table className="table-base">
                 <thead className="thead-base">
                   <tr>
-                    <th className="th-base">Date</th>
-                    <th className="th-base">Action</th>
-                    <th className="th-base">Item</th>
-                    <th className="th-base td-right">Qty</th>
-                    <th className="th-base td-right">GP</th>
-                    <th className="th-base td-right">Profit</th>
+                    <th className="th-base" title="When this trade happened">Date</th>
+                    <th className="th-base" title="Buy, sell, or adjust">Action</th>
+                    <th className="th-base" title="Item that was traded">Item</th>
+                    <th className="th-base td-right" title="Number of items traded">Qty</th>
+                    <th className="th-base td-right" title="Total GP for this trade">GP</th>
+                    <th className="th-base td-right" title="Profit made on this trade">Profit</th>
                   </tr>
                 </thead>
                 <tbody>

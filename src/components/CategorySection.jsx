@@ -254,9 +254,18 @@ export default function CategorySection({
   );
 }
 
+const statTooltips = {
+  'Total Cost': 'GP spent buying items in this category',
+  'Total Shares': 'Items currently held in this category',
+  'Total Profit': 'Profit from sold items in this category',
+  'Sold Shares': 'Items sold in this category',
+  'Sold Cost': 'GP received from sales in this category',
+  'Unreal. Profit': 'Estimated profit if sold at GE high (after 2% tax)'
+};
+
 function StatItem({ label, value, color }) {
   return (
-    <div className="stat-item">
+    <div className="stat-item" title={statTooltips[label]}>
       <div className="stat-label">{label}</div>
       <div className="stat-value" style={{ color }}>{value}</div>
     </div>

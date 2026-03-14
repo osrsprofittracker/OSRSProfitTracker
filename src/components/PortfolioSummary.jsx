@@ -41,6 +41,7 @@ export default function PortfolioSummary({
           label="Total Portfolio:"
           value={formatNumber(totalPortfolio)}
           color="rgb(96, 165, 250)"
+          tooltip="GP invested across all items you hold"
         />
 
         {/* Total Shares */}
@@ -48,6 +49,7 @@ export default function PortfolioSummary({
           label="Total Stock:"
           value={formatNumber(totalShares)}
           color="rgb(251, 146, 60)"
+          tooltip="Total items you currently hold"
         />
 
         {/* Total Sales */}
@@ -55,6 +57,7 @@ export default function PortfolioSummary({
           label="Total Revenue:"
           value={formatNumber(totalSales)}
           color="rgb(168, 85, 247)"
+          tooltip="GP received from all sales"
         />
 
         {/* Total Profit */}
@@ -62,6 +65,7 @@ export default function PortfolioSummary({
           label="Total Profit:"
           value={formatNumber(totalProfit)}
           color={totalProfit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
+          tooltip="Stocks + dumps + referrals + bonds profit combined"
         />
       </div>
 
@@ -72,6 +76,7 @@ export default function PortfolioSummary({
           label="Stock Profit:"
           value={formatNumber(stocksProfit)}
           color={stocksProfit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
+          tooltip="Profit from flipping items"
         />
 
         {/* Dump Profit */}
@@ -80,6 +85,7 @@ export default function PortfolioSummary({
             label="Dump Profit:"
             value={formatNumber(dumpProfit)}
             color="rgb(52, 211, 153)"
+            tooltip="Profit from item dumps"
             button={{
               onClick: onAddDumpProfit,
               color: 'rgb(5, 150, 105)',
@@ -94,6 +100,7 @@ export default function PortfolioSummary({
             label="Referral Profit:"
             value={formatNumber(referralProfit)}
             color="rgb(168, 85, 247)"
+            tooltip="Profit from referrals"
             button={{
               onClick: onAddReferralProfit,
               color: 'rgb(126, 34, 206)',
@@ -108,6 +115,7 @@ export default function PortfolioSummary({
             label="Bonds Profit:"
             value={formatNumber(bondsProfit)}
             color="rgb(234, 179, 8)"
+            tooltip="Profit from bond flips"
             button={{
               onClick: onAddBondsProfit,
               color: 'rgb(161, 98, 7)',
@@ -122,6 +130,7 @@ export default function PortfolioSummary({
             label="Unrealised Profit:"
             value={`${totalUnrealised >= 0 ? '+' : ''}${formatNumber(totalUnrealised, numberFormat)}`}
             color={totalUnrealised >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
+            tooltip="Estimated profit if sold at GE high (after 2% tax)"
           />
         )}
       </div>
@@ -129,9 +138,9 @@ export default function PortfolioSummary({
   );
 }
 
-function SummaryCard({ label, value, color, button }) {
+function SummaryCard({ label, value, color, button, tooltip }) {
   return (
-    <div style={{
+    <div title={tooltip} style={{
       display: 'flex',
       alignItems: 'center',
       gap: '1rem',

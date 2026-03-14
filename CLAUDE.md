@@ -79,3 +79,6 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 
 - Dont use inline CSS
 - Keep using the same color codes as already there
+
+### Rules
+- Do not ouse the classic - that ai agents use
