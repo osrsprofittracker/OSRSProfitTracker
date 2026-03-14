@@ -288,34 +288,34 @@ export default function HistoryPage({
         <table className="history-table">
           <thead>
             <tr>
-              <th className="history-th--sortable" onClick={() => handleSort('date')}>
+              <th className="history-th--sortable" onClick={() => handleSort('date')} title="When this trade happened">
                 Date <SortIcon col="date" />
               </th>
-              <th className="history-th--sortable" onClick={() => handleSort('stockName')}>
+              <th className="history-th--sortable" onClick={() => handleSort('stockName')} title="Item that was traded">
                 Item <SortIcon col="stockName" />
               </th>
-              <th className="history-th--sortable" onClick={() => handleSort('type')}>
+              <th className="history-th--sortable" onClick={() => handleSort('type')} title="Buy, sell, or adjust">
                 Type <SortIcon col="type" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('shares')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('shares')} title="Number of items traded">
                 Qty <SortIcon col="shares" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('price')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('price')} title="Price per item">
                 Price Each <SortIcon col="price" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('total')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('total')} title="Total GP for this trade">
                 Total <SortIcon col="total" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('profit')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('profit')} title="Profit made on this sale">
                 Profit <SortIcon col="profit" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('margin')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('margin')} title="Profit margin %">
                 Margin <SortIcon col="margin" />
               </th>
-              <th className="history-th--sortable" onClick={() => handleSort('category')}>
+              <th className="history-th--sortable" onClick={() => handleSort('category')} title="Category this item is in">
                 Category <SortIcon col="category" />
               </th>
-              <th>Undo</th>
+              <th title="Undo this trade">Undo</th>
             </tr>
           </thead>
           <tbody>

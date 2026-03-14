@@ -72,22 +72,22 @@ export default function StockTable({
 
 function TableHeader({ sortConfig, onSort, visibleColumns }) {
   const columns = [
-    { label: 'Name', key: 'name', visible: true },
-    { label: 'Status', key: null, visible: visibleColumns.status },
-    { label: 'In Stock', key: 'shares', visible: true },
-    { label: 'Total Cost', key: 'totalCost', visible: true },
-    { label: 'Avg Buy', key: 'avgBuy', visible: visibleColumns.avgBuy },
-    { label: 'Stock Sold', key: 'sharesSold', visible: true },
-    { label: 'Total Sold Price', key: 'totalCostSold', visible: true },
-    { label: 'Avg Sell', key: 'avgSell', visible: visibleColumns.avgSell },
-    { label: 'Profit', key: 'profit', visible: visibleColumns.profit },
-    { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock },
-    { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h },
-    { label: 'GE High', key: null, visible: visibleColumns.geHigh },
-    { label: 'GE Low', key: null, visible: visibleColumns.geLow },
-    { label: 'Unreal. Profit', key: null, visible: visibleColumns.unrealizedProfit },
-    { label: 'Notes', key: null, visible: visibleColumns.notes },
-    { label: 'Actions', key: null, visible: true }
+    { label: 'Name', key: 'name', visible: true, tooltip: 'Item name' },
+    { label: 'Status', key: null, visible: visibleColumns.status, tooltip: 'Shows if the 4h GE buy limit has reset' },
+    { label: 'In Stock', key: 'shares', visible: true, tooltip: 'How many you currently hold' },
+    { label: 'Total Cost', key: 'totalCost', visible: true, tooltip: 'Total GP spent buying this item' },
+    { label: 'Avg Buy', key: 'avgBuy', visible: visibleColumns.avgBuy, tooltip: 'Average price paid per item' },
+    { label: 'Stock Sold', key: 'sharesSold', visible: true, tooltip: 'How many you have sold' },
+    { label: 'Total Sold Price', key: 'totalCostSold', visible: true, tooltip: 'Total GP received from sales' },
+    { label: 'Avg Sell', key: 'avgSell', visible: visibleColumns.avgSell, tooltip: 'Average sell price per item' },
+    { label: 'Profit', key: 'profit', visible: visibleColumns.profit, tooltip: 'Realized profit from sold items' },
+    { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock, tooltip: 'How many you want to hold' },
+    { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h, tooltip: 'GE 4-hour buy limit' },
+    { label: 'GE High', key: null, visible: visibleColumns.geHigh, tooltip: 'Live GE highest buy price' },
+    { label: 'GE Low', key: null, visible: visibleColumns.geLow, tooltip: 'Live GE lowest sell price' },
+    { label: 'Unreal. Profit', key: null, visible: visibleColumns.unrealizedProfit, tooltip: 'Estimated profit if sold at GE high (after 2% tax)' },
+    { label: 'Notes', key: null, visible: visibleColumns.notes, tooltip: 'Your notes for this item' },
+    { label: 'Actions', key: null, visible: true, tooltip: 'Buy, sell, adjust, calculate, archive, or delete' }
   ];
 
   return (
@@ -99,6 +99,7 @@ function TableHeader({ sortConfig, onSort, visibleColumns }) {
             key={col.label}
             onClick={() => col.key && onSort(col.key)}
             className={`th-base ${col.key ? 'th-sortable' : ''}`}
+            title={col.tooltip}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               {col.label}
