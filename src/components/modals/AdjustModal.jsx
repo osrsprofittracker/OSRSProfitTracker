@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { handleMKInput } from '../../utils/formatters';
 
 export default function AdjustModal({ stock, categories, mapping = [], onConfirm, onCancel }) {
   const [stockType, setStockType] = useState(stock.itemId ? 'osrs' : 'custom');
@@ -223,10 +224,10 @@ export default function AdjustModal({ stock, categories, mapping = [], onConfirm
             4H Limit
           </label>
           <input
-            type="number"
+            type="text"
             value={limit4h}
-            onChange={(e) => setLimit4h(e.target.value)}
-            placeholder="Enter 4h limit"
+            onChange={(e) => handleMKInput(e.target.value, setLimit4h)}
+            placeholder="Enter 4h limit (e.g. 10k)"
             style={inputStyle}
             onFocus={(e) => e.target.style.borderColor = focusColor}
             onBlur={(e) => e.target.style.borderColor = 'transparent'}
@@ -239,10 +240,10 @@ export default function AdjustModal({ stock, categories, mapping = [], onConfirm
             Desired Stock
           </label>
           <input
-            type="number"
+            type="text"
             value={needed}
-            onChange={(e) => setNeeded(e.target.value)}
-            placeholder="Enter desired stock"
+            onChange={(e) => handleMKInput(e.target.value, setNeeded)}
+            placeholder="Enter desired stock (e.g. 100k)"
             style={inputStyle}
             onFocus={(e) => e.target.style.borderColor = focusColor}
             onBlur={(e) => e.target.style.borderColor = 'transparent'}

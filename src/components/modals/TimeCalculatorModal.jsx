@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { handleMKInput } from '../../utils/formatters';
 
 export default function TimeCalculatorModal({ stock, onClose }) {
   const [targetAmount, setTargetAmount] = useState(stock.needed.toString());
@@ -36,10 +37,10 @@ export default function TimeCalculatorModal({ stock, onClose }) {
             Target Amount
           </label>
           <input
-            type="number"
+            type="text"
             value={targetAmount}
-            onChange={(e) => setTargetAmount(e.target.value)}
-            placeholder="Enter target amount"
+            onChange={(e) => handleMKInput(e.target.value, setTargetAmount)}
+            placeholder="Enter target amount (e.g. 100k)"
             autoFocus
             style={{
               width: '100%',
@@ -61,11 +62,10 @@ export default function TimeCalculatorModal({ stock, onClose }) {
             Number of Accounts
           </label>
           <input
-            type="number"
+            type="text"
             value={accountCount}
-            onChange={(e) => setAccountCount(e.target.value)}
+            onChange={(e) => handleMKInput(e.target.value, setAccountCount)}
             placeholder="Enter number of accounts"
-            min="1"
             style={{
               width: '100%',
               padding: '0.5rem 1rem',
