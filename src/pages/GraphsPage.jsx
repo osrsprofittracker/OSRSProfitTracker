@@ -14,7 +14,7 @@ const TIMEFRAMES = [
   { label: '1Y', timestep: '24h', filterDays: 365 },
 ];
 
-export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, userId }) {
+export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, userId, initialItemId, navigateToPage }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -119,6 +119,23 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
   }, [searchQuery, favorites, recents, filteredItems, mapping]);
 
   const hasDropdownContent = dropdownSections.some(s => s.items.length > 0);
+
+  // Auto-select item from URL query param
+  useEffect(() => {
+    if (!mapping.length) return;
+    if (!initialItemId) {
+      setSelectedItem(null);
+      setSearchQuery('');
+      return;
+    }
+    const itemId = Number(initialItemId);
+    const item = mapping.find(m => m.id === itemId);
+    if (item && selectedItem?.id !== itemId) {
+      setSelectedItem(item);
+      setSearchQuery(item.name);
+      addRecent(item);
+    }
+  }, [initialItemId, mapping]);
 
   // Click outside to close dropdown
   useEffect(() => {
@@ -469,6 +486,7 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
     setSearchQuery(item.name);
     setShowDropdown(false);
     addRecent(item);
+    window.history.pushState({ page: 'graphs' }, '', '/graphs?item=' + item.id);
   };
 
   const handleSearchChange = (e) => {
@@ -476,6 +494,7 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
     setShowDropdown(true);
     if (!e.target.value.trim()) {
       setSelectedItem(null);
+      window.history.replaceState({ page: 'graphs' }, '', '/graphs');
     }
   };
 

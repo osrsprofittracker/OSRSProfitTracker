@@ -23,6 +23,5 @@ Rules:
 - Scope should reflect the area of the codebase changed (e.g. `stocks`, `modals`, `hooks`, `ui`)
 - If changes span multiple unrelated areas, use multiple commits only if they are clearly separable; otherwise use the dominant type
 - Do not add a body unless the change is non-obvious
-- Make the Branch off origin/Develop
 
 Stage and commit in a single response. Do not ask for confirmation. Do not output anything besides the tool calls.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
@@ -51,6 +51,16 @@ import {
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
 
+const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs' };
+
+function getPageFromURL() {
+  const path = window.location.pathname;
+  if (path === '/trade') return 'trade';
+  if (path === '/history') return 'history';
+  if (path === '/graphs') return 'graphs';
+  return 'home';
+}
+
 export default function MainApp({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
@@ -92,20 +102,52 @@ export default function MainApp({ session, onLogout }) {
     const saved = localStorage.getItem('collapsedCategories');
     return saved ? JSON.parse(saved) : {};
   });
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState(getPageFromURL);
+  const [graphItemId, setGraphItemId] = useState(() => new URLSearchParams(window.location.search).get('item'));
 
-  const navigateToPage = (page) => {
+  const navigateToPage = useCallback((page, options = {}) => {
     if (page === 'trade') {
       refetch();
       fetchCategories();
     }
     if (page === 'home') {
-    refetch();
-    refetchGPStats();
-    refetchProfitHistory();
-  }
+      refetch();
+      refetchGPStats();
+      refetchProfitHistory();
+    }
     setCurrentPage(page);
-  };
+    let url = PAGE_PATHS[page] || '/';
+    if (options.query) {
+      url += '?' + new URLSearchParams(options.query).toString();
+    }
+    window.history.pushState({ page }, '', url);
+  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory]);
+
+  // Replace initial history entry so back button works correctly
+  useEffect(() => {
+    const page = getPageFromURL();
+    window.history.replaceState({ page }, '', window.location.pathname + window.location.search);
+  }, []);
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const page = getPageFromURL();
+      if (page === 'trade') {
+        refetch();
+        fetchCategories();
+      }
+      if (page === 'home') {
+        refetch();
+        refetchGPStats();
+        refetchProfitHistory();
+      }
+      setCurrentPage(page);
+      setGraphItemId(new URLSearchParams(window.location.search).get('item'));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -1090,6 +1132,8 @@ export default function MainApp({ session, onLogout }) {
             iconMap={geIconMap}
             mappingLoading={mappingLoading}
             userId={userId}
+            initialItemId={graphItemId}
+            navigateToPage={navigateToPage}
           />
         ) : (
           <>
