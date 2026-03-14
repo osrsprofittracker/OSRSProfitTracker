@@ -335,10 +335,10 @@ export default function HistoryPage({
                     {t.type.toUpperCase()}
                   </span>
                 </td>
-                <td className="history-cell history-cell--right">{t.shares.toLocaleString()}</td>
-                <td className="history-cell history-cell--right">{t.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="history-cell history-cell--right">{formatNumber(t.total, numberFormat)}</td>
-                <td className="history-cell history-cell--right">
+                <td className="history-cell history-cell--right" title={formatNumber(t.shares, 'full')}>{t.shares.toLocaleString()}</td>
+                <td className="history-cell history-cell--right" title={formatNumber(t.price, 'full')}>{t.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="history-cell history-cell--right" title={formatNumber(t.total, 'full')}>{formatNumber(t.total, numberFormat)}</td>
+                <td className="history-cell history-cell--right" title={t.type === 'sell' && t.profit != null ? formatNumber(t.profit, 'full') : undefined}>
                   {t.type === 'sell' && t.profit != null
                     ? <span className={t.profit >= 0 ? 'history-total--buy' : 'history-total--sell'}>{formatNumber(t.profit, numberFormat)}</span>
                     : <span className="history-cell--muted">—</span>

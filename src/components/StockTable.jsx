@@ -171,52 +171,52 @@ function StockRow({
           <StatusBadge stock={stock} />
         </td>
       )}
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+      <td title={formatNumber(stock.shares, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
         {formatNumber(stock.shares, numberFormat)}
       </td>
-      <td style={{ padding: '0.5rem 0.5rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', whiteSpace: 'nowrap' }}>
+      <td title={formatNumber(stock.totalCost, 'full')} style={{ padding: '0.5rem 0.5rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', whiteSpace: 'nowrap' }}>
         {formatNumber(stock.totalCost, numberFormat)}
       </td>
       {visibleColumns.avgBuy && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
+        <td title={formatNumber(avgBuy, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
           {formatAvgPrice(avgBuy, numberFormat)}
         </td>
       )}
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+      <td title={formatNumber(stock.sharesSold, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
         {formatNumber(stock.sharesSold, numberFormat)}
       </td>
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+      <td title={formatNumber(stock.totalCostSold, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
         {formatNumber(stock.totalCostSold, numberFormat)}
       </td>
       {visibleColumns.avgSell && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
+        <td title={formatNumber(avgSell, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
           {formatAvgPrice(avgSell, numberFormat)}
         </td>
       )}
       {visibleColumns.profit && (
-        <td className={`td-base td-right ${profit >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
+        <td title={formatNumber(profit, 'full')} className={`td-base td-right ${profit >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
           {profit >= 0 ? '+' : ''}{formatNumber(profit, numberFormat)}
         </td>
       )}
       {visibleColumns.desiredStock !== false && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+        <td title={formatNumber(stock.needed, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
           {formatNumber(stock.needed, numberFormat)}
         </td>
       )}
       {visibleColumns.limit4h && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+        <td title={formatNumber(stock.limit4h, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
           {formatNumber(stock.limit4h, numberFormat)}
         </td>
       )}
       {visibleColumns.geHigh && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
+        <td title={stock.itemId && geData[stock.itemId]?.high != null ? formatNumber(geData[stock.itemId].high, 'full') : undefined} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
           {stock.itemId && geData[stock.itemId]?.high != null
             ? formatNumber(geData[stock.itemId].high, numberFormat)
             : 'NA'}
         </td>
       )}
       {visibleColumns.geLow && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
+        <td title={stock.itemId && geData[stock.itemId]?.low != null ? formatNumber(geData[stock.itemId].low, 'full') : undefined} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
           {stock.itemId && geData[stock.itemId]?.low != null
             ? formatNumber(geData[stock.itemId].low, numberFormat)
             : 'NA'}
@@ -226,7 +226,7 @@ function StockRow({
         const latestHigh = stock.itemId ? geData[stock.itemId]?.high : null;
         const unrealized = calculateUnrealizedProfit(stock, latestHigh, stock.itemId);
         return (
-          <td className={`td-base td-right ${unrealized == null ? '' : unrealized >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
+          <td title={unrealized != null ? formatNumber(unrealized, 'full') : undefined} className={`td-base td-right ${unrealized == null ? '' : unrealized >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
             {unrealized == null ? 'NA' : `${unrealized >= 0 ? '+' : ''}${formatNumber(unrealized, numberFormat)}`}
           </td>
         );
