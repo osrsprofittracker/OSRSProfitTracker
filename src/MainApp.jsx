@@ -1103,6 +1103,7 @@ export default function MainApp({ session, onLogout }) {
             onNavigateToTrade={() => navigateToPage('trade')}
             onOpenMilestoneModal={() => { setMilestoneInitialView('main'); setShowMilestoneModal(true); }}
             onOpenMilestoneHistory={() => { setMilestoneInitialView('history'); setShowMilestoneModal(true); }}
+            geData={gePrices}
           />
         ) : currentPage === 'history' ? (
           <HistoryPage
