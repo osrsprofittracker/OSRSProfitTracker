@@ -9,6 +9,7 @@ export default function AdjustModal({ stock, categories, mapping = [], onConfirm
   const [limit4h, setLimit4h] = useState(stock.limit4h.toString());
   const [onHold, setOnHold] = useState(stock.onHold || false);
   const [isInvestment, setIsInvestment] = useState(stock.isInvestment || false);
+  const [investmentStartDate, setInvestmentStartDate] = useState(stock.investmentStartDate ? stock.investmentStartDate.slice(0, 10) : '');
   const [targetCategory, setTargetCategory] = useState('Uncategorized');
   const [itemId, setItemId] = useState(stock.itemId || null);
   const [searchQuery, setSearchQuery] = useState(() => {
@@ -83,6 +84,7 @@ export default function AdjustModal({ stock, categories, mapping = [], onConfirm
       onHold,
       isInvestment,
       itemId: stockType === 'osrs' ? itemId : null,
+      investmentStartDate: investmentStartDate || null,
     });
   };
 
@@ -277,6 +279,22 @@ export default function AdjustModal({ stock, categories, mapping = [], onConfirm
           />
           <span className="checkbox-investment-text">📈 Mark as Investment</span>
         </label>
+
+        {isInvestment && (
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
+              Start Date (optional)
+            </label>
+            <input
+              type="date"
+              value={investmentStartDate}
+              onChange={(e) => setInvestmentStartDate(e.target.value)}
+              style={inputStyle}
+              onFocus={(e) => e.target.style.borderColor = focusColor}
+              onBlur={(e) => e.target.style.borderColor = 'transparent'}
+            />
+          </div>
+        )}
 
         <div>
           <label style={{

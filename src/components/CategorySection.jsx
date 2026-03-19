@@ -37,7 +37,9 @@ export default function CategorySection({
   showCategoryUnrealisedProfit = false,
   geData = {},
   geIconMap = {},
-  onArchive
+  onArchive,
+  showInvestmentDate = false,
+  onInvestmentDateChange
 }) {
   const categoryStocks = stocks.filter(s => s.category === category);
 
@@ -247,6 +249,8 @@ export default function CategorySection({
             geData={geData}
             geIconMap={geIconMap}
             onArchive={onArchive}
+            showInvestmentDate={showInvestmentDate}
+            onInvestmentDateChange={onInvestmentDateChange}
           />
         </>
       )}
