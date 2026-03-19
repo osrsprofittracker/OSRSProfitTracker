@@ -8,6 +8,7 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
   const [limit4h, setLimit4h] = useState('');
   const [needed, setNeeded] = useState('');
   const [isInvestment, setIsInvestment] = useState(defaultIsInvestment || false);
+  const [investmentStartDate, setInvestmentStartDate] = useState('');
   const [itemId, setItemId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -64,6 +65,7 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
       needed: parseFloat(needed) || 0,
       isInvestment,
       itemId: stockType === 'osrs' ? itemId : null,
+      investmentStartDate: investmentStartDate || null,
     });
   };
 
@@ -253,6 +255,22 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
           />
           <span className="checkbox-investment-text">📈 Mark as Investment</span>
         </label>
+
+        {isInvestment && (
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
+              Start Date (optional)
+            </label>
+            <input
+              type="date"
+              value={investmentStartDate}
+              onChange={(e) => setInvestmentStartDate(e.target.value)}
+              style={inputStyle}
+              onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
+              onBlur={(e) => e.target.style.borderColor = 'transparent'}
+            />
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
           <button

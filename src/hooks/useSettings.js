@@ -8,7 +8,8 @@ const DEFAULT_VISIBLE_COLUMNS = {
   profit: true,
   desiredStock: true,
   notes: true,
-  limit4h: true
+  limit4h: true,
+  investmentStartDate: true
 };
 
 const DEFAULT_VISIBLE_PROFITS = {
@@ -61,6 +62,7 @@ export function useSettings(userId) {
           geHigh: data.visible_columns?.geHigh ?? true,
           geLow: data.visible_columns?.geLow ?? true,
           unrealizedProfit: data.visible_columns?.unrealizedProfit ?? true,
+          investmentStartDate: data.visible_columns?.investmentStartDate ?? true,
         },
         visibleProfits: data.visible_profits || DEFAULT_VISIBLE_PROFITS.bondsProfit,
         altAccountTimer: data.alt_account_timer,

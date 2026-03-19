@@ -38,6 +38,7 @@ export function useStocks(userId) {
         onHold: stock.on_hold || false,
         isInvestment: stock.is_investment || false,
         itemId: stock.item_id || null,
+        investmentStartDate: stock.investment_start_date || null,
       }));
       setStocks(formattedStocks);
     }
@@ -106,6 +107,7 @@ export function useStocks(userId) {
       category: stock.category,
       is_investment: stock.isInvestment || false,
       item_id: stock.itemId || null,
+      investment_start_date: stock.investmentStartDate || null,
     };
 
     const { data, error } = await supabase
@@ -138,6 +140,7 @@ export function useStocks(userId) {
     if (updates.onHold !== undefined) dbUpdates.on_hold = updates.onHold;
     if (updates.isInvestment !== undefined) dbUpdates.is_investment = updates.isInvestment;
     if (updates.itemId !== undefined) dbUpdates.item_id = updates.itemId;
+    if (updates.investmentStartDate !== undefined) dbUpdates.investment_start_date = updates.investmentStartDate || null;
 
     const { error } = await supabase
       .from('stocks')
@@ -241,6 +244,7 @@ export function useStocks(userId) {
       onHold: stock.on_hold || false,
       isInvestment: stock.is_investment || false,
       itemId: stock.item_id || null,
+      investmentStartDate: stock.investment_start_date || null,
     }));
   };
 

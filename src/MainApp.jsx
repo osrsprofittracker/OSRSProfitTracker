@@ -542,9 +542,14 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
+  const handleInvestmentDateChange = async (stock, date) => {
+    await updateStock(stock.id, { investmentStartDate: date });
+    await refetch();
+  };
+
   const handleAdjust = async (data) => {
-    const { name, needed, category, limit4h, onHold, isInvestment, itemId } = data;
-    await updateStock(selectedStock.id, { name, needed, category, limit4h, onHold, isInvestment, itemId });
+    const { name, needed, category, limit4h, onHold, isInvestment, itemId, investmentStartDate } = data;
+    await updateStock(selectedStock.id, { name, needed, category, limit4h, onHold, isInvestment, itemId, investmentStartDate });
     await refetch();
     highlightRow(selectedStock.id);
     setShowAdjustModal(false);
@@ -557,7 +562,7 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleAddStock = async (data) => {
-    const { name, category, limit4h, needed, isInvestment, itemId } = data;
+    const { name, category, limit4h, needed, isInvestment, itemId, investmentStartDate } = data;
     await addStockToDB({
       name,
       totalCost: 0,
@@ -571,6 +576,7 @@ export default function MainApp({ session, onLogout }) {
       category: category || 'Uncategorized',
       isInvestment: isInvestment || false,
       itemId: itemId || null,
+      investmentStartDate: investmentStartDate || null,
     });
     await refetch();
     setNewStockCategory('');
@@ -1290,6 +1296,8 @@ export default function MainApp({ session, onLogout }) {
                 showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
                 geData={gePrices}
                 geIconMap={geIconMap}
+                showInvestmentDate={tradeMode === 'investment' && visibleColumns.investmentStartDate}
+                onInvestmentDateChange={handleInvestmentDateChange}
               />
             ))}
 

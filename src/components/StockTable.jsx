@@ -5,6 +5,25 @@ import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '..
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { sortStocks } from '../utils/calculations';
 
+function investmentAge(dateStr) {
+  if (!dateStr) return null;
+  const start = new Date(dateStr);
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  let days = now.getDate() - start.getDate();
+  if (days < 0) {
+    months--;
+    days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  }
+  if (months < 0) { years--; months += 12; }
+  const parts = [];
+  if (years > 0) parts.push(`${years}y`);
+  if (months > 0) parts.push(`${months}mo`);
+  if (days > 0) parts.push(`${days}d`);
+  return parts.length ? parts.join(' ') : 'Today';
+}
+
 export default function StockTable({
   stocks,
   category,
@@ -26,7 +45,9 @@ export default function StockTable({
   numberFormat,
   geData = {},
   geIconMap = {},
-  onArchive
+  onArchive,
+  showInvestmentDate = false,
+  onInvestmentDateChange
 }) {
   const sortedStocks = sortStocks(stocks, sortConfig);
 
@@ -37,6 +58,7 @@ export default function StockTable({
           sortConfig={sortConfig}
           onSort={onSort}
           visibleColumns={visibleColumns}
+          showInvestmentDate={showInvestmentDate}
         />
         <tbody>
           {sortedStocks.map((stock, index) => (
@@ -62,6 +84,8 @@ export default function StockTable({
               numberFormat={numberFormat}
               geData={geData}
               geIconMap={geIconMap}
+              showInvestmentDate={showInvestmentDate}
+              onInvestmentDateChange={onInvestmentDateChange}
             />
           ))}
         </tbody>
@@ -70,7 +94,7 @@ export default function StockTable({
   );
 }
 
-function TableHeader({ sortConfig, onSort, visibleColumns }) {
+function TableHeader({ sortConfig, onSort, visibleColumns, showInvestmentDate }) {
   const columns = [
     { label: 'Name', key: 'name', visible: true, tooltip: 'Item name' },
     { label: 'Status', key: null, visible: visibleColumns.status, tooltip: 'Shows if the 4h GE buy limit has reset' },
@@ -86,6 +110,7 @@ function TableHeader({ sortConfig, onSort, visibleColumns }) {
     { label: 'GE High', key: null, visible: visibleColumns.geHigh, tooltip: 'Live GE highest buy price' },
     { label: 'GE Low', key: null, visible: visibleColumns.geLow, tooltip: 'Live GE lowest sell price' },
     { label: 'Unreal. Profit', key: null, visible: visibleColumns.unrealizedProfit, tooltip: 'Estimated profit if sold at GE high (after 2% tax)' },
+    { label: 'Start Date', key: null, visible: showInvestmentDate, tooltip: 'Date this investment was started' },
     { label: 'Notes', key: null, visible: visibleColumns.notes, tooltip: 'Your notes for this item' },
     { label: 'Actions', key: null, visible: true, tooltip: 'Buy, sell, adjust, calculate, archive, or delete' }
   ];
@@ -136,7 +161,9 @@ function StockRow({
   numberFormat,
   geData = {},
   geIconMap = {},
-  onArchive
+  onArchive,
+  showInvestmentDate,
+  onInvestmentDateChange
 }) {
   const avgBuy = calculateAvgBuyPrice(stock);
   const avgSell = calculateAvgSellPrice(stock);
@@ -232,6 +259,22 @@ function StockRow({
           </td>
         );
       })()}
+      {showInvestmentDate && (
+        <td style={{ padding: '0.25rem 0.5rem', border: '1px solid rgb(51, 65, 85)' }}>
+          <div
+            className="investment-date-wrapper"
+            title={stock.investmentStartDate ? `${investmentAge(stock.investmentStartDate)} ago` : undefined}
+            onClick={(e) => e.currentTarget.querySelector('input').showPicker?.()}
+          >
+            <input
+              type="date"
+              className="investment-date-input"
+              value={stock.investmentStartDate || ''}
+              onChange={(e) => onInvestmentDateChange(stock, e.target.value || null)}
+            />
+          </div>
+        </td>
+      )}
       {visibleColumns.notes && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
           <button
