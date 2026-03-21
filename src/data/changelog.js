@@ -1,6 +1,21 @@
-export const CURRENT_VERSION = "2.2.0";
+export const CURRENT_VERSION = "2.3.0";
 
 export const changelog = [
+  {
+    version: "2.3.0",
+    date: "2026-03-21",
+    changes: [
+      { type: "new", text: "Members/F2P star icon — item name columns now show a gold star for members items and a silver star for F2P items, sourced from the OSRS Wiki" },
+      { type: "new", text: "Members icon toggle — the star icon can be enabled or disabled in Settings" },
+      { type: "new", text: "GE item icon on History page — the item icon now appears next to the name column in the transaction history" },
+      { type: "new", text: "Investment start date — investments can now have a start date, shown on the stock row to track how long you've held a position" },
+      { type: "new", text: "Top items expanded to 10 — the top items panel now shows up to 10 items in a 2-column layout with sort options (profit, value, ROI)" },
+      { type: "new", text: "URL deep-linking — the app now updates the browser URL as you navigate, enabling browser back/forward and shareable links to pages" },
+      { type: "new", text: "Column header tooltips — hover over any column header or summary card to see a description of what it shows" },
+      { type: "new", text: "Exact number tooltips — hover over any formatted number (e.g. 4.2M) to see the full unrounded value" },
+      { type: "improved", text: "K/M shorthand now works in all numeric inputs — previously only available in the quantity field, now supported in price, cost, and all other number fields" },
+    ],
+  },
   {
     version: "2.2.0",
     date: "2026-03-12",
