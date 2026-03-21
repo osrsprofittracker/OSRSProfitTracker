@@ -1,9 +1,28 @@
 import React from 'react';
-import { Edit3, Trash2, GripVertical } from 'lucide-react';
+import { Edit3, Trash2, GripVertical, Star } from 'lucide-react';
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { sortStocks } from '../utils/calculations';
+
+function investmentAge(dateStr) {
+  if (!dateStr) return null;
+  const start = new Date(dateStr);
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  let days = now.getDate() - start.getDate();
+  if (days < 0) {
+    months--;
+    days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  }
+  if (months < 0) { years--; months += 12; }
+  const parts = [];
+  if (years > 0) parts.push(`${years}y`);
+  if (months > 0) parts.push(`${months}mo`);
+  if (days > 0) parts.push(`${days}d`);
+  return parts.length ? parts.join(' ') : 'Today';
+}
 
 export default function StockTable({
   stocks,
@@ -26,7 +45,11 @@ export default function StockTable({
   numberFormat,
   geData = {},
   geIconMap = {},
-  onArchive
+  membershipMap = {},
+  showMembershipIcon = true,
+  onArchive,
+  showInvestmentDate = false,
+  onInvestmentDateChange
 }) {
   const sortedStocks = sortStocks(stocks, sortConfig);
 
@@ -37,6 +60,7 @@ export default function StockTable({
           sortConfig={sortConfig}
           onSort={onSort}
           visibleColumns={visibleColumns}
+          showInvestmentDate={showInvestmentDate}
         />
         <tbody>
           {sortedStocks.map((stock, index) => (
@@ -62,6 +86,10 @@ export default function StockTable({
               numberFormat={numberFormat}
               geData={geData}
               geIconMap={geIconMap}
+              membershipMap={membershipMap}
+              showMembershipIcon={showMembershipIcon}
+              showInvestmentDate={showInvestmentDate}
+              onInvestmentDateChange={onInvestmentDateChange}
             />
           ))}
         </tbody>
@@ -70,24 +98,25 @@ export default function StockTable({
   );
 }
 
-function TableHeader({ sortConfig, onSort, visibleColumns }) {
+function TableHeader({ sortConfig, onSort, visibleColumns, showInvestmentDate }) {
   const columns = [
-    { label: 'Name', key: 'name', visible: true },
-    { label: 'Status', key: null, visible: visibleColumns.status },
-    { label: 'In Stock', key: 'shares', visible: true },
-    { label: 'Total Cost', key: 'totalCost', visible: true },
-    { label: 'Avg Buy', key: 'avgBuy', visible: visibleColumns.avgBuy },
-    { label: 'Stock Sold', key: 'sharesSold', visible: true },
-    { label: 'Total Sold Price', key: 'totalCostSold', visible: true },
-    { label: 'Avg Sell', key: 'avgSell', visible: visibleColumns.avgSell },
-    { label: 'Profit', key: 'profit', visible: visibleColumns.profit },
-    { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock },
-    { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h },
-    { label: 'GE High', key: null, visible: visibleColumns.geHigh },
-    { label: 'GE Low', key: null, visible: visibleColumns.geLow },
-    { label: 'Unreal. Profit', key: null, visible: visibleColumns.unrealizedProfit },
-    { label: 'Notes', key: null, visible: visibleColumns.notes },
-    { label: 'Actions', key: null, visible: true }
+    { label: 'Name', key: 'name', visible: true, tooltip: 'Item name' },
+    { label: 'Status', key: null, visible: visibleColumns.status, tooltip: 'Shows if the 4h GE buy limit has reset' },
+    { label: 'In Stock', key: 'shares', visible: true, tooltip: 'How many you currently hold' },
+    { label: 'Total Cost', key: 'totalCost', visible: true, tooltip: 'Total GP spent buying this item' },
+    { label: 'Avg Buy', key: 'avgBuy', visible: visibleColumns.avgBuy, tooltip: 'Average price paid per item' },
+    { label: 'Stock Sold', key: 'sharesSold', visible: true, tooltip: 'How many you have sold' },
+    { label: 'Total Sold Price', key: 'totalCostSold', visible: true, tooltip: 'Total GP received from sales' },
+    { label: 'Avg Sell', key: 'avgSell', visible: visibleColumns.avgSell, tooltip: 'Average sell price per item' },
+    { label: 'Profit', key: 'profit', visible: visibleColumns.profit, tooltip: 'Realized profit from sold items' },
+    { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock, tooltip: 'How many you want to hold' },
+    { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h, tooltip: 'GE 4-hour buy limit' },
+    { label: 'GE High', key: null, visible: visibleColumns.geHigh, tooltip: 'Live GE highest buy price' },
+    { label: 'GE Low', key: null, visible: visibleColumns.geLow, tooltip: 'Live GE lowest sell price' },
+    { label: 'Unreal. Profit', key: null, visible: visibleColumns.unrealizedProfit, tooltip: 'Estimated profit if sold at GE high (after 2% tax)' },
+    { label: 'Start Date', key: null, visible: showInvestmentDate, tooltip: 'Date this investment was started' },
+    { label: 'Notes', key: null, visible: visibleColumns.notes, tooltip: 'Your notes for this item' },
+    { label: 'Actions', key: null, visible: true, tooltip: 'Buy, sell, adjust, calculate, archive, or delete' }
   ];
 
   return (
@@ -99,6 +128,7 @@ function TableHeader({ sortConfig, onSort, visibleColumns }) {
             key={col.label}
             onClick={() => col.key && onSort(col.key)}
             className={`th-base ${col.key ? 'th-sortable' : ''}`}
+            title={col.tooltip}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               {col.label}
@@ -135,7 +165,11 @@ function StockRow({
   numberFormat,
   geData = {},
   geIconMap = {},
-  onArchive
+  membershipMap = {},
+  showMembershipIcon = true,
+  onArchive,
+  showInvestmentDate,
+  onInvestmentDateChange
 }) {
   const avgBuy = calculateAvgBuyPrice(stock);
   const avgSell = calculateAvgSellPrice(stock);
@@ -163,6 +197,14 @@ function StockRow({
               style={{ width: '20px', height: '20px', objectFit: 'contain', imageRendering: 'pixelated' }}
             />
           )}
+          {showMembershipIcon && stock.itemId && stock.itemId in membershipMap && (
+            <Star
+              className={`members-star ${membershipMap[stock.itemId] ? 'members-star--p2p' : 'members-star--f2p'}`}
+              size={12}
+              fill="currentColor"
+              title={membershipMap[stock.itemId] ? 'Members item' : 'Free-to-play item'}
+            />
+          )}
           {stock.name}
         </div>
       </td>
@@ -171,52 +213,52 @@ function StockRow({
           <StatusBadge stock={stock} />
         </td>
       )}
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+      <td title={formatNumber(stock.shares, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
         {formatNumber(stock.shares, numberFormat)}
       </td>
-      <td style={{ padding: '0.5rem 0.5rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', whiteSpace: 'nowrap' }}>
+      <td title={formatNumber(stock.totalCost, 'full')} style={{ padding: '0.5rem 0.5rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', whiteSpace: 'nowrap' }}>
         {formatNumber(stock.totalCost, numberFormat)}
       </td>
       {visibleColumns.avgBuy && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
+        <td title={formatNumber(avgBuy, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
           {formatAvgPrice(avgBuy, numberFormat)}
         </td>
       )}
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+      <td title={formatNumber(stock.sharesSold, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
         {formatNumber(stock.sharesSold, numberFormat)}
       </td>
-      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+      <td title={formatNumber(stock.totalCostSold, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
         {formatNumber(stock.totalCostSold, numberFormat)}
       </td>
       {visibleColumns.avgSell && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
+        <td title={formatNumber(avgSell, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: 'rgb(134, 239, 172)', border: '1px solid rgb(51, 65, 85)' }}>
           {formatAvgPrice(avgSell, numberFormat)}
         </td>
       )}
       {visibleColumns.profit && (
-        <td className={`td-base td-right ${profit >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
+        <td title={formatNumber(profit, 'full')} className={`td-base td-right ${profit >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
           {profit >= 0 ? '+' : ''}{formatNumber(profit, numberFormat)}
         </td>
       )}
       {visibleColumns.desiredStock !== false && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+        <td title={formatNumber(stock.needed, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
           {formatNumber(stock.needed, numberFormat)}
         </td>
       )}
       {visibleColumns.limit4h && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
+        <td title={formatNumber(stock.limit4h, 'full')} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)' }}>
           {formatNumber(stock.limit4h, numberFormat)}
         </td>
       )}
       {visibleColumns.geHigh && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
+        <td title={stock.itemId && geData[stock.itemId]?.high != null ? formatNumber(geData[stock.itemId].high, 'full') : undefined} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
           {stock.itemId && geData[stock.itemId]?.high != null
             ? formatNumber(geData[stock.itemId].high, numberFormat)
             : 'NA'}
         </td>
       )}
       {visibleColumns.geLow && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
+        <td title={stock.itemId && geData[stock.itemId]?.low != null ? formatNumber(geData[stock.itemId].low, 'full') : undefined} style={{ padding: '0.5rem 0.75rem', textAlign: 'right', border: '1px solid rgb(51, 65, 85)', color: 'rgb(134, 239, 172)' }}>
           {stock.itemId && geData[stock.itemId]?.low != null
             ? formatNumber(geData[stock.itemId].low, numberFormat)
             : 'NA'}
@@ -226,11 +268,27 @@ function StockRow({
         const latestHigh = stock.itemId ? geData[stock.itemId]?.high : null;
         const unrealized = calculateUnrealizedProfit(stock, latestHigh, stock.itemId);
         return (
-          <td className={`td-base td-right ${unrealized == null ? '' : unrealized >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
+          <td title={unrealized != null ? formatNumber(unrealized, 'full') : undefined} className={`td-base td-right ${unrealized == null ? '' : unrealized >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`}>
             {unrealized == null ? 'NA' : `${unrealized >= 0 ? '+' : ''}${formatNumber(unrealized, numberFormat)}`}
           </td>
         );
       })()}
+      {showInvestmentDate && (
+        <td style={{ padding: '0.25rem 0.5rem', border: '1px solid rgb(51, 65, 85)' }}>
+          <div
+            className="investment-date-wrapper"
+            title={stock.investmentStartDate ? `${investmentAge(stock.investmentStartDate)} ago` : undefined}
+            onClick={(e) => e.currentTarget.querySelector('input').showPicker?.()}
+          >
+            <input
+              type="date"
+              className="investment-date-input"
+              value={stock.investmentStartDate || ''}
+              onChange={(e) => onInvestmentDateChange(stock, e.target.value || null)}
+            />
+          </div>
+        </td>
+      )}
       {visibleColumns.notes && (
         <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
           <button

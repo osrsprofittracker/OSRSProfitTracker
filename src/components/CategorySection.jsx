@@ -37,7 +37,11 @@ export default function CategorySection({
   showCategoryUnrealisedProfit = false,
   geData = {},
   geIconMap = {},
-  onArchive
+  membershipMap = {},
+  showMembershipIcon = true,
+  onArchive,
+  showInvestmentDate = false,
+  onInvestmentDateChange
 }) {
   const categoryStocks = stocks.filter(s => s.category === category);
 
@@ -246,7 +250,11 @@ export default function CategorySection({
             showCategoryStats={showCategoryStats}
             geData={geData}
             geIconMap={geIconMap}
+            membershipMap={membershipMap}
+            showMembershipIcon={showMembershipIcon}
             onArchive={onArchive}
+            showInvestmentDate={showInvestmentDate}
+            onInvestmentDateChange={onInvestmentDateChange}
           />
         </>
       )}
@@ -254,9 +262,18 @@ export default function CategorySection({
   );
 }
 
+const statTooltips = {
+  'Total Cost': 'GP spent buying items in this category',
+  'Total Shares': 'Items currently held in this category',
+  'Total Profit': 'Profit from sold items in this category',
+  'Sold Shares': 'Items sold in this category',
+  'Sold Cost': 'GP received from sales in this category',
+  'Unreal. Profit': 'Estimated profit if sold at GE high (after 2% tax)'
+};
+
 function StatItem({ label, value, color }) {
   return (
-    <div className="stat-item">
+    <div className="stat-item" title={statTooltips[label]}>
       <div className="stat-label">{label}</div>
       <div className="stat-value" style={{ color }}>{value}</div>
     </div>

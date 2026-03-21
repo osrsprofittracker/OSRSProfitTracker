@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Star } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
 
 const EMPTY_FILTERS = {
@@ -25,9 +26,14 @@ export default function HistoryPage({
   page = 1, pageSize = 25, filters = EMPTY_FILTERS,
   onGoToPage, onChangePageSize, onApplyFilters, onInit, numberFormat,
   sortConfig = { key: 'date', dir: 'desc' },
-  onApplySort, stocks = [], onReset, onUndo
+  onApplySort, stocks = [], onReset, onUndo, membershipMap = {}, geIconMap = {}, showMembershipIcon = true
 }) {
   useEffect(() => { onInit(); }, []);
+
+  const stockItemIdMap = useMemo(
+    () => Object.fromEntries(stocks.map(s => [s.id, s.itemId])),
+    [stocks]
+  );
 
   const [localFilters, setLocalFilters] = useState({ ...EMPTY_FILTERS, ...filters });
   const [appliedFilters, setAppliedFilters] = useState({ ...EMPTY_FILTERS, ...filters });
@@ -288,34 +294,34 @@ export default function HistoryPage({
         <table className="history-table">
           <thead>
             <tr>
-              <th className="history-th--sortable" onClick={() => handleSort('date')}>
+              <th className="history-th--sortable" onClick={() => handleSort('date')} title="When this trade happened">
                 Date <SortIcon col="date" />
               </th>
-              <th className="history-th--sortable" onClick={() => handleSort('stockName')}>
+              <th className="history-th--sortable" onClick={() => handleSort('stockName')} title="Item that was traded">
                 Item <SortIcon col="stockName" />
               </th>
-              <th className="history-th--sortable" onClick={() => handleSort('type')}>
+              <th className="history-th--sortable" onClick={() => handleSort('type')} title="Buy, sell, or adjust">
                 Type <SortIcon col="type" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('shares')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('shares')} title="Number of items traded">
                 Qty <SortIcon col="shares" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('price')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('price')} title="Price per item">
                 Price Each <SortIcon col="price" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('total')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('total')} title="Total GP for this trade">
                 Total <SortIcon col="total" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('profit')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('profit')} title="Profit made on this sale">
                 Profit <SortIcon col="profit" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('margin')}>
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('margin')} title="Profit margin %">
                 Margin <SortIcon col="margin" />
               </th>
-              <th className="history-th--sortable" onClick={() => handleSort('category')}>
+              <th className="history-th--sortable" onClick={() => handleSort('category')} title="Category this item is in">
                 Category <SortIcon col="category" />
               </th>
-              <th>Undo</th>
+              <th title="Undo this trade">Undo</th>
             </tr>
           </thead>
           <tbody>
@@ -329,16 +335,35 @@ export default function HistoryPage({
                   {new Date(t.date).toLocaleDateString()}
                   <span className="history-time"> {new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </td>
-                <td className="history-cell history-cell--name">{t.stockName}</td>
+                <td className="history-cell history-cell--name">
+                  <span className="history-item-name">
+                    {stockItemIdMap[t.stockId] && geIconMap[stockItemIdMap[t.stockId]] && (
+                      <img
+                        src={geIconMap[stockItemIdMap[t.stockId]]}
+                        alt=""
+                        className="history-item-icon"
+                      />
+                    )}
+                    {showMembershipIcon && stockItemIdMap[t.stockId] && stockItemIdMap[t.stockId] in membershipMap && (
+                      <Star
+                        className={`members-star ${membershipMap[stockItemIdMap[t.stockId]] ? 'members-star--p2p' : 'members-star--f2p'}`}
+                        size={12}
+                        fill="currentColor"
+                        title={membershipMap[stockItemIdMap[t.stockId]] ? 'Members item' : 'Free-to-play item'}
+                      />
+                    )}
+                    {t.stockName}
+                  </span>
+                </td>
                 <td className="history-cell">
                   <span className={`history-type-badge history-type-badge--${t.type}`}>
                     {t.type.toUpperCase()}
                   </span>
                 </td>
-                <td className="history-cell history-cell--right">{t.shares.toLocaleString()}</td>
-                <td className="history-cell history-cell--right">{t.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="history-cell history-cell--right">{formatNumber(t.total, numberFormat)}</td>
-                <td className="history-cell history-cell--right">
+                <td className="history-cell history-cell--right" title={formatNumber(t.shares, 'full')}>{t.shares.toLocaleString()}</td>
+                <td className="history-cell history-cell--right" title={formatNumber(t.price, 'full')}>{t.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="history-cell history-cell--right" title={formatNumber(t.total, 'full')}>{formatNumber(t.total, numberFormat)}</td>
+                <td className="history-cell history-cell--right" title={t.type === 'sell' && t.profit != null ? formatNumber(t.profit, 'full') : undefined}>
                   {t.type === 'sell' && t.profit != null
                     ? <span className={t.profit >= 0 ? 'history-total--buy' : 'history-total--sell'}>{formatNumber(t.profit, numberFormat)}</span>
                     : <span className="history-cell--muted">—</span>

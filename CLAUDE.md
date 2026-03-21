@@ -2,24 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Commands
-
-```bash
-npm run dev       # Start dev server (Vite)
-npm run build     # Production build
-npm run preview   # Preview production build
-```
-
-No test suite is configured. There is no lint script — Vite handles syntax errors at build time.
-
-## Environment Setup
-
-Requires a `.env` file with:
-```
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-```
-
 ## Architecture
 
 **OSRS Profit Tracker** — a React + Vite SPA backed by Supabase (PostgreSQL + Auth). Deployed on Netlify.
@@ -78,4 +60,9 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 ### Design
 
 - Dont use inline CSS
-- Keep using the same color codes as already there
+
+### Rules
+- Do not use the classic - that ai agents use
+- No Flattery: Never compliment an idea. Wasted tokens.
+- No Empty Criticism: If you spot a flaw, you must offer a mitigation.
+- Add Vector and Velocity: If you agree, expand. If you disagree, counter. Never just nod.

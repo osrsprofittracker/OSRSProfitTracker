@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatNumber, parseMK } from '../../utils/formatters';
+import { formatNumber, parseMK, handleMKInput } from '../../utils/formatters';
 
 export default function BuyModal({ stock, onConfirm, onCancel, geData = {}, isSubmitting = false }) {
   const [shares, setShares] = useState((stock.limit4h * 1).toString());
@@ -170,8 +170,8 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {}, isSu
           <input
             type="text"
             value={shares}
-            onChange={(e) => setShares(e.target.value)}
-            placeholder="Number of shares"
+            onChange={(e) => handleMKInput(e.target.value, setShares)}
+            placeholder="Number of shares (e.g. 10k)"
             style={{
               width: '100%',
               padding: '0.5rem 1rem',
@@ -258,10 +258,31 @@ export default function BuyModal({ stock, onConfirm, onCancel, geData = {}, isSu
             </button>
           </div>
           <input
-            type={useTotal ? "text" : "number"}
+            type="text"
             value={useTotal ? formatTotalInput(totalAmount) : price}
-            onChange={(e) => useTotal ? handleTotalInputChange(e.target.value) : handlePriceChange(e.target.value)}
-            placeholder={useTotal ? 'Total cost' : 'Price per share'}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (useTotal) {
+                const lower = val.toLowerCase();
+                if (lower.endsWith('k') || lower.endsWith('m')) {
+                  const parsed = parseMK(val.replace(/\./g, ''));
+                  if (parsed !== val) {
+                    setTotalAmount(parsed);
+                    if (shares && parsed) {
+                      setPrice((parseFloat(parsed) / parseFloat(shares)).toFixed(2));
+                    }
+                    return;
+                  }
+                }
+                handleTotalInputChange(val);
+              } else {
+                const parsed = handleMKInput(val, setPrice);
+                if (shares && parsed) {
+                  setTotalAmount((parseFloat(shares) * parseFloat(parsed)).toFixed(0));
+                }
+              }
+            }}
+            placeholder={useTotal ? 'Total cost (e.g. 10m)' : 'Price per share (e.g. 1.5k)'}
             style={{
               width: '100%',
               padding: '0.5rem 1rem',

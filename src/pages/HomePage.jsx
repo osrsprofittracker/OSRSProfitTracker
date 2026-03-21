@@ -1,5 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { formatNumber } from '../utils/formatters';
+import { calculateUnrealizedProfit } from '../utils/taxUtils';
+
+const SORT_OPTIONS = [
+  { value: 'profit',     label: 'Profit' },
+  { value: 'margin',     label: 'Margin' },
+  { value: 'stock',      label: 'Stock' },
+  { value: 'totalCost',  label: 'Total Cost' },
+  { value: 'soldStock',  label: 'Total Sold Stock' },
+  { value: 'soldCost',   label: 'Total Sold Cost' },
+  { value: 'unrealized', label: 'Unrealized Profit' },
+];
 
 export default function HomePage({
   stocks,
@@ -12,8 +23,10 @@ export default function HomePage({
   onNavigateToTrade,
   onOpenMilestoneModal,
   onOpenMilestoneHistory,
-  profitHistory
+  profitHistory,
+  geData
 }) {
+  const [topItemsSortBy, setTopItemsSortBy] = useState('profit');
   // Use milestoneProgress for period profits (already calculated in MainApp)
   const dayProfit = milestoneProgress?.day || 0;
   const weekProfit = milestoneProgress?.week || 0;
@@ -51,22 +64,35 @@ export default function HomePage({
   // Recent activity (last 10 transactions)
   const recentActivity = transactions?.slice(0, 10) || [];
 
-  // Top items by profit (based on realized profit from sells)
   const topItems = stocks
     ?.map(stock => {
       const realizedProfit = stock.totalCostSold - (stock.totalCostBasisSold || 0);
       const margin = stock.totalCostBasisSold > 0
-        ? ((realizedProfit / stock.totalCostBasisSold) * 100)
+        ? (realizedProfit / stock.totalCostBasisSold) * 100
         : 0;
-      return {
-        ...stock,
-        profit: realizedProfit,
-        margin
-      };
+      const latestHigh = stock.itemId ? geData?.[stock.itemId]?.high : null;
+      const unrealizedProfit = calculateUnrealizedProfit(stock, latestHigh, stock.itemId);
+      return { ...stock, profit: realizedProfit, margin, unrealizedProfit, latestHigh };
     })
-    .filter(stock => stock.sharesSold > 0) // Only show items that have been sold
-    .sort((a, b) => b.profit - a.profit)
-    .slice(0, 5) || [];
+    .filter(stock => {
+      if (topItemsSortBy === 'stock') return stock.shares > 0;
+      if (topItemsSortBy === 'unrealized') return stock.shares > 0 && stock.unrealizedProfit != null;
+      if (topItemsSortBy === 'totalCost') return true;
+      return stock.sharesSold > 0;
+    })
+    .sort((a, b) => {
+      const sortMap = {
+        profit:     b.profit - a.profit,
+        margin:     b.margin - a.margin,
+        stock:      b.shares - a.shares,
+        totalCost:  b.totalCost - a.totalCost,
+        soldStock:  b.sharesSold - a.sharesSold,
+        soldCost:   b.totalCostSold - a.totalCostSold,
+        unrealized: (b.unrealizedProfit ?? -Infinity) - (a.unrealizedProfit ?? -Infinity),
+      };
+      return sortMap[topItemsSortBy] ?? 0;
+    })
+    .slice(0, 10) || [];
 
   return (
     <div className="home-container">
@@ -184,12 +210,12 @@ export default function HomePage({
               <table className="table-base">
                 <thead className="thead-base">
                   <tr>
-                    <th className="th-base">Date</th>
-                    <th className="th-base">Action</th>
-                    <th className="th-base">Item</th>
-                    <th className="th-base td-right">Qty</th>
-                    <th className="th-base td-right">GP</th>
-                    <th className="th-base td-right">Profit</th>
+                    <th className="th-base" title="When this trade happened">Date</th>
+                    <th className="th-base" title="Buy, sell, or adjust">Action</th>
+                    <th className="th-base" title="Item that was traded">Item</th>
+                    <th className="th-base td-right" title="Number of items traded">Qty</th>
+                    <th className="th-base td-right" title="Total GP for this trade">GP</th>
+                    <th className="th-base td-right" title="Profit made on this trade">Profit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -322,30 +348,73 @@ export default function HomePage({
         </div>
       </div>
 
-      {/* Top Items by Profit */}
+      {/* Top Items */}
       <div className="activity-section">
         <h3 className="activity-section-title">
-          <span>🏆</span> Top Items (By Profit)
+          <span>🏆</span> Top Items
+          <select
+            className="top-items-sort-select"
+            value={topItemsSortBy}
+            onChange={e => setTopItemsSortBy(e.target.value)}
+          >
+            {SORT_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </h3>
-        <div className="activity-list">
+        <div className="top-items-grid">
           {topItems.length === 0 ? (
-            <p className="activity-empty">No items sold yet</p>
+            <p className="activity-empty">No items to display</p>
           ) : (
-            topItems.map((item, idx) => (
-              <div key={idx} className="activity-item">
-                <div className="activity-item-left">
-                  <div className="activity-item-title">
-                    {item.name}
-                  </div>
-                  <div className="activity-item-subtitle">
-                    Sold: {item.sharesSold?.toLocaleString()} | Margin: {item.margin.toFixed(2)}%
-                  </div>
-                </div>
-                <div className="activity-item-right">
-                  <div className={`activity-item-value ${item.profit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative'}`}>
-                    {formatNumber(item.profit, numberFormat)}
-                  </div>
-                </div>
+            [topItems.slice(0, 5), topItems.slice(5, 10)].map((col, colIdx) => (
+              <div key={colIdx} className="top-items-column">
+                {col.map((item, idx) => {
+                  let displayValue, displayValueClass, subtitle;
+
+                  if (topItemsSortBy === 'profit') {
+                    displayValue = formatNumber(item.profit, numberFormat);
+                    displayValueClass = item.profit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
+                    subtitle = `Sold: ${item.sharesSold?.toLocaleString()} | Margin: ${item.margin.toFixed(2)}%`;
+                  } else if (topItemsSortBy === 'margin') {
+                    displayValue = `${item.margin.toFixed(2)}%`;
+                    displayValueClass = item.margin >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
+                    subtitle = `Profit: ${formatNumber(item.profit, numberFormat)} | Sold: ${item.sharesSold?.toLocaleString()}`;
+                  } else if (topItemsSortBy === 'stock') {
+                    displayValue = item.shares?.toLocaleString();
+                    displayValueClass = 'activity-item-value-neutral';
+                    subtitle = `Total Cost: ${formatNumber(item.totalCost, numberFormat)}`;
+                  } else if (topItemsSortBy === 'totalCost') {
+                    displayValue = formatNumber(item.totalCost, numberFormat);
+                    displayValueClass = 'activity-item-value-neutral';
+                    subtitle = `Shares held: ${item.shares?.toLocaleString()}`;
+                  } else if (topItemsSortBy === 'soldStock') {
+                    displayValue = item.sharesSold?.toLocaleString();
+                    displayValueClass = 'activity-item-value-neutral';
+                    subtitle = `Total Sold Cost: ${formatNumber(item.totalCostSold, numberFormat)}`;
+                  } else if (topItemsSortBy === 'soldCost') {
+                    displayValue = formatNumber(item.totalCostSold, numberFormat);
+                    displayValueClass = 'activity-item-value-neutral';
+                    subtitle = `Sold: ${item.sharesSold?.toLocaleString()}`;
+                  } else if (topItemsSortBy === 'unrealized') {
+                    displayValue = formatNumber(item.unrealizedProfit, numberFormat);
+                    displayValueClass = item.unrealizedProfit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
+                    subtitle = `Held: ${item.shares?.toLocaleString()} | GE High: ${item.latestHigh?.toLocaleString()}`;
+                  }
+
+                  return (
+                    <div key={idx} className="activity-item">
+                      <div className="activity-item-left">
+                        <div className="activity-item-title">{item.name}</div>
+                        <div className="activity-item-subtitle">{subtitle}</div>
+                      </div>
+                      <div className="activity-item-right">
+                        <div className={`activity-item-value ${displayValueClass}`}>
+                          {displayValue}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ))
           )}

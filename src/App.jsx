@@ -10,7 +10,10 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
-  const [showLanding, setShowLanding] = useState(true);
+  const [showLanding, setShowLanding] = useState(() => {
+    const path = window.location.pathname;
+    return path === '/' || path === '';
+  });
 
   useEffect(() => {
     // Check if user is already logged in

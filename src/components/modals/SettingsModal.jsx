@@ -51,7 +51,9 @@ export default function SettingsModal({
     { key: 'geHigh', label: 'GE High' },
     { key: 'geLow', label: 'GE Low' },
     { key: 'unrealizedProfit', label: 'Unrealized Profit' },
-    { key: 'notes', label: 'Notes' }
+    { key: 'investmentStartDate', label: 'Investment Start Date' },
+    { key: 'notes', label: 'Notes' },
+    { key: 'membershipIcon', label: 'F2P / Members Icon (★)' }
   ];
 
   return (
