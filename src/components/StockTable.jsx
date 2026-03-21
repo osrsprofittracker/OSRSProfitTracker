@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit3, Trash2, GripVertical } from 'lucide-react';
+import { Edit3, Trash2, GripVertical, Star } from 'lucide-react';
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
@@ -45,6 +45,8 @@ export default function StockTable({
   numberFormat,
   geData = {},
   geIconMap = {},
+  membershipMap = {},
+  showMembershipIcon = true,
   onArchive,
   showInvestmentDate = false,
   onInvestmentDateChange
@@ -84,6 +86,8 @@ export default function StockTable({
               numberFormat={numberFormat}
               geData={geData}
               geIconMap={geIconMap}
+              membershipMap={membershipMap}
+              showMembershipIcon={showMembershipIcon}
               showInvestmentDate={showInvestmentDate}
               onInvestmentDateChange={onInvestmentDateChange}
             />
@@ -161,6 +165,8 @@ function StockRow({
   numberFormat,
   geData = {},
   geIconMap = {},
+  membershipMap = {},
+  showMembershipIcon = true,
   onArchive,
   showInvestmentDate,
   onInvestmentDateChange
@@ -189,6 +195,14 @@ function StockRow({
               src={geIconMap[stock.itemId]}
               alt=""
               style={{ width: '20px', height: '20px', objectFit: 'contain', imageRendering: 'pixelated' }}
+            />
+          )}
+          {showMembershipIcon && stock.itemId && stock.itemId in membershipMap && (
+            <Star
+              className={`members-star ${membershipMap[stock.itemId] ? 'members-star--p2p' : 'members-star--f2p'}`}
+              size={12}
+              fill="currentColor"
+              title={membershipMap[stock.itemId] ? 'Members item' : 'Free-to-play item'}
             />
           )}
           {stock.name}

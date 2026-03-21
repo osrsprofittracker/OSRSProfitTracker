@@ -9,7 +9,8 @@ const DEFAULT_VISIBLE_COLUMNS = {
   desiredStock: true,
   notes: true,
   limit4h: true,
-  investmentStartDate: true
+  investmentStartDate: true,
+  membershipIcon: true
 };
 
 const DEFAULT_VISIBLE_PROFITS = {
@@ -63,6 +64,7 @@ export function useSettings(userId) {
           geLow: data.visible_columns?.geLow ?? true,
           unrealizedProfit: data.visible_columns?.unrealizedProfit ?? true,
           investmentStartDate: data.visible_columns?.investmentStartDate ?? true,
+          membershipIcon: data.visible_columns?.membershipIcon ?? true,
         },
         visibleProfits: data.visible_profits || DEFAULT_VISIBLE_PROFITS.bondsProfit,
         altAccountTimer: data.alt_account_timer,
