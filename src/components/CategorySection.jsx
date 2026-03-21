@@ -37,6 +37,7 @@ export default function CategorySection({
   showCategoryUnrealisedProfit = false,
   geData = {},
   geIconMap = {},
+  membershipMap = {},
   onArchive,
   showInvestmentDate = false,
   onInvestmentDateChange
@@ -248,6 +249,7 @@ export default function CategorySection({
             showCategoryStats={showCategoryStats}
             geData={geData}
             geIconMap={geIconMap}
+            membershipMap={membershipMap}
             onArchive={onArchive}
             showInvestmentDate={showInvestmentDate}
             onInvestmentDateChange={onInvestmentDateChange}

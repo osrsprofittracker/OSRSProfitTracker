@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
@@ -69,6 +69,11 @@ export default function MainApp({ session, onLogout }) {
   const [tradeMode, setTradeMode] = useState('trade');
   // Update the destructure:
   const { prices: gePrices, mapping: geMapping, iconMap: geIconMap, mappingLoading } = useGEPrices();
+
+  const membershipMap = useMemo(
+    () => Object.fromEntries((geMapping || []).map(item => [item.id, !!item.members])),
+    [geMapping]
+  );
 
   const switchTradeMode = (mode) => {
     refetch();
@@ -1131,6 +1136,7 @@ export default function MainApp({ session, onLogout }) {
             onApplySort={applySort}
             onReset={resetPaged}
             onUndo={undoTransaction}
+            membershipMap={membershipMap}
           />
         ) : currentPage === 'graphs' ? (
           <GraphsPage
@@ -1296,6 +1302,7 @@ export default function MainApp({ session, onLogout }) {
                 showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
                 geData={gePrices}
                 geIconMap={geIconMap}
+                membershipMap={membershipMap}
                 showInvestmentDate={tradeMode === 'investment' && visibleColumns.investmentStartDate}
                 onInvestmentDateChange={handleInvestmentDateChange}
               />

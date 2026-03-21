@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Star } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
 
 const EMPTY_FILTERS = {
@@ -25,9 +26,14 @@ export default function HistoryPage({
   page = 1, pageSize = 25, filters = EMPTY_FILTERS,
   onGoToPage, onChangePageSize, onApplyFilters, onInit, numberFormat,
   sortConfig = { key: 'date', dir: 'desc' },
-  onApplySort, stocks = [], onReset, onUndo
+  onApplySort, stocks = [], onReset, onUndo, membershipMap = {}
 }) {
   useEffect(() => { onInit(); }, []);
+
+  const stockItemIdMap = useMemo(
+    () => Object.fromEntries(stocks.map(s => [s.id, s.itemId])),
+    [stocks]
+  );
 
   const [localFilters, setLocalFilters] = useState({ ...EMPTY_FILTERS, ...filters });
   const [appliedFilters, setAppliedFilters] = useState({ ...EMPTY_FILTERS, ...filters });
@@ -329,7 +335,19 @@ export default function HistoryPage({
                   {new Date(t.date).toLocaleDateString()}
                   <span className="history-time"> {new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </td>
-                <td className="history-cell history-cell--name">{t.stockName}</td>
+                <td className="history-cell history-cell--name">
+                  <span className="history-item-name">
+                    {stockItemIdMap[t.stockId] && stockItemIdMap[t.stockId] in membershipMap && (
+                      <Star
+                        className={`members-star ${membershipMap[stockItemIdMap[t.stockId]] ? 'members-star--p2p' : 'members-star--f2p'}`}
+                        size={12}
+                        fill="currentColor"
+                        title={membershipMap[stockItemIdMap[t.stockId]] ? 'Members item' : 'Free-to-play item'}
+                      />
+                    )}
+                    {t.stockName}
+                  </span>
+                </td>
                 <td className="history-cell">
                   <span className={`history-type-badge history-type-badge--${t.type}`}>
                     {t.type.toUpperCase()}

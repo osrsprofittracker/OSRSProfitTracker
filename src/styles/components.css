@@ -1391,6 +1391,24 @@
   color: white;
 }
 
+.history-item-name {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.members-star {
+  flex-shrink: 0;
+}
+
+.members-star--p2p {
+  color: #f59e0b;
+}
+
+.members-star--f2p {
+  color: #e2e8f0;
+}
+
 .history-cell--right {
   text-align: right;
 }
