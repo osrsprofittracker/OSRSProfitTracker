@@ -46,6 +46,7 @@ export default function StockTable({
   geData = {},
   geIconMap = {},
   membershipMap = {},
+  showMembershipIcon = true,
   onArchive,
   showInvestmentDate = false,
   onInvestmentDateChange
@@ -86,6 +87,7 @@ export default function StockTable({
               geData={geData}
               geIconMap={geIconMap}
               membershipMap={membershipMap}
+              showMembershipIcon={showMembershipIcon}
               showInvestmentDate={showInvestmentDate}
               onInvestmentDateChange={onInvestmentDateChange}
             />
@@ -164,6 +166,7 @@ function StockRow({
   geData = {},
   geIconMap = {},
   membershipMap = {},
+  showMembershipIcon = true,
   onArchive,
   showInvestmentDate,
   onInvestmentDateChange
@@ -194,7 +197,7 @@ function StockRow({
               style={{ width: '20px', height: '20px', objectFit: 'contain', imageRendering: 'pixelated' }}
             />
           )}
-          {stock.itemId && stock.itemId in membershipMap && (
+          {showMembershipIcon && stock.itemId && stock.itemId in membershipMap && (
             <Star
               className={`members-star ${membershipMap[stock.itemId] ? 'members-star--p2p' : 'members-star--f2p'}`}
               size={12}

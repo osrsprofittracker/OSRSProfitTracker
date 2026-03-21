@@ -1138,6 +1138,7 @@ export default function MainApp({ session, onLogout }) {
             onUndo={undoTransaction}
             membershipMap={membershipMap}
             geIconMap={geIconMap}
+            showMembershipIcon={visibleColumns.membershipIcon}
           />
         ) : currentPage === 'graphs' ? (
           <GraphsPage
@@ -1304,6 +1305,7 @@ export default function MainApp({ session, onLogout }) {
                 geData={gePrices}
                 geIconMap={geIconMap}
                 membershipMap={membershipMap}
+                showMembershipIcon={visibleColumns.membershipIcon}
                 showInvestmentDate={tradeMode === 'investment' && visibleColumns.investmentStartDate}
                 onInvestmentDateChange={handleInvestmentDateChange}
               />

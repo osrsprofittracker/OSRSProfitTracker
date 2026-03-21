@@ -38,6 +38,7 @@ export default function CategorySection({
   geData = {},
   geIconMap = {},
   membershipMap = {},
+  showMembershipIcon = true,
   onArchive,
   showInvestmentDate = false,
   onInvestmentDateChange
@@ -250,6 +251,7 @@ export default function CategorySection({
             geData={geData}
             geIconMap={geIconMap}
             membershipMap={membershipMap}
+            showMembershipIcon={showMembershipIcon}
             onArchive={onArchive}
             showInvestmentDate={showInvestmentDate}
             onInvestmentDateChange={onInvestmentDateChange}
