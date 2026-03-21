@@ -1137,6 +1137,7 @@ export default function MainApp({ session, onLogout }) {
             onReset={resetPaged}
             onUndo={undoTransaction}
             membershipMap={membershipMap}
+            geIconMap={geIconMap}
           />
         ) : currentPage === 'graphs' ? (
           <GraphsPage

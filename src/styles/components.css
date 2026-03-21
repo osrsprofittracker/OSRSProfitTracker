@@ -1397,6 +1397,14 @@
   gap: 0.3rem;
 }
 
+.history-item-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
 .members-star {
   flex-shrink: 0;
 }

@@ -26,7 +26,7 @@ export default function HistoryPage({
   page = 1, pageSize = 25, filters = EMPTY_FILTERS,
   onGoToPage, onChangePageSize, onApplyFilters, onInit, numberFormat,
   sortConfig = { key: 'date', dir: 'desc' },
-  onApplySort, stocks = [], onReset, onUndo, membershipMap = {}
+  onApplySort, stocks = [], onReset, onUndo, membershipMap = {}, geIconMap = {}
 }) {
   useEffect(() => { onInit(); }, []);
 
@@ -337,6 +337,13 @@ export default function HistoryPage({
                 </td>
                 <td className="history-cell history-cell--name">
                   <span className="history-item-name">
+                    {stockItemIdMap[t.stockId] && geIconMap[stockItemIdMap[t.stockId]] && (
+                      <img
+                        src={geIconMap[stockItemIdMap[t.stockId]]}
+                        alt=""
+                        className="history-item-icon"
+                      />
+                    )}
                     {stockItemIdMap[t.stockId] && stockItemIdMap[t.stockId] in membershipMap && (
                       <Star
                         className={`members-star ${membershipMap[stockItemIdMap[t.stockId]] ? 'members-star--p2p' : 'members-star--f2p'}`}
