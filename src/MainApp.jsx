@@ -22,6 +22,7 @@ import Footer from './components/Footer';
 import EditCategoryModal from './components/modals/EditCategoryModal';
 import TimeCalculatorModal from './components/modals/TimeCalculatorModal';
 import Header from './components/Header';
+import NotificationCenter from './components/NotificationCenter';
 import PortfolioSummary from './components/PortfolioSummary';
 import ChartButtons from './components/ChartButtons';
 import CategorySection from './components/CategorySection';
@@ -1052,7 +1053,9 @@ export default function MainApp({ session, onLogout }) {
             </a>
           </div>
 
-          {/* Right - User dropdown */}
+          {/* Right - Notifications + User dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <NotificationCenter notifications={[]} />
           <div className="user-dropdown-wrapper">
             <button
               className="user-dropdown-trigger"
@@ -1095,6 +1098,7 @@ export default function MainApp({ session, onLogout }) {
                 </button>
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
