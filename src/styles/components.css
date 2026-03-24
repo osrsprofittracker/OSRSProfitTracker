@@ -2456,3 +2456,86 @@
 .investment-date-wrapper:hover .investment-date-input {
   border-color: rgb(96, 165, 250);
 }
+
+/* Notification Center */
+.notification-bell-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notification-bell-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: rgb(148, 163, 184);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.notification-bell-btn:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: white;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgb(220, 38, 38);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+}
+
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 280px;
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.5rem;
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.15s ease;
+}
+
+.notification-panel-header {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: white;
+  border-bottom: 1px solid rgb(51, 65, 85);
+}
+
+.notification-empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: rgb(100, 116, 139);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.notification-item {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: rgb(148, 163, 184);
+  border-bottom: 1px solid rgb(51, 65, 85);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
