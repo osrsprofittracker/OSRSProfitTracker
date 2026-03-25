@@ -2519,6 +2519,32 @@
   font-size: 0.875rem;
   color: white;
   border-bottom: 1px solid rgb(51, 65, 85);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.notification-action-btn {
+  background: transparent;
+  border: none;
+  color: rgb(148, 163, 184);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, background 0.2s;
+}
+
+.notification-action-btn:hover {
+  color: white;
+  background: rgba(148, 163, 184, 0.15);
 }
 
 .notification-empty {
@@ -2529,13 +2555,271 @@
   margin: 0;
 }
 
+.notification-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
 .notification-item {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   color: rgb(148, 163, 184);
   border-bottom: 1px solid rgb(51, 65, 85);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.notification-item:hover {
+  background: rgba(148, 163, 184, 0.05);
 }
 
 .notification-item:last-child {
   border-bottom: none;
+}
+
+.notification-item-unread {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.notification-item-unread .notification-item-message {
+  color: rgb(226, 232, 240);
+  font-weight: 500;
+}
+
+.notification-item-read .notification-item-message {
+  color: rgb(148, 163, 184);
+}
+
+.notification-item-icon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.notification-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-item-message {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.notification-item-time {
+  font-size: 0.6875rem;
+  color: rgb(100, 116, 139);
+  margin-top: 0.125rem;
+}
+
+.notification-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: rgb(100, 116, 139);
+  cursor: pointer;
+  padding: 0.125rem;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.notification-item:hover .notification-dismiss-btn {
+  opacity: 1;
+}
+
+.notification-dismiss-btn:hover {
+  color: rgb(220, 38, 38);
+}
+
+/* Settings Modal */
+.settings-modal-container {
+  background: rgb(30, 41, 59);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  width: 48rem;
+  max-width: 90vw;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgb(51, 65, 85);
+  color: rgb(209, 213, 219);
+}
+
+.settings-modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgb(51, 65, 85);
+  margin-bottom: 1.5rem;
+}
+
+.settings-tab {
+  background: transparent;
+  border: none;
+  color: rgb(148, 163, 184);
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.settings-tab:hover {
+  color: rgb(226, 232, 240);
+}
+
+.settings-tab-active {
+  color: rgb(96, 165, 250);
+  border-bottom-color: rgb(96, 165, 250);
+}
+
+.settings-tab-content {
+  min-height: 200px;
+}
+
+.settings-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid rgb(71, 85, 105);
+  padding-top: 1.5rem;
+}
+
+.settings-done-btn {
+  padding: 0.75rem 1.5rem;
+  background: rgb(37, 99, 235);
+  border-radius: 0.5rem;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: background 0.2s;
+}
+
+.settings-done-btn:hover {
+  background: rgb(29, 78, 216);
+}
+
+/* Notification Settings Tab */
+.settings-notifications-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settings-notification-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-notification-section-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.settings-notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-notification-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgb(51, 65, 85);
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.settings-notification-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.settings-notification-toggle-content {
+  flex: 1;
+}
+
+.settings-notification-toggle-label {
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.settings-notification-toggle-desc {
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+}
+
+/* Sound Picker */
+.sound-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sound-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.sound-picker-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: rgb(51, 65, 85);
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  color: rgb(209, 213, 219);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.sound-picker-option:hover {
+  background: rgb(71, 85, 105);
+}
+
+.sound-picker-option-active {
+  border-color: rgb(96, 165, 250);
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.sound-picker-option-label {
+  pointer-events: none;
+}
+
+.sound-picker-play-btn {
+  background: transparent;
+  border: none;
+  color: rgb(148, 163, 184);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  transition: color 0.15s;
+  line-height: 1;
+}
+
+.sound-picker-play-btn:hover {
+  color: rgb(96, 165, 250);
+}
+
+.sound-picker-file-input {
+  display: none;
 }

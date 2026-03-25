@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+const DEFAULT_NOTIFICATION_PREFERENCES = {
+  limitTimer: false,
+  altAccountTimer: true,
+  milestones: true,
+  browserPush: false,
+  sound: false,
+  soundChoice: 'chime',
+};
+
 const DEFAULT_VISIBLE_COLUMNS = {
   status: true,
   avgBuy: true,
@@ -28,6 +37,8 @@ export function useSettings(userId) {
     showCategoryStats: false,
     showUnrealisedProfitStats: false,
     showCategoryUnrealisedProfit: true,
+    notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
+    customNotificationSound: null,
   });
   const [loading, setLoading] = useState(true);
 
@@ -71,6 +82,11 @@ export function useSettings(userId) {
         showCategoryStats: data.show_category_stats || false,
         showUnrealisedProfitStats: data.show_unrealised_profit_stats ?? false,
         showCategoryUnrealisedProfit: data.show_category_unrealised_profit ?? true,
+        notificationPreferences: {
+          ...DEFAULT_NOTIFICATION_PREFERENCES,
+          ...data.notification_preferences,
+        },
+        customNotificationSound: data.custom_notification_sound || null,
       });
     } else {
       const { error: insertError } = await supabase
@@ -94,6 +110,9 @@ export function useSettings(userId) {
   const updateSettings = async (updates) => {
     const newSettings = { ...settings, ...updates };
 
+    // Update local state immediately for responsive UI
+    setSettings(newSettings);
+
     const dbData = {
       user_id: userId,
       number_format: newSettings.numberFormat,
@@ -103,21 +122,37 @@ export function useSettings(userId) {
       show_category_stats: newSettings.showCategoryStats,
       show_unrealised_profit_stats: newSettings.showUnrealisedProfitStats,
       show_category_unrealised_profit: newSettings.showCategoryUnrealisedProfit,
+      notification_preferences: newSettings.notificationPreferences,
+      custom_notification_sound: newSettings.customNotificationSound,
     };
 
-    const { error } = await supabase
+    let { error } = await supabase
       .from('user_settings')
-      .upsert(dbData, {
-        onConflict: 'user_id'
-      });
+      .upsert(dbData, { onConflict: 'user_id' });
+
+    // If a new column doesn't exist yet, retry without it
+    if (error) {
+      const colsToTry = ['custom_notification_sound', 'notification_preferences'];
+      let retryData = { ...dbData };
+      for (const col of colsToTry) {
+        if (error && error.message?.includes(col)) {
+          delete retryData[col];
+          const retry = await supabase
+            .from('user_settings')
+            .upsert(retryData, { onConflict: 'user_id' });
+          error = retry.error;
+        }
+      }
+    }
 
     if (error) {
       console.error('Error updating settings:', error);
+      // Revert to previous state on failure
+      setSettings(settings);
       return false;
-    } else {
-      setSettings(newSettings);
-      return true;
     }
+
+    return true;
   };
 
   return { settings, loading, updateSettings, refetch: fetchSettings };

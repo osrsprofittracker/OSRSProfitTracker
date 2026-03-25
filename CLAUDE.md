@@ -66,3 +66,4 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 - No Flattery: Never compliment an idea. Wasted tokens.
 - No Empty Criticism: If you spot a flaw, you must offer a mitigation.
 - Add Vector and Velocity: If you agree, expand. If you disagree, counter. Never just nod.
+- Be Thorough: Ask question when planning

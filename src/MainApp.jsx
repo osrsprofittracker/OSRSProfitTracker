@@ -14,6 +14,7 @@ import { useProfits } from './hooks/useProfits';
 import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEPrices } from './hooks/useGEPrices';
+import { useNotifications } from './hooks/useNotifications';
 import CategoryQuickNav from './components/CategoryQuickNav';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
 import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
@@ -101,7 +102,8 @@ export default function MainApp({ session, onLogout }) {
 
   // Destructure settings
   const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats,
-          showUnrealisedProfitStats, showCategoryUnrealisedProfit } = settings;
+          showUnrealisedProfitStats, showCategoryUnrealisedProfit, notificationPreferences,
+          customNotificationSound } = settings;
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
     // Load collapsed state from localStorage on initial render
@@ -221,6 +223,25 @@ export default function MainApp({ session, onLogout }) {
     await refetch();
   };
 
+  // Notifications
+  const {
+    notifications,
+    unreadCount,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+    clearAll: clearAllNotifications,
+  } = useNotifications(notificationPreferences, customNotificationSound);
+
+  // Track which timer notifications have already fired to avoid duplicates
+  const firedTimerNotifs = useRef(new Set());
+  const firedAltTimerNotif = useRef(false);
+  const firedMilestoneNotifs = useRef(new Set());
+  const timerNotifsInitialized = useRef(false);
+  const altTimerNotifInitialized = useRef(false);
+  const milestoneNotifsInitialized = useRef(false);
+
   // Timer update
   useEffect(() => {
     const interval = setInterval(() => {
@@ -228,6 +249,53 @@ export default function MainApp({ session, onLogout }) {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Detect timer expirations for notifications
+  useEffect(() => {
+    if (!stocks || stocks.length === 0) return;
+    const now = Date.now();
+
+    // On first run, seed the fired set with already-expired timers (no notifications)
+    if (!timerNotifsInitialized.current) {
+      timerNotifsInitialized.current = true;
+      stocks.forEach(stock => {
+        if (stock.timerEndTime && stock.timerEndTime <= now) {
+          firedTimerNotifs.current.add(stock.id);
+        }
+      });
+      return;
+    }
+
+    stocks.forEach(stock => {
+      if (
+        stock.timerEndTime &&
+        stock.timerEndTime <= now &&
+        !firedTimerNotifs.current.has(stock.id)
+      ) {
+        firedTimerNotifs.current.add(stock.id);
+        addNotification('limitTimer', `${stock.name} — GE buy limit has reset`);
+      }
+    });
+  }, [currentTime, stocks, addNotification]);
+
+  // Detect alt account timer expiration
+  useEffect(() => {
+    if (!altAccountTimer || firedAltTimerNotif.current) return;
+
+    // On first run, seed if already expired (no notification)
+    if (!altTimerNotifInitialized.current) {
+      altTimerNotifInitialized.current = true;
+      if (altAccountTimer <= Date.now()) {
+        firedAltTimerNotif.current = true;
+      }
+      return;
+    }
+
+    if (altAccountTimer <= Date.now()) {
+      firedAltTimerNotif.current = true;
+      addNotification('altAccountTimer', 'Alt account timer is ready');
+    }
+  }, [currentTime, altAccountTimer, addNotification]);
 
   useEffect(() => {
     const ensureUncategorizedExists = async () => {
@@ -416,6 +484,34 @@ export default function MainApp({ session, onLogout }) {
 
     setMilestoneProgress(newProgress);
 
+    // Check for milestone achievements and fire notifications
+    const periods = ['day', 'week', 'month', 'year'];
+    const periodLabels = { day: 'Daily', week: 'Weekly', month: 'Monthly', year: 'Yearly' };
+
+    // On first run, seed already-achieved milestones without firing notifications
+    if (!milestoneNotifsInitialized.current) {
+      milestoneNotifsInitialized.current = true;
+      periods.forEach(period => {
+        const goal = milestones[period]?.goal;
+        const enabled = milestones[period]?.enabled;
+        if (enabled && goal && newProgress[period] >= goal) {
+          firedMilestoneNotifs.current.add(`${period}-${goal}`);
+        }
+      });
+    } else {
+      periods.forEach(period => {
+        const goal = milestones[period]?.goal;
+        const enabled = milestones[period]?.enabled;
+        if (enabled && goal && newProgress[period] >= goal) {
+          const key = `${period}-${goal}`;
+          if (!firedMilestoneNotifs.current.has(key)) {
+            firedMilestoneNotifs.current.add(key);
+            addNotification('milestone', `${periodLabels[period]} milestone achieved!`);
+          }
+        }
+      });
+    }
+
     if (!milestonesLoading) {
       recordCompletedPeriods(profitHistory, milestones);
     }
@@ -461,6 +557,8 @@ export default function MainApp({ session, onLogout }) {
       // If startTimer is checked, always start the timer and take off hold
       timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
       newOnHold = false; // Take it off hold when timer starts
+      // Reset notification so it can fire again when this new timer expires
+      firedTimerNotifs.current.delete(selectedStock.id);
     } else {
       // If startTimer is NOT checked, keep existing timer
       timerEndTime = selectedStock.timerEndTime;
@@ -691,11 +789,13 @@ export default function MainApp({ session, onLogout }) {
 
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
+    firedAltTimerNotif.current = false;
     await updateSettings({ altAccountTimer: timerEndTime });
     setShowAltTimerModal(false);
   };
 
   const handleResetAltTimer = async () => {
+    firedAltTimerNotif.current = false;
     await updateSettings({ altAccountTimer: null });
   };
 
@@ -1055,7 +1155,14 @@ export default function MainApp({ session, onLogout }) {
 
           {/* Right - Notifications + User dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <NotificationCenter notifications={[]} />
+          <NotificationCenter
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onDismiss={dismissNotification}
+            onClearAll={clearAllNotifications}
+          />
           <div className="user-dropdown-wrapper">
             <button
               className="user-dropdown-trigger"
@@ -1487,6 +1594,10 @@ export default function MainApp({ session, onLogout }) {
             onShowUnrealisedProfitStatsChange={(v) => updateSettings({ showUnrealisedProfitStats: v })}
             showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
             onShowCategoryUnrealisedProfitChange={(v) => updateSettings({ showCategoryUnrealisedProfit: v })}
+            notificationPreferences={notificationPreferences}
+            onNotificationPreferencesChange={(newPrefs) => updateSettings({ notificationPreferences: newPrefs })}
+            customNotificationSound={customNotificationSound}
+            onCustomNotificationSoundChange={(uri) => updateSettings({ customNotificationSound: uri })}
             onCancel={() => setShowSettingsModal(false)}
             onChangePassword={() => {
               setShowSettingsModal(false);
