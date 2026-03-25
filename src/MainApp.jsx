@@ -506,7 +506,7 @@ export default function MainApp({ session, onLogout }) {
           const key = `${period}-${goal}`;
           if (!firedMilestoneNotifs.current.has(key)) {
             firedMilestoneNotifs.current.add(key);
-            addNotification('milestone', `${periodLabels[period]} milestone reached — ${(goal / 1000000).toFixed(0)}M GP`);
+            addNotification('milestone', `${periodLabels[period]} milestone achieved!`);
           }
         }
       });

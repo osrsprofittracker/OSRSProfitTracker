@@ -30,7 +30,8 @@
       "Bash(gh issue:*)",
       "Bash(ls:*)",
       "Bash(find . -name *.sql -o -name *migration* -o -name *schema*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(gh pr:*)"
     ]
   }
 }

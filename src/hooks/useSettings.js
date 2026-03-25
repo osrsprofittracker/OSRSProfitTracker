@@ -110,6 +110,9 @@ export function useSettings(userId) {
   const updateSettings = async (updates) => {
     const newSettings = { ...settings, ...updates };
 
+    // Update local state immediately for responsive UI
+    setSettings(newSettings);
+
     const dbData = {
       user_id: userId,
       number_format: newSettings.numberFormat,
@@ -144,11 +147,12 @@ export function useSettings(userId) {
 
     if (error) {
       console.error('Error updating settings:', error);
+      // Revert to previous state on failure
+      setSettings(settings);
       return false;
-    } else {
-      setSettings(newSettings);
-      return true;
     }
+
+    return true;
   };
 
   return { settings, loading, updateSettings, refetch: fetchSettings };
