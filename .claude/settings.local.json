@@ -31,7 +31,9 @@
       "Bash(ls:*)",
       "Bash(find . -name *.sql -o -name *migration* -o -name *schema*)",
       "Bash(npx vite:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)"
     ]
   }
 }

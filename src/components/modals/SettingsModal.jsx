@@ -26,23 +26,6 @@ function ProfitCheckbox({ profit, checked, onChange }) {
   );
 }
 
-function NotificationToggle({ label, description, checked, onChange }) {
-  return (
-    <label className="settings-notification-toggle">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="settings-notification-checkbox"
-      />
-      <div className="settings-notification-toggle-content">
-        <div className="settings-notification-toggle-label">{label}</div>
-        <div className="settings-notification-toggle-desc">{description}</div>
-      </div>
-    </label>
-  );
-}
-
 function GeneralTab({
   numberFormat,
   onNumberFormatChange,
@@ -303,8 +286,6 @@ function GeneralTab({
 }
 
 function SoundPicker({ soundChoice, onChange }) {
-  const [localChoice, setLocalChoice] = useState(soundChoice || 'chime');
-
   return (
     <div className="sound-picker">
       <div className="sound-picker-grid">
@@ -312,9 +293,8 @@ function SoundPicker({ soundChoice, onChange }) {
           <button
             key={preset.id}
             type="button"
-            className={`sound-picker-option ${localChoice === preset.id ? 'sound-picker-option-active' : ''}`}
+            className={`sound-picker-option ${soundChoice === preset.id ? 'sound-picker-option-active' : ''}`}
             onClick={() => {
-              setLocalChoice(preset.id);
               onChange({ soundChoice: preset.id });
               playPresetPreview(preset.id);
             }}
@@ -338,93 +318,112 @@ function SoundPicker({ soundChoice, onChange }) {
   );
 }
 
-function NotificationsTab({ notificationPreferences, onNotificationPreferencesChange, customNotificationSound, onCustomNotificationSoundChange }) {
-  const handleChange = (key, value) => {
-    onNotificationPreferencesChange({
-      ...notificationPreferences,
-      [key]: value,
-    });
-  };
-
-  const handleSoundPickerChange = ({ soundChoice, customSoundUri }) => {
-    // soundChoice goes in preferences JSONB, custom audio goes in separate column
-    onNotificationPreferencesChange({
-      ...notificationPreferences,
-      soundChoice,
-    });
-    if (customSoundUri !== undefined) {
-      onCustomNotificationSoundChange(customSoundUri);
-    }
-  };
-
+function NotificationTypeSettings({ typePrefs, onChange }) {
   const handleBrowserPushChange = async (enabled) => {
     if (enabled && Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') return;
     }
     if (enabled && Notification.permission === 'denied') return;
-    handleChange('browserPush', enabled);
+    onChange({ ...typePrefs, browserPush: enabled });
   };
 
   return (
-    <div className="settings-notifications-tab">
-      <div className="settings-notification-section">
-        <label className="settings-notification-section-label">
-          Notification Types
-        </label>
-        <div className="settings-notification-list">
-          <NotificationToggle
-            label="4H Limit Timer"
-            description="Get notified when a stock's GE buy limit resets"
-            checked={notificationPreferences.limitTimer}
-            onChange={(v) => handleChange('limitTimer', v)}
-          />
-          <NotificationToggle
-            label="Alt Account Timer"
-            description="Get notified when your alt account timer is ready"
-            checked={notificationPreferences.altAccountTimer}
-            onChange={(v) => handleChange('altAccountTimer', v)}
-          />
-          <NotificationToggle
-            label="Milestones"
-            description="Get notified when you reach a profit milestone"
-            checked={notificationPreferences.milestones}
-            onChange={(v) => handleChange('milestones', v)}
-          />
+    <div className="notif-detail-settings">
+      <label className="notif-detail-row">
+        <input
+          type="checkbox"
+          className="settings-notification-checkbox"
+          checked={typePrefs.enabled}
+          onChange={(e) => onChange({ ...typePrefs, enabled: e.target.checked })}
+        />
+        <div className="settings-notification-toggle-content">
+          <div className="settings-notification-toggle-label">Enabled</div>
+          <div className="settings-notification-toggle-desc">Receive this type of notification</div>
         </div>
-      </div>
+      </label>
 
-      <div className="settings-notification-section">
-        <label className="settings-notification-section-label">
-          Delivery
-        </label>
-        <div className="settings-notification-list">
-          <NotificationToggle
-            label="Browser Notifications"
-            description="Show system notifications even when the tab isn't focused"
-            checked={notificationPreferences.browserPush}
-            onChange={handleBrowserPushChange}
-          />
-          <NotificationToggle
-            label="Sound Alerts"
-            description="Play a sound when notifications arrive"
-            checked={notificationPreferences.sound}
-            onChange={(v) => handleChange('sound', v)}
-          />
-        </div>
-      </div>
-
-      {notificationPreferences.sound && (
-        <div className="settings-notification-section">
-          <label className="settings-notification-section-label">
-            Notification Sound
+      {typePrefs.enabled && (
+        <>
+          <label className="notif-detail-row">
+            <input
+              type="checkbox"
+              className="settings-notification-checkbox"
+              checked={typePrefs.browserPush}
+              onChange={(e) => handleBrowserPushChange(e.target.checked)}
+            />
+            <div className="settings-notification-toggle-content">
+              <div className="settings-notification-toggle-label">Browser notifications</div>
+              <div className="settings-notification-toggle-desc">Show system notification even when the tab isn't focused</div>
+            </div>
           </label>
-          <SoundPicker
-            soundChoice={notificationPreferences.soundChoice}
-            onChange={handleSoundPickerChange}
-          />
-        </div>
+          <label className="notif-detail-row">
+            <input
+              type="checkbox"
+              className="settings-notification-checkbox"
+              checked={typePrefs.sound}
+              onChange={(e) => onChange({ ...typePrefs, sound: e.target.checked })}
+            />
+            <div className="settings-notification-toggle-content">
+              <div className="settings-notification-toggle-label">Sound alerts</div>
+              <div className="settings-notification-toggle-desc">Play a sound when this notification fires</div>
+            </div>
+          </label>
+          {typePrefs.sound && (
+            <SoundPicker
+              soundChoice={typePrefs.soundChoice}
+              onChange={({ soundChoice }) => onChange({ ...typePrefs, soundChoice })}
+            />
+          )}
+        </>
       )}
+    </div>
+  );
+}
+
+const NOTIFICATION_TYPES = [
+  { key: 'limitTimer', label: '4H Limit Timer', description: "Get notified when a stock's GE buy limit resets" },
+  { key: 'altAccountTimer', label: 'Alt Account Timer', description: 'Get notified when your alt account timer is ready' },
+  { key: 'milestones', label: 'Milestones', description: 'Get notified when you reach a profit milestone' },
+];
+
+function NotificationsTab({ notificationPreferences, onNotificationTypeChange }) {
+  const [selectedKey, setSelectedKey] = useState(NOTIFICATION_TYPES[0].key);
+
+  const handleTypeChange = (key, updatedTypePrefs) => {
+    onNotificationTypeChange(key, updatedTypePrefs);
+  };
+
+  const selectedType = NOTIFICATION_TYPES.find(t => t.key === selectedKey);
+  const selectedPrefs = notificationPreferences[selectedKey];
+
+  return (
+    <div className="notif-settings-pane">
+      <div className="notif-sidebar">
+        {NOTIFICATION_TYPES.map((type) => {
+          const enabled = notificationPreferences[type.key]?.enabled;
+          return (
+            <button
+              key={type.key}
+              type="button"
+              className={`notif-sidebar-item ${selectedKey === type.key ? 'notif-sidebar-item-active' : ''}`}
+              onClick={() => setSelectedKey(type.key)}
+            >
+              <span className={`notif-sidebar-dot ${enabled ? 'notif-sidebar-dot-on' : 'notif-sidebar-dot-off'}`} />
+              <span className="notif-sidebar-label">{type.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="notif-detail">
+        <div className="notif-detail-title">{selectedType.label}</div>
+        <div className="notif-detail-desc">{selectedType.description}</div>
+        <NotificationTypeSettings
+          typePrefs={selectedPrefs}
+          onChange={(updated) => handleTypeChange(selectedKey, updated)}
+        />
+      </div>
     </div>
   );
 }
@@ -443,9 +442,7 @@ export default function SettingsModal({
   showCategoryUnrealisedProfit,
   onShowCategoryUnrealisedProfitChange,
   notificationPreferences,
-  onNotificationPreferencesChange,
-  customNotificationSound,
-  onCustomNotificationSoundChange,
+  onNotificationTypeChange,
   onCancel,
   onChangePassword
 }) {
@@ -493,9 +490,7 @@ export default function SettingsModal({
         {activeTab === 'notifications' && (
           <NotificationsTab
             notificationPreferences={notificationPreferences}
-            onNotificationPreferencesChange={onNotificationPreferencesChange}
-            customNotificationSound={customNotificationSound}
-            onCustomNotificationSoundChange={onCustomNotificationSoundChange}
+            onNotificationTypeChange={onNotificationTypeChange}
           />
         )}
       </div>
