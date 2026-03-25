@@ -25,7 +25,12 @@
       "Bash(git stash:*)",
       "Bash(git add:*)",
       "Bash(gh api:*)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Bash(git commit:*)",
+      "Bash(gh issue:*)",
+      "Bash(ls:*)",
+      "Bash(find . -name *.sql -o -name *migration* -o -name *schema*)",
+      "Bash(npx vite:*)"
     ]
   }
 }

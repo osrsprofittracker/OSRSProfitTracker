@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { playNotificationSound, playPresetPreview, SOUND_PRESETS } from '../../hooks/useNotifications';
 
 function ProfitCheckbox({ profit, checked, onChange }) {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -25,7 +26,24 @@ function ProfitCheckbox({ profit, checked, onChange }) {
   );
 }
 
-export default function SettingsModal({
+function NotificationToggle({ label, description, checked, onChange }) {
+  return (
+    <label className="settings-notification-toggle">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="settings-notification-checkbox"
+      />
+      <div className="settings-notification-toggle-content">
+        <div className="settings-notification-toggle-label">{label}</div>
+        <div className="settings-notification-toggle-desc">{description}</div>
+      </div>
+    </label>
+  );
+}
+
+function GeneralTab({
   numberFormat,
   onNumberFormatChange,
   visibleColumns,
@@ -38,7 +56,6 @@ export default function SettingsModal({
   onShowUnrealisedProfitStatsChange,
   showCategoryUnrealisedProfit,
   onShowCategoryUnrealisedProfitChange,
-  onCancel,
   onChangePassword
 }) {
   const columns = [
@@ -57,21 +74,8 @@ export default function SettingsModal({
   ];
 
   return (
-    <div
-      style={{
-        background: 'rgb(30, 41, 59)',
-        padding: '1.5rem',
-        borderRadius: '0.75rem',
-        width: '48rem',
-        maxWidth: '90vw',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: '1px solid rgb(51, 65, 85)',
-        color: 'rgb(209, 213, 219)',
-      }}
-    >
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Settings</h2>
-
-      {/* Theme & Number Format Section */}
+    <>
+      {/* Number Format */}
       <div
         style={{
           display: 'grid',
@@ -80,8 +84,6 @@ export default function SettingsModal({
           marginBottom: '1.5rem',
         }}
       >
-
-        {/* Number Format */}
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
             Number Format
@@ -293,42 +295,220 @@ export default function SettingsModal({
           onMouseOver={(e) => e.target.style.color = 'rgb(147, 197, 253)'}
           onMouseOut={(e) => e.target.style.color = 'rgb(96, 165, 250)'}
         >
-          🔒 Change Password
+          Change Password
+        </button>
+      </div>
+    </>
+  );
+}
+
+function SoundPicker({ soundChoice, onChange }) {
+  const [localChoice, setLocalChoice] = useState(soundChoice || 'chime');
+
+  return (
+    <div className="sound-picker">
+      <div className="sound-picker-grid">
+        {SOUND_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            className={`sound-picker-option ${localChoice === preset.id ? 'sound-picker-option-active' : ''}`}
+            onClick={() => {
+              setLocalChoice(preset.id);
+              onChange({ soundChoice: preset.id });
+              playPresetPreview(preset.id);
+            }}
+          >
+            <span className="sound-picker-option-label">{preset.label}</span>
+            <button
+              type="button"
+              className="sound-picker-play-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                playPresetPreview(preset.id);
+              }}
+              title={`Preview ${preset.label}`}
+            >
+              &#9654;
+            </button>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NotificationsTab({ notificationPreferences, onNotificationPreferencesChange, customNotificationSound, onCustomNotificationSoundChange }) {
+  const handleChange = (key, value) => {
+    onNotificationPreferencesChange({
+      ...notificationPreferences,
+      [key]: value,
+    });
+  };
+
+  const handleSoundPickerChange = ({ soundChoice, customSoundUri }) => {
+    // soundChoice goes in preferences JSONB, custom audio goes in separate column
+    onNotificationPreferencesChange({
+      ...notificationPreferences,
+      soundChoice,
+    });
+    if (customSoundUri !== undefined) {
+      onCustomNotificationSoundChange(customSoundUri);
+    }
+  };
+
+  const handleBrowserPushChange = async (enabled) => {
+    if (enabled && Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+    }
+    if (enabled && Notification.permission === 'denied') return;
+    handleChange('browserPush', enabled);
+  };
+
+  return (
+    <div className="settings-notifications-tab">
+      <div className="settings-notification-section">
+        <label className="settings-notification-section-label">
+          Notification Types
+        </label>
+        <div className="settings-notification-list">
+          <NotificationToggle
+            label="4H Limit Timer"
+            description="Get notified when a stock's GE buy limit resets"
+            checked={notificationPreferences.limitTimer}
+            onChange={(v) => handleChange('limitTimer', v)}
+          />
+          <NotificationToggle
+            label="Alt Account Timer"
+            description="Get notified when your alt account timer is ready"
+            checked={notificationPreferences.altAccountTimer}
+            onChange={(v) => handleChange('altAccountTimer', v)}
+          />
+          <NotificationToggle
+            label="Milestones"
+            description="Get notified when you reach a profit milestone"
+            checked={notificationPreferences.milestones}
+            onChange={(v) => handleChange('milestones', v)}
+          />
+        </div>
+      </div>
+
+      <div className="settings-notification-section">
+        <label className="settings-notification-section-label">
+          Delivery
+        </label>
+        <div className="settings-notification-list">
+          <NotificationToggle
+            label="Browser Notifications"
+            description="Show system notifications even when the tab isn't focused"
+            checked={notificationPreferences.browserPush}
+            onChange={handleBrowserPushChange}
+          />
+          <NotificationToggle
+            label="Sound Alerts"
+            description="Play a sound when notifications arrive"
+            checked={notificationPreferences.sound}
+            onChange={(v) => handleChange('sound', v)}
+          />
+        </div>
+      </div>
+
+      {notificationPreferences.sound && (
+        <div className="settings-notification-section">
+          <label className="settings-notification-section-label">
+            Notification Sound
+          </label>
+          <SoundPicker
+            soundChoice={notificationPreferences.soundChoice}
+            onChange={handleSoundPickerChange}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function SettingsModal({
+  numberFormat,
+  onNumberFormatChange,
+  visibleColumns,
+  onVisibleColumnsChange,
+  visibleProfits,
+  onVisibleProfitsChange,
+  showCategoryStats,
+  onShowCategoryStatsChange,
+  showUnrealisedProfitStats,
+  onShowUnrealisedProfitStatsChange,
+  showCategoryUnrealisedProfit,
+  onShowCategoryUnrealisedProfitChange,
+  notificationPreferences,
+  onNotificationPreferencesChange,
+  customNotificationSound,
+  onCustomNotificationSoundChange,
+  onCancel,
+  onChangePassword
+}) {
+  const [activeTab, setActiveTab] = useState('general');
+
+  return (
+    <div className="settings-modal-container">
+      <h2 className="settings-modal-title">Settings</h2>
+
+      {/* Tabs */}
+      <div className="settings-tabs">
+        <button
+          className={`settings-tab ${activeTab === 'general' ? 'settings-tab-active' : ''}`}
+          onClick={() => setActiveTab('general')}
+        >
+          General
+        </button>
+        <button
+          className={`settings-tab ${activeTab === 'notifications' ? 'settings-tab-active' : ''}`}
+          onClick={() => setActiveTab('notifications')}
+        >
+          Notifications
         </button>
       </div>
 
-      {/* Buttons */}
+      {/* Tab Content */}
+      <div className="settings-tab-content">
+        {activeTab === 'general' && (
+          <GeneralTab
+            numberFormat={numberFormat}
+            onNumberFormatChange={onNumberFormatChange}
+            visibleColumns={visibleColumns}
+            onVisibleColumnsChange={onVisibleColumnsChange}
+            visibleProfits={visibleProfits}
+            onVisibleProfitsChange={onVisibleProfitsChange}
+            showCategoryStats={showCategoryStats}
+            onShowCategoryStatsChange={onShowCategoryStatsChange}
+            showUnrealisedProfitStats={showUnrealisedProfitStats}
+            onShowUnrealisedProfitStatsChange={onShowUnrealisedProfitStatsChange}
+            showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
+            onShowCategoryUnrealisedProfitChange={onShowCategoryUnrealisedProfitChange}
+            onChangePassword={onChangePassword}
+          />
+        )}
+        {activeTab === 'notifications' && (
+          <NotificationsTab
+            notificationPreferences={notificationPreferences}
+            onNotificationPreferencesChange={onNotificationPreferencesChange}
+            customNotificationSound={customNotificationSound}
+            onCustomNotificationSoundChange={onCustomNotificationSoundChange}
+          />
+        )}
+      </div>
 
       {/* Done Button */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          borderTop: '1px solid rgb(71, 85, 105)',
-          paddingTop: '1.5rem',
-        }}
-      >
+      <div className="settings-modal-footer">
         <button
           onClick={onCancel}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: 'rgb(37, 99, 235)',
-            borderRadius: '0.5rem',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: '500',
-            fontSize: '0.875rem',
-            transition: 'background 0.2s',
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = 'rgb(29, 78, 216)')}
-          onMouseOut={(e) => (e.currentTarget.style.background = 'rgb(37, 99, 235)')}
+          className="settings-done-btn"
         >
           Done
         </button>
       </div>
     </div>
-
   );
-
 }
