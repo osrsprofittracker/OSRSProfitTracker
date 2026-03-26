@@ -2,6 +2,12 @@ import { useState, useCallback, useMemo, useRef } from 'react';
 
 let notifCounter = 0;
 
+const TYPE_PREF_KEY = {
+  limitTimer: 'limitTimer',
+  altAccountTimer: 'altAccountTimer',
+  milestone: 'milestones',
+};
+
 // --- WAV generation helpers ---
 
 function buildWav(sampleRate, samples) {
@@ -163,12 +169,10 @@ function sendBrowserNotification(message) {
 
 // --- Hook ---
 
-export function useNotifications(preferences, customSoundUri) {
+export function useNotifications(preferences) {
   const [notifications, setNotifications] = useState([]);
   const prefsRef = useRef(preferences);
   prefsRef.current = preferences;
-  const customSoundRef = useRef(customSoundUri);
-  customSoundRef.current = customSoundUri;
 
   const unreadCount = useMemo(
     () => notifications.filter(n => !n.read).length,
@@ -179,9 +183,11 @@ export function useNotifications(preferences, customSoundUri) {
     const prefs = prefsRef.current;
     if (!prefs) return;
 
-    if (type === 'limitTimer' && !prefs.limitTimer) return;
-    if (type === 'altAccountTimer' && !prefs.altAccountTimer) return;
-    if (type === 'milestone' && !prefs.milestones) return;
+    const prefKey = TYPE_PREF_KEY[type];
+    if (!prefKey) return;
+
+    const typePrefs = prefs[prefKey];
+    if (!typePrefs?.enabled) return;
 
     const notification = {
       id: ++notifCounter,
@@ -193,11 +199,11 @@ export function useNotifications(preferences, customSoundUri) {
 
     setNotifications(prev => [notification, ...prev]);
 
-    if (prefs.sound) {
-      playNotificationSound(prefs.soundChoice, customSoundRef.current);
+    if (typePrefs.sound) {
+      playNotificationSound(typePrefs.soundChoice, typePrefs.customSoundUri);
     }
 
-    if (prefs.browserPush) {
+    if (typePrefs.browserPush) {
       sendBrowserNotification(message);
     }
   }, []);

@@ -10,6 +10,7 @@ import { useTransactions } from './hooks/useTransactions';
 import { useGPTradedStats } from './hooks/useGPTradedStats';
 import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
+import { useNotificationSettings } from './hooks/useNotificationSettings';
 import { useProfits } from './hooks/useProfits';
 import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
@@ -93,6 +94,7 @@ export default function MainApp({ session, onLogout }) {
  const { stats: gpTradedStats, loading: gpStatsLoading, refetch: refetchGPStats } = useGPTradedStats(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
+  const { notificationPreferences, updateNotificationPreference, loading: notificationSettingsLoading } = useNotificationSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
   const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
   const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestones(userId);
@@ -102,8 +104,7 @@ export default function MainApp({ session, onLogout }) {
 
   // Destructure settings
   const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats,
-          showUnrealisedProfitStats, showCategoryUnrealisedProfit, notificationPreferences,
-          customNotificationSound } = settings;
+          showUnrealisedProfitStats, showCategoryUnrealisedProfit } = settings;
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
     // Load collapsed state from localStorage on initial render
@@ -232,7 +233,7 @@ export default function MainApp({ session, onLogout }) {
     markAllAsRead,
     dismissNotification,
     clearAll: clearAllNotifications,
-  } = useNotifications(notificationPreferences, customNotificationSound);
+  } = useNotifications(notificationPreferences);
 
   // Track which timer notifications have already fired to avoid duplicates
   const firedTimerNotifs = useRef(new Set());
@@ -1595,9 +1596,7 @@ export default function MainApp({ session, onLogout }) {
             showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
             onShowCategoryUnrealisedProfitChange={(v) => updateSettings({ showCategoryUnrealisedProfit: v })}
             notificationPreferences={notificationPreferences}
-            onNotificationPreferencesChange={(newPrefs) => updateSettings({ notificationPreferences: newPrefs })}
-            customNotificationSound={customNotificationSound}
-            onCustomNotificationSoundChange={(uri) => updateSettings({ customNotificationSound: uri })}
+            onNotificationTypeChange={updateNotificationPreference}
             onCancel={() => setShowSettingsModal(false)}
             onChangePassword={() => {
               setShowSettingsModal(false);
