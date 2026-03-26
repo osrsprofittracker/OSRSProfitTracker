@@ -179,6 +179,7 @@ function StockRow({
 
   return (
     <tr
+      data-stock-id={stock.id}
       className={`tr-base ${isHighlighted ? 'tr-highlighted' : (index % 2 ? 'tr-even' : 'tr-odd')}`}
       draggable
       onDragStart={(e) => onDragStart(e, stock.id, category)}
