@@ -45,6 +45,7 @@ export default function NotificationCenter({
   onMarkAllAsRead,
   onDismiss,
   onClearAll,
+  onNavigate,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -106,8 +107,14 @@ export default function NotificationCenter({
               {notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`notification-item ${n.read ? 'notification-item-read' : 'notification-item-unread'}`}
-                  onClick={() => !n.read && onMarkAsRead(n.id)}
+                  className={`notification-item ${n.read ? 'notification-item-read' : 'notification-item-unread'} ${n.navigationTarget ? 'notification-item-clickable' : ''}`}
+                  onClick={() => {
+                    if (!n.read) onMarkAsRead(n.id);
+                    if (n.navigationTarget) {
+                      onNavigate?.(n.navigationTarget);
+                      setIsOpen(false);
+                    }
+                  }}
                 >
                   <div
                     className="notification-item-icon"

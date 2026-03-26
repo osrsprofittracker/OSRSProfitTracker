@@ -179,7 +179,7 @@ export function useNotifications(preferences) {
     [notifications]
   );
 
-  const addNotification = useCallback((type, message) => {
+  const addNotification = useCallback((type, message, navigationTarget = null) => {
     const prefs = prefsRef.current;
     if (!prefs) return;
 
@@ -195,6 +195,7 @@ export function useNotifications(preferences) {
       message,
       timestamp: Date.now(),
       read: false,
+      navigationTarget,
     };
 
     setNotifications(prev => [notification, ...prev]);

@@ -2929,3 +2929,22 @@
   border-radius: 0.375rem;
   cursor: pointer;
 }
+
+/* Stock row highlight animation for notification navigation */
+.stock-row-highlight {
+  animation: stockHighlight 1.5s ease-out;
+}
+
+@keyframes stockHighlight {
+  0% {
+    background-color: rgba(124, 58, 237, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Notification items with navigation targets */
+.notification-item-clickable {
+  cursor: pointer;
+}

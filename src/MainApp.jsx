@@ -274,7 +274,7 @@ export default function MainApp({ session, onLogout }) {
         !firedTimerNotifs.current.has(stock.id)
       ) {
         firedTimerNotifs.current.add(stock.id);
-        addNotification('limitTimer', `${stock.name} — GE buy limit has reset`);
+        addNotification('limitTimer', `${stock.name} — GE buy limit has reset`, { page: 'trade', stockId: stock.id });
       }
     });
   }, [currentTime, stocks, addNotification]);
@@ -294,7 +294,7 @@ export default function MainApp({ session, onLogout }) {
 
     if (altAccountTimer <= Date.now()) {
       firedAltTimerNotif.current = true;
-      addNotification('altAccountTimer', 'Alt account timer is ready');
+      addNotification('altAccountTimer', 'Alt account timer is ready', { page: 'trade' });
     }
   }, [currentTime, altAccountTimer, addNotification]);
 
@@ -507,7 +507,7 @@ export default function MainApp({ session, onLogout }) {
           const key = `${period}-${goal}`;
           if (!firedMilestoneNotifs.current.has(key)) {
             firedMilestoneNotifs.current.add(key);
-            addNotification('milestone', `${periodLabels[period]} milestone achieved!`);
+            addNotification('milestone', `${periodLabels[period]} milestone achieved!`, { page: 'home' });
           }
         }
       });
@@ -787,6 +787,23 @@ export default function MainApp({ session, onLogout }) {
       scrollToCategory();
     }
   };
+
+  const handleNotificationNavigate = useCallback((target) => {
+    if (!target) return;
+    navigateToPage(target.page);
+    if (target.stockId) {
+      setTimeout(() => {
+        const el = document.querySelector(`[data-stock-id="${target.stockId}"]`);
+        if (el) {
+          const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
+          const top = el.getBoundingClientRect().top + window.scrollY - topbarHeight - 16;
+          window.scrollTo({ top, behavior: 'smooth' });
+          el.classList.add('stock-row-highlight');
+          setTimeout(() => el.classList.remove('stock-row-highlight'), 1500);
+        }
+      }, 100);
+    }
+  }, [navigateToPage]);
 
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
@@ -1163,6 +1180,7 @@ export default function MainApp({ session, onLogout }) {
             onMarkAllAsRead={markAllAsRead}
             onDismiss={dismissNotification}
             onClearAll={clearAllNotifications}
+            onNavigate={handleNotificationNavigate}
           />
           <div className="user-dropdown-wrapper">
             <button
