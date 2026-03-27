@@ -45,7 +45,7 @@ export function useTransactions(userId) {
     const to = from + size - 1;
 
     let query = supabase
-      .from('transactions')
+      .from('transactions_view')
       .select('*', { count: 'exact' })
       .eq('user_id', userId)
       .range(from, to);
@@ -242,13 +242,6 @@ export function useTransactions(userId) {
           shares_sold: stockData.shares_sold - transaction.shares,
           total_cost_sold: stockData.total_cost_sold - transaction.total,
           total_cost_basis_sold: stockData.total_cost_basis_sold - costBasisToRestore,
-        };
-      } else if (transaction.type === 'remove') {
-        const avgPrice = transaction.price || 0;
-        const costToRestore = avgPrice * transaction.shares;
-        stockUpdate = {
-          shares: stockData.shares + transaction.shares,
-          total_cost: stockData.total_cost + costToRestore,
         };
       }
 
