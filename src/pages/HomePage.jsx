@@ -237,8 +237,8 @@ export default function HomePage({
                           {new Date(transaction.date).toLocaleDateString()}
                         </td>
                         <td className="td-base">
-                          <span className={transaction.type === 'buy' ? 'badge badge-ok' : 'badge badge-low'}>
-                            {transaction.type === 'buy' ? '🛒 Buy' : '💵 Sell'}
+                          <span className={transaction.type === 'buy' ? 'badge badge-ok' : transaction.type === 'sell' ? 'badge badge-low' : 'badge badge-purple'}>
+                            {transaction.type === 'buy' ? '🛒 Buy' : transaction.type === 'sell' ? '💵 Sell' : '🗑️ Remove'}
                           </span>
                         </td>
                         <td className="td-base">{transaction.stockName}</td>
