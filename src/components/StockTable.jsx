@@ -29,6 +29,7 @@ export default function StockTable({
   category,
   onBuy,
   onSell,
+  onRemove,
   onAdjust,
   onDelete,
   onNotes,
@@ -71,6 +72,7 @@ export default function StockTable({
               category={category}
               onBuy={onBuy}
               onSell={onSell}
+              onRemove={onRemove}
               onAdjust={onAdjust}
               onDelete={onDelete}
               onNotes={onNotes}
@@ -151,6 +153,7 @@ function StockRow({
   category,
   onBuy,
   onSell,
+  onRemove,
   onAdjust,
   onDelete,
   onNotes,
@@ -305,6 +308,7 @@ function StockRow({
           stock={stock}
           onBuy={onBuy}
           onSell={onSell}
+          onRemove={onRemove}
           onAdjust={onAdjust}
           onDelete={onDelete}
           onCalculate={onCalculate}
@@ -351,7 +355,7 @@ function StatusBadge({ stock }) {
   }
 }
 
-function ActionButtons({ stock, onBuy, onSell, onAdjust, onDelete, onCalculate, onArchive }) {
+function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onCalculate, onArchive }) {
   return (
     <div className="action-buttons">
       <button className="btn btn-success btn-sm" onClick={() => onBuy(stock)}>
@@ -359,6 +363,9 @@ function ActionButtons({ stock, onBuy, onSell, onAdjust, onDelete, onCalculate, 
       </button>
       <button className="btn btn-sell btn-sm" onClick={() => onSell(stock)}>
         Sell
+      </button>
+      <button className="btn btn-purple btn-sm" onClick={() => onRemove(stock)}>
+        Remove
       </button>
       <button className="btn btn-blue btn-sm" onClick={() => onCalculate(stock)}>
         ⏱️ Calc

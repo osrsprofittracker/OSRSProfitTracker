@@ -1366,6 +1366,10 @@
   border-left: 3px solid rgb(239, 68, 68);
 }
 
+.history-row--remove {
+  border-left: 3px solid rgb(168, 85, 247);
+}
+
 .history-row:hover {
   background: rgb(30, 41, 59);
 }
@@ -1448,6 +1452,12 @@
   background: rgba(185, 28, 28, 0.25);
   color: rgb(252, 165, 165);
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.history-type-badge--remove {
+  background: rgba(124, 58, 237, 0.25);
+  color: rgb(196, 181, 253);
+  border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .history-total--buy {

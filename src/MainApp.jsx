@@ -33,6 +33,7 @@ import ChangePasswordModal from './components/modals/ChangePasswordModal';
 import ModalContainer from './components/modals/ModalContainer';
 import BuyModal from './components/modals/BuyModal';
 import SellModal from './components/modals/SellModal';
+import RemoveStockModal from './components/modals/RemoveStockModal';
 import AdjustModal from './components/modals/AdjustModal';
 import DeleteModal from './components/modals/DeleteModal';
 import NewStockModal from './components/modals/NewStockModal';
@@ -166,6 +167,7 @@ export default function MainApp({ session, onLogout }) {
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [showAdjustModal, setShowAdjustModal] = useState(false);
@@ -784,6 +786,38 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
+  const handleRemoveStock = async (data) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const { shares } = data;
+
+    const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
+    const costToRemove = avgBuy * shares;
+
+    try {
+      await updateStock(selectedStock.id, {
+        shares: selectedStock.shares - shares,
+        totalCost: selectedStock.totalCost - costToRemove,
+      });
+
+      await addTransaction({
+        stockId: selectedStock.id,
+        stockName: selectedStock.name,
+        type: 'remove',
+        shares,
+        price: avgBuy,
+        total: costToRemove,
+        date: new Date().toISOString(),
+      });
+
+      await refetch();
+      highlightRow(selectedStock.id);
+      setShowRemoveModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleInvestmentDateChange = async (stock, date) => {
     await updateStock(stock.id, { investmentStartDate: date });
     await refetch();
@@ -1035,6 +1069,9 @@ export default function MainApp({ session, onLogout }) {
         break;
       case 'sell':
         setShowSellModal(true);
+        break;
+      case 'remove':
+        setShowRemoveModal(true);
         break;
       case 'adjust':
         setShowAdjustModal(true);
@@ -1554,6 +1591,10 @@ export default function MainApp({ session, onLogout }) {
                   setSelectedStock(stock);
                   setShowSellModal(true);
                 }}
+                onRemove={(stock) => {
+                  setSelectedStock(stock);
+                  setShowRemoveModal(true);
+                }}
                 onAdjust={(stock) => {
                   setSelectedStock(stock);
                   setShowAdjustModal(true);
@@ -1609,6 +1650,15 @@ export default function MainApp({ session, onLogout }) {
                 onConfirm={handleSell}
                 onCancel={() => setShowSellModal(false)}
                 geData={gePrices}
+                isSubmitting={isSubmitting}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showRemoveModal}>
+              <RemoveStockModal
+                stock={selectedStock}
+                onConfirm={handleRemoveStock}
+                onCancel={() => setShowRemoveModal(false)}
                 isSubmitting={isSubmitting}
               />
             </ModalContainer>
