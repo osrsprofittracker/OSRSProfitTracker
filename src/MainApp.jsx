@@ -10,10 +10,13 @@ import { useTransactions } from './hooks/useTransactions';
 import { useGPTradedStats } from './hooks/useGPTradedStats';
 import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
+import { useNotificationSettings } from './hooks/useNotificationSettings';
 import { useProfits } from './hooks/useProfits';
 import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEPrices } from './hooks/useGEPrices';
+import { useNotifications } from './hooks/useNotifications';
+import { useOSRSNews } from './hooks/useOSRSNews';
 import CategoryQuickNav from './components/CategoryQuickNav';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
 import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
@@ -22,6 +25,7 @@ import Footer from './components/Footer';
 import EditCategoryModal from './components/modals/EditCategoryModal';
 import TimeCalculatorModal from './components/modals/TimeCalculatorModal';
 import Header from './components/Header';
+import NotificationCenter from './components/NotificationCenter';
 import PortfolioSummary from './components/PortfolioSummary';
 import ChartButtons from './components/ChartButtons';
 import CategorySection from './components/CategorySection';
@@ -91,6 +95,7 @@ export default function MainApp({ session, onLogout }) {
  const { stats: gpTradedStats, loading: gpStatsLoading, refetch: refetchGPStats } = useGPTradedStats(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
+  const { notificationPreferences, updateNotificationPreference, loading: notificationSettingsLoading } = useNotificationSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
   const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
   const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestones(userId);
@@ -220,6 +225,29 @@ export default function MainApp({ session, onLogout }) {
     await refetch();
   };
 
+  // Notifications
+  const {
+    notifications,
+    unreadCount,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+    clearAll: clearAllNotifications,
+  } = useNotifications(notificationPreferences);
+
+  const { newsItems } = useOSRSNews();
+
+  // Track which timer notifications have already fired to avoid duplicates
+  const firedTimerNotifs = useRef(new Set());
+  const firedAltTimerNotif = useRef(false);
+  const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_milestones') || '[]')));
+  const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_news') || '[]')));
+  const timerNotifsInitialized = useRef(false);
+  const altTimerNotifInitialized = useRef(false);
+  const milestoneNotifsInitialized = useRef(false);
+  const newsNotifsInitialized = useRef(localStorage.getItem('osrs_news_initialized') === 'true');
+
   // Timer update
   useEffect(() => {
     const interval = setInterval(() => {
@@ -227,6 +255,53 @@ export default function MainApp({ session, onLogout }) {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Detect timer expirations for notifications
+  useEffect(() => {
+    if (!stocks || stocks.length === 0) return;
+    const now = Date.now();
+
+    // On first run, seed the fired set with already-expired timers (no notifications)
+    if (!timerNotifsInitialized.current) {
+      timerNotifsInitialized.current = true;
+      stocks.forEach(stock => {
+        if (stock.timerEndTime && stock.timerEndTime <= now) {
+          firedTimerNotifs.current.add(stock.id);
+        }
+      });
+      return;
+    }
+
+    stocks.forEach(stock => {
+      if (
+        stock.timerEndTime &&
+        stock.timerEndTime <= now &&
+        !firedTimerNotifs.current.has(stock.id)
+      ) {
+        firedTimerNotifs.current.add(stock.id);
+        addNotification('limitTimer', `${stock.name} — GE buy limit has reset`, { page: 'trade', stockId: stock.id });
+      }
+    });
+  }, [currentTime, stocks, addNotification]);
+
+  // Detect alt account timer expiration
+  useEffect(() => {
+    if (!altAccountTimer || firedAltTimerNotif.current) return;
+
+    // On first run, seed if already expired (no notification)
+    if (!altTimerNotifInitialized.current) {
+      altTimerNotifInitialized.current = true;
+      if (altAccountTimer <= Date.now()) {
+        firedAltTimerNotif.current = true;
+      }
+      return;
+    }
+
+    if (altAccountTimer <= Date.now()) {
+      firedAltTimerNotif.current = true;
+      addNotification('altAccountTimer', 'Alt account timer is ready', { page: 'trade' });
+    }
+  }, [currentTime, altAccountTimer, addNotification]);
 
   useEffect(() => {
     const ensureUncategorizedExists = async () => {
@@ -415,10 +490,77 @@ export default function MainApp({ session, onLogout }) {
 
     setMilestoneProgress(newProgress);
 
+    // Check for milestone achievements and fire notifications
+    const periods = ['day', 'week', 'month', 'year'];
+    const periodLabels = { day: 'Daily', week: 'Weekly', month: 'Monthly', year: 'Yearly' };
+
+    // On first run, seed already-achieved milestones without firing notifications
+    if (!milestoneNotifsInitialized.current) {
+      milestoneNotifsInitialized.current = true;
+      let changed = false;
+      periods.forEach(period => {
+        const goal = milestones[period]?.goal;
+        const enabled = milestones[period]?.enabled;
+        if (enabled && goal && newProgress[period] >= goal) {
+          const key = `${period}-${goal}`;
+          if (!firedMilestoneNotifs.current.has(key)) {
+            firedMilestoneNotifs.current.add(key);
+            changed = true;
+          }
+        }
+      });
+      if (changed) {
+        localStorage.setItem('osrs_fired_milestones', JSON.stringify([...firedMilestoneNotifs.current]));
+      }
+    } else {
+      let changed = false;
+      periods.forEach(period => {
+        const goal = milestones[period]?.goal;
+        const enabled = milestones[period]?.enabled;
+        if (enabled && goal && newProgress[period] >= goal) {
+          const key = `${period}-${goal}`;
+          if (!firedMilestoneNotifs.current.has(key)) {
+            firedMilestoneNotifs.current.add(key);
+            changed = true;
+            addNotification('milestone', `${periodLabels[period]} milestone achieved!`, { page: 'home' });
+          }
+        }
+      });
+      if (changed) {
+        localStorage.setItem('osrs_fired_milestones', JSON.stringify([...firedMilestoneNotifs.current]));
+      }
+    }
+
     if (!milestonesLoading) {
       recordCompletedPeriods(profitHistory, milestones);
     }
   }, [dataLoaded, profitHistory, milestones]);
+
+  // OSRS News notification effect
+  useEffect(() => {
+    if (!newsItems || newsItems.length === 0) return;
+
+    if (!newsNotifsInitialized.current) {
+      newsNotifsInitialized.current = true;
+      localStorage.setItem('osrs_news_initialized', 'true');
+      newsItems.forEach(item => seenNewsGuids.current.add(item.guid));
+      localStorage.setItem('osrs_seen_news', JSON.stringify([...seenNewsGuids.current]));
+      return;
+    }
+
+    let changed = false;
+    newsItems.forEach(item => {
+      if (!seenNewsGuids.current.has(item.guid)) {
+        seenNewsGuids.current.add(item.guid);
+        changed = true;
+        addNotification('osrsNews', item.title, { externalUrl: item.link });
+      }
+    });
+
+    if (changed) {
+      localStorage.setItem('osrs_seen_news', JSON.stringify([...seenNewsGuids.current]));
+    }
+  }, [newsItems, addNotification]);
 
   useEffect(() => {
     const storageKey = `lastSeenVersion_${userId}`;
@@ -460,6 +602,8 @@ export default function MainApp({ session, onLogout }) {
       // If startTimer is checked, always start the timer and take off hold
       timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
       newOnHold = false; // Take it off hold when timer starts
+      // Reset notification so it can fire again when this new timer expires
+      firedTimerNotifs.current.delete(selectedStock.id);
     } else {
       // If startTimer is NOT checked, keep existing timer
       timerEndTime = selectedStock.timerEndTime;
@@ -688,13 +832,36 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
+  const handleNotificationNavigate = useCallback((target) => {
+    if (!target) return;
+    if (target.externalUrl) {
+      window.open(target.externalUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    navigateToPage(target.page);
+    if (target.stockId) {
+      setTimeout(() => {
+        const el = document.querySelector(`[data-stock-id="${target.stockId}"]`);
+        if (el) {
+          const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
+          const top = el.getBoundingClientRect().top + window.scrollY - topbarHeight - 16;
+          window.scrollTo({ top, behavior: 'smooth' });
+          el.classList.add('stock-row-highlight');
+          setTimeout(() => el.classList.remove('stock-row-highlight'), 1500);
+        }
+      }, 100);
+    }
+  }, [navigateToPage]);
+
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
+    firedAltTimerNotif.current = false;
     await updateSettings({ altAccountTimer: timerEndTime });
     setShowAltTimerModal(false);
   };
 
   const handleResetAltTimer = async () => {
+    firedAltTimerNotif.current = false;
     await updateSettings({ altAccountTimer: null });
   };
 
@@ -1052,7 +1219,18 @@ export default function MainApp({ session, onLogout }) {
             </a>
           </div>
 
-          {/* Right - User dropdown */}
+          {/* Right - Notifications + User dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <NotificationCenter
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onDismiss={dismissNotification}
+            onClearAll={clearAllNotifications}
+            onNavigate={handleNotificationNavigate}
+            newsItems={newsItems}
+          />
           <div className="user-dropdown-wrapper">
             <button
               className="user-dropdown-trigger"
@@ -1095,6 +1273,7 @@ export default function MainApp({ session, onLogout }) {
                 </button>
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
@@ -1483,6 +1662,8 @@ export default function MainApp({ session, onLogout }) {
             onShowUnrealisedProfitStatsChange={(v) => updateSettings({ showUnrealisedProfitStats: v })}
             showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
             onShowCategoryUnrealisedProfitChange={(v) => updateSettings({ showCategoryUnrealisedProfit: v })}
+            notificationPreferences={notificationPreferences}
+            onNotificationTypeChange={updateNotificationPreference}
             onCancel={() => setShowSettingsModal(false)}
             onChangePassword={() => {
               setShowSettingsModal(false);

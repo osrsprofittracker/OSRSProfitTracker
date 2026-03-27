@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { playNotificationSound, playPresetPreview, SOUND_PRESETS } from '../../hooks/useNotifications';
 
 function ProfitCheckbox({ profit, checked, onChange }) {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -25,7 +26,7 @@ function ProfitCheckbox({ profit, checked, onChange }) {
   );
 }
 
-export default function SettingsModal({
+function GeneralTab({
   numberFormat,
   onNumberFormatChange,
   visibleColumns,
@@ -38,7 +39,6 @@ export default function SettingsModal({
   onShowUnrealisedProfitStatsChange,
   showCategoryUnrealisedProfit,
   onShowCategoryUnrealisedProfitChange,
-  onCancel,
   onChangePassword
 }) {
   const columns = [
@@ -57,21 +57,8 @@ export default function SettingsModal({
   ];
 
   return (
-    <div
-      style={{
-        background: 'rgb(30, 41, 59)',
-        padding: '1.5rem',
-        borderRadius: '0.75rem',
-        width: '48rem',
-        maxWidth: '90vw',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        border: '1px solid rgb(51, 65, 85)',
-        color: 'rgb(209, 213, 219)',
-      }}
-    >
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Settings</h2>
-
-      {/* Theme & Number Format Section */}
+    <>
+      {/* Number Format */}
       <div
         style={{
           display: 'grid',
@@ -80,8 +67,6 @@ export default function SettingsModal({
           marginBottom: '1.5rem',
         }}
       >
-
-        {/* Number Format */}
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
             Number Format
@@ -293,42 +278,233 @@ export default function SettingsModal({
           onMouseOver={(e) => e.target.style.color = 'rgb(147, 197, 253)'}
           onMouseOut={(e) => e.target.style.color = 'rgb(96, 165, 250)'}
         >
-          🔒 Change Password
+          Change Password
+        </button>
+      </div>
+    </>
+  );
+}
+
+function SoundPicker({ soundChoice, onChange }) {
+  return (
+    <div className="sound-picker">
+      <div className="sound-picker-grid">
+        {SOUND_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            className={`sound-picker-option ${soundChoice === preset.id ? 'sound-picker-option-active' : ''}`}
+            onClick={() => {
+              onChange({ soundChoice: preset.id });
+              playPresetPreview(preset.id);
+            }}
+          >
+            <span className="sound-picker-option-label">{preset.label}</span>
+            <button
+              type="button"
+              className="sound-picker-play-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                playPresetPreview(preset.id);
+              }}
+              title={`Preview ${preset.label}`}
+            >
+              &#9654;
+            </button>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NotificationTypeSettings({ typePrefs, onChange }) {
+  const handleBrowserPushChange = async (enabled) => {
+    if (enabled && Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+    }
+    if (enabled && Notification.permission === 'denied') return;
+    onChange({ ...typePrefs, browserPush: enabled });
+  };
+
+  return (
+    <div className="notif-detail-settings">
+      <label className="notif-detail-row">
+        <input
+          type="checkbox"
+          className="settings-notification-checkbox"
+          checked={typePrefs.enabled}
+          onChange={(e) => onChange({ ...typePrefs, enabled: e.target.checked })}
+        />
+        <div className="settings-notification-toggle-content">
+          <div className="settings-notification-toggle-label">Enabled</div>
+          <div className="settings-notification-toggle-desc">Receive this type of notification</div>
+        </div>
+      </label>
+
+      {typePrefs.enabled && (
+        <>
+          <label className="notif-detail-row">
+            <input
+              type="checkbox"
+              className="settings-notification-checkbox"
+              checked={typePrefs.browserPush}
+              onChange={(e) => handleBrowserPushChange(e.target.checked)}
+            />
+            <div className="settings-notification-toggle-content">
+              <div className="settings-notification-toggle-label">Browser notifications</div>
+              <div className="settings-notification-toggle-desc">Show system notification even when the tab isn't focused</div>
+            </div>
+          </label>
+          <label className="notif-detail-row">
+            <input
+              type="checkbox"
+              className="settings-notification-checkbox"
+              checked={typePrefs.sound}
+              onChange={(e) => onChange({ ...typePrefs, sound: e.target.checked })}
+            />
+            <div className="settings-notification-toggle-content">
+              <div className="settings-notification-toggle-label">Sound alerts</div>
+              <div className="settings-notification-toggle-desc">Play a sound when this notification fires</div>
+            </div>
+          </label>
+          {typePrefs.sound && (
+            <SoundPicker
+              soundChoice={typePrefs.soundChoice}
+              onChange={({ soundChoice }) => onChange({ ...typePrefs, soundChoice })}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+const NOTIFICATION_TYPES = [
+  { key: 'limitTimer', label: '4H Limit Timer', description: "Get notified when a stock's GE buy limit resets" },
+  { key: 'altAccountTimer', label: 'Alt Account Timer', description: 'Get notified when your alt account timer is ready' },
+  { key: 'milestones', label: 'Milestones', description: 'Get notified when you reach a profit milestone' },
+  { key: 'osrsNews', label: 'OSRS News', description: 'Get notified when new OSRS blog posts are published' },
+];
+
+function NotificationsTab({ notificationPreferences, onNotificationTypeChange }) {
+  const [selectedKey, setSelectedKey] = useState(NOTIFICATION_TYPES[0].key);
+
+  const handleTypeChange = (key, updatedTypePrefs) => {
+    onNotificationTypeChange(key, updatedTypePrefs);
+  };
+
+  const selectedType = NOTIFICATION_TYPES.find(t => t.key === selectedKey);
+  const selectedPrefs = notificationPreferences[selectedKey];
+
+  return (
+    <div className="notif-settings-pane">
+      <div className="notif-sidebar">
+        {NOTIFICATION_TYPES.map((type) => {
+          const enabled = notificationPreferences[type.key]?.enabled;
+          return (
+            <button
+              key={type.key}
+              type="button"
+              className={`notif-sidebar-item ${selectedKey === type.key ? 'notif-sidebar-item-active' : ''}`}
+              onClick={() => setSelectedKey(type.key)}
+            >
+              <span className={`notif-sidebar-dot ${enabled ? 'notif-sidebar-dot-on' : 'notif-sidebar-dot-off'}`} />
+              <span className="notif-sidebar-label">{type.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="notif-detail">
+        <div className="notif-detail-title">{selectedType.label}</div>
+        <div className="notif-detail-desc">{selectedType.description}</div>
+        <NotificationTypeSettings
+          typePrefs={selectedPrefs}
+          onChange={(updated) => handleTypeChange(selectedKey, updated)}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function SettingsModal({
+  numberFormat,
+  onNumberFormatChange,
+  visibleColumns,
+  onVisibleColumnsChange,
+  visibleProfits,
+  onVisibleProfitsChange,
+  showCategoryStats,
+  onShowCategoryStatsChange,
+  showUnrealisedProfitStats,
+  onShowUnrealisedProfitStatsChange,
+  showCategoryUnrealisedProfit,
+  onShowCategoryUnrealisedProfitChange,
+  notificationPreferences,
+  onNotificationTypeChange,
+  onCancel,
+  onChangePassword
+}) {
+  const [activeTab, setActiveTab] = useState('general');
+
+  return (
+    <div className="settings-modal-container">
+      <h2 className="settings-modal-title">Settings</h2>
+
+      {/* Tabs */}
+      <div className="settings-tabs">
+        <button
+          className={`settings-tab ${activeTab === 'general' ? 'settings-tab-active' : ''}`}
+          onClick={() => setActiveTab('general')}
+        >
+          General
+        </button>
+        <button
+          className={`settings-tab ${activeTab === 'notifications' ? 'settings-tab-active' : ''}`}
+          onClick={() => setActiveTab('notifications')}
+        >
+          Notifications
         </button>
       </div>
 
-      {/* Buttons */}
+      {/* Tab Content */}
+      <div className="settings-tab-content">
+        {activeTab === 'general' && (
+          <GeneralTab
+            numberFormat={numberFormat}
+            onNumberFormatChange={onNumberFormatChange}
+            visibleColumns={visibleColumns}
+            onVisibleColumnsChange={onVisibleColumnsChange}
+            visibleProfits={visibleProfits}
+            onVisibleProfitsChange={onVisibleProfitsChange}
+            showCategoryStats={showCategoryStats}
+            onShowCategoryStatsChange={onShowCategoryStatsChange}
+            showUnrealisedProfitStats={showUnrealisedProfitStats}
+            onShowUnrealisedProfitStatsChange={onShowUnrealisedProfitStatsChange}
+            showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
+            onShowCategoryUnrealisedProfitChange={onShowCategoryUnrealisedProfitChange}
+            onChangePassword={onChangePassword}
+          />
+        )}
+        {activeTab === 'notifications' && (
+          <NotificationsTab
+            notificationPreferences={notificationPreferences}
+            onNotificationTypeChange={onNotificationTypeChange}
+          />
+        )}
+      </div>
 
       {/* Done Button */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          borderTop: '1px solid rgb(71, 85, 105)',
-          paddingTop: '1.5rem',
-        }}
-      >
+      <div className="settings-modal-footer">
         <button
           onClick={onCancel}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: 'rgb(37, 99, 235)',
-            borderRadius: '0.5rem',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: '500',
-            fontSize: '0.875rem',
-            transition: 'background 0.2s',
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = 'rgb(29, 78, 216)')}
-          onMouseOut={(e) => (e.currentTarget.style.background = 'rgb(37, 99, 235)')}
+          className="settings-done-btn"
         >
           Done
         </button>
       </div>
     </div>
-
   );
-
 }
