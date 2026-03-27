@@ -15,6 +15,7 @@ export default function CategorySection({
   onEditCategory,
   onBuy,
   onSell,
+  onRemove,
   onAdjust,
   onDelete,
   onHistory,
@@ -232,6 +233,7 @@ export default function CategorySection({
             category={category}
             onBuy={onBuy}
             onSell={onSell}
+            onRemove={onRemove}
             onAdjust={onAdjust}
             onDelete={onDelete}
             onHistory={onHistory}

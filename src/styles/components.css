@@ -40,6 +40,14 @@
   background: rgb(153, 27, 27);
 }
 
+.btn-remove {
+  background: rgb(168, 85, 247);
+}
+
+.btn-remove:hover {
+  background: rgb(147, 51, 234);
+}
+
 .btn-danger {
   background: rgb(127, 29, 29);
 }
@@ -97,12 +105,14 @@
 .badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.25rem;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
+  min-width: 80px;
 }
 
 .badge-ok {
@@ -120,6 +130,10 @@
 
 .badge-low {
   background: rgb(220, 38, 38);
+}
+
+.badge-purple {
+  background: rgb(79, 70, 229);
 }
 
 /* Action Button Container */
@@ -1366,6 +1380,10 @@
   border-left: 3px solid rgb(239, 68, 68);
 }
 
+.history-row--remove {
+  border-left: 3px solid rgb(168, 85, 247);
+}
+
 .history-row:hover {
   background: rgb(30, 41, 59);
 }
@@ -1448,6 +1466,12 @@
   background: rgba(185, 28, 28, 0.25);
   color: rgb(252, 165, 165);
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.history-type-badge--remove {
+  background: rgba(124, 58, 237, 0.25);
+  color: rgb(196, 181, 253);
+  border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .history-total--buy {
