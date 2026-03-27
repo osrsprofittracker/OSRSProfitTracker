@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
 let notifCounter = 0;
 
@@ -171,9 +171,17 @@ function sendBrowserNotification(message) {
 // --- Hook ---
 
 export function useNotifications(preferences) {
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem('osrs_notifications');
+    return saved ? JSON.parse(saved) : [];
+  });
   const prefsRef = useRef(preferences);
   prefsRef.current = preferences;
+
+  // Persist notifications to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('osrs_notifications', JSON.stringify(notifications));
+  }, [notifications]);
 
   const unreadCount = useMemo(
     () => notifications.filter(n => !n.read).length,
