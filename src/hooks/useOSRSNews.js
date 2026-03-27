@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const POLL_INTERVAL = 60 * 1000;
+const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes (server cache updates every minute)
 
 export function useOSRSNews() {
   const [newsItems, setNewsItems] = useState([]);

@@ -1,44 +1,14 @@
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 exports.handler = async () => {
   try {
-    // Fetch from Supabase cache
-    const cacheResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/news_cache?id=eq.1&select=cached_articles`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: ANON_KEY,
-          Authorization: `Bearer ${ANON_KEY}`,
-        },
-      }
-    );
-
-    if (cacheResponse.ok) {
-      const data = await cacheResponse.json();
-      if (data.length > 0 && data[0].cached_articles) {
-        const articles = data[0].cached_articles;
-        return {
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-          body: JSON.stringify(articles),
-        };
-      }
-    }
-
-    // Fallback: fetch directly if cache is empty
     const response = await fetch('https://secure.runescape.com/m=news/a=13/archive?oldschool=1');
 
     if (!response.ok) {
-      console.error('News fetch error:', response.status);
       return {
         statusCode: 502,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: `News page returned ${response.status}` }),
+        body: JSON.stringify({ error: `News fetch failed: ${response.status}` }),
       };
     }
 
@@ -78,22 +48,61 @@ exports.handler = async () => {
       });
     }
 
-    console.log(`Found ${items.length} articles (fallback)`);
+    // Update Supabase cache
+    const cacheResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/news_cache?id=eq.1`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          cached_articles: items,
+          last_updated: new Date().toISOString(),
+        }),
+      }
+    );
+
+    if (cacheResponse.ok) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ success: true, count: items.length }),
+      };
+    }
+
+    // Try INSERT if row doesn't exist
+    const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/news_cache`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({
+        id: 1,
+        cached_articles: items,
+        last_updated: new Date().toISOString(),
+      }),
+    });
+
+    if (!insertResponse.ok) {
+      throw new Error(`Failed to cache articles: ${insertResponse.status}`);
+    }
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-      body: JSON.stringify(items),
+      body: JSON.stringify({ success: true, count: items.length }),
     };
   } catch (error) {
-    console.error('Error:', error.message);
     return {
       statusCode: 502,
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: error.message }),
     };
   }
+};
+
+exports.config = {
+  schedule: '*/1 * * * *', // Every minute
 };
