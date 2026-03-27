@@ -1,7 +1,7 @@
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-exports.handler = async () => {
+export default async () => {
   try {
     const response = await fetch('https://secure.runescape.com/m=news/a=13/archive?oldschool=1');
 
@@ -103,6 +103,6 @@ exports.handler = async () => {
   }
 };
 
-exports.config = {
+export const config = {
   schedule: '*/1 * * * *', // Every minute
 };
