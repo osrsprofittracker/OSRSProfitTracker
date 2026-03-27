@@ -279,7 +279,7 @@ export default function MainApp({ session, onLogout }) {
         !firedTimerNotifs.current.has(stock.id)
       ) {
         firedTimerNotifs.current.add(stock.id);
-        addNotification('limitTimer', `${stock.name} — GE buy limit has reset`, { page: 'trade', stockId: stock.id });
+        addNotification('limitTimer', `${stock.name}: GE buy limit reset`, { page: 'trade', stockId: stock.id });
       }
     });
   }, [currentTime, stocks, addNotification]);
@@ -602,8 +602,6 @@ export default function MainApp({ session, onLogout }) {
       // If startTimer is checked, always start the timer and take off hold
       timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
       newOnHold = false; // Take it off hold when timer starts
-      // Reset notification so it can fire again when this new timer expires
-      firedTimerNotifs.current.delete(selectedStock.id);
     } else {
       // If startTimer is NOT checked, keep existing timer
       timerEndTime = selectedStock.timerEndTime;
@@ -636,6 +634,10 @@ export default function MainApp({ session, onLogout }) {
         date: new Date().toISOString()
       });
       await refetch();
+      // Reset notification after successful update so it can fire when the new timer expires
+      if (startTimer) {
+        firedTimerNotifs.current.delete(selectedStock.id);
+      }
       highlightRow(selectedStock.id);
       setShowBuyModal(false);
     } finally {
@@ -840,6 +842,15 @@ export default function MainApp({ session, onLogout }) {
     }
     navigateToPage(target.page);
     if (target.stockId) {
+      // Find the stock's category and expand it if collapsed
+      const stock = stocks.find(s => s.id === target.stockId);
+      if (stock && stock.categoryId) {
+        const category = categories.find(c => c.id === stock.categoryId);
+        if (category && collapsedCategories[category.name]) {
+          setCollapsedCategories(prev => ({ ...prev, [category.name]: false }));
+        }
+      }
+
       setTimeout(() => {
         const el = document.querySelector(`[data-stock-id="${target.stockId}"]`);
         if (el) {
@@ -851,7 +862,7 @@ export default function MainApp({ session, onLogout }) {
         }
       }, 100);
     }
-  }, [navigateToPage]);
+  }, [navigateToPage, stocks, categories, collapsedCategories]);
 
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
