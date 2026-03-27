@@ -105,12 +105,14 @@
 .badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.25rem;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
+  min-width: 80px;
 }
 
 .badge-ok {
@@ -128,6 +130,10 @@
 
 .badge-low {
   background: rgb(220, 38, 38);
+}
+
+.badge-purple {
+  background: rgb(79, 70, 229);
 }
 
 /* Action Button Container */
