@@ -6,10 +6,10 @@ export default async () => {
     const response = await fetch('https://secure.runescape.com/m=news/a=13/archive?oldschool=1');
 
     if (!response.ok) {
-      return {
-        statusCode: 502,
-        body: JSON.stringify({ error: `News fetch failed: ${response.status}` }),
-      };
+      return new Response(JSON.stringify({ error: `News fetch failed: ${response.status}` }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const html = await response.text();
@@ -66,10 +66,10 @@ export default async () => {
     );
 
     if (cacheResponse.ok) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ success: true, count: items.length }),
-      };
+      return new Response(JSON.stringify({ success: true, count: items.length }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Try INSERT if row doesn't exist
@@ -91,15 +91,15 @@ export default async () => {
       throw new Error(`Failed to cache articles: ${insertResponse.status}`);
     }
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ success: true, count: items.length }),
-    };
+    return new Response(JSON.stringify({ success: true, count: items.length }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    return {
-      statusCode: 502,
-      body: JSON.stringify({ error: error.message }),
-    };
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 };
 
