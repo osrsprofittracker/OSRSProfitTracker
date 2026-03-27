@@ -6,6 +6,7 @@ const TYPE_PREF_KEY = {
   limitTimer: 'limitTimer',
   altAccountTimer: 'altAccountTimer',
   milestone: 'milestones',
+  osrsNews: 'osrsNews',
 };
 
 // --- WAV generation helpers ---

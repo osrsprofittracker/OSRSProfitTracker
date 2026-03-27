@@ -33,7 +33,8 @@
       "Bash(npx vite:*)",
       "Bash(gh pr:*)",
       "Bash(git fetch:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Skill(pr)"
     ]
   }
 }

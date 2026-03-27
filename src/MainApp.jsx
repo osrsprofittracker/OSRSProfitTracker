@@ -16,6 +16,7 @@ import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEPrices } from './hooks/useGEPrices';
 import { useNotifications } from './hooks/useNotifications';
+import { useOSRSNews } from './hooks/useOSRSNews';
 import CategoryQuickNav from './components/CategoryQuickNav';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
 import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
@@ -235,13 +236,17 @@ export default function MainApp({ session, onLogout }) {
     clearAll: clearAllNotifications,
   } = useNotifications(notificationPreferences);
 
+  const { newsItems } = useOSRSNews();
+
   // Track which timer notifications have already fired to avoid duplicates
   const firedTimerNotifs = useRef(new Set());
   const firedAltTimerNotif = useRef(false);
-  const firedMilestoneNotifs = useRef(new Set());
+  const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_milestones') || '[]')));
+  const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_news') || '[]')));
   const timerNotifsInitialized = useRef(false);
   const altTimerNotifInitialized = useRef(false);
   const milestoneNotifsInitialized = useRef(false);
+  const newsNotifsInitialized = useRef(localStorage.getItem('osrs_news_initialized') === 'true');
 
   // Timer update
   useEffect(() => {
@@ -492,14 +497,7 @@ export default function MainApp({ session, onLogout }) {
     // On first run, seed already-achieved milestones without firing notifications
     if (!milestoneNotifsInitialized.current) {
       milestoneNotifsInitialized.current = true;
-      periods.forEach(period => {
-        const goal = milestones[period]?.goal;
-        const enabled = milestones[period]?.enabled;
-        if (enabled && goal && newProgress[period] >= goal) {
-          firedMilestoneNotifs.current.add(`${period}-${goal}`);
-        }
-      });
-    } else {
+      let changed = false;
       periods.forEach(period => {
         const goal = milestones[period]?.goal;
         const enabled = milestones[period]?.enabled;
@@ -507,16 +505,62 @@ export default function MainApp({ session, onLogout }) {
           const key = `${period}-${goal}`;
           if (!firedMilestoneNotifs.current.has(key)) {
             firedMilestoneNotifs.current.add(key);
+            changed = true;
+          }
+        }
+      });
+      if (changed) {
+        localStorage.setItem('osrs_fired_milestones', JSON.stringify([...firedMilestoneNotifs.current]));
+      }
+    } else {
+      let changed = false;
+      periods.forEach(period => {
+        const goal = milestones[period]?.goal;
+        const enabled = milestones[period]?.enabled;
+        if (enabled && goal && newProgress[period] >= goal) {
+          const key = `${period}-${goal}`;
+          if (!firedMilestoneNotifs.current.has(key)) {
+            firedMilestoneNotifs.current.add(key);
+            changed = true;
             addNotification('milestone', `${periodLabels[period]} milestone achieved!`, { page: 'home' });
           }
         }
       });
+      if (changed) {
+        localStorage.setItem('osrs_fired_milestones', JSON.stringify([...firedMilestoneNotifs.current]));
+      }
     }
 
     if (!milestonesLoading) {
       recordCompletedPeriods(profitHistory, milestones);
     }
   }, [dataLoaded, profitHistory, milestones]);
+
+  // OSRS News notification effect
+  useEffect(() => {
+    if (!newsItems || newsItems.length === 0) return;
+
+    if (!newsNotifsInitialized.current) {
+      newsNotifsInitialized.current = true;
+      localStorage.setItem('osrs_news_initialized', 'true');
+      newsItems.forEach(item => seenNewsGuids.current.add(item.guid));
+      localStorage.setItem('osrs_seen_news', JSON.stringify([...seenNewsGuids.current]));
+      return;
+    }
+
+    let changed = false;
+    newsItems.forEach(item => {
+      if (!seenNewsGuids.current.has(item.guid)) {
+        seenNewsGuids.current.add(item.guid);
+        changed = true;
+        addNotification('osrsNews', item.title, { externalUrl: item.link });
+      }
+    });
+
+    if (changed) {
+      localStorage.setItem('osrs_seen_news', JSON.stringify([...seenNewsGuids.current]));
+    }
+  }, [newsItems, addNotification]);
 
   useEffect(() => {
     const storageKey = `lastSeenVersion_${userId}`;
@@ -790,6 +834,10 @@ export default function MainApp({ session, onLogout }) {
 
   const handleNotificationNavigate = useCallback((target) => {
     if (!target) return;
+    if (target.externalUrl) {
+      window.open(target.externalUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
     navigateToPage(target.page);
     if (target.stockId) {
       setTimeout(() => {
@@ -1181,6 +1229,7 @@ export default function MainApp({ session, onLogout }) {
             onDismiss={dismissNotification}
             onClearAll={clearAllNotifications}
             onNavigate={handleNotificationNavigate}
+            newsItems={newsItems}
           />
           <div className="user-dropdown-wrapper">
             <button

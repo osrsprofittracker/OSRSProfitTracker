@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
-const NOTIFICATION_TYPES = ['limitTimer', 'altAccountTimer', 'milestones'];
+const NOTIFICATION_TYPES = ['limitTimer', 'altAccountTimer', 'milestones', 'osrsNews'];
 
 const DEFAULT_TYPE_SETTINGS = {
   limitTimer: { enabled: false, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
   altAccountTimer: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
   milestones: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
+  osrsNews: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
 };
 
 function rowToPrefs(row) {
@@ -80,6 +81,23 @@ export function useNotificationSettings(userId) {
         prefs[row.type] = rowToPrefs(row);
       }
     }
+
+    // Backfill missing notification types for existing users
+    const existingTypes = new Set(data.map(r => r.type));
+    const missing = NOTIFICATION_TYPES.filter(t => !existingTypes.has(t));
+    if (missing.length > 0) {
+      const backfillRows = missing.map(t =>
+        prefsToRow(userId, t, DEFAULT_TYPE_SETTINGS[t])
+      );
+      const { error: backfillError } = await supabase
+        .from('notification_settings')
+        .insert(backfillRows);
+      if (backfillError) {
+        console.error('Error backfilling notification settings:', backfillError);
+      }
+      missing.forEach(t => { prefs[t] = DEFAULT_TYPE_SETTINGS[t]; });
+    }
+
     setNotificationPreferences(prefs);
     setLoading(false);
   };

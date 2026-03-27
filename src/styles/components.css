@@ -2635,6 +2635,103 @@
   color: rgb(220, 38, 38);
 }
 
+/* Notification Tabs */
+.notification-tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgb(51, 65, 85);
+}
+
+.notification-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: rgb(148, 163, 184);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.notification-tab:hover {
+  color: rgb(226, 232, 240);
+}
+
+.notification-tab-active {
+  color: rgb(96, 165, 250);
+  border-bottom-color: rgb(96, 165, 250);
+}
+
+.notification-tab-badge {
+  display: inline-block;
+  background: rgb(239, 68, 68);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+}
+
+/* News List */
+.notification-news-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notification-news-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgb(51, 65, 85);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: background 0.15s;
+}
+
+.notification-news-item:hover {
+  background: rgba(148, 163, 184, 0.05);
+}
+
+.notification-news-item:last-child {
+  border-bottom: none;
+}
+
+.notification-news-title {
+  font-size: 0.875rem;
+  color: rgb(226, 232, 240);
+  font-weight: 500;
+  margin: 0;
+}
+
+.notification-news-meta {
+  font-size: 0.75rem;
+  color: rgb(100, 116, 139);
+}
+
+.notification-news-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgb(96, 165, 250);
+  text-decoration: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.notification-news-link:hover {
+  color: rgb(147, 197, 253);
+}
+
 /* Settings Modal */
 .settings-modal-container {
   background: rgb(30, 41, 59);
