@@ -239,7 +239,7 @@ export default function MainApp({ session, onLogout }) {
   const { newsItems } = useOSRSNews();
 
   // Track which timer notifications have already fired to avoid duplicates
-  const firedTimerNotifs = useRef(new Set());
+  const firedTimerNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_limit_timers') || '[]')));
   const firedAltTimerNotif = useRef(false);
   const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_milestones') || '[]')));
   const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_news') || '[]')));
@@ -247,6 +247,22 @@ export default function MainApp({ session, onLogout }) {
   const altTimerNotifInitialized = useRef(false);
   const milestoneNotifsInitialized = useRef(false);
   const newsNotifsInitialized = useRef(localStorage.getItem('osrs_news_initialized') === 'true');
+  const timerTimeoutsRef = useRef(new Map());
+
+  // Helper to persist firedTimerNotifs to localStorage
+  const saveFiredTimers = useCallback(() => {
+    localStorage.setItem('osrs_fired_limit_timers', JSON.stringify(Array.from(firedTimerNotifs.current)));
+  }, []);
+
+  // Save when app closes
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.setItem('osrs_last_closed', Date.now().toString());
+      saveFiredTimers();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveFiredTimers]);
 
   // Timer update
   useEffect(() => {
@@ -261,28 +277,102 @@ export default function MainApp({ session, onLogout }) {
     if (!stocks || stocks.length === 0) return;
     const now = Date.now();
 
-    // On first run, seed the fired set with already-expired timers (no notifications)
+    // On first run, initialize timers
     if (!timerNotifsInitialized.current) {
       timerNotifsInitialized.current = true;
+
+      // Check if app was closed > 4 hours
+      const lastClosedTime = localStorage.getItem('osrs_last_closed');
+      const closedTimeMs = lastClosedTime ? parseInt(lastClosedTime) : 0;
+      const closedDuration = closedTimeMs ? now - closedTimeMs : 0;
+      const fourHours = 4 * 60 * 60 * 1000;
+      const shouldCheckExpiredTimers = closedDuration === 0 || closedDuration <= fourHours;
+
+      // Notify only for timers that expired WHILE offline, not old expired timers
+      if (shouldCheckExpiredTimers) {
+        stocks.forEach(stock => {
+          if (
+            stock.timerEndTime &&
+            stock.timerEndTime > closedTimeMs && // Timer was active when we closed
+            stock.timerEndTime <= now && // But expired while we were offline
+            !firedTimerNotifs.current.has(stock.id)
+          ) {
+            firedTimerNotifs.current.add(stock.id);
+            addNotification('limitTimer', `${stock.name}: GE buy limit reset`, { page: 'trade', stockId: stock.id });
+          }
+        });
+      }
+
+      // Seed all currently-expired timers as already notified (to avoid spam)
       stocks.forEach(stock => {
         if (stock.timerEndTime && stock.timerEndTime <= now) {
           firedTimerNotifs.current.add(stock.id);
         }
       });
+
+      saveFiredTimers();
+
+      // Set up timeouts for active timers
+      stocks.forEach(stock => {
+        if (stock.timerEndTime && stock.timerEndTime > now) {
+          const timeUntilExpiry = stock.timerEndTime - now;
+          const timeoutId = setTimeout(() => {
+            if (!firedTimerNotifs.current.has(stock.id)) {
+              firedTimerNotifs.current.add(stock.id);
+              addNotification('limitTimer', `${stock.name}: GE buy limit reset`, { page: 'trade', stockId: stock.id });
+              saveFiredTimers();
+            }
+          }, timeUntilExpiry);
+          timerTimeoutsRef.current.set(stock.id, timeoutId);
+        }
+      });
+
       return;
     }
 
+    // Update timeouts: clear deleted stocks, add new ones, update changed timers
+    const currentStockIds = new Set(stocks.map(s => s.id));
+    const trackedStockIds = timerTimeoutsRef.current.keys();
+
+    // Clear timeouts for deleted stocks
+    for (const stockId of trackedStockIds) {
+      if (!currentStockIds.has(stockId)) {
+        clearTimeout(timerTimeoutsRef.current.get(stockId));
+        timerTimeoutsRef.current.delete(stockId);
+      }
+    }
+
+    // Update or create timeouts for active timers
     stocks.forEach(stock => {
-      if (
-        stock.timerEndTime &&
-        stock.timerEndTime <= now &&
-        !firedTimerNotifs.current.has(stock.id)
-      ) {
-        firedTimerNotifs.current.add(stock.id);
-        addNotification('limitTimer', `${stock.name}: GE buy limit reset`, { page: 'trade', stockId: stock.id });
+      if (stock.timerEndTime && stock.timerEndTime > now) {
+        const timeUntilExpiry = stock.timerEndTime - now;
+
+        // Clear old timeout if timer was reset
+        if (timerTimeoutsRef.current.has(stock.id)) {
+          clearTimeout(timerTimeoutsRef.current.get(stock.id));
+        }
+
+        const timeoutId = setTimeout(() => {
+          if (!firedTimerNotifs.current.has(stock.id)) {
+            firedTimerNotifs.current.add(stock.id);
+            addNotification('limitTimer', `${stock.name}: GE buy limit reset`, { page: 'trade', stockId: stock.id });
+            saveFiredTimers();
+          }
+        }, timeUntilExpiry);
+        timerTimeoutsRef.current.set(stock.id, timeoutId);
+      } else if (timerTimeoutsRef.current.has(stock.id)) {
+        // Stock exists but timer expired or was cleared, remove the timeout
+        clearTimeout(timerTimeoutsRef.current.get(stock.id));
+        timerTimeoutsRef.current.delete(stock.id);
       }
     });
-  }, [currentTime, stocks, addNotification]);
+
+    // Cleanup only on unmount
+    return () => {
+      timerTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+      timerTimeoutsRef.current.clear();
+    };
+  }, [stocks, addNotification, saveFiredTimers]);
 
   // Detect alt account timer expiration
   useEffect(() => {
@@ -637,6 +727,7 @@ export default function MainApp({ session, onLogout }) {
       // Reset notification after successful update so it can fire when the new timer expires
       if (startTimer) {
         firedTimerNotifs.current.delete(selectedStock.id);
+        saveFiredTimers();
       }
       highlightRow(selectedStock.id);
       setShowBuyModal(false);
