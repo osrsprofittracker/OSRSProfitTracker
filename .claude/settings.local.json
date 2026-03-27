@@ -34,7 +34,8 @@
       "Bash(gh pr:*)",
       "Bash(git fetch:*)",
       "Bash(git pull:*)",
-      "Skill(pr)"
+      "Skill(pr)",
+      "Bash(git:*)"
     ]
   }
 }
