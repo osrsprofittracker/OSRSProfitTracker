@@ -1,6 +1,19 @@
-export const CURRENT_VERSION = "2.3.0";
+export const CURRENT_VERSION = "2.4.0";
 
 export const changelog = [
+  {
+    version: "2.4.0",
+    date: "2026-03-27",
+    changes: [
+      { type: "new", text: "Notification Center — a bell icon in the top bar opens a notification inbox with read/unread state, dismiss, and clear all" },
+      { type: "new", text: "GE limit timer notifications — get notified when a GE buy limit resets, clicking the notification navigates to and highlights the stock" },
+      { type: "new", text: "Alt account timer notifications — receive an alert when a timed alt account session ends" },
+      { type: "new", text: "Milestone notifications — a notification fires when a GP milestone is reached, linking to the Home page" },
+      { type: "new", text: "OSRS News tab — the notification panel includes a live feed of official OSRS blog posts, cached server-side to reduce external requests" },
+      { type: "new", text: "Notification settings — per-type controls for enabled state, browser push notifications, and sound with a sound picker" },
+      { type: "fix", text: "Category quick-nav panel no longer clips long category names — panel widened and hover zone extended to full height" },
+    ],
+  },
   {
     version: "2.3.0",
     date: "2026-03-21",
