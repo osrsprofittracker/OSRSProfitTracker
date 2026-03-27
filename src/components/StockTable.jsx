@@ -364,7 +364,7 @@ function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onC
       <button className="btn btn-sell btn-sm" onClick={() => onSell(stock)}>
         Sell
       </button>
-      <button className="btn btn-purple btn-sm" onClick={() => onRemove(stock)}>
+      <button className="btn btn-remove btn-sm" onClick={() => onRemove(stock)}>
         Remove
       </button>
       <button className="btn btn-blue btn-sm" onClick={() => onCalculate(stock)}>
