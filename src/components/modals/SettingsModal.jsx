@@ -386,6 +386,7 @@ const NOTIFICATION_TYPES = [
   { key: 'altAccountTimer', label: 'Alt Account Timer', description: 'Get notified when your alt account timer is ready' },
   { key: 'milestones', label: 'Milestones', description: 'Get notified when you reach a profit milestone' },
   { key: 'osrsNews', label: 'OSRS News', description: 'Get notified when new OSRS blog posts are published' },
+  { key: 'jmodReddit', label: 'Jmod Reddit', description: 'Get notified when a Jagex Moderator comments on r/2007scape' },
 ];
 
 function NotificationsTab({ notificationPreferences, onNotificationTypeChange }) {

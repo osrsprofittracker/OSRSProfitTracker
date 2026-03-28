@@ -15,3 +15,7 @@
    [[scheduled-functions]]
      function = "osrs-news-cache"
      schedule = "*/1 * * * *"
+
+   [[scheduled-functions]]
+     function = "jmod-comments-cache"
+     schedule = "*/1 * * * *"

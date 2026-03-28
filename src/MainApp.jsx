@@ -17,6 +17,7 @@ import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEPrices } from './hooks/useGEPrices';
 import { useNotifications } from './hooks/useNotifications';
 import { useOSRSNews } from './hooks/useOSRSNews';
+import { useJmodComments } from './hooks/useJmodComments';
 import CategoryQuickNav from './components/CategoryQuickNav';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
 import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
@@ -239,16 +240,19 @@ export default function MainApp({ session, onLogout }) {
   } = useNotifications(notificationPreferences);
 
   const { newsItems } = useOSRSNews();
+  const { jmodComments } = useJmodComments();
 
   // Track which timer notifications have already fired to avoid duplicates
   const firedTimerNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_limit_timers') || '[]')));
   const firedAltTimerNotif = useRef(false);
   const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_milestones') || '[]')));
   const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_news') || '[]')));
+  const seenJmodIds = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_jmod') || '[]')));
   const timerNotifsInitialized = useRef(false);
   const altTimerNotifInitialized = useRef(false);
   const milestoneNotifsInitialized = useRef(false);
   const newsNotifsInitialized = useRef(localStorage.getItem('osrs_news_initialized') === 'true');
+  const jmodNotifsInitialized = useRef(localStorage.getItem('osrs_jmod_initialized') === 'true');
   const timerTimeoutsRef = useRef(new Map());
 
   // Helper to persist firedTimerNotifs to localStorage
@@ -653,6 +657,34 @@ export default function MainApp({ session, onLogout }) {
       localStorage.setItem('osrs_seen_news', JSON.stringify([...seenNewsGuids.current]));
     }
   }, [newsItems, addNotification]);
+
+  // Jmod Reddit notification effect
+  useEffect(() => {
+    if (!jmodComments || jmodComments.length === 0) return;
+
+    if (!jmodNotifsInitialized.current) {
+      jmodNotifsInitialized.current = true;
+      localStorage.setItem('osrs_jmod_initialized', 'true');
+      jmodComments.forEach(c => seenJmodIds.current.add(c.id));
+      localStorage.setItem('osrs_seen_jmod', JSON.stringify([...seenJmodIds.current]));
+      return;
+    }
+
+    let changed = false;
+    jmodComments.forEach(c => {
+      if (!seenJmodIds.current.has(c.id)) {
+        seenJmodIds.current.add(c.id);
+        changed = true;
+        addNotification('jmodReddit', `${c.author}: ${c.body.slice(0, 80)}`, {
+          externalUrl: `https://www.reddit.com${c.permalink}`,
+        });
+      }
+    });
+
+    if (changed) {
+      localStorage.setItem('osrs_seen_jmod', JSON.stringify([...seenJmodIds.current]));
+    }
+  }, [jmodComments, addNotification]);
 
   useEffect(() => {
     const storageKey = `lastSeenVersion_${userId}`;
@@ -1369,6 +1401,8 @@ export default function MainApp({ session, onLogout }) {
             onClearAll={clearAllNotifications}
             onNavigate={handleNotificationNavigate}
             newsItems={newsItems}
+            jmodComments={jmodComments}
+            newJmodCount={notifications.filter(n => n.type === 'jmodReddit' && !n.read).length}
           />
           <div className="user-dropdown-wrapper">
             <button
