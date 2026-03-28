@@ -2,9 +2,21 @@ import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { playNotificationSound, playPresetPreview, SOUND_PRESETS } from '../../hooks/useNotifications';
 
-function ProfitCheckbox({ profit, checked, onChange }) {
-  const [showTooltip, setShowTooltip] = useState(false);
+function SettingTooltip({ text, children }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span
+      className="setting-tooltip-wrapper"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && <div className="tooltip setting-tooltip">{text}</div>}
+    </span>
+  );
+}
 
+function ProfitCheckbox({ profit, checked, onChange }) {
   return (
     <label className="checkbox-label">
       <input
@@ -13,15 +25,9 @@ function ProfitCheckbox({ profit, checked, onChange }) {
         onChange={onChange}
         className="checkbox-input"
       />
-      <span style={{ fontSize: '0.875rem', flex: 1 }}>{profit.label}</span>
-      <div
-        style={{ position: 'relative', display: 'inline-block' }}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        <span className="info-icon">i</span>
-        {showTooltip && <div className="tooltip">{profit.info}</div>}
-      </div>
+      <SettingTooltip text={profit.info}>
+        <span style={{ fontSize: '0.875rem', flex: 1 }}>{profit.label}</span>
+      </SettingTooltip>
     </label>
   );
 }
@@ -42,18 +48,18 @@ function GeneralTab({
   onChangePassword
 }) {
   const columns = [
-    { key: 'status', label: 'Status' },
+    { key: 'status', label: 'Status', tooltip: "Shows item status: ⏰Timer (4H limit active), ✓OK (holding at desired stock), 🔒Hold (excess stock), 🔴Low (below desired stock)." },
     { key: 'avgBuy', label: 'Avg Buy' },
     { key: 'avgSell', label: 'Avg Sell' },
     { key: 'profit', label: 'Profit' },
-    { key: 'desiredStock', label: 'Desired Stock' },
+    { key: 'desiredStock', label: 'Desired Stock', tooltip: 'The target quantity you want to hold. Used to calculate how much more to buy.' },
     { key: 'limit4h', label: '4H Limit' },
     { key: 'geHigh', label: 'GE High' },
     { key: 'geLow', label: 'GE Low' },
-    { key: 'unrealizedProfit', label: 'Unrealized Profit' },
+    { key: 'unrealizedProfit', label: 'Unrealized Profit', tooltip: 'Estimated profit if all current stock were sold now at the live GE high price, after 2% GE tax.' },
     { key: 'investmentStartDate', label: 'Investment Start Date' },
-    { key: 'notes', label: 'Notes' },
-    { key: 'membershipIcon', label: 'F2P / Members Icon (★)' }
+    { key: 'notes', label: 'Notes', tooltip: 'A free-text note you can attach to each item for personal reference.' },
+    { key: 'membershipIcon', label: 'F2P / Members Icon (★)', tooltip: 'Shows a star icon (★) indicating whether the item is F2P or members-only.' }
   ];
 
   return (
@@ -124,7 +130,11 @@ function GeneralTab({
                   }
                   style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                 />
-                <span style={{ fontSize: '0.875rem' }}>{col.label}</span>
+                <span style={{ fontSize: '0.875rem' }}>
+                  {col.tooltip ? (
+                    <SettingTooltip text={col.tooltip}>{col.label}</SettingTooltip>
+                  ) : col.label}
+                </span>
               </label>
             ))}
           </div>
@@ -188,12 +198,9 @@ function GeneralTab({
             onChange={(e) => onShowUnrealisedProfitStatsChange(e.target.checked)}
             style={{ width: '18px', height: '18px', cursor: 'pointer' }}
           />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Show Unrealised Profit in Portfolio Stats</div>
-            <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)' }}>
-              Display total estimated unrealised profit in the top summary cards
-            </div>
-          </div>
+          <SettingTooltip text="Display total estimated unrealised profit in the top summary cards">
+            <div style={{ fontSize: '0.875rem' }}>Show Unrealised Profit in Portfolio Stats</div>
+          </SettingTooltip>
         </label>
       </div>
 
@@ -219,12 +226,9 @@ function GeneralTab({
             onChange={(e) => onShowCategoryStatsChange(e.target.checked)}
             style={{ width: '18px', height: '18px', cursor: 'pointer' }}
           />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Show Category Statistics</div>
-            <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)' }}>
-              Display stock status counts (⏰Timer, ✓OK, 🔒Hold, 🔴Low) next to category names
-            </div>
-          </div>
+          <SettingTooltip text="Display stock status counts (⏰Timer, ✓OK, 🔒Hold, 🔴Low) next to category names">
+            <div style={{ fontSize: '0.875rem' }}>Show Category Statistics</div>
+          </SettingTooltip>
         </label>
         <label
           style={{
@@ -244,12 +248,9 @@ function GeneralTab({
             onChange={(e) => onShowCategoryUnrealisedProfitChange(e.target.checked)}
             style={{ width: '18px', height: '18px', cursor: 'pointer' }}
           />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Show Unrealised Profit in Category Stats</div>
-            <div style={{ fontSize: '0.75rem', color: 'rgb(156, 163, 175)' }}>
-              Display estimated unrealised profit per category based on live GE high prices
-            </div>
-          </div>
+          <SettingTooltip text="Display estimated unrealised profit per category based on live GE high prices">
+            <div style={{ fontSize: '0.875rem' }}>Show Unrealised Profit in Category Stats</div>
+          </SettingTooltip>
         </label>
       </div>
 

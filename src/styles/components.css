@@ -229,6 +229,18 @@
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 }
 
+.setting-tooltip-wrapper {
+  position: relative;
+  cursor: help;
+}
+
+.setting-tooltip {
+  white-space: normal;
+  width: 16rem;
+  right: auto;
+  left: 0;
+}
+
 /* Category Section */
 .category-header {
   display: flex;
