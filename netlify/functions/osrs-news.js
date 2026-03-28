@@ -1,33 +1,41 @@
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+const { readFileSync } = require('fs');
+const { resolve } = require('path');
+const { getStore } = require('@netlify/blobs');
+
+function loadEnvToken() {
+  try {
+    const envPath = resolve(process.cwd(), '.env');
+    const content = readFileSync(envPath, 'utf8');
+    const match = content.match(/^NETLIFY_AUTH_TOKEN=(.+)$/m);
+    return match?.[1]?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function getNewsStore() {
+  const siteID = process.env.SITE_ID || process.env.NETLIFY_SITE_ID;
+  const token = process.env.NETLIFY_AUTH_TOKEN || loadEnvToken();
+  if (siteID && token) {
+    return getStore({ name: 'osrs-news', siteID, token });
+  }
+  return getStore('osrs-news');
+}
 
 exports.handler = async () => {
   try {
-    // Fetch from Supabase cache
-    const cacheResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/news_cache?id=eq.1&select=cached_articles`,
-      {
+    const store = getNewsStore();
+    const cached = await store.get('cache', { type: 'json' });
+
+    if (cached && cached.length > 0) {
+      return {
+        statusCode: 200,
         headers: {
           'Content-Type': 'application/json',
-          apikey: ANON_KEY,
-          Authorization: `Bearer ${ANON_KEY}`,
+          'Access-Control-Allow-Origin': '*',
         },
-      }
-    );
-
-    if (cacheResponse.ok) {
-      const data = await cacheResponse.json();
-      if (data.length > 0 && data[0].cached_articles) {
-        const articles = data[0].cached_articles;
-        return {
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-          body: JSON.stringify(articles),
-        };
-      }
+        body: JSON.stringify(cached),
+      };
     }
 
     // Fallback: fetch directly if cache is empty
@@ -70,15 +78,8 @@ exports.handler = async () => {
       const pubDate = dateMatch[1];
       const guid = link.split('?')[0];
 
-      items.push({
-        guid,
-        title,
-        link,
-        pubDate,
-      });
+      items.push({ guid, title, link, pubDate });
     }
-
-    console.log(`Found ${items.length} articles (fallback)`);
 
     return {
       statusCode: 200,
