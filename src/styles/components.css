@@ -2659,6 +2659,21 @@
   color: rgb(220, 38, 38);
 }
 
+.notification-action-icon-btn {
+  background: transparent;
+  border: none;
+  color: rgb(100, 116, 139);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.notification-action-icon-btn:hover {
+  color: rgb(226, 232, 240);
+}
+
 /* Notification Tabs */
 .notification-tab-bar {
   display: flex;
@@ -2754,6 +2769,133 @@
 
 .notification-news-link:hover {
   color: rgb(147, 197, 253);
+}
+
+/* Inbox Filter Chips */
+.notification-inbox-filters {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgb(51, 65, 85);
+  flex-wrap: wrap;
+}
+
+.notification-inbox-filter-chip {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: rgb(148, 163, 184);
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.notification-inbox-filter-chip:hover {
+  color: rgb(226, 232, 240);
+  background: rgba(148, 163, 184, 0.15);
+}
+
+.notification-inbox-filter-chip-active {
+  color: rgb(96, 165, 250);
+  background: rgba(96, 165, 250, 0.15);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+/* News Sub-filter Bar */
+.notification-news-filter {
+  display: flex;
+  border-bottom: 1px solid rgb(51, 65, 85);
+  padding: 0 0.5rem;
+}
+
+.notification-news-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(148, 163, 184);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.notification-news-filter-btn:hover {
+  color: rgb(226, 232, 240);
+}
+
+.notification-news-filter-btn-active {
+  color: rgb(226, 232, 240);
+  border-bottom-color: rgb(96, 165, 250);
+}
+
+.notification-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(239, 68, 68);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  margin-left: 0.25rem;
+}
+
+/* Jmod Comment Items */
+.notification-jmod-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgb(51, 65, 85);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.notification-jmod-item:hover {
+  background: rgba(148, 163, 184, 0.05);
+}
+
+.notification-jmod-item:last-child {
+  border-bottom: none;
+}
+
+.notification-jmod-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-jmod-author {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgb(255, 149, 0);
+}
+
+.notification-jmod-context {
+  font-size: 0.7rem;
+  color: rgb(100, 116, 139);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notification-jmod-body {
+  font-size: 0.8rem;
+  color: rgb(203, 213, 225);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Settings Modal */

@@ -7,6 +7,7 @@ const TYPE_PREF_KEY = {
   altAccountTimer: 'altAccountTimer',
   milestone: 'milestones',
   osrsNews: 'osrsNews',
+  jmodReddit: 'jmodReddit',
 };
 
 // --- WAV generation helpers ---

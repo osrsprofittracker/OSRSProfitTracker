@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink } from 'lucide-react';
+import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, Filter } from 'lucide-react';
 
 function getTimeAgo(timestamp) {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -22,6 +22,8 @@ function getTypeIcon(type) {
       return <Trophy size={16} />;
     case 'osrsNews':
       return <Newspaper size={16} />;
+    case 'jmodReddit':
+      return <MessageSquare size={16} />;
     default:
       return <Bell size={16} />;
   }
@@ -37,6 +39,8 @@ function getTypeColor(type) {
       return 'var(--notification-milestone-color, rgb(34, 197, 94))';
     case 'osrsNews':
       return 'var(--notification-news-color, rgb(14, 165, 233))';
+    case 'jmodReddit':
+      return 'var(--notification-jmod-color, rgb(255, 149, 0))';
     default:
       return 'rgb(148, 163, 184)';
   }
@@ -51,10 +55,18 @@ export default function NotificationCenter({
   onClearAll,
   onNavigate,
   newsItems = [],
+  jmodComments = [],
+  newJmodCount = 0,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('inbox');
+  const [newsFilter, setNewsFilter] = useState('osrsNews');
+  const [inboxFilter, setInboxFilter] = useState('all');
   const wrapperRef = useRef(null);
+
+  const filteredNotifications = inboxFilter === 'all'
+    ? notifications
+    : notifications.filter(n => n.type === inboxFilter);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -97,6 +109,7 @@ export default function NotificationCenter({
                 onClick={() => setActiveTab('news')}
               >
                 News
+                {newJmodCount > 0 && <span className="notification-tab-badge">{newJmodCount > 99 ? '99+' : newJmodCount}</span>}
               </button>
             </div>
             {activeTab === 'inbox' && notifications.length > 0 && (
@@ -123,11 +136,31 @@ export default function NotificationCenter({
 
           {activeTab === 'inbox' && (
             <>
-              {notifications.length === 0 ? (
-                <p className="notification-empty">No notifications</p>
+              {notifications.length > 0 && (
+                <div className="notification-inbox-filters">
+                  {[
+                    { key: 'all', label: 'All' },
+                    { key: 'limitTimer', label: 'Timers' },
+                    { key: 'altAccountTimer', label: 'Alt Timer' },
+                    { key: 'milestone', label: 'Milestones' },
+                    { key: 'osrsNews', label: 'News' },
+                    { key: 'jmodReddit', label: 'Jmod' },
+                  ].map(f => (
+                    <button
+                      key={f.key}
+                      className={`notification-inbox-filter-chip ${inboxFilter === f.key ? 'notification-inbox-filter-chip-active' : ''}`}
+                      onClick={() => setInboxFilter(f.key)}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {filteredNotifications.length === 0 ? (
+                <p className="notification-empty">{notifications.length === 0 ? 'No notifications' : 'No notifications in this category'}</p>
               ) : (
                 <div className="notification-list">
-                  {notifications.map((n) => (
+                  {filteredNotifications.map((n) => (
                     <div
                       key={n.id}
                       className={`notification-item ${n.read ? 'notification-item-read' : 'notification-item-unread'} ${n.navigationTarget ? 'notification-item-clickable' : ''}`}
@@ -149,8 +182,17 @@ export default function NotificationCenter({
                         <div className="notification-item-message">{n.message}</div>
                         <div className="notification-item-time">{getTimeAgo(n.timestamp)}</div>
                       </div>
+                      {!n.read && (
+                        <button
+                          className="notification-action-icon-btn"
+                          onClick={(e) => { e.stopPropagation(); onMarkAsRead(n.id); }}
+                          title="Mark as read"
+                        >
+                          <Check size={14} />
+                        </button>
+                      )}
                       <button
-                        className="notification-dismiss-btn"
+                        className="notification-action-icon-btn"
                         onClick={(e) => { e.stopPropagation(); onDismiss(n.id); }}
                         title="Dismiss"
                       >
@@ -165,25 +207,77 @@ export default function NotificationCenter({
 
           {activeTab === 'news' && (
             <>
-              {newsItems.length === 0 ? (
-                <p className="notification-empty">No news yet</p>
-              ) : (
-                <div className="notification-news-list">
-                  {newsItems.slice(0, 10).map((item) => (
-                    <div key={item.guid} className="notification-news-item">
-                      <h4 className="notification-news-title">{item.title}</h4>
-                      <div className="notification-news-meta">{getTimeAgo(new Date(item.pubDate).getTime())}</div>
-                      <a
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="notification-news-link"
-                      >
-                        Read more <ExternalLink size={12} />
-                      </a>
+              <div className="notification-news-filter">
+                <button
+                  className={`notification-news-filter-btn ${newsFilter === 'osrsNews' ? 'notification-news-filter-btn-active' : ''}`}
+                  onClick={() => setNewsFilter('osrsNews')}
+                >
+                  <Newspaper size={14} /> OSRS News
+                </button>
+                <button
+                  className={`notification-news-filter-btn ${newsFilter === 'jmodReddit' ? 'notification-news-filter-btn-active' : ''}`}
+                  onClick={() => setNewsFilter('jmodReddit')}
+                >
+                  <MessageSquare size={14} /> Jmod Reddit
+                  {newJmodCount > 0 && <span className="notification-filter-badge">{newJmodCount}</span>}
+                </button>
+              </div>
+
+              {newsFilter === 'osrsNews' && (
+                <>
+                  {newsItems.length === 0 ? (
+                    <p className="notification-empty">No news yet</p>
+                  ) : (
+                    <div className="notification-news-list">
+                      {newsItems.slice(0, 10).map((item) => (
+                        <div key={item.guid} className="notification-news-item">
+                          <h4 className="notification-news-title">{item.title}</h4>
+                          <div className="notification-news-meta">{getTimeAgo(new Date(item.pubDate).getTime())}</div>
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="notification-news-link"
+                          >
+                            Read more <ExternalLink size={12} />
+                          </a>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
+              )}
+
+              {newsFilter === 'jmodReddit' && (
+                <>
+                  {jmodComments.length === 0 ? (
+                    <p className="notification-empty">No Jmod comments yet</p>
+                  ) : (
+                    <div className="notification-news-list">
+                      {jmodComments.slice(0, 15).map((comment) => (
+                        <a
+                          key={comment.id}
+                          href={`https://www.reddit.com${comment.permalink}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="notification-jmod-item"
+                        >
+                          <div className="notification-jmod-header">
+                            <span className="notification-jmod-author">{comment.author}</span>
+                            <span className="notification-news-meta">
+                              {getTimeAgo(comment.created_utc * 1000)}
+                            </span>
+                          </div>
+                          <div className="notification-jmod-context">{comment.link_title}</div>
+                          <div className="notification-jmod-body">{comment.body}</div>
+                          <span className="notification-news-link">
+                            View on Reddit <ExternalLink size={12} />
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
