@@ -77,7 +77,7 @@ export default function RemoveStockModal({ stock, onConfirm, onCancel, isSubmitt
               Avg Buy Price:
             </span>
             <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'white' }}>
-              {formatNumber(avgBuy)}
+              {formatNumber(avgBuy, 'full')}
             </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -85,7 +85,7 @@ export default function RemoveStockModal({ stock, onConfirm, onCancel, isSubmitt
               Cost Basis Removed:
             </span>
             <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgb(248, 113, 113)' }}>
-              {formatNumber(costToRemove)}
+              {formatNumber(costToRemove, 'full')}
             </span>
           </div>
         </div>
