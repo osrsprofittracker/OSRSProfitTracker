@@ -1,5 +1,59 @@
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const { readFileSync } = require('fs');
+const { resolve } = require('path');
+const { getStore } = require('@netlify/blobs');
+
+function loadEnvToken() {
+  try {
+    const envPath = resolve(process.cwd(), '.env');
+    const content = readFileSync(envPath, 'utf8');
+    const match = content.match(/^NETLIFY_AUTH_TOKEN=(.+)$/m);
+    return match?.[1]?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function getNewsStore() {
+  const siteID = process.env.SITE_ID || process.env.NETLIFY_SITE_ID;
+  const token = process.env.NETLIFY_AUTH_TOKEN || loadEnvToken();
+  if (siteID && token) {
+    return getStore({ name: 'osrs-news', siteID, token });
+  }
+  return getStore('osrs-news');
+}
+
+function parseArticles(html) {
+  const items = [];
+  const articleRegex = /<article class='news-list-article'>([\s\S]*?)<\/article>/g;
+  let match;
+
+  while ((match = articleRegex.exec(html)) !== null) {
+    const articleHtml = match[1];
+
+    const titleMatch = /<a class='news-list-article__title-link' href='([^']+)'>([^<]+)<\/a>/.exec(articleHtml);
+    if (!titleMatch) continue;
+
+    const link = titleMatch[1];
+    let title = titleMatch[2];
+
+    title = title
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+
+    const dateMatch = /<time class='news-list-article__date' datetime='([^']+)'>/.exec(articleHtml);
+    if (!dateMatch) continue;
+
+    const pubDate = dateMatch[1];
+    const guid = link.split('?')[0];
+
+    items.push({ guid, title, link, pubDate });
+  }
+
+  return items;
+}
 
 exports.handler = async () => {
   try {
@@ -13,83 +67,10 @@ exports.handler = async () => {
     }
 
     const html = await response.text();
-    const items = [];
+    const items = parseArticles(html);
 
-    const articleRegex = /<article class='news-list-article'>([\s\S]*?)<\/article>/g;
-    let match;
-
-    while ((match = articleRegex.exec(html)) !== null) {
-      const articleHtml = match[1];
-
-      const titleMatch = /<a class='news-list-article__title-link' href='([^']+)'>([^<]+)<\/a>/.exec(articleHtml);
-      if (!titleMatch) continue;
-
-      const link = titleMatch[1];
-      let title = titleMatch[2];
-
-      title = title
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-
-      const dateMatch = /<time class='news-list-article__date' datetime='([^']+)'>/.exec(articleHtml);
-      if (!dateMatch) continue;
-
-      const pubDate = dateMatch[1];
-      const guid = link.split('?')[0];
-
-      items.push({
-        guid,
-        title,
-        link,
-        pubDate,
-      });
-    }
-
-    // Update Supabase cache
-    const cacheResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/news_cache?id=eq.1`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({
-          cached_articles: items,
-          last_updated: new Date().toISOString(),
-        }),
-      }
-    );
-
-    if (cacheResponse.ok) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ success: true, count: items.length }),
-      };
-    }
-
-    // Try INSERT if row doesn't exist
-    const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/news_cache`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-      },
-      body: JSON.stringify({
-        id: 1,
-        cached_articles: items,
-        last_updated: new Date().toISOString(),
-      }),
-    });
-
-    if (!insertResponse.ok) {
-      throw new Error(`Failed to cache articles: ${insertResponse.status}`);
-    }
+    const store = getNewsStore();
+    await store.setJSON('cache', items);
 
     return {
       statusCode: 200,
@@ -104,5 +85,5 @@ exports.handler = async () => {
 };
 
 exports.config = {
-  schedule: '*/1 * * * *', // Every minute
+  schedule: '*/1 * * * *',
 };
