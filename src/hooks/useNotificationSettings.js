@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
-const NOTIFICATION_TYPES = ['limitTimer', 'altAccountTimer', 'milestones', 'osrsNews'];
+const NOTIFICATION_TYPES = ['limitTimer', 'altAccountTimer', 'milestones', 'osrsNews', 'jmodReddit', 'priceAlert'];
 
 const DEFAULT_TYPE_SETTINGS = {
   limitTimer: { enabled: false, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
   altAccountTimer: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
   milestones: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
   osrsNews: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
+  jmodReddit: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
+  priceAlert: { enabled: true, browserPush: false, sound: false, soundChoice: 'alert', customSoundUri: null },
 };
 
 function rowToPrefs(row) {

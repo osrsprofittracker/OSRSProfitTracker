@@ -154,13 +154,13 @@ export default function HistoryPage({
             <div className="history-filter-field">
               <label className="history-filter-label">Type</label>
               <div className="history-filter-group">
-                {['all', 'buy', 'sell'].map(f => (
+                {['all', 'buy', 'sell', 'remove'].map(f => (
                   <button
                     key={f}
                     className={`history-filter-btn history-filter-btn--${f} ${localFilters.type === f ? 'history-filter-btn--active' : ''}`}
                     onClick={() => setLocalFilters(prev => ({ ...prev, type: f }))}
                   >
-                    {f === 'all' ? 'All' : f === 'buy' ? 'Buys' : 'Sales'}
+                    {f === 'all' ? 'All' : f === 'buy' ? 'Buys' : f === 'sell' ? 'Sales' : 'Removes'}
                   </button>
                 ))}
               </div>

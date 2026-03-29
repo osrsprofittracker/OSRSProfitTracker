@@ -1,12 +1,16 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
-let notifCounter = 0;
+let notifCounter = Date.now();
 
 const TYPE_PREF_KEY = {
   limitTimer: 'limitTimer',
   altAccountTimer: 'altAccountTimer',
   milestone: 'milestones',
   osrsNews: 'osrsNews',
+  jmodReddit: 'jmodReddit',
+  priceAlert: 'priceAlert',
+  priceAlertHigh: 'priceAlert',
+  priceAlertLow: 'priceAlert',
 };
 
 // --- WAV generation helpers ---

@@ -17,6 +17,7 @@ import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEPrices } from './hooks/useGEPrices';
 import { useNotifications } from './hooks/useNotifications';
 import { useOSRSNews } from './hooks/useOSRSNews';
+import { useJmodComments } from './hooks/useJmodComments';
 import CategoryQuickNav from './components/CategoryQuickNav';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
 import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
@@ -33,6 +34,7 @@ import ChangePasswordModal from './components/modals/ChangePasswordModal';
 import ModalContainer from './components/modals/ModalContainer';
 import BuyModal from './components/modals/BuyModal';
 import SellModal from './components/modals/SellModal';
+import RemoveStockModal from './components/modals/RemoveStockModal';
 import AdjustModal from './components/modals/AdjustModal';
 import DeleteModal from './components/modals/DeleteModal';
 import NewStockModal from './components/modals/NewStockModal';
@@ -44,7 +46,10 @@ import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
 import ChangelogModal from './components/modals/ChangelogModal';
+import PriceAlertModal from './components/modals/PriceAlertModal';
 import { CURRENT_VERSION } from './data/changelog';
+import { usePriceAlerts } from './hooks/usePriceAlerts';
+import { usePriceAlertChecker } from './hooks/usePriceAlertChecker';
 
 import {
   STORAGE_KEY,
@@ -99,6 +104,7 @@ export default function MainApp({ session, onLogout }) {
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
   const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
   const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestones(userId);
+  const { alerts: priceAlerts, allAlerts: allPriceAlerts, loading: priceAlertsLoading, saveAlert: savePriceAlert, dismissAlert: dismissPriceAlert, deactivateAlert: deactivatePriceAlert, updateLastChecked: updatePriceAlertLastChecked, refetch: refetchPriceAlerts } = usePriceAlerts(userId);
 
   // Destructure profits
   const { dumpProfit, referralProfit, bondsProfit } = profits;
@@ -166,6 +172,7 @@ export default function MainApp({ session, onLogout }) {
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [showAdjustModal, setShowAdjustModal] = useState(false);
@@ -186,6 +193,8 @@ export default function MainApp({ session, onLogout }) {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showTimeCalculatorModal, setShowTimeCalculatorModal] = useState(false);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
+  const [showPriceAlertModal, setShowPriceAlertModal] = useState(false);
+  const [selectedAlertItem, setSelectedAlertItem] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const [selectedStock, setSelectedStock] = useState(null);
@@ -225,6 +234,27 @@ export default function MainApp({ session, onLogout }) {
     await refetch();
   };
 
+  // Price alert handlers
+  const handleOpenPriceAlert = (stockOrItem) => {
+    const itemId = stockOrItem.itemId ?? stockOrItem.itemId;
+    const itemName = stockOrItem.itemName ?? stockOrItem.name;
+    if (!itemId) return;
+    setSelectedAlertItem({ itemId, itemName });
+    setShowPriceAlertModal(true);
+  };
+
+  const handleSavePriceAlert = async (itemId, itemName, highThreshold, lowThreshold) => {
+    await savePriceAlert(itemId, itemName, highThreshold, lowThreshold);
+    setShowPriceAlertModal(false);
+    setSelectedAlertItem(null);
+  };
+
+  const handleDeletePriceAlert = async (alertId) => {
+    await dismissPriceAlert(alertId);
+    setShowPriceAlertModal(false);
+    setSelectedAlertItem(null);
+  };
+
   // Notifications
   const {
     notifications,
@@ -237,16 +267,27 @@ export default function MainApp({ session, onLogout }) {
   } = useNotifications(notificationPreferences);
 
   const { newsItems } = useOSRSNews();
+  const { jmodComments } = useJmodComments();
+
+  usePriceAlertChecker({
+    alerts: priceAlerts,
+    gePrices,
+    addNotification,
+    deactivateAlert: deactivatePriceAlert,
+    updateLastChecked: updatePriceAlertLastChecked,
+  });
 
   // Track which timer notifications have already fired to avoid duplicates
   const firedTimerNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_limit_timers') || '[]')));
   const firedAltTimerNotif = useRef(false);
   const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_milestones') || '[]')));
   const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_news') || '[]')));
+  const seenJmodIds = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_jmod') || '[]')));
   const timerNotifsInitialized = useRef(false);
   const altTimerNotifInitialized = useRef(false);
   const milestoneNotifsInitialized = useRef(false);
   const newsNotifsInitialized = useRef(localStorage.getItem('osrs_news_initialized') === 'true');
+  const jmodNotifsInitialized = useRef(localStorage.getItem('osrs_jmod_initialized') === 'true');
   const timerTimeoutsRef = useRef(new Map());
 
   // Helper to persist firedTimerNotifs to localStorage
@@ -652,6 +693,34 @@ export default function MainApp({ session, onLogout }) {
     }
   }, [newsItems, addNotification]);
 
+  // Jmod Reddit notification effect
+  useEffect(() => {
+    if (!jmodComments || jmodComments.length === 0) return;
+
+    if (!jmodNotifsInitialized.current) {
+      jmodNotifsInitialized.current = true;
+      localStorage.setItem('osrs_jmod_initialized', 'true');
+      jmodComments.forEach(c => seenJmodIds.current.add(c.id));
+      localStorage.setItem('osrs_seen_jmod', JSON.stringify([...seenJmodIds.current]));
+      return;
+    }
+
+    let changed = false;
+    jmodComments.forEach(c => {
+      if (!seenJmodIds.current.has(c.id)) {
+        seenJmodIds.current.add(c.id);
+        changed = true;
+        addNotification('jmodReddit', `${c.author}: ${c.body.slice(0, 80)}`, {
+          externalUrl: `https://www.reddit.com${c.permalink}`,
+        });
+      }
+    });
+
+    if (changed) {
+      localStorage.setItem('osrs_seen_jmod', JSON.stringify([...seenJmodIds.current]));
+    }
+  }, [jmodComments, addNotification]);
+
   useEffect(() => {
     const storageKey = `lastSeenVersion_${userId}`;
     const lastSeen = localStorage.getItem(storageKey);
@@ -779,6 +848,38 @@ export default function MainApp({ session, onLogout }) {
       await refetch();
       highlightRow(selectedStock.id);
       setShowSellModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRemoveStock = async (data) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const { shares } = data;
+
+    const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
+    const costToRemove = avgBuy * shares;
+
+    try {
+      await updateStock(selectedStock.id, {
+        shares: selectedStock.shares - shares,
+        totalCost: selectedStock.totalCost - costToRemove,
+      });
+
+      await addTransaction({
+        stockId: selectedStock.id,
+        stockName: selectedStock.name,
+        type: 'remove',
+        shares,
+        price: avgBuy,
+        total: costToRemove,
+        date: new Date().toISOString(),
+      });
+
+      await refetch();
+      highlightRow(selectedStock.id);
+      setShowRemoveModal(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -1035,6 +1136,9 @@ export default function MainApp({ session, onLogout }) {
         break;
       case 'sell':
         setShowSellModal(true);
+        break;
+      case 'remove':
+        setShowRemoveModal(true);
         break;
       case 'adjust':
         setShowAdjustModal(true);
@@ -1332,6 +1436,18 @@ export default function MainApp({ session, onLogout }) {
             onClearAll={clearAllNotifications}
             onNavigate={handleNotificationNavigate}
             newsItems={newsItems}
+            jmodComments={jmodComments}
+            newJmodCount={notifications.filter(n => n.type === 'jmodReddit' && !n.read).length}
+            priceAlerts={priceAlerts}
+            allPriceAlerts={allPriceAlerts}
+            geIconMap={geIconMap}
+            gePrices={gePrices}
+            onEditAlert={(alert) => {
+              setSelectedAlertItem({ itemId: alert.itemId, itemName: alert.itemName });
+              setShowPriceAlertModal(true);
+            }}
+            onDismissAlert={dismissPriceAlert}
+            onNewAlert={() => navigateToPage('graphs')}
           />
           <div className="user-dropdown-wrapper">
             <button
@@ -1430,6 +1546,8 @@ export default function MainApp({ session, onLogout }) {
             userId={userId}
             initialItemId={graphItemId}
             navigateToPage={navigateToPage}
+            priceAlerts={priceAlerts}
+            onPriceAlert={handleOpenPriceAlert}
           />
         ) : (
           <>
@@ -1554,6 +1672,10 @@ export default function MainApp({ session, onLogout }) {
                   setSelectedStock(stock);
                   setShowSellModal(true);
                 }}
+                onRemove={(stock) => {
+                  setSelectedStock(stock);
+                  setShowRemoveModal(true);
+                }}
                 onAdjust={(stock) => {
                   setSelectedStock(stock);
                   setShowAdjustModal(true);
@@ -1589,6 +1711,8 @@ export default function MainApp({ session, onLogout }) {
                 showMembershipIcon={visibleColumns.membershipIcon}
                 showInvestmentDate={tradeMode === 'investment' && visibleColumns.investmentStartDate}
                 onInvestmentDateChange={handleInvestmentDateChange}
+                onPriceAlert={handleOpenPriceAlert}
+                priceAlerts={priceAlerts}
               />
             ))}
 
@@ -1609,6 +1733,15 @@ export default function MainApp({ session, onLogout }) {
                 onConfirm={handleSell}
                 onCancel={() => setShowSellModal(false)}
                 geData={gePrices}
+                isSubmitting={isSubmitting}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showRemoveModal}>
+              <RemoveStockModal
+                stock={selectedStock}
+                onConfirm={handleRemoveStock}
+                onCancel={() => setShowRemoveModal(false)}
                 isSubmitting={isSubmitting}
               />
             </ModalContainer>
@@ -1746,9 +1879,20 @@ export default function MainApp({ session, onLogout }) {
               />
             </ModalContainer>
 
-
           </>
         )}
+
+        <ModalContainer isOpen={showPriceAlertModal}>
+          <PriceAlertModal
+            itemId={selectedAlertItem?.itemId}
+            itemName={selectedAlertItem?.itemName}
+            currentAlert={selectedAlertItem ? priceAlerts[selectedAlertItem.itemId] : null}
+            gePrice={selectedAlertItem ? gePrices[selectedAlertItem.itemId] : null}
+            onSave={handleSavePriceAlert}
+            onDelete={handleDeletePriceAlert}
+            onCancel={() => { setShowPriceAlertModal(false); setSelectedAlertItem(null); }}
+          />
+        </ModalContainer>
 
         <ModalContainer isOpen={showSettingsModal}>
           <SettingsModal

@@ -15,6 +15,7 @@ export default function CategorySection({
   onEditCategory,
   onBuy,
   onSell,
+  onRemove,
   onAdjust,
   onDelete,
   onHistory,
@@ -41,7 +42,9 @@ export default function CategorySection({
   showMembershipIcon = true,
   onArchive,
   showInvestmentDate = false,
-  onInvestmentDateChange
+  onInvestmentDateChange,
+  onPriceAlert,
+  priceAlerts = {},
 }) {
   const categoryStocks = stocks.filter(s => s.category === category);
 
@@ -232,6 +235,7 @@ export default function CategorySection({
             category={category}
             onBuy={onBuy}
             onSell={onSell}
+            onRemove={onRemove}
             onAdjust={onAdjust}
             onDelete={onDelete}
             onHistory={onHistory}
@@ -255,6 +259,8 @@ export default function CategorySection({
             onArchive={onArchive}
             showInvestmentDate={showInvestmentDate}
             onInvestmentDateChange={onInvestmentDateChange}
+            onPriceAlert={onPriceAlert}
+            priceAlerts={priceAlerts}
           />
         </>
       )}

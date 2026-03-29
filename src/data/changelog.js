@@ -1,6 +1,20 @@
-export const CURRENT_VERSION = "2.4.0";
+export const CURRENT_VERSION = "2.5.0";
 
 export const changelog = [
+  {
+    version: "2.5.0",
+    date: "2026-03-29",
+    changes: [
+      { type: "new", text: "Remove Stock button lets you remove shares without selling them, tracked as its own transaction type in recent activity with undo support" },
+      { type: "new", text: "Price alerts let you set a target price on any GE-linked item and get notified when it's reached, including retroactive checking" },
+      { type: "new", text: "Jmod Reddit notifications alert you when Jagex moderators post comments on Reddit" },
+      { type: "new", text: "Hovering over any setting now shows a tooltip explaining what it does" },
+      { type: "improved", text: "Remove modal now displays precise GP amounts instead of rounded values" },
+      { type: "improved", text: "OSRS news cache migrated from Supabase to Netlify Blobs for faster caching" },
+      { type: "fix", text: "False buy limit reset alerts no longer fire incorrectly" },
+      { type: "fix", text: "Notification system rewritten to use efficient timeouts instead of polling, with persistent state across sessions" },
+    ],
+  },
   {
     version: "2.4.0",
     date: "2026-03-27",
