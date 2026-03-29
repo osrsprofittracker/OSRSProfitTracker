@@ -72,15 +72,15 @@ exports.handler = async () => {
     const store = getNewsStore();
     await store.setJSON('cache', items);
 
-    return new Response(JSON.stringify({ success: true, count: items.length }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ success: true, count: items.length }),
+    };
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return {
+      statusCode: 502,
+      body: JSON.stringify({ error: error.message }),
+    };
   }
 };
 
