@@ -12,10 +12,8 @@
      to = "/index.html"
      status = 200
 
-   [[scheduled-functions]]
-     function = "osrs-news-cache"
-     schedule = "*/1 * * * *"
+   [functions."osrs-news-cache"]
+   schedule = "*/1 * * * *"
 
-   [[scheduled-functions]]
-     function = "jmod-comments-cache"
-     schedule = "*/1 * * * *"
+   [functions."jmod-comments-cache"]
+   schedule = "*/1 * * * *"
