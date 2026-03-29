@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, Filter } from 'lucide-react';
+import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, Filter, TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
+import { formatNumber } from '../utils/formatters';
 
 function getTimeAgo(timestamp) {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -24,6 +25,11 @@ function getTypeIcon(type) {
       return <Newspaper size={16} />;
     case 'jmodReddit':
       return <MessageSquare size={16} />;
+    case 'priceAlert':
+    case 'priceAlertHigh':
+      return <TrendingUp size={16} />;
+    case 'priceAlertLow':
+      return <TrendingDown size={16} />;
     default:
       return <Bell size={16} />;
   }
@@ -41,6 +47,11 @@ function getTypeColor(type) {
       return 'var(--notification-news-color, rgb(14, 165, 233))';
     case 'jmodReddit':
       return 'var(--notification-jmod-color, rgb(255, 149, 0))';
+    case 'priceAlert':
+    case 'priceAlertLow':
+      return 'rgb(239, 68, 68)';
+    case 'priceAlertHigh':
+      return 'rgb(74, 222, 128)';
     default:
       return 'rgb(148, 163, 184)';
   }
@@ -57,6 +68,13 @@ export default function NotificationCenter({
   newsItems = [],
   jmodComments = [],
   newJmodCount = 0,
+  priceAlerts = {},
+  allPriceAlerts = [],
+  geIconMap = {},
+  gePrices = {},
+  onEditAlert,
+  onDismissAlert,
+  onNewAlert,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('inbox');
@@ -66,7 +84,11 @@ export default function NotificationCenter({
 
   const filteredNotifications = inboxFilter === 'all'
     ? notifications
-    : notifications.filter(n => n.type === inboxFilter);
+    : inboxFilter === 'priceAlert'
+      ? notifications.filter(n => n.type === 'priceAlert' || n.type === 'priceAlertHigh' || n.type === 'priceAlertLow')
+      : notifications.filter(n => n.type === inboxFilter);
+
+  const alertsList = allPriceAlerts;
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -111,6 +133,12 @@ export default function NotificationCenter({
                 News
                 {newJmodCount > 0 && <span className="notification-tab-badge">{newJmodCount > 99 ? '99+' : newJmodCount}</span>}
               </button>
+              <button
+                className={`notification-tab ${activeTab === 'alerts' ? 'notification-tab-active' : ''}`}
+                onClick={() => setActiveTab('alerts')}
+              >
+                Alerts
+              </button>
             </div>
             {activeTab === 'inbox' && notifications.length > 0 && (
               <div className="notification-header-actions">
@@ -145,6 +173,7 @@ export default function NotificationCenter({
                     { key: 'milestone', label: 'Milestones' },
                     { key: 'osrsNews', label: 'News' },
                     { key: 'jmodReddit', label: 'Jmod' },
+                    { key: 'priceAlert', label: 'Alerts' },
                   ].map(f => (
                     <button
                       key={f.key}
@@ -278,6 +307,94 @@ export default function NotificationCenter({
                     </div>
                   )}
                 </>
+              )}
+            </>
+          )}
+
+          {activeTab === 'alerts' && (
+            <>
+              {onNewAlert && (
+                <div className="notification-alerts-header">
+                  <button
+                    className="notification-alerts-new-btn"
+                    onClick={() => { onNewAlert(); setIsOpen(false); }}
+                  >
+                    + New Alert
+                  </button>
+                </div>
+              )}
+              {alertsList.length === 0 ? (
+                <p className="notification-empty">No price alerts set</p>
+              ) : (
+                <div className="notification-alerts-list">
+                  {alertsList
+                    .sort((a, b) => (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0))
+                    .map((alert) => {
+                      const livePrice = gePrices[alert.itemId];
+                      return (
+                        <div key={alert.id} className="notification-alert-item">
+                          {geIconMap[alert.itemId] && (
+                            <img
+                              src={geIconMap[alert.itemId]}
+                              alt=""
+                              className="notification-alert-icon"
+                            />
+                          )}
+                          <div className="notification-alert-info">
+                            <div className="notification-alert-name">{alert.itemName}</div>
+                            <div className="notification-alert-thresholds">
+                              {alert.highThreshold && (
+                                <span className="notification-alert-threshold notification-alert-threshold-high">
+                                  <TrendingUp size={10} />
+                                  {formatNumber(alert.highThreshold, 'full')}
+                                </span>
+                              )}
+                              {alert.lowThreshold && (
+                                <span className="notification-alert-threshold notification-alert-threshold-low">
+                                  <TrendingDown size={10} />
+                                  {formatNumber(alert.lowThreshold, 'full')}
+                                </span>
+                              )}
+                            </div>
+                            {livePrice && alert.isActive && (
+                              <div className="notification-alert-live-prices">
+                                {livePrice.high != null && <span>High: {formatNumber(livePrice.high, 'full')}</span>}
+                                {livePrice.low != null && <span>Low: {formatNumber(livePrice.low, 'full')}</span>}
+                              </div>
+                            )}
+                            {alert.triggeredAt && (
+                              <div className="notification-alert-triggered">
+                                Triggered {getTimeAgo(new Date(alert.triggeredAt).getTime())} at {formatNumber(alert.triggeredPrice, 'full')} GP
+                              </div>
+                            )}
+                          </div>
+                          <span className={`notification-alert-status ${alert.isActive ? 'notification-alert-status-active' : 'notification-alert-status-triggered'}`}>
+                            {alert.isActive ? 'Active' : 'Triggered'}
+                          </span>
+                          <div className="notification-alert-actions">
+                            {alert.isActive && onEditAlert && (
+                              <button
+                                className="notification-alert-action-btn"
+                                onClick={() => { onEditAlert(alert); setIsOpen(false); }}
+                                title="Edit alert"
+                              >
+                                <Edit3 size={13} />
+                              </button>
+                            )}
+                            {onDismissAlert && (
+                              <button
+                                className="notification-alert-action-btn notification-alert-action-btn-delete"
+                                onClick={() => onDismissAlert(alert.id)}
+                                title="Dismiss"
+                              >
+                                <X size={13} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               )}
             </>
           )}

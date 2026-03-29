@@ -46,7 +46,10 @@ import ProfitChartModal from './components/modals/ProfitChartModal';
 import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
 import ChangelogModal from './components/modals/ChangelogModal';
+import PriceAlertModal from './components/modals/PriceAlertModal';
 import { CURRENT_VERSION } from './data/changelog';
+import { usePriceAlerts } from './hooks/usePriceAlerts';
+import { usePriceAlertChecker } from './hooks/usePriceAlertChecker';
 
 import {
   STORAGE_KEY,
@@ -101,6 +104,7 @@ export default function MainApp({ session, onLogout }) {
   const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
   const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
   const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestones(userId);
+  const { alerts: priceAlerts, allAlerts: allPriceAlerts, loading: priceAlertsLoading, saveAlert: savePriceAlert, dismissAlert: dismissPriceAlert, deactivateAlert: deactivatePriceAlert, updateLastChecked: updatePriceAlertLastChecked, refetch: refetchPriceAlerts } = usePriceAlerts(userId);
 
   // Destructure profits
   const { dumpProfit, referralProfit, bondsProfit } = profits;
@@ -189,6 +193,8 @@ export default function MainApp({ session, onLogout }) {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showTimeCalculatorModal, setShowTimeCalculatorModal] = useState(false);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
+  const [showPriceAlertModal, setShowPriceAlertModal] = useState(false);
+  const [selectedAlertItem, setSelectedAlertItem] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const [selectedStock, setSelectedStock] = useState(null);
@@ -228,6 +234,27 @@ export default function MainApp({ session, onLogout }) {
     await refetch();
   };
 
+  // Price alert handlers
+  const handleOpenPriceAlert = (stockOrItem) => {
+    const itemId = stockOrItem.itemId ?? stockOrItem.itemId;
+    const itemName = stockOrItem.itemName ?? stockOrItem.name;
+    if (!itemId) return;
+    setSelectedAlertItem({ itemId, itemName });
+    setShowPriceAlertModal(true);
+  };
+
+  const handleSavePriceAlert = async (itemId, itemName, highThreshold, lowThreshold) => {
+    await savePriceAlert(itemId, itemName, highThreshold, lowThreshold);
+    setShowPriceAlertModal(false);
+    setSelectedAlertItem(null);
+  };
+
+  const handleDeletePriceAlert = async (alertId) => {
+    await dismissPriceAlert(alertId);
+    setShowPriceAlertModal(false);
+    setSelectedAlertItem(null);
+  };
+
   // Notifications
   const {
     notifications,
@@ -241,6 +268,14 @@ export default function MainApp({ session, onLogout }) {
 
   const { newsItems } = useOSRSNews();
   const { jmodComments } = useJmodComments();
+
+  usePriceAlertChecker({
+    alerts: priceAlerts,
+    gePrices,
+    addNotification,
+    deactivateAlert: deactivatePriceAlert,
+    updateLastChecked: updatePriceAlertLastChecked,
+  });
 
   // Track which timer notifications have already fired to avoid duplicates
   const firedTimerNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_limit_timers') || '[]')));
@@ -1403,6 +1438,16 @@ export default function MainApp({ session, onLogout }) {
             newsItems={newsItems}
             jmodComments={jmodComments}
             newJmodCount={notifications.filter(n => n.type === 'jmodReddit' && !n.read).length}
+            priceAlerts={priceAlerts}
+            allPriceAlerts={allPriceAlerts}
+            geIconMap={geIconMap}
+            gePrices={gePrices}
+            onEditAlert={(alert) => {
+              setSelectedAlertItem({ itemId: alert.itemId, itemName: alert.itemName });
+              setShowPriceAlertModal(true);
+            }}
+            onDismissAlert={dismissPriceAlert}
+            onNewAlert={() => navigateToPage('graphs')}
           />
           <div className="user-dropdown-wrapper">
             <button
@@ -1501,6 +1546,8 @@ export default function MainApp({ session, onLogout }) {
             userId={userId}
             initialItemId={graphItemId}
             navigateToPage={navigateToPage}
+            priceAlerts={priceAlerts}
+            onPriceAlert={handleOpenPriceAlert}
           />
         ) : (
           <>
@@ -1664,6 +1711,8 @@ export default function MainApp({ session, onLogout }) {
                 showMembershipIcon={visibleColumns.membershipIcon}
                 showInvestmentDate={tradeMode === 'investment' && visibleColumns.investmentStartDate}
                 onInvestmentDateChange={handleInvestmentDateChange}
+                onPriceAlert={handleOpenPriceAlert}
+                priceAlerts={priceAlerts}
               />
             ))}
 
@@ -1830,9 +1879,20 @@ export default function MainApp({ session, onLogout }) {
               />
             </ModalContainer>
 
-
           </>
         )}
+
+        <ModalContainer isOpen={showPriceAlertModal}>
+          <PriceAlertModal
+            itemId={selectedAlertItem?.itemId}
+            itemName={selectedAlertItem?.itemName}
+            currentAlert={selectedAlertItem ? priceAlerts[selectedAlertItem.itemId] : null}
+            gePrice={selectedAlertItem ? gePrices[selectedAlertItem.itemId] : null}
+            onSave={handleSavePriceAlert}
+            onDelete={handleDeletePriceAlert}
+            onCancel={() => { setShowPriceAlertModal(false); setSelectedAlertItem(null); }}
+          />
+        </ModalContainer>
 
         <ModalContainer isOpen={showSettingsModal}>
           <SettingsModal
