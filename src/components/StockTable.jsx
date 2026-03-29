@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit3, Trash2, GripVertical, Star } from 'lucide-react';
+import { Edit3, Trash2, GripVertical, Star, Bell, BellRing } from 'lucide-react';
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
@@ -50,7 +50,9 @@ export default function StockTable({
   showMembershipIcon = true,
   onArchive,
   showInvestmentDate = false,
-  onInvestmentDateChange
+  onInvestmentDateChange,
+  onPriceAlert,
+  priceAlerts = {},
 }) {
   const sortedStocks = sortStocks(stocks, sortConfig);
 
@@ -92,6 +94,8 @@ export default function StockTable({
               showMembershipIcon={showMembershipIcon}
               showInvestmentDate={showInvestmentDate}
               onInvestmentDateChange={onInvestmentDateChange}
+              onPriceAlert={onPriceAlert}
+              priceAlerts={priceAlerts}
             />
           ))}
         </tbody>
@@ -172,7 +176,9 @@ function StockRow({
   showMembershipIcon = true,
   onArchive,
   showInvestmentDate,
-  onInvestmentDateChange
+  onInvestmentDateChange,
+  onPriceAlert,
+  priceAlerts = {},
 }) {
   const avgBuy = calculateAvgBuyPrice(stock);
   const avgSell = calculateAvgSellPrice(stock);
@@ -210,6 +216,15 @@ function StockRow({
             />
           )}
           {stock.name}
+          {stock.itemId && onPriceAlert && (
+            <button
+              className={`stock-name-bell ${priceAlerts[stock.itemId]?.isActive ? 'stock-name-bell-active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); onPriceAlert(stock); }}
+              title={priceAlerts[stock.itemId]?.isActive ? 'Edit price alert' : 'Set price alert'}
+            >
+              {priceAlerts[stock.itemId]?.isActive ? <BellRing size={12} /> : <Bell size={12} />}
+            </button>
+          )}
         </div>
       </td>
       {visibleColumns.status && (

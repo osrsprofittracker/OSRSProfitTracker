@@ -388,6 +388,7 @@ const NOTIFICATION_TYPES = [
   { key: 'milestones', label: 'Milestones', description: 'Get notified when you reach a profit milestone' },
   { key: 'osrsNews', label: 'OSRS News', description: 'Get notified when new OSRS blog posts are published' },
   { key: 'jmodReddit', label: 'Jmod Reddit', description: 'Get notified when a Jagex Moderator comments on r/2007scape' },
+  { key: 'priceAlert', label: 'Price Alerts', description: 'Get notified when a tracked item crosses your price threshold' },
 ];
 
 function NotificationsTab({ notificationPreferences, onNotificationTypeChange }) {

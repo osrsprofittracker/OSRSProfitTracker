@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createChart, LineSeries, HistogramSeries, CandlestickSeries } from 'lightweight-charts';
-import { Star, Clock, Search, ChevronDown } from 'lucide-react';
+import { Star, Clock, Search, ChevronDown, Bell, BellRing } from 'lucide-react';
 import { useTimeseries } from '../hooks/useTimeseries';
 import { useGraphPreferences } from '../hooks/useGraphPreferences';
 import { calculateGETax } from '../utils/taxUtils';
@@ -14,7 +14,7 @@ const TIMEFRAMES = [
   { label: '1Y', timestep: '24h', filterDays: 365 },
 ];
 
-export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, userId, initialItemId, navigateToPage }) {
+export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, userId, initialItemId, navigateToPage, priceAlerts = {}, onPriceAlert }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -691,6 +691,15 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
               <span className={`graphs-info-badge ${itemStats.members ? 'graphs-info-badge--p2p' : 'graphs-info-badge--f2p'}`}>
                 {itemStats.members ? 'P2P' : 'F2P'}
               </span>
+            )}
+            {onPriceAlert && (
+              <button
+                className={`graph-alert-btn ${priceAlerts[selectedItem.id]?.isActive ? 'graph-alert-btn-active' : ''}`}
+                onClick={() => onPriceAlert({ itemId: selectedItem.id, itemName: selectedItem.name })}
+              >
+                {priceAlerts[selectedItem.id]?.isActive ? <BellRing size={14} /> : <Bell size={14} />}
+                {priceAlerts[selectedItem.id]?.isActive ? 'Edit Alert' : 'Set Alert'}
+              </button>
             )}
           </div>
           <div className="graphs-info-stats">
