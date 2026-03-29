@@ -66,9 +66,13 @@ exports.handler = async () => {
   try {
     const store = getJmodStore();
 
-    // Fetch all Jmod profiles in parallel
-    const results = await Promise.all(JMOD_USERNAMES.map(fetchUserComments));
-    const jmodComments = results.flat();
+    // Fetch Jmod profiles sequentially to avoid Reddit rate limiting
+    const jmodComments = [];
+    for (const username of JMOD_USERNAMES) {
+      const comments = await fetchUserComments(username);
+      jmodComments.push(...comments);
+      if (comments.length >= 0) await new Promise(r => setTimeout(r, 2000));
+    }
 
     // Read existing cache to merge
     let existing = [];
