@@ -33,30 +33,61 @@ function getJmodStore() {
   return getStore('jmod-comments');
 }
 
-function mapComment(c) {
-  const body = (c.data.body || '').replace(/[*_~\[\]()#>]/g, '');
-  return {
-    id: c.data.name,
-    author: c.data.author,
-    body: body.length > 300 ? body.slice(0, 300) + '...' : body,
-    permalink: c.data.permalink,
-    created_utc: c.data.created_utc,
-    link_title: c.data.link_title,
-    subreddit: c.data.subreddit,
-  };
+function parseRssEntries(xml, username) {
+  const entries = [];
+  const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+  let match;
+
+  while ((match = entryRegex.exec(xml)) !== null) {
+    const entry = match[1];
+
+    const subredditMatch = /<category term="([^"]*)"/.exec(entry);
+    const subreddit = subredditMatch?.[1] || '';
+    if (subreddit.toLowerCase() !== '2007scape') continue;
+
+    const idMatch = /<id>(.*?)<\/id>/.exec(entry);
+    const linkMatch = /<link href="([^"]*)"/.exec(entry);
+    const updatedMatch = /<updated>(.*?)<\/updated>/.exec(entry);
+    const titleMatch = /<title>(.*?)<\/title>/.exec(entry);
+    const contentMatch = /<content type="html">([\s\S]*?)<\/content>/.exec(entry);
+
+    let body = (contentMatch?.[1] || '')
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (body.length > 300) body = body.slice(0, 300) + '...';
+
+    const linkTitle = (titleMatch?.[1] || '')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'")
+      .replace(new RegExp(`^/u/${username} on `), '');
+
+    const permalink = linkMatch?.[1]?.replace('https://www.reddit.com', '') || '';
+    const createdUtc = updatedMatch?.[1] ? Math.floor(new Date(updatedMatch[1]).getTime() / 1000) : 0;
+
+    entries.push({
+      id: idMatch?.[1] || '',
+      author: username,
+      body,
+      permalink,
+      created_utc: createdUtc,
+      link_title: linkTitle,
+      subreddit,
+    });
+  }
+
+  return entries;
 }
 
 async function fetchUserComments(username) {
   try {
     const res = await fetch(
-      `https://www.reddit.com/user/${username}/comments.json?limit=10&sort=new`,
+      `https://www.reddit.com/user/${username}/comments.rss?limit=10`,
       { headers: HEADERS }
     );
     if (!res.ok) return [];
-    const json = await res.json();
-    return (json?.data?.children || [])
-      .filter(c => c.data.subreddit?.toLowerCase() === '2007scape')
-      .map(mapComment);
+    const xml = await res.text();
+    return parseRssEntries(xml, username);
   } catch {
     return [];
   }
