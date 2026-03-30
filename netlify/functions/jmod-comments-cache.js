@@ -6,7 +6,7 @@ const JMOD_USERNAMES = [
   'JagexAsh', 'JagexLight', 'JagexSarnie', 'JagexGoblin',
   'JagexAyiza', 'JagexFlippy', 'Mod_Kieren', 'JagexHusky',
   'JagexSween', 'Jagex_Wolf', 'JagexTyran', 'JagexRoq',
-  'JagexBlossom', 'JagexNin', 'JagexRice',
+  'JagexBlossom', 'JagexNin', 'JagexRice', 'Mod_Jerv', 'JagexArcane',
 ];
 
 const HEADERS = {
