@@ -264,7 +264,7 @@ export default function MainApp({ session, onLogout }) {
     markAllAsRead,
     dismissNotification,
     clearAll: clearAllNotifications,
-  } = useNotifications(notificationPreferences);
+  } = useNotifications(notificationPreferences, userId);
 
   const { newsItems } = useOSRSNews();
   const { jmodComments } = useJmodComments();
@@ -278,27 +278,27 @@ export default function MainApp({ session, onLogout }) {
   });
 
   // Track which timer notifications have already fired to avoid duplicates
-  const firedTimerNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_limit_timers') || '[]')));
+  const firedTimerNotifs = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_fired_limit_timers_${userId}`) || '[]')));
   const firedAltTimerNotif = useRef(false);
-  const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem('osrs_fired_milestones') || '[]')));
-  const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_news') || '[]')));
-  const seenJmodIds = useRef(new Set(JSON.parse(localStorage.getItem('osrs_seen_jmod') || '[]')));
+  const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_fired_milestones_${userId}`) || '[]')));
+  const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_seen_news_${userId}`) || '[]')));
+  const seenJmodIds = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_seen_jmod_${userId}`) || '[]')));
   const timerNotifsInitialized = useRef(false);
   const altTimerNotifInitialized = useRef(false);
   const milestoneNotifsInitialized = useRef(false);
-  const newsNotifsInitialized = useRef(localStorage.getItem('osrs_news_initialized') === 'true');
-  const jmodNotifsInitialized = useRef(localStorage.getItem('osrs_jmod_initialized') === 'true');
+  const newsNotifsInitialized = useRef(localStorage.getItem(`osrs_news_initialized_${userId}`) === 'true');
+  const jmodNotifsInitialized = useRef(localStorage.getItem(`osrs_jmod_initialized_${userId}`) === 'true');
   const timerTimeoutsRef = useRef(new Map());
 
   // Helper to persist firedTimerNotifs to localStorage
   const saveFiredTimers = useCallback(() => {
-    localStorage.setItem('osrs_fired_limit_timers', JSON.stringify(Array.from(firedTimerNotifs.current)));
-  }, []);
+    localStorage.setItem(`osrs_fired_limit_timers_${userId}`, JSON.stringify(Array.from(firedTimerNotifs.current)));
+  }, [userId]);
 
   // Save when app closes
   useEffect(() => {
     const handleBeforeUnload = () => {
-      localStorage.setItem('osrs_last_closed', Date.now().toString());
+      localStorage.setItem(`osrs_last_closed_${userId}`, Date.now().toString());
       saveFiredTimers();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -323,11 +323,11 @@ export default function MainApp({ session, onLogout }) {
       timerNotifsInitialized.current = true;
 
       // Check if app was closed > 4 hours
-      const lastClosedTime = localStorage.getItem('osrs_last_closed');
+      const lastClosedTime = localStorage.getItem(`osrs_last_closed_${userId}`);
       const closedTimeMs = lastClosedTime ? parseInt(lastClosedTime) : 0;
       const closedDuration = closedTimeMs ? now - closedTimeMs : 0;
       const fourHours = 4 * 60 * 60 * 1000;
-      const shouldCheckExpiredTimers = closedDuration === 0 || closedDuration <= fourHours;
+      const shouldCheckExpiredTimers = closedTimeMs > 0 && closedDuration <= fourHours;
 
       // Notify only for timers that expired WHILE offline, not old expired timers
       if (shouldCheckExpiredTimers) {
@@ -641,7 +641,7 @@ export default function MainApp({ session, onLogout }) {
         }
       });
       if (changed) {
-        localStorage.setItem('osrs_fired_milestones', JSON.stringify([...firedMilestoneNotifs.current]));
+        localStorage.setItem(`osrs_fired_milestones_${userId}`, JSON.stringify([...firedMilestoneNotifs.current]));
       }
     } else {
       let changed = false;
@@ -658,7 +658,7 @@ export default function MainApp({ session, onLogout }) {
         }
       });
       if (changed) {
-        localStorage.setItem('osrs_fired_milestones', JSON.stringify([...firedMilestoneNotifs.current]));
+        localStorage.setItem(`osrs_fired_milestones_${userId}`, JSON.stringify([...firedMilestoneNotifs.current]));
       }
     }
 
@@ -673,9 +673,9 @@ export default function MainApp({ session, onLogout }) {
 
     if (!newsNotifsInitialized.current) {
       newsNotifsInitialized.current = true;
-      localStorage.setItem('osrs_news_initialized', 'true');
+      localStorage.setItem(`osrs_news_initialized_${userId}`, 'true');
       newsItems.forEach(item => seenNewsGuids.current.add(item.guid));
-      localStorage.setItem('osrs_seen_news', JSON.stringify([...seenNewsGuids.current]));
+      localStorage.setItem(`osrs_seen_news_${userId}`, JSON.stringify([...seenNewsGuids.current]));
       return;
     }
 
@@ -689,9 +689,9 @@ export default function MainApp({ session, onLogout }) {
     });
 
     if (changed) {
-      localStorage.setItem('osrs_seen_news', JSON.stringify([...seenNewsGuids.current]));
+      localStorage.setItem(`osrs_seen_news_${userId}`, JSON.stringify([...seenNewsGuids.current]));
     }
-  }, [newsItems, addNotification]);
+  }, [newsItems, addNotification, userId]);
 
   // Jmod Reddit notification effect
   useEffect(() => {
@@ -699,9 +699,9 @@ export default function MainApp({ session, onLogout }) {
 
     if (!jmodNotifsInitialized.current) {
       jmodNotifsInitialized.current = true;
-      localStorage.setItem('osrs_jmod_initialized', 'true');
+      localStorage.setItem(`osrs_jmod_initialized_${userId}`, 'true');
       jmodComments.forEach(c => seenJmodIds.current.add(c.id));
-      localStorage.setItem('osrs_seen_jmod', JSON.stringify([...seenJmodIds.current]));
+      localStorage.setItem(`osrs_seen_jmod_${userId}`, JSON.stringify([...seenJmodIds.current]));
       return;
     }
 
@@ -717,9 +717,9 @@ export default function MainApp({ session, onLogout }) {
     });
 
     if (changed) {
-      localStorage.setItem('osrs_seen_jmod', JSON.stringify([...seenJmodIds.current]));
+      localStorage.setItem(`osrs_seen_jmod_${userId}`, JSON.stringify([...seenJmodIds.current]));
     }
-  }, [jmodComments, addNotification]);
+  }, [jmodComments, addNotification, userId]);
 
   useEffect(() => {
     const storageKey = `lastSeenVersion_${userId}`;
