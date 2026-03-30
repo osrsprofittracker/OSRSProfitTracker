@@ -50,6 +50,7 @@ import PriceAlertModal from './components/modals/PriceAlertModal';
 import { CURRENT_VERSION } from './data/changelog';
 import { usePriceAlerts } from './hooks/usePriceAlerts';
 import { usePriceAlertChecker } from './hooks/usePriceAlertChecker';
+import GlobalSearch from './components/GlobalSearch';
 
 import {
   STORAGE_KEY,
@@ -134,7 +135,13 @@ export default function MainApp({ session, onLogout }) {
     setCurrentPage(page);
     let url = PAGE_PATHS[page] || '/';
     if (options.query) {
-      url += '?' + new URLSearchParams(options.query).toString();
+      const params = new URLSearchParams(options.query);
+      url += '?' + params.toString();
+      if (page === 'graphs' && params.has('item')) {
+        setGraphItemId(params.get('item'));
+      }
+    } else if (page === 'graphs') {
+      setGraphItemId(null);
     }
     window.history.pushState({ page }, '', url);
   }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory]);
@@ -1425,8 +1432,16 @@ export default function MainApp({ session, onLogout }) {
             </a>
           </div>
 
-          {/* Right - Notifications + User dropdown */}
+          {/* Right - Search + Notifications + User dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <GlobalSearch
+            stocks={stocks}
+            categories={categories}
+            transactions={transactions}
+            geMapping={geMapping}
+            geIconMap={geIconMap}
+            navigateToPage={navigateToPage}
+          />
           <NotificationCenter
             notifications={notifications}
             unreadCount={unreadCount}
