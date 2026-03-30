@@ -6,8 +6,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8888',
+        target: 'https://osrsprofittracker.netlify.app',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/.netlify/functions'),
       },
     },
   },
