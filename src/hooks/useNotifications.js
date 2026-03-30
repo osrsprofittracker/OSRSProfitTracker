@@ -174,9 +174,10 @@ function sendBrowserNotification(message) {
 
 // --- Hook ---
 
-export function useNotifications(preferences) {
+export function useNotifications(preferences, userId) {
+  const storageKey = `osrs_notifications_${userId}`;
   const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem('osrs_notifications');
+    const saved = localStorage.getItem(storageKey);
     return saved ? JSON.parse(saved) : [];
   });
   const prefsRef = useRef(preferences);
@@ -184,8 +185,8 @@ export function useNotifications(preferences) {
 
   // Persist notifications to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('osrs_notifications', JSON.stringify(notifications));
-  }, [notifications]);
+    localStorage.setItem(storageKey, JSON.stringify(notifications));
+  }, [notifications, storageKey]);
 
   const unreadCount = useMemo(
     () => notifications.filter(n => !n.read).length,
