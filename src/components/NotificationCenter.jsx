@@ -167,22 +167,30 @@ export default function NotificationCenter({
               {notifications.length > 0 && (
                 <div className="notification-inbox-filters">
                   {[
-                    { key: 'all', label: 'All' },
+                    { key: 'all', label: 'All', count: notifications.length },
                     { key: 'limitTimer', label: 'Timers' },
                     { key: 'altAccountTimer', label: 'Alt Timer' },
                     { key: 'milestone', label: 'Milestones' },
                     { key: 'osrsNews', label: 'News' },
                     { key: 'jmodReddit', label: 'Jmod' },
                     { key: 'priceAlert', label: 'Alerts' },
-                  ].map(f => (
-                    <button
-                      key={f.key}
-                      className={`notification-inbox-filter-chip ${inboxFilter === f.key ? 'notification-inbox-filter-chip-active' : ''}`}
-                      onClick={() => setInboxFilter(f.key)}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
+                  ].map(f => {
+                    const count = f.count ?? (
+                      f.key === 'priceAlert'
+                        ? notifications.filter(n => n.type === 'priceAlert' || n.type === 'priceAlertHigh' || n.type === 'priceAlertLow').length
+                        : notifications.filter(n => n.type === f.key).length
+                    );
+                    return (
+                      <button
+                        key={f.key}
+                        className={`notification-inbox-filter-chip ${inboxFilter === f.key ? 'notification-inbox-filter-chip-active' : ''}`}
+                        onClick={() => setInboxFilter(f.key)}
+                      >
+                        {f.label}
+                        {count > 0 && <span className="notification-filter-chip-count">{count}</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
               {filteredNotifications.length === 0 ? (
