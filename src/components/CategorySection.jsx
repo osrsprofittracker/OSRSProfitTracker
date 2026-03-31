@@ -45,6 +45,7 @@ export default function CategorySection({
   onInvestmentDateChange,
   onPriceAlert,
   priceAlerts = {},
+  onViewGraph,
 }) {
   const categoryStocks = stocks.filter(s => s.category === category);
 
@@ -261,6 +262,7 @@ export default function CategorySection({
             onInvestmentDateChange={onInvestmentDateChange}
             onPriceAlert={onPriceAlert}
             priceAlerts={priceAlerts}
+            onViewGraph={onViewGraph}
           />
         </>
       )}

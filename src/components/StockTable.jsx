@@ -53,6 +53,7 @@ export default function StockTable({
   onInvestmentDateChange,
   onPriceAlert,
   priceAlerts = {},
+  onViewGraph,
 }) {
   const sortedStocks = sortStocks(stocks, sortConfig);
 
@@ -96,6 +97,7 @@ export default function StockTable({
               onInvestmentDateChange={onInvestmentDateChange}
               onPriceAlert={onPriceAlert}
               priceAlerts={priceAlerts}
+              onViewGraph={onViewGraph}
             />
           ))}
         </tbody>
@@ -179,6 +181,7 @@ function StockRow({
   onInvestmentDateChange,
   onPriceAlert,
   priceAlerts = {},
+  onViewGraph,
 }) {
   const avgBuy = calculateAvgBuyPrice(stock);
   const avgSell = calculateAvgSellPrice(stock);
@@ -215,7 +218,17 @@ function StockRow({
               title={membershipMap[stock.itemId] ? 'Members item' : 'Free-to-play item'}
             />
           )}
-          {stock.name}
+          {stock.itemId && onViewGraph ? (
+            <span
+              className="stock-name-link"
+              onClick={(e) => { e.stopPropagation(); onViewGraph(stock); }}
+              title="View price graph"
+            >
+              {stock.name}
+            </span>
+          ) : (
+            stock.name
+          )}
           {stock.itemId && onPriceAlert && (
             <button
               className={`stock-name-bell ${priceAlerts[stock.itemId]?.isActive ? 'stock-name-bell-active' : ''}`}

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Plus, Download, Upload, FolderPlus, LogOut } from 'lucide-react';
+import { Plus, FolderPlus, LogOut } from 'lucide-react';
 
 export default function Header({
-    onExport,
     onAddCategory,
     onAddStock,
     onOpenSettings,
@@ -54,9 +53,6 @@ export default function Header({
                     </button>
                     <button className="btn btn-secondary" onClick={onOpenSettings}>
                         ⚙️ Settings
-                    </button>
-                    <button className="btn btn-success" onClick={onExport}>
-                        Export
                     </button>
                     {onLogout && (
                         <button
