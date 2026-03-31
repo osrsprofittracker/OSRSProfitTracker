@@ -1728,6 +1728,7 @@ export default function MainApp({ session, onLogout }) {
                 onInvestmentDateChange={handleInvestmentDateChange}
                 onPriceAlert={handleOpenPriceAlert}
                 priceAlerts={priceAlerts}
+                onViewGraph={(stock) => stock.itemId && navigateToPage('graphs', { query: { item: stock.itemId } })}
               />
             ))}
 
