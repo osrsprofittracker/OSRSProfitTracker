@@ -45,7 +45,7 @@ export function useTransactions(userId) {
     const to = from + size - 1;
 
     let query = supabase
-      .from('transactions')
+      .from('transactions_view')
       .select('*', { count: 'exact' })
       .eq('user_id', userId)
       .range(from, to);
