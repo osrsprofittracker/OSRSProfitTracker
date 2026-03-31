@@ -1080,24 +1080,6 @@ export default function MainApp({ session, onLogout }) {
     setShowNotesModal(false);
   };
 
-  // xport operations
-  const exportData = () => {
-    const exportObj = {
-      stocks,
-      categories,
-      dumpProfit,
-      referralProfit,
-      bondsProfit,
-      stockNotes,
-      transactions
-    };
-    const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `stock-backup-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-  };
-
   // Drag and drop operations
   const handleCategoryDragStart = (e, category) => {
 
@@ -1482,12 +1464,6 @@ export default function MainApp({ session, onLogout }) {
                   onClick={() => { setShowSettingsModal(true); setUserMenuOpen(false); }}
                 >
                   ⚙️ Settings
-                </button>
-                <button
-                  className="user-dropdown-item"
-                  onClick={() => { exportData(); setUserMenuOpen(false); }}
-                >
-                  📥 Export Data
                 </button>
                 <a
                   href="https://buymeacoffee.com/osrsprofittracker"
@@ -2034,6 +2010,7 @@ export default function MainApp({ session, onLogout }) {
             PRESET_GOALS={PRESET_GOALS}
           />
         </ModalContainer>
+
 
       </div>
       <Footer />
