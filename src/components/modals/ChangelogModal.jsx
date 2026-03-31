@@ -6,6 +6,7 @@ const TYPE_LABELS = {
   fix:      { label: 'Fix',      className: 'changelog-badge changelog-badge--fix' },
   improved: { label: 'Improved', className: 'changelog-badge changelog-badge--improved' },
   tip:      { label: '💡 Tip',   className: 'changelog-badge changelog-badge--tip' },
+  removed:  { label: 'Removed',  className: 'changelog-badge changelog-badge--removed' },
 };
 
 export default function ChangelogModal({ onClose }) {

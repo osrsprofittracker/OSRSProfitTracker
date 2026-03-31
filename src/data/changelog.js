@@ -1,6 +1,20 @@
-export const CURRENT_VERSION = "2.5.0";
+export const CURRENT_VERSION = "2.6.0";
 
 export const changelog = [
+  {
+    version: "2.6.0",
+    date: "2026-03-31",
+    changes: [
+      { type: "new", text: "Global search bar with Ctrl+K command palette for quickly finding stocks, categories, and actions" },
+      { type: "new", text: "Item names in the stock table are now clickable to open the price graph directly" },
+      { type: "new", text: "Added Jmod Reddit accounts: Mod_Jerv, JagexArcane, and JagexRach" },
+      { type: "improved", text: "Jmod Reddit comment fetching switched from JSON API to RSS for better reliability" },
+      { type: "fix", text: "Transaction history now correctly displays profit and margin data" },
+      { type: "fix", text: "Notification panel width, padding, and text overflow normalized across all tabs" },
+      { type: "fix", text: "Notification localStorage keys scoped by user to prevent notification flood on account switch" },
+      { type: "removed", text: "Removed export/backup data button from user menu" },
+    ],
+  },
   {
     version: "2.5.0",
     date: "2026-03-29",
