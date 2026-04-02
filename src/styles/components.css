@@ -1208,7 +1208,7 @@
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
   white-space: nowrap;
-  line-height: 1.4;
+  line-height: 0.5;
 }
 
 .quick-nav-item:hover {
