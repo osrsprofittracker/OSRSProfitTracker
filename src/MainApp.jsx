@@ -1559,6 +1559,9 @@ export default function MainApp({ session, onLogout }) {
             navigateToPage={navigateToPage}
             priceAlerts={priceAlerts}
             onPriceAlert={handleOpenPriceAlert}
+            stocks={stocks}
+            stockNotes={stockNotes}
+            onSaveNote={saveNote}
           />
         ) : (
           <>
