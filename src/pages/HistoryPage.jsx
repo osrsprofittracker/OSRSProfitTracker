@@ -39,6 +39,12 @@ export default function HistoryPage({
   const [appliedFilters, setAppliedFilters] = useState({ ...EMPTY_FILTERS, ...filters });
   const [showFilters, setShowFilters] = useState(false);
 
+  useEffect(() => {
+    setLocalFilters({ ...EMPTY_FILTERS, ...filters });
+    setAppliedFilters({ ...EMPTY_FILTERS, ...filters });
+    if (filters.stockName) setShowFilters(true);
+  }, [filters.stockName]);
+
   const [confirmUndo, setConfirmUndo] = useState(null); // holds transaction to undo
   const [undoWarning, setUndoWarning] = useState(null); // holds warning type
 

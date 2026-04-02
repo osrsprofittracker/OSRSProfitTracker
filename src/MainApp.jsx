@@ -63,6 +63,13 @@ import {
 
 const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs' };
 
+const HISTORY_EMPTY_FILTERS = {
+  type: 'all', mode: 'all', stockName: '', category: '',
+  dateFrom: '', dateTo: '', gpMin: '', gpMax: '',
+  priceMin: '', priceMax: '', profitMin: '', profitMax: '',
+  qtyMin: '', qtyMax: '', marginMin: '', marginMax: ''
+};
+
 function getPageFromURL() {
   const path = window.location.pathname;
   if (path === '/trade') return 'trade';
@@ -140,11 +147,16 @@ export default function MainApp({ session, onLogout }) {
       if (page === 'graphs' && params.has('item')) {
         setGraphItemId(params.get('item'));
       }
+      if (page === 'history' && params.has('search')) {
+        applyFilters({ ...HISTORY_EMPTY_FILTERS, stockName: params.get('search') });
+      }
     } else if (page === 'graphs') {
       setGraphItemId(null);
+    } else if (page === 'history') {
+      applyFilters({ ...HISTORY_EMPTY_FILTERS });
     }
     window.history.pushState({ page }, '', url);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory]);
+  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
 
   // Replace initial history entry so back button works correctly
   useEffect(() => {
@@ -166,11 +178,19 @@ export default function MainApp({ session, onLogout }) {
         refetchProfitHistory();
       }
       setCurrentPage(page);
-      setGraphItemId(new URLSearchParams(window.location.search).get('item'));
+      const searchParams = new URLSearchParams(window.location.search);
+      setGraphItemId(searchParams.get('item'));
+      if (page === 'history') {
+        const searchName = searchParams.get('search');
+        applyFilters(searchName
+          ? { ...HISTORY_EMPTY_FILTERS, stockName: searchName }
+          : { ...HISTORY_EMPTY_FILTERS }
+        );
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory]);
+  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
