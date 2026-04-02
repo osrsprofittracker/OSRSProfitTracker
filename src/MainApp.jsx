@@ -1070,7 +1070,10 @@ export default function MainApp({ session, onLogout }) {
         }
       }
 
-      setTimeout(() => {
+      const maxWait = 500;
+      const interval = 50;
+      let elapsed = 0;
+      const tryScroll = () => {
         const el = document.querySelector(`[data-stock-id="${target.stockId}"]`);
         if (el) {
           const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
@@ -1078,8 +1081,12 @@ export default function MainApp({ session, onLogout }) {
           window.scrollTo({ top, behavior: 'smooth' });
           el.classList.add('stock-row-highlight');
           setTimeout(() => el.classList.remove('stock-row-highlight'), 1500);
+        } else if (elapsed < maxWait) {
+          elapsed += interval;
+          setTimeout(tryScroll, interval);
         }
-      }, 100);
+      };
+      setTimeout(tryScroll, interval);
     }
   }, [navigateToPage, stocks, categories, collapsedCategories]);
 
