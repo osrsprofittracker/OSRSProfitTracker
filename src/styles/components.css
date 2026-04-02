@@ -1208,9 +1208,6 @@
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 184px;
 }
 
 .quick-nav-item:hover {
