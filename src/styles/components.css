@@ -3119,6 +3119,64 @@
   display: none;
 }
 
+/* Notification volume slider */
+.notif-volume-section {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.5rem;
+}
+
+.notif-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.notif-volume-label {
+  color: rgb(209, 213, 219);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.notif-volume-slider {
+  flex: 1;
+  height: 6px;
+  appearance: none;
+  background: rgb(51, 65, 85);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.notif-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(96, 165, 250);
+  cursor: pointer;
+  border: none;
+}
+
+.notif-volume-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(96, 165, 250);
+  cursor: pointer;
+  border: none;
+}
+
+.notif-volume-value {
+  color: rgb(148, 163, 184);
+  font-size: 0.8125rem;
+  min-width: 2.5rem;
+  text-align: right;
+}
+
 /* Two-pane notification settings */
 .notif-settings-pane {
   display: flex;

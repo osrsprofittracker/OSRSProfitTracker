@@ -29,6 +29,7 @@ export function useSettings(userId) {
     showCategoryStats: false,
     showUnrealisedProfitStats: false,
     showCategoryUnrealisedProfit: true,
+    notificationVolume: 70,
   });
   const [loading, setLoading] = useState(true);
 
@@ -72,6 +73,7 @@ export function useSettings(userId) {
         showCategoryStats: data.show_category_stats || false,
         showUnrealisedProfitStats: data.show_unrealised_profit_stats ?? false,
         showCategoryUnrealisedProfit: data.show_category_unrealised_profit ?? true,
+        notificationVolume: data.notification_volume ?? 70,
       });
     } else {
       const { error: insertError } = await supabase
@@ -82,7 +84,8 @@ export function useSettings(userId) {
           visible_columns: DEFAULT_VISIBLE_COLUMNS,
           visible_profits: DEFAULT_VISIBLE_PROFITS,
           alt_account_timer: null,
-          show_category_stats: false
+          show_category_stats: false,
+          notification_volume: 70
         }], { onConflict: 'user_id', ignoreDuplicates: true });
 
       if (insertError && insertError.code !== '23505') {
@@ -107,6 +110,7 @@ export function useSettings(userId) {
       show_category_stats: newSettings.showCategoryStats,
       show_unrealised_profit_stats: newSettings.showUnrealisedProfitStats,
       show_category_unrealised_profit: newSettings.showCategoryUnrealisedProfit,
+      notification_volume: newSettings.notificationVolume,
     };
 
     const { error } = await supabase
