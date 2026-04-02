@@ -112,7 +112,7 @@ export default function MainApp({ session, onLogout }) {
 
   // Destructure settings
   const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats,
-          showUnrealisedProfitStats, showCategoryUnrealisedProfit } = settings;
+          showUnrealisedProfitStats, showCategoryUnrealisedProfit, notificationVolume } = settings;
   // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState(() => {
     // Load collapsed state from localStorage on initial render
@@ -271,7 +271,7 @@ export default function MainApp({ session, onLogout }) {
     markAllAsRead,
     dismissNotification,
     clearAll: clearAllNotifications,
-  } = useNotifications(notificationPreferences, userId);
+  } = useNotifications(notificationPreferences, userId, notificationVolume);
 
   const { newsItems } = useOSRSNews();
   const { jmodComments } = useJmodComments();
@@ -1902,6 +1902,8 @@ export default function MainApp({ session, onLogout }) {
             onShowCategoryUnrealisedProfitChange={(v) => updateSettings({ showCategoryUnrealisedProfit: v })}
             notificationPreferences={notificationPreferences}
             onNotificationTypeChange={updateNotificationPreference}
+            notificationVolume={notificationVolume}
+            onNotificationVolumeChange={(v) => updateSettings({ notificationVolume: v })}
             onCancel={() => setShowSettingsModal(false)}
             onChangePassword={() => {
               setShowSettingsModal(false);

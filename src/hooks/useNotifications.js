@@ -137,7 +137,7 @@ function getPresetUri(id) {
 
 // --- Playback ---
 
-export function playNotificationSound(soundChoice, customSoundUri) {
+export function playNotificationSound(soundChoice, customSoundUri, volume = 0.7) {
   try {
     let uri;
     if (soundChoice === 'custom' && customSoundUri) {
@@ -147,7 +147,7 @@ export function playNotificationSound(soundChoice, customSoundUri) {
     }
     if (!uri) return;
     const audio = new Audio(uri);
-    audio.volume = 0.7;
+    audio.volume = Math.max(0, Math.min(1, volume));
     return audio.play().catch((err) => {
       console.warn('Notification sound blocked:', err);
     });
@@ -156,11 +156,11 @@ export function playNotificationSound(soundChoice, customSoundUri) {
   }
 }
 
-export function playPresetPreview(presetId) {
+export function playPresetPreview(presetId, volume = 0.7) {
   const uri = getPresetUri(presetId);
   if (!uri) return;
   const audio = new Audio(uri);
-  audio.volume = 0.7;
+  audio.volume = Math.max(0, Math.min(1, volume));
   audio.play().catch(() => {});
 }
 
@@ -174,7 +174,7 @@ function sendBrowserNotification(message) {
 
 // --- Hook ---
 
-export function useNotifications(preferences, userId) {
+export function useNotifications(preferences, userId, notificationVolume = 70) {
   const storageKey = `osrs_notifications_${userId}`;
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem(storageKey);
@@ -182,6 +182,8 @@ export function useNotifications(preferences, userId) {
   });
   const prefsRef = useRef(preferences);
   prefsRef.current = preferences;
+  const volumeRef = useRef(notificationVolume);
+  volumeRef.current = notificationVolume;
 
   // Persist notifications to localStorage whenever they change
   useEffect(() => {
@@ -215,7 +217,7 @@ export function useNotifications(preferences, userId) {
     setNotifications(prev => [notification, ...prev]);
 
     if (typePrefs.sound) {
-      playNotificationSound(typePrefs.soundChoice, typePrefs.customSoundUri);
+      playNotificationSound(typePrefs.soundChoice, typePrefs.customSoundUri, volumeRef.current / 100);
     }
 
     if (typePrefs.browserPush) {
