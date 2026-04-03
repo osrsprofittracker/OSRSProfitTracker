@@ -33,6 +33,7 @@ import CategorySection from './components/CategorySection';
 import ChangePasswordModal from './components/modals/ChangePasswordModal';
 import ModalContainer from './components/modals/ModalContainer';
 import BuyModal from './components/modals/BuyModal';
+import BulkBuyModal from './components/modals/BulkBuyModal';
 import SellModal from './components/modals/SellModal';
 import RemoveStockModal from './components/modals/RemoveStockModal';
 import AdjustModal from './components/modals/AdjustModal';
@@ -198,6 +199,7 @@ export default function MainApp({ session, onLogout }) {
 
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
+  const [showBulkBuyModal, setShowBulkBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -827,6 +829,64 @@ export default function MainApp({ session, onLogout }) {
       }
       highlightRow(selectedStock.id);
       setShowBuyModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkBuy = async (items) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      for (const item of items) {
+        const { stock, shares, price, startTimer } = item;
+        const total = shares * price;
+        const newShares = stock.shares + shares;
+
+        let timerEndTime;
+        let newOnHold = stock.onHold;
+
+        if (startTimer) {
+          timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
+          newOnHold = false;
+        } else {
+          timerEndTime = stock.timerEndTime;
+        }
+
+        const timerJustEnded = stock.timerEndTime && stock.timerEndTime <= Date.now();
+        if (timerJustEnded && newShares < stock.needed && stock.onHold) {
+          newOnHold = true;
+        } else if (newShares >= stock.needed) {
+          newOnHold = false;
+        }
+
+        await updateStock(stock.id, {
+          totalCost: stock.totalCost + total,
+          shares: newShares,
+          timerEndTime,
+        });
+
+        await addTransaction({
+          stockId: stock.id,
+          stockName: stock.name,
+          type: 'buy',
+          shares,
+          price,
+          total,
+          date: new Date().toISOString(),
+        });
+
+        if (startTimer) {
+          firedTimerNotifs.current.delete(stock.id);
+        }
+
+        highlightRow(stock.id);
+      }
+
+      saveFiredTimers();
+      await refetch();
+      setShowBulkBuyModal(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -1657,6 +1717,12 @@ export default function MainApp({ session, onLogout }) {
                 + Add Stock
               </button>
               <button
+                onClick={() => setShowBulkBuyModal(true)}
+                className="btn btn-success"
+              >
+                Bulk Buy
+              </button>
+              <button
                 onClick={handleOpenArchive}
                 className="btn btn-secondary"
               >
@@ -1745,6 +1811,19 @@ export default function MainApp({ session, onLogout }) {
                 onConfirm={handleBuy}
                 onCancel={() => setShowBuyModal(false)}
                 geData={gePrices}
+                isSubmitting={isSubmitting}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showBulkBuyModal}>
+              <BulkBuyModal
+                stocks={stocks}
+                categories={categories}
+                tradeMode={tradeMode}
+                gePrices={gePrices}
+                geIconMap={geIconMap}
+                onConfirm={handleBulkBuy}
+                onCancel={() => setShowBulkBuyModal(false)}
                 isSubmitting={isSubmitting}
               />
             </ModalContainer>
