@@ -57,6 +57,40 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 - `HistoryPage` — transaction history log
 - Static pages: `About`, `Contact`, `PrivacyPolicy`, `CookiePolicy`, `Terms`
 
+### MainApp.jsx structure
+
+`MainApp.jsx` is the orchestrator. Key sections by line area:
+
+- **Imports** (top ~60 lines): all hooks, components, modals
+- **Hook calls** (~line 70-150): `useStocks`, `useTransactions`, `useCategories`, etc.
+- **Modal state** (~line 200-230): `useState` booleans for every modal (`showBuyModal`, `showBulkBuyModal`, etc.) plus `selectedStock`, `isSubmitting`
+- **Handlers** (~line 840-1050): `handleBulkBuy`, `handleBulkSell`, `handleBulkUndo`, `handleSell`, `handleRemoveStock`, etc. Each handler does: guard `isSubmitting` -> mutate via hooks -> `refetch()` -> close modal
+- **JSX modals** (~line 1870-1950): all `<ModalContainer isOpen={...}>` blocks
+
+### Modal pattern
+
+Every modal follows this pattern:
+1. State in MainApp: `const [showXModal, setShowXModal] = useState(false)`
+2. Open: `setShowXModal(true)` (from button click or stock action)
+3. Component in `src/components/modals/XModal.jsx` receives `onConfirm` and `onCancel`
+4. Render: `<ModalContainer isOpen={showXModal}><XModal .../></ModalContainer>`
+5. `ModalContainer` is a fixed overlay with z-index 200, renders null when closed
+
+### CSS conventions
+
+- All styles in `src/styles/components.css` (single file, ~5000+ lines)
+- BEM-like naming: `.component-name`, `.component-name-element`, `.component-name-element.modifier`
+- Modal colors: `rgb(22, 30, 46)` background, `rgba(51, 65, 85, 0.6)` borders
+- Green confirm: `rgb(21, 128, 61)`, gray cancel: `rgba(71, 85, 105, 0.5)`
+- Modal dimensions: `52rem` wide (or smaller for simple modals), `75vh` tall, `0.875rem` border-radius
+- Mobile breakpoint: `@media (max-width: 640px)` -- modals go full width, `95vh`
+
+### Utilities
+
+- `src/utils/formatters.js`: `formatNumber(num, format)`, `parseMK(str)`, `handleMKInput(value)`
+- `src/utils/calculations.js`: profit math
+- `src/utils/taxUtils.js`: GE tax (2%, 5M cap)
+
 ### Design
 
 - Dont use inline CSS

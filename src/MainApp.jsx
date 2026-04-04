@@ -35,6 +35,7 @@ import ModalContainer from './components/modals/ModalContainer';
 import BuyModal from './components/modals/BuyModal';
 import BulkBuyModal from './components/modals/BulkBuyModal';
 import BulkSellModal from './components/modals/BulkSellModal';
+import BulkSummaryModal from './components/modals/BulkSummaryModal';
 import SellModal from './components/modals/SellModal';
 import RemoveStockModal from './components/modals/RemoveStockModal';
 import AdjustModal from './components/modals/AdjustModal';
@@ -202,6 +203,9 @@ export default function MainApp({ session, onLogout }) {
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showBulkBuyModal, setShowBulkBuyModal] = useState(false);
   const [showBulkSellModal, setShowBulkSellModal] = useState(false);
+  const [bulkSummaryData, setBulkSummaryData] = useState(null);
+  const [isUndoing, setIsUndoing] = useState(false);
+  const [undoResult, setUndoResult] = useState(null);
   const [showSellModal, setShowSellModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -841,6 +845,8 @@ export default function MainApp({ session, onLogout }) {
     setIsSubmitting(true);
 
     try {
+      const completedItems = [];
+
       for (const item of items) {
         const { stock, shares, price, startTimer } = item;
         const total = shares * price;
@@ -869,7 +875,7 @@ export default function MainApp({ session, onLogout }) {
           timerEndTime,
         });
 
-        await addTransaction({
+        const transaction = await addTransaction({
           stockId: stock.id,
           stockName: stock.name,
           type: 'buy',
@@ -878,6 +884,8 @@ export default function MainApp({ session, onLogout }) {
           total,
           date: new Date().toISOString(),
         });
+
+        completedItems.push({ stockName: stock.name, shares, price, total, transaction });
 
         if (startTimer) {
           firedTimerNotifs.current.delete(stock.id);
@@ -889,6 +897,7 @@ export default function MainApp({ session, onLogout }) {
       saveFiredTimers();
       await refetch();
       setShowBulkBuyModal(false);
+      setBulkSummaryData({ type: 'buy', items: completedItems });
     } finally {
       setIsSubmitting(false);
     }
@@ -946,6 +955,8 @@ export default function MainApp({ session, onLogout }) {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
+      const completedItems = [];
+
       for (const item of items) {
         const { stock, shares, price } = item;
         const total = shares * price;
@@ -980,14 +991,51 @@ export default function MainApp({ session, onLogout }) {
             .eq('id', newTransaction.id);
         }
 
+        completedItems.push({ stockName: stock.name, shares, price, total, transaction: newTransaction, profitEntry, profit });
+
         highlightRow(stock.id);
       }
 
       await refetch();
       setShowBulkSellModal(false);
+      setBulkSummaryData({ type: 'sell', items: completedItems });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleBulkUndo = async () => {
+    if (!bulkSummaryData || isUndoing) return;
+    setIsUndoing(true);
+
+    const items = [...bulkSummaryData.items].reverse();
+    let undoneCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
+    for (const item of items) {
+      if (!item.transaction) {
+        failedCount++;
+        errors.push(`${item.stockName}: no transaction reference`);
+        continue;
+      }
+      const result = await undoTransaction(item.transaction);
+      if (result.success) {
+        undoneCount++;
+      } else {
+        failedCount++;
+        errors.push(`${item.stockName}: ${result.warning || result.error || 'unknown error'}`);
+      }
+    }
+
+    await refetch();
+    setUndoResult({ success: failedCount === 0, undoneCount, failedCount, errors });
+    setIsUndoing(false);
+  };
+
+  const handleBulkSummaryDone = () => {
+    setBulkSummaryData(null);
+    setUndoResult(null);
   };
 
   const handleRemoveStock = async (data) => {
@@ -1894,6 +1942,17 @@ export default function MainApp({ session, onLogout }) {
                 onConfirm={handleBulkSell}
                 onCancel={() => setShowBulkSellModal(false)}
                 isSubmitting={isSubmitting}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={bulkSummaryData !== null}>
+              <BulkSummaryModal
+                type={bulkSummaryData?.type}
+                completedItems={bulkSummaryData?.items || []}
+                onUndo={handleBulkUndo}
+                onDone={handleBulkSummaryDone}
+                isUndoing={isUndoing}
+                undoResult={undoResult}
               />
             </ModalContainer>
 
