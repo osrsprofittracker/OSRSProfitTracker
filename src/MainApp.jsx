@@ -34,6 +34,7 @@ import ChangePasswordModal from './components/modals/ChangePasswordModal';
 import ModalContainer from './components/modals/ModalContainer';
 import BuyModal from './components/modals/BuyModal';
 import BulkBuyModal from './components/modals/BulkBuyModal';
+import BulkSellModal from './components/modals/BulkSellModal';
 import SellModal from './components/modals/SellModal';
 import RemoveStockModal from './components/modals/RemoveStockModal';
 import AdjustModal from './components/modals/AdjustModal';
@@ -200,6 +201,7 @@ export default function MainApp({ session, onLogout }) {
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showBulkBuyModal, setShowBulkBuyModal] = useState(false);
+  const [showBulkSellModal, setShowBulkSellModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -935,6 +937,54 @@ export default function MainApp({ session, onLogout }) {
       await refetch();
       highlightRow(selectedStock.id);
       setShowSellModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkSell = async (items) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      for (const item of items) {
+        const { stock, shares, price } = item;
+        const total = shares * price;
+        const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
+        const costBasisOfSharesSold = avgBuy * shares;
+        const profit = total - costBasisOfSharesSold;
+
+        await updateStock(stock.id, {
+          shares: stock.shares - shares,
+          totalCost: stock.totalCost - costBasisOfSharesSold,
+          sharesSold: stock.sharesSold + shares,
+          totalCostSold: stock.totalCostSold + total,
+          totalCostBasisSold: (stock.totalCostBasisSold || 0) + costBasisOfSharesSold
+        });
+
+        const newTransaction = await addTransaction({
+          stockId: stock.id,
+          stockName: stock.name,
+          type: 'sell',
+          shares,
+          price,
+          total,
+          date: new Date().toISOString()
+        });
+
+        const profitEntry = await addProfitEntry('stock', profit, stock.id, newTransaction?.id ?? null);
+
+        if (newTransaction && profitEntry) {
+          await supabase
+            .from('transactions')
+            .update({ profit_history_id: profitEntry.id })
+            .eq('id', newTransaction.id);
+        }
+
+        highlightRow(stock.id);
+      }
+
+      await refetch();
+      setShowBulkSellModal(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -1723,6 +1773,12 @@ export default function MainApp({ session, onLogout }) {
                 Bulk Buy
               </button>
               <button
+                onClick={() => setShowBulkSellModal(true)}
+                className="btn btn-danger"
+              >
+                Bulk Sell
+              </button>
+              <button
                 onClick={handleOpenArchive}
                 className="btn btn-secondary"
               >
@@ -1824,6 +1880,19 @@ export default function MainApp({ session, onLogout }) {
                 geIconMap={geIconMap}
                 onConfirm={handleBulkBuy}
                 onCancel={() => setShowBulkBuyModal(false)}
+                isSubmitting={isSubmitting}
+              />
+            </ModalContainer>
+
+            <ModalContainer isOpen={showBulkSellModal}>
+              <BulkSellModal
+                stocks={stocks}
+                categories={categories}
+                tradeMode={tradeMode}
+                gePrices={gePrices}
+                geIconMap={geIconMap}
+                onConfirm={handleBulkSell}
+                onCancel={() => setShowBulkSellModal(false)}
                 isSubmitting={isSubmitting}
               />
             </ModalContainer>
