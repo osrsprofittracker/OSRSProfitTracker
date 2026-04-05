@@ -42,19 +42,25 @@ export default function BulkSummaryModal({ type, completedItems, onUndo, onDone,
       </div>
 
       <div className="bulk-summary-receipt">
-        <div className="bulk-summary-receipt-header">
+        <div className={`bulk-summary-receipt-header ${!isBuy ? 'with-profit' : ''}`}>
           <span>Item</span>
           <span>Qty</span>
           <span>Price</span>
           <span>Total</span>
+          {!isBuy && <span>Profit</span>}
         </div>
         <div className="bulk-summary-lines">
           {completedItems.map((item, i) => (
-            <div className="bulk-summary-line" key={i}>
+            <div className={`bulk-summary-line ${!isBuy ? 'with-profit' : ''}`} key={i}>
               <span className="bulk-summary-line-name">{item.stockName}</span>
               <span className="bulk-summary-line-qty">{formatNumber(item.shares)}</span>
               <span className="bulk-summary-line-price">{formatNumber(item.price)}</span>
               <span className="bulk-summary-line-total">{formatNumber(item.total)}</span>
+              {!isBuy && (
+                <span className={`bulk-summary-line-profit ${item.profit >= 0 ? 'profit' : 'loss'}`}>
+                  {item.profit >= 0 ? '+' : ''}{formatNumber(item.profit)}
+                </span>
+              )}
             </div>
           ))}
         </div>
