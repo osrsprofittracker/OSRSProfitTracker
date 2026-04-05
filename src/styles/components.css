@@ -5126,7 +5126,7 @@
 .bulk-summary-modal {
   background: rgb(22, 30, 46);
   border-radius: 0.875rem;
-  width: 28rem;
+  width: 36rem;
   max-width: 95vw;
   max-height: 80vh;
   display: flex;
@@ -5195,6 +5195,10 @@
   border-radius: 4px;
 }
 
+.bulk-summary-receipt-header.with-profit {
+  grid-template-columns: 1fr 4rem 5rem 5.5rem 5.5rem;
+}
+
 .bulk-summary-receipt-header {
   display: grid;
   grid-template-columns: 1fr 4rem 5rem 5.5rem;
@@ -5214,6 +5218,10 @@
 
 .bulk-summary-lines {
   padding: 0.25rem 0;
+}
+
+.bulk-summary-line.with-profit {
+  grid-template-columns: 1fr 4rem 5rem 5.5rem 5.5rem;
 }
 
 .bulk-summary-line {
@@ -5255,6 +5263,20 @@
   text-align: right;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.bulk-summary-line-profit {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.bulk-summary-line-profit.profit {
+  color: rgb(34, 197, 94);
+}
+
+.bulk-summary-line-profit.loss {
+  color: rgb(239, 68, 68);
 }
 
 /* Totals */
@@ -5440,13 +5462,19 @@
     gap: 0.25rem;
   }
 
+  .bulk-summary-receipt-header.with-profit,
+  .bulk-summary-line.with-profit {
+    grid-template-columns: 1fr 3.5rem 4rem 4.5rem 4.5rem;
+  }
+
   .bulk-summary-line-name {
     font-size: 0.78rem;
   }
 
   .bulk-summary-line-qty,
   .bulk-summary-line-price,
-  .bulk-summary-line-total {
+  .bulk-summary-line-total,
+  .bulk-summary-line-profit {
     font-size: 0.75rem;
   }
 }

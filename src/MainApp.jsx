@@ -840,64 +840,111 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
-  const handleBulkBuy = async (items) => {
+  const processBuyItem = async (item) => {
+    const { stock, shares, price, startTimer } = item;
+    const total = shares * price;
+    const newShares = stock.shares + shares;
+
+    let timerEndTime;
+    let newOnHold = stock.onHold;
+
+    if (startTimer) {
+      timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
+      newOnHold = false;
+    } else {
+      timerEndTime = stock.timerEndTime;
+    }
+
+    const timerJustEnded = stock.timerEndTime && stock.timerEndTime <= Date.now();
+    if (timerJustEnded && newShares < stock.needed && stock.onHold) {
+      newOnHold = true;
+    } else if (newShares >= stock.needed) {
+      newOnHold = false;
+    }
+
+    await updateStock(stock.id, {
+      totalCost: stock.totalCost + total,
+      shares: newShares,
+      timerEndTime,
+    });
+
+    const transaction = await addTransaction({
+      stockId: stock.id,
+      stockName: stock.name,
+      type: 'buy',
+      shares,
+      price,
+      total,
+      date: new Date().toISOString(),
+    });
+
+    if (startTimer) {
+      firedTimerNotifs.current.delete(stock.id);
+    }
+
+    return { stockName: stock.name, shares, price, total, transaction };
+  };
+
+  const processSellItem = async (item) => {
+    const { stock, shares, price } = item;
+    const total = shares * price;
+    const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
+    const costBasisOfSharesSold = avgBuy * shares;
+    const profit = total - costBasisOfSharesSold;
+
+    await updateStock(stock.id, {
+      shares: stock.shares - shares,
+      totalCost: stock.totalCost - costBasisOfSharesSold,
+      sharesSold: stock.sharesSold + shares,
+      totalCostSold: stock.totalCostSold + total,
+      totalCostBasisSold: (stock.totalCostBasisSold || 0) + costBasisOfSharesSold
+    });
+
+    const transaction = await addTransaction({
+      stockId: stock.id,
+      stockName: stock.name,
+      type: 'sell',
+      shares,
+      price,
+      total,
+      date: new Date().toISOString(),
+    });
+
+    const profitEntry = await addProfitEntry('stock', profit, stock.id, transaction?.id ?? null);
+
+    if (transaction && profitEntry) {
+      await supabase
+        .from('transactions')
+        .update({ profit_history_id: profitEntry.id })
+        .eq('id', transaction.id);
+    }
+
+    return { stockName: stock.name, shares, price, total, transaction, profitEntry, profit };
+  };
+
+  const handleBulkOperation = async (type, items, closeModal) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
       const completedItems = [];
+      const processItem = type === 'buy' ? processBuyItem : processSellItem;
 
       for (const item of items) {
-        const { stock, shares, price, startTimer } = item;
-        const total = shares * price;
-        const newShares = stock.shares + shares;
-
-        let timerEndTime;
-        let newOnHold = stock.onHold;
-
-        if (startTimer) {
-          timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
-          newOnHold = false;
-        } else {
-          timerEndTime = stock.timerEndTime;
-        }
-
-        const timerJustEnded = stock.timerEndTime && stock.timerEndTime <= Date.now();
-        if (timerJustEnded && newShares < stock.needed && stock.onHold) {
-          newOnHold = true;
-        } else if (newShares >= stock.needed) {
-          newOnHold = false;
-        }
-
-        await updateStock(stock.id, {
-          totalCost: stock.totalCost + total,
-          shares: newShares,
-          timerEndTime,
-        });
-
-        const transaction = await addTransaction({
-          stockId: stock.id,
-          stockName: stock.name,
-          type: 'buy',
-          shares,
-          price,
-          total,
-          date: new Date().toISOString(),
-        });
-
-        completedItems.push({ stockName: stock.name, shares, price, total, transaction });
-
-        if (startTimer) {
-          firedTimerNotifs.current.delete(stock.id);
-        }
-
-        highlightRow(stock.id);
+        const completed = await processItem(item);
+        completedItems.push(completed);
+        highlightRow(item.stock.id);
       }
 
-      saveFiredTimers();
+      if (type === 'buy') {
+        saveFiredTimers();
+      }
+
       await refetch();
-      setShowBulkBuyModal(false);
-      setBulkSummaryData({ type: 'buy', items: completedItems });
+      closeModal(false);
+      if (items.length > 1) {
+        setBulkSummaryData({ type, items: completedItems });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -907,101 +954,12 @@ export default function MainApp({ session, onLogout }) {
 
 
   const handleSell = async (data) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
     const { shares, price } = data;
-    const total = shares * price;
-
-    const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
-    const costBasisOfSharesSold = avgBuy * shares;
-    const profit = total - costBasisOfSharesSold;
-
-    try {
-      await updateStock(selectedStock.id, {
-        shares: selectedStock.shares - shares,
-        totalCost: selectedStock.totalCost - costBasisOfSharesSold,
-        sharesSold: selectedStock.sharesSold + shares,
-        totalCostSold: selectedStock.totalCostSold + total,
-        totalCostBasisSold: (selectedStock.totalCostBasisSold || 0) + costBasisOfSharesSold
-      });
-
-      const newTransaction = await addTransaction({
-        stockId: selectedStock.id,
-        stockName: selectedStock.name,
-        type: 'sell',
-        shares,
-        price,
-        total,
-        date: new Date().toISOString()
-      });
-
-      const profitEntry = await addProfitEntry('stock', profit, selectedStock.id, newTransaction?.id ?? null);
-
-      if (newTransaction && profitEntry) {
-        await supabase
-          .from('transactions')
-          .update({ profit_history_id: profitEntry.id })
-          .eq('id', newTransaction.id);
-      }
-      await refetch();
-      highlightRow(selectedStock.id);
-      setShowSellModal(false);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await handleBulkOperation('sell', [{ stock: selectedStock, shares, price }], setShowSellModal);
   };
 
   const handleBulkSell = async (items) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const completedItems = [];
-
-      for (const item of items) {
-        const { stock, shares, price } = item;
-        const total = shares * price;
-        const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
-        const costBasisOfSharesSold = avgBuy * shares;
-        const profit = total - costBasisOfSharesSold;
-
-        await updateStock(stock.id, {
-          shares: stock.shares - shares,
-          totalCost: stock.totalCost - costBasisOfSharesSold,
-          sharesSold: stock.sharesSold + shares,
-          totalCostSold: stock.totalCostSold + total,
-          totalCostBasisSold: (stock.totalCostBasisSold || 0) + costBasisOfSharesSold
-        });
-
-        const newTransaction = await addTransaction({
-          stockId: stock.id,
-          stockName: stock.name,
-          type: 'sell',
-          shares,
-          price,
-          total,
-          date: new Date().toISOString()
-        });
-
-        const profitEntry = await addProfitEntry('stock', profit, stock.id, newTransaction?.id ?? null);
-
-        if (newTransaction && profitEntry) {
-          await supabase
-            .from('transactions')
-            .update({ profit_history_id: profitEntry.id })
-            .eq('id', newTransaction.id);
-        }
-
-        completedItems.push({ stockName: stock.name, shares, price, total, transaction: newTransaction, profitEntry, profit });
-
-        highlightRow(stock.id);
-      }
-
-      await refetch();
-      setShowBulkSellModal(false);
-      setBulkSummaryData({ type: 'sell', items: completedItems });
-    } finally {
-      setIsSubmitting(false);
-    }
+    await handleBulkOperation('sell', items, setShowBulkSellModal);
   };
 
   const handleBulkUndo = async () => {
@@ -1926,7 +1884,7 @@ export default function MainApp({ session, onLogout }) {
                 tradeMode={tradeMode}
                 gePrices={gePrices}
                 geIconMap={geIconMap}
-                onConfirm={handleBulkBuy}
+                onConfirm={(items) => handleBulkOperation('buy', items, setShowBulkBuyModal)}
                 onCancel={() => setShowBulkBuyModal(false)}
                 isSubmitting={isSubmitting}
               />
