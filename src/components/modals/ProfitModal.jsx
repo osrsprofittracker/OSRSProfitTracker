@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { handleMKInput } from '../../utils/formatters';
+import StepInput from '../StepInput';
 
 export default function ProfitModal({ type, onConfirm, onCancel }) {
   const [amount, setAmount] = useState('');
@@ -40,10 +41,11 @@ export default function ProfitModal({ type, onConfirm, onCancel }) {
     }}>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>{title}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <input
+        <StepInput
           type="text"
           value={amount}
           onChange={(e) => handleMKInput(e.target.value, setAmount)}
+          onStep={(d) => setAmount(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
           placeholder="Enter profit amount (e.g. 10m, 500k)"
           style={{
             width: '100%',

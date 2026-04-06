@@ -14,6 +14,18 @@ export default function PriceAlertModal({ itemId, itemName, currentAlert, gePric
 
   const isEditing = !!currentAlert?.isActive;
 
+  const stepHigh = (delta) => {
+    const newVal = Math.max(0, (parseInt(highThreshold) || 0) + delta);
+    setHighThreshold(newVal.toString());
+    setError('');
+  };
+
+  const stepLow = (delta) => {
+    const newVal = Math.max(0, (parseInt(lowThreshold) || 0) + delta);
+    setLowThreshold(newVal.toString());
+    setError('');
+  };
+
   const handleSave = () => {
     const high = highThreshold ? parseInt(highThreshold, 10) : null;
     const low = lowThreshold ? parseInt(lowThreshold, 10) : null;
@@ -71,14 +83,24 @@ export default function PriceAlertModal({ itemId, itemName, currentAlert, gePric
             <TrendingUp size={14} className="price-alert-field-icon-up" />
             Notify when price above
           </label>
-          <input
-            type="number"
-            className="price-alert-input"
-            value={highThreshold}
-            onChange={(e) => { setHighThreshold(e.target.value); setError(''); }}
-            placeholder="e.g. 5000000"
-            min="1"
-          />
+          <div className="input-step-wrapper">
+            <input
+              type="number"
+              className="price-alert-input input-step-field"
+              value={highThreshold}
+              onChange={(e) => { setHighThreshold(e.target.value); setError(''); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') { e.preventDefault(); stepHigh(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepHigh(-1); }
+              }}
+              placeholder="e.g. 5000000"
+              min="1"
+            />
+            <div className="input-step-btns">
+              <button type="button" className="input-step-btn" onClick={() => stepHigh(1)}>▲</button>
+              <button type="button" className="input-step-btn" onClick={() => stepHigh(-1)}>▼</button>
+            </div>
+          </div>
         </div>
 
         <div className="price-alert-field">
@@ -86,14 +108,24 @@ export default function PriceAlertModal({ itemId, itemName, currentAlert, gePric
             <TrendingDown size={14} className="price-alert-field-icon-down" />
             Notify when price below
           </label>
-          <input
-            type="number"
-            className="price-alert-input"
-            value={lowThreshold}
-            onChange={(e) => { setLowThreshold(e.target.value); setError(''); }}
-            placeholder="e.g. 3000000"
-            min="1"
-          />
+          <div className="input-step-wrapper">
+            <input
+              type="number"
+              className="price-alert-input input-step-field"
+              value={lowThreshold}
+              onChange={(e) => { setLowThreshold(e.target.value); setError(''); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') { e.preventDefault(); stepLow(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepLow(-1); }
+              }}
+              placeholder="e.g. 3000000"
+              min="1"
+            />
+            <div className="input-step-btns">
+              <button type="button" className="input-step-btn" onClick={() => stepLow(1)}>▲</button>
+              <button type="button" className="input-step-btn" onClick={() => stepLow(-1)}>▼</button>
+            </div>
+          </div>
         </div>
       </div>
 

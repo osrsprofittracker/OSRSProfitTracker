@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { handleMKInput } from '../../utils/formatters';
+import StepInput from '../StepInput';
 
 export default function TimeCalculatorModal({ stock, onClose }) {
   const [targetAmount, setTargetAmount] = useState(stock.needed.toString());
@@ -36,10 +37,11 @@ export default function TimeCalculatorModal({ stock, onClose }) {
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
             Target Amount
           </label>
-          <input
+          <StepInput
             type="text"
             value={targetAmount}
             onChange={(e) => handleMKInput(e.target.value, setTargetAmount)}
+            onStep={(d) => setTargetAmount(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
             placeholder="Enter target amount (e.g. 100k)"
             autoFocus
             style={{
@@ -61,10 +63,11 @@ export default function TimeCalculatorModal({ stock, onClose }) {
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
             Number of Accounts
           </label>
-          <input
+          <StepInput
             type="text"
             value={accountCount}
             onChange={(e) => handleMKInput(e.target.value, setAccountCount)}
+            onStep={(d) => setAccountCount(prev => Math.max(1, (parseFloat(prev) || 1) + d).toString())}
             placeholder="Enter number of accounts"
             style={{
               width: '100%',

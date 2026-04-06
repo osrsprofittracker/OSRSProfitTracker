@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { formatNumber, parseMK, handleMKInput } from '../../utils/formatters';
 import '../../styles/bulk-modals.css';
+import StepInput from '../StepInput';
 
 export default function BulkBuyModal({ stocks, categories = [], tradeMode = 'trade', gePrices = {}, geIconMap = {}, onConfirm, onCancel, isSubmitting = false }) {
   const [mode, setMode] = useState('perItem');
@@ -252,10 +253,11 @@ export default function BulkBuyModal({ stocks, categories = [], tradeMode = 'tra
           {mode === 'budgetSplit' && (
             <div className="bulk-buy-budget-row">
               <label>Total Budget (GP)</label>
-              <input
+              <StepInput
                 type="text"
                 value={budget}
                 onChange={(e) => handleMKInput(e.target.value, setBudget)}
+                onStep={(d) => setBudget(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
                 placeholder="e.g. 100m"
               />
             </div>
@@ -285,16 +287,18 @@ export default function BulkBuyModal({ stocks, categories = [], tradeMode = 'tra
                     {mode === 'perItem' ? (
                       <>
                         <div className="item-inputs">
-                          <input
+                          <StepInput
                             type="text"
                             value={item.shares}
                             onChange={(e) => handleSharesInput(id, e.target.value)}
+                            onStep={(d) => updateItem(id, 'shares', Math.max(0, (parseFloat(item.shares) || 0) + d).toString())}
                             placeholder="Shares"
                           />
-                          <input
+                          <StepInput
                             type="text"
                             value={item.price}
                             onChange={(e) => handlePriceInput(id, e.target.value)}
+                            onStep={(d) => updateItem(id, 'price', Math.max(0, (parseFloat(item.price) || 0) + d).toString())}
                             placeholder="Price"
                           />
                         </div>
@@ -327,10 +331,11 @@ export default function BulkBuyModal({ stocks, categories = [], tradeMode = 'tra
                     ) : (
                       <>
                         <div className="item-inputs">
-                          <input
+                          <StepInput
                             type="text"
                             value={item.price}
                             onChange={(e) => handlePriceInput(id, e.target.value)}
+                            onStep={(d) => updateItem(id, 'price', Math.max(0, (parseFloat(item.price) || 0) + d).toString())}
                             placeholder="Buy price"
                           />
                         </div>
