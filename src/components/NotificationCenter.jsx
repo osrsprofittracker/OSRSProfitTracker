@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, Filter, TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
+import '../styles/notification-center.css';
 
 function getTimeAgo(timestamp) {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);

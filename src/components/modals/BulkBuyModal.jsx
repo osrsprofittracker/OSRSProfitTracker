@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { formatNumber, parseMK, handleMKInput } from '../../utils/formatters';
+import '../../styles/bulk-modals.css';
 
 export default function BulkBuyModal({ stocks, categories = [], tradeMode = 'trade', gePrices = {}, geIconMap = {}, onConfirm, onCancel, isSubmitting = false }) {
   const [mode, setMode] = useState('perItem');

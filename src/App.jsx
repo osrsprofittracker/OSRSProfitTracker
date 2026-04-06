@@ -4,7 +4,7 @@ import Auth from './components/Auth';
 import MainApp from './MainApp';
 import UpdatePassword from './components/UpdatePassword';
 import LandingPage from './pages/LandingPage';
-import './styles/components.css';
+
 
 export default function App() {
   const [session, setSession] = useState(null);

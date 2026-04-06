@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import StockTable from './StockTable';
 import { formatNumber } from '../utils/formatters';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
+import '../styles/category-section.css';
 
 export default function CategorySection({
   category,

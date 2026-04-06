@@ -48,7 +48,7 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 - `MainApp` renders `Header`, `PortfolioSummary`, `CategoryQuickNav`, `MilestoneProgressBar`, `ChartButtons`, `CategorySection` (per category), and `Footer`.
 - `CategorySection` renders a `StockTable` per category.
 - All modals live in `src/components/modals/` and are controlled from `MainApp` via `selectedStock` / modal-open state. `ModalContainer` wraps modal-level concerns.
-- `src/styles/components.css` holds component styles; `src/index.css` holds global styles. No CSS framework.
+- `src/styles/` holds component styles split per-component; `src/index.css` holds global styles. No CSS framework.
 - Icons come from `lucide-react`.
 
 ### Pages
@@ -78,12 +78,35 @@ Every modal follows this pattern:
 
 ### CSS conventions
 
-- All styles in `src/styles/components.css` (single file, ~5000+ lines)
+- Styles live in `src/styles/`, one file per component/feature. Each component imports its own CSS file.
+- `shared.css` — reusable classes (modal base, form elements, common patterns)
 - BEM-like naming: `.component-name`, `.component-name-element`, `.component-name-element.modifier`
 - Modal colors: `rgb(22, 30, 46)` background, `rgba(51, 65, 85, 0.6)` borders
 - Green confirm: `rgb(21, 128, 61)`, gray cancel: `rgba(71, 85, 105, 0.5)`
 - Modal dimensions: `52rem` wide (or smaller for simple modals), `75vh` tall, `0.875rem` border-radius
-- Mobile breakpoint: `@media (max-width: 640px)` -- modals go full width, `95vh`
+- Mobile breakpoint: `@media (max-width: 640px)` — modals go full width, `95vh`
+
+#### CSS file map
+
+| File | Component(s) |
+|---|---|
+| `shared.css` | Reusable modal/form/layout classes |
+| `auth.css` | `Auth`, `UpdatePassword` |
+| `header.css` | `Header` |
+| `quick-nav.css` | `CategoryQuickNav` |
+| `category-section.css` | `CategorySection` |
+| `table.css` | `StockTable` |
+| `global-search.css` | `GlobalSearch` |
+| `notification-center.css` | `NotificationCenter` |
+| `home-page.css` | `HomePage` |
+| `history-page.css` | `HistoryPage` |
+| `graphs-page.css` | `GraphsPage` |
+| `filter-panel.css` | Filter panel in `HistoryPage` |
+| `bulk-modals.css` | `BulkBuyModal`, `BulkSellModal` |
+| `bulk-summary-modal.css` | `BulkSummaryModal` |
+| `changelog-modal.css` | `ChangelogModal` |
+| `price-alert-modal.css` | `PriceAlertModal` |
+| `settings-modal.css` | `SettingsModal` |
 
 ### Utilities
 

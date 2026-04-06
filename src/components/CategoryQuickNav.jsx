@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import '../styles/quick-nav.css';
 
 export default function CategoryQuickNav({ categories, collapsedCategories, onNavigate }) {
   const [activeCategory, setActiveCategory] = useState(null);

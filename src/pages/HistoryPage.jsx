@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Star } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
+import '../styles/table.css';
+import '../styles/history-page.css';
+import '../styles/filter-panel.css';
 
 const EMPTY_FILTERS = {
   type: 'all',

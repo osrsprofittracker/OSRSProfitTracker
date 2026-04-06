@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { formatNumber, handleMKInput } from '../../utils/formatters';
+import '../../styles/bulk-modals.css';
 
 export default function BulkSellModal({ stocks, categories = [], tradeMode = 'trade', gePrices = {}, geIconMap = {}, onConfirm, onCancel, isSubmitting = false }) {
   const [searchQuery, setSearchQuery] = useState('');

@@ -7,7 +7,7 @@ import CookiePolicy from './pages/CookiePolicy';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import ErrorBoundary from './components/ErrorBoundary';
-import './styles/components.css';
+import './styles/shared.css';
 import './index.css'
 import './lib/errorLogger' // Import to activate global error handlers
 
