@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Search, Package, FolderOpen, ArrowLeftRight, BarChart3, X } from 'lucide-react';
+import '../styles/global-search.css';
 
 export default function GlobalSearch({
   stocks = [],

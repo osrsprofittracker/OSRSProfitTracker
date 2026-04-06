@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { playNotificationSound, playPresetPreview, SOUND_PRESETS } from '../../hooks/useNotifications';
+import '../../styles/settings-modal.css';
 
 function SettingTooltip({ text, children }) {
   const [show, setShow] = useState(false);

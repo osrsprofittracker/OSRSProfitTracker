@@ -6,6 +6,7 @@ import { useGraphPreferences } from '../hooks/useGraphPreferences';
 import { calculateGETax } from '../utils/taxUtils';
 import ModalContainer from '../components/modals/ModalContainer';
 import NotesModal from '../components/modals/NotesModal';
+import '../styles/graphs-page.css';
 
 const TIMEFRAMES = [
   { label: '1D', timestep: '5m', filterDays: 1 },

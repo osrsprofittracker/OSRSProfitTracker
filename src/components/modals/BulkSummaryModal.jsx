@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, Undo2, AlertTriangle, Loader2 } from 'lucide-react';
 import { formatNumber } from '../../utils/formatters';
+import '../../styles/bulk-summary-modal.css';
 
 export default function BulkSummaryModal({ type, completedItems, onUndo, onDone, isUndoing, undoResult }) {
   const [confirmUndo, setConfirmUndo] = useState(false);

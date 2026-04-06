@@ -3,6 +3,7 @@ import { Edit3, Trash2, GripVertical, Star, Bell, BellRing } from 'lucide-react'
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
+import '../styles/table.css';
 import { sortStocks } from '../utils/calculations';
 
 function investmentAge(dateStr) {

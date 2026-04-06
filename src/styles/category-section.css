@@ -1,0 +1,100 @@
+/* Category Section */
+.category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+  margin-bottom: 0.5rem;
+  user-select: none;
+}
+
+.category-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: move;
+  flex: 1;
+}
+
+.category-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-right: 0.25rem;
+}
+
+.collapse-icon {
+  font-size: 1.25rem;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.collapse-icon-rotated {
+  transform: rotate(-90deg);
+}
+
+
+/* Category Section */
+.category-container {
+  margin-bottom: 2rem;
+}
+
+.category-stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 1rem;
+  background: rgba(51, 65, 85, 0.5);
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgb(71, 85, 105);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.btn-edit-category {
+  padding: 0.25rem 0.75rem;
+  background: rgb(147, 51, 234);
+  color: white;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-delete-category {
+  padding: 0.25rem 0.75rem;
+  background: rgb(153, 27, 27);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-delete-category:hover {
+  background: rgb(127, 29, 29);
+}
+

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, TrendingUp, TrendingDown, Trash2 } from 'lucide-react';
 import { formatNumber } from '../../utils/formatters';
+import '../../styles/price-alert-modal.css';
 
 export default function PriceAlertModal({ itemId, itemName, currentAlert, gePrice, onSave, onDelete, onCancel }) {
   const [highThreshold, setHighThreshold] = useState(

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { formatNumber } from '../utils/formatters';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
+import '../styles/home-page.css';
 
 const SORT_OPTIONS = [
   { value: 'profit',     label: 'Profit' },

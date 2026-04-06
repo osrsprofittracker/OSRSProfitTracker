@@ -1,0 +1,72 @@
+/* Auth form elements */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  color: rgb(209, 213, 219);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgb(51, 65, 85);
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  color: white;
+  outline: none;
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  border-color: rgb(37, 99, 235);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+  margin-top: 0.5rem;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgb(34, 197, 94);
+  border: none;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.btn-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: rgb(96, 165, 250);
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.btn-link:hover {
+  color: rgb(147, 197, 253);
+}
+
+.btn-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
