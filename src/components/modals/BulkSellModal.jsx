@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { formatNumber, handleMKInput } from '../../utils/formatters';
 import '../../styles/bulk-modals.css';
+import StepInput from '../StepInput';
 
 export default function BulkSellModal({ stocks, categories = [], tradeMode = 'trade', gePrices = {}, geIconMap = {}, onConfirm, onCancel, isSubmitting = false }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -216,10 +217,11 @@ export default function BulkSellModal({ stocks, categories = [], tradeMode = 'tr
 
                     <div className="item-inputs">
                       <div className="input-group">
-                        <input
+                        <StepInput
                           type="text"
                           value={item.shares}
                           onChange={(e) => handleSharesInput(id, e.target.value)}
+                          onStep={(d) => updateItem(id, 'shares', Math.max(0, Math.min(stock.shares, (parseFloat(item.shares) || 0) + d)).toString())}
                           placeholder="Qty"
                           className={overMax ? 'input-error' : ''}
                         />
@@ -230,10 +232,11 @@ export default function BulkSellModal({ stocks, categories = [], tradeMode = 'tr
                           ALL
                         </button>
                       </div>
-                      <input
+                      <StepInput
                         type="text"
                         value={item.price}
                         onChange={(e) => handlePriceInput(id, e.target.value)}
+                        onStep={(d) => updateItem(id, 'price', Math.max(0, (parseFloat(item.price) || 0) + d).toString())}
                         placeholder="Price"
                       />
                     </div>

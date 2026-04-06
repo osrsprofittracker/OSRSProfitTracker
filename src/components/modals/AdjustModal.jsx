@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { handleMKInput } from '../../utils/formatters';
+import StepInput from '../StepInput';
 
 export default function AdjustModal({ stock, categories, mapping = [], onConfirm, onCancel }) {
   const [stockType, setStockType] = useState(stock.itemId ? 'osrs' : 'custom');
@@ -225,10 +226,11 @@ export default function AdjustModal({ stock, categories, mapping = [], onConfirm
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
             4H Limit
           </label>
-          <input
+          <StepInput
             type="text"
             value={limit4h}
             onChange={(e) => handleMKInput(e.target.value, setLimit4h)}
+            onStep={(d) => setLimit4h(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
             placeholder="Enter 4h limit (e.g. 10k)"
             style={inputStyle}
             onFocus={(e) => e.target.style.borderColor = focusColor}
@@ -241,10 +243,11 @@ export default function AdjustModal({ stock, categories, mapping = [], onConfirm
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
             Desired Stock
           </label>
-          <input
+          <StepInput
             type="text"
             value={needed}
             onChange={(e) => handleMKInput(e.target.value, setNeeded)}
+            onStep={(d) => setNeeded(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
             placeholder="Enter desired stock (e.g. 100k)"
             style={inputStyle}
             onFocus={(e) => e.target.style.borderColor = focusColor}

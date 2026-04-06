@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatNumber, handleMKInput } from '../../utils/formatters';
+import StepInput from '../StepInput';
 
 export default function RemoveStockModal({ stock, onConfirm, onCancel, isSubmitting = false }) {
   const [shares, setShares] = useState('');
@@ -116,10 +117,11 @@ export default function RemoveStockModal({ stock, onConfirm, onCancel, isSubmitt
               ALL
             </button>
           </div>
-          <input
+          <StepInput
             type="text"
             value={shares}
             onChange={(e) => handleMKInput(e.target.value, setShares)}
+            onStep={(d) => setShares(prev => Math.max(0, Math.min(stock.shares, (parseFloat(prev) || 0) + d)).toString())}
             placeholder="Number of shares (e.g. 10k)"
             style={{
               width: '100%',
