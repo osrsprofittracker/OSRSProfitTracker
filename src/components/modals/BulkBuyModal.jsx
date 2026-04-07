@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useGroupedStocks } from '../../hooks/useGroupedStocks';
 import { formatNumber, parseMK, handleMKInput } from '../../utils/formatters';
 import '../../styles/bulk-modals.css';
 import StepInput from '../StepInput';
@@ -9,33 +10,7 @@ export default function BulkBuyModal({ stocks, categories = [], tradeMode = 'tra
   const [selectedItems, setSelectedItems] = useState({});
   const [budget, setBudget] = useState('');
 
-  // Build grouped stocks in category order (matching main trade screen)
-  const groupedStocks = useMemo(() => {
-    const filtered = stocks.filter(s =>
-      tradeMode === 'investment' ? s.isInvestment : !s.isInvestment
-    );
-    const filteredCats = categories.filter(c =>
-      tradeMode === 'investment' ? c.isInvestment : !c.isInvestment
-    );
-    const catNames = filteredCats.map(c => c.name);
-
-    const groups = [];
-    for (const cat of filteredCats) {
-      const catStocks = filtered.filter(s => s.category === cat.name);
-      if (catStocks.length > 0) {
-        groups.push({ name: cat.name, stocks: catStocks });
-      }
-    }
-
-    const uncategorized = filtered.filter(s =>
-      s.category === 'Uncategorized' || !s.category || !catNames.includes(s.category)
-    );
-    if (uncategorized.length > 0 && !filteredCats.some(c => c.name === 'Uncategorized')) {
-      groups.push({ name: 'Uncategorized', stocks: uncategorized });
-    }
-
-    return groups;
-  }, [stocks, categories, tradeMode]);
+  const groupedStocks = useGroupedStocks(stocks, categories, tradeMode);
 
   // Filtered groups for search
   const filteredGroups = useMemo(() => {
