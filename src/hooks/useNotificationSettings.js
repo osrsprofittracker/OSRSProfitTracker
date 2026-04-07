@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { mapRow } from '../utils/mapRow';
 
 const NOTIFICATION_TYPES = ['limitTimer', 'altAccountTimer', 'milestones', 'osrsNews', 'jmodReddit', 'priceAlert'];
 
@@ -12,15 +13,15 @@ const DEFAULT_TYPE_SETTINGS = {
   priceAlert: { enabled: true, browserPush: false, sound: false, soundChoice: 'alert', customSoundUri: null },
 };
 
-function rowToPrefs(row) {
-  return {
-    enabled: row.enabled,
-    browserPush: row.browser_push,
-    sound: row.sound,
-    soundChoice: row.sound_choice,
-    customSoundUri: row.custom_sound_uri ?? null,
-  };
-}
+const PREFS_KEY_MAP = {
+  enabled: 'enabled',
+  browserPush: 'browser_push',
+  sound: 'sound',
+  soundChoice: 'sound_choice',
+  customSoundUri: ['custom_sound_uri', null],
+};
+
+const rowToPrefs = (row) => mapRow(row, PREFS_KEY_MAP);
 
 function prefsToRow(userId, type, prefs) {
   return {

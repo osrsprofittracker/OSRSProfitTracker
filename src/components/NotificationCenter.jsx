@@ -69,6 +69,7 @@ export default function NotificationCenter({
   newsItems = [],
   jmodComments = [],
   newJmodCount = 0,
+  newOsrsNewsCount = 0,
   priceAlerts = {},
   allPriceAlerts = [],
   geIconMap = {},
@@ -132,7 +133,7 @@ export default function NotificationCenter({
                 onClick={() => setActiveTab('news')}
               >
                 News
-                {newJmodCount > 0 && <span className="notification-tab-badge">{newJmodCount > 99 ? '99+' : newJmodCount}</span>}
+                {(newJmodCount + newOsrsNewsCount) > 0 && <span className="notification-tab-badge">{(newJmodCount + newOsrsNewsCount) > 99 ? '99+' : newJmodCount + newOsrsNewsCount}</span>}
               </button>
               <button
                 className={`notification-tab ${activeTab === 'alerts' ? 'notification-tab-active' : ''}`}
@@ -251,6 +252,7 @@ export default function NotificationCenter({
                   onClick={() => setNewsFilter('osrsNews')}
                 >
                   <Newspaper size={14} /> OSRS News
+                  {newOsrsNewsCount > 0 && <span className="notification-filter-badge">{newOsrsNewsCount}</span>}
                 </button>
                 <button
                   className={`notification-news-filter-btn ${newsFilter === 'jmodReddit' ? 'notification-news-filter-btn-active' : ''}`}
