@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Star } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
+import { useGEData } from '../contexts/GEDataContext';
+import { useTrade } from '../contexts/TradeContext';
 import '../styles/table.css';
 import '../styles/history-page.css';
 import '../styles/filter-panel.css';
@@ -29,8 +31,10 @@ export default function HistoryPage({
   page = 1, pageSize = 25, filters = EMPTY_FILTERS,
   onGoToPage, onChangePageSize, onApplyFilters, onInit, numberFormat,
   sortConfig = { key: 'date', dir: 'desc' },
-  onApplySort, stocks = [], onReset, onUndo, membershipMap = {}, geIconMap = {}, showMembershipIcon = true
+  onApplySort, onReset, onUndo, showMembershipIcon = true
 }) {
+  const { geIconMap, membershipMap } = useGEData();
+  const { stocks } = useTrade();
   useEffect(() => { onInit(); }, []);
 
   const stockItemIdMap = useMemo(

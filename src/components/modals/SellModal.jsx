@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { formatNumber, parseMK, handleMKInput } from '../../utils/formatters';
+import { useGEData } from '../../contexts/GEDataContext';
 
-export default function SellModal({ stock, onConfirm, onCancel, geData = {}, isSubmitting = false }) {
+export default function SellModal({ stock, onConfirm, onCancel, isSubmitting = false }) {
+  const { gePrices: geData } = useGEData();
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState('');
   const [useTotal, setUseTotal] = useState(false);

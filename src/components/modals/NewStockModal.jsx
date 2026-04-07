@@ -1,8 +1,12 @@
 import StepInput from '../StepInput';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { handleMKInput } from '../../utils/formatters';
+import { useGEData } from '../../contexts/GEDataContext';
+import { useTrade } from '../../contexts/TradeContext';
 
-export default function NewStockModal({ categories, defaultCategory = '', defaultIsInvestment = false, mapping = [], archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
+export default function NewStockModal({ defaultCategory = '', defaultIsInvestment = false, archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
+  const { geMapping: mapping } = useGEData();
+  const { categories } = useTrade();
   const [stockType, setStockType] = useState('osrs'); // 'osrs' | 'custom'
   const [name, setName] = useState('');
   const [category, setCategory] = useState(defaultCategory);
