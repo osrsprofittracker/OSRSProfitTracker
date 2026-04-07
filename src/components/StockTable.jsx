@@ -3,6 +3,7 @@ import { Edit3, Trash2, GripVertical, Star, Bell, BellRing } from 'lucide-react'
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
+import { useGEData } from '../contexts/GEDataContext';
 import '../styles/table.css';
 import { sortStocks } from '../utils/calculations';
 
@@ -45,9 +46,6 @@ export default function StockTable({
   stockNotes,
   currentTime,
   numberFormat,
-  geData = {},
-  geIconMap = {},
-  membershipMap = {},
   showMembershipIcon = true,
   onArchive,
   showInvestmentDate = false,
@@ -56,6 +54,7 @@ export default function StockTable({
   priceAlerts = {},
   onViewGraph,
 }) {
+  const { gePrices: geData, geIconMap, membershipMap } = useGEData();
   const sortedStocks = sortStocks(stocks, sortConfig);
 
   return (

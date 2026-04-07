@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, Filter, TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
+import { useGEData } from '../contexts/GEDataContext';
 import '../styles/notification-center.css';
 
 function getTimeAgo(timestamp) {
@@ -72,12 +73,11 @@ export default function NotificationCenter({
   newOsrsNewsCount = 0,
   priceAlerts = {},
   allPriceAlerts = [],
-  geIconMap = {},
-  gePrices = {},
   onEditAlert,
   onDismissAlert,
   onNewAlert,
 }) {
+  const { geIconMap, gePrices } = useGEData();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('inbox');
   const [newsFilter, setNewsFilter] = useState('osrsNews');

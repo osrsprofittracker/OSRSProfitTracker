@@ -1,10 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useGroupedStocks } from '../../hooks/useGroupedStocks';
 import { formatNumber, parseMK, handleMKInput } from '../../utils/formatters';
+import { useGEData } from '../../contexts/GEDataContext';
+import { useTrade } from '../../contexts/TradeContext';
 import '../../styles/bulk-modals.css';
 import StepInput from '../StepInput';
 
-export default function BulkBuyModal({ stocks, categories = [], tradeMode = 'trade', gePrices = {}, geIconMap = {}, onConfirm, onCancel, isSubmitting = false }) {
+export default function BulkBuyModal({ tradeMode = 'trade', onConfirm, onCancel, isSubmitting = false }) {
+  const { gePrices, geIconMap } = useGEData();
+  const { stocks, categories } = useTrade();
   const [mode, setMode] = useState('perItem');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItems, setSelectedItems] = useState({});

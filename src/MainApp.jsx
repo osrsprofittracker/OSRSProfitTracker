@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
@@ -14,7 +14,8 @@ import { useNotificationSettings } from './hooks/useNotificationSettings';
 import { useProfits } from './hooks/useProfits';
 import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
-import { useGEPrices } from './hooks/useGEPrices';
+import { useGEData } from './contexts/GEDataContext';
+import { TradeProvider } from './contexts/TradeContext';
 import { useNotifications } from './hooks/useNotifications';
 import { useOSRSNews } from './hooks/useOSRSNews';
 import { useJmodComments } from './hooks/useJmodComments';
@@ -87,13 +88,7 @@ export default function MainApp({ session, onLogout }) {
   const [showChangelog, setShowChangelog] = useState(false);
   // Custom hooks for Supabase
   const [tradeMode, setTradeMode] = useState('trade');
-  // Update the destructure:
-  const { prices: gePrices, mapping: geMapping, iconMap: geIconMap, mappingLoading } = useGEPrices();
-
-  const membershipMap = useMemo(
-    () => Object.fromEntries((geMapping || []).map(item => [item.id, !!item.members])),
-    [geMapping]
-  );
+  const { gePrices, geMapping, geIconMap, membershipMap, mappingLoading } = useGEData();
 
   const switchTradeMode = (mode) => {
     refetch();
@@ -1419,7 +1414,7 @@ export default function MainApp({ session, onLogout }) {
 
 
   return (
-
+    <TradeProvider stocks={stocks} categories={categories} refetchStocks={refetch} refetchCategories={fetchCategories}>
     <div style={{
       minHeight: '100vh',
       background: 'rgb(15, 23, 42)',
@@ -1560,12 +1555,16 @@ export default function MainApp({ session, onLogout }) {
           {/* Right - Search + Notifications + User dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <GlobalSearch
-            stocks={stocks}
-            categories={categories}
             transactions={transactions}
-            geMapping={geMapping}
-            geIconMap={geIconMap}
             navigateToPage={navigateToPage}
+            onExpandCategory={(cat) => {
+              setCollapsedCategories(prev => {
+                if (!prev[cat]) return prev;
+                const next = { ...prev, [cat]: false };
+                localStorage.setItem('collapsedCategories', JSON.stringify(next));
+                return next;
+              });
+            }}
           />
           <NotificationCenter
             notifications={notifications}
@@ -1581,8 +1580,6 @@ export default function MainApp({ session, onLogout }) {
             newOsrsNewsCount={notifications.filter(n => n.type === 'osrsNews' && !n.read).length}
             priceAlerts={priceAlerts}
             allPriceAlerts={allPriceAlerts}
-            geIconMap={geIconMap}
-            gePrices={gePrices}
             onEditAlert={(alert) => {
               setSelectedAlertItem({ itemId: alert.itemId, itemName: alert.itemName });
               setShowPriceAlertModal(true);
@@ -1635,7 +1632,6 @@ export default function MainApp({ session, onLogout }) {
       <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 2rem' }}>
         {currentPage === 'home' ? (
           <HomePage
-            stocks={stocks}
             transactions={transactions}
             profitHistory={profitHistory}
             gpTradedStats={gpTradedStats}
@@ -1646,7 +1642,6 @@ export default function MainApp({ session, onLogout }) {
             onNavigateToTrade={() => navigateToPage('trade')}
             onOpenMilestoneModal={() => { setMilestoneInitialView('main'); setShowMilestoneModal(true); }}
             onOpenMilestoneHistory={() => { setMilestoneInitialView('history'); setShowMilestoneModal(true); }}
-            geData={gePrices}
           />
         ) : currentPage === 'history' ? (
           <HistoryPage
@@ -1654,7 +1649,6 @@ export default function MainApp({ session, onLogout }) {
             profitHistory={profitHistory}
             pagedLoading={pagedLoading}
             totalCount={totalCount}
-            stocks={stocks}
             totalPages={totalPages}
             page={page}
             pageSize={pageSize}
@@ -1668,22 +1662,15 @@ export default function MainApp({ session, onLogout }) {
             onApplySort={applySort}
             onReset={resetPaged}
             onUndo={undoTransaction}
-            membershipMap={membershipMap}
-            geIconMap={geIconMap}
             showMembershipIcon={visibleColumns.membershipIcon}
           />
         ) : currentPage === 'graphs' ? (
           <GraphsPage
-            mapping={geMapping}
-            prices={gePrices}
-            iconMap={geIconMap}
-            mappingLoading={mappingLoading}
             userId={userId}
             initialItemId={graphItemId}
             navigateToPage={navigateToPage}
             priceAlerts={priceAlerts}
             onPriceAlert={handleOpenPriceAlert}
-            stocks={stocks}
             stockNotes={stockNotes}
             onSaveNote={saveNote}
           />
@@ -1696,7 +1683,6 @@ export default function MainApp({ session, onLogout }) {
             />
 
             <PortfolioSummary
-              stocks={stocks}
               dumpProfit={dumpProfit}
               referralProfit={referralProfit}
               bondsProfit={bondsProfit}
@@ -1705,7 +1691,6 @@ export default function MainApp({ session, onLogout }) {
               onAddReferralProfit={() => setShowReferralProfitModal(true)}
               onAddBondsProfit={() => setShowBondsProfitModal(true)}
               numberFormat={numberFormat}
-              geData={gePrices}
               showUnrealisedProfitStats={showUnrealisedProfitStats}
             />
 
@@ -1799,7 +1784,6 @@ export default function MainApp({ session, onLogout }) {
                 key={category}
                 category={category}
                 stocks={categoryStocks}
-                categories={categoryNames}
                 isCollapsed={collapsedCategories[category]}
                 onToggleCollapse={toggleCategory}
                 onAddStock={(cat) => {
@@ -1855,9 +1839,6 @@ export default function MainApp({ session, onLogout }) {
                 numberFormat={numberFormat}
                 showCategoryStats={showCategoryStats}
                 showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
-                geData={gePrices}
-                geIconMap={geIconMap}
-                membershipMap={membershipMap}
                 showMembershipIcon={visibleColumns.membershipIcon}
                 showInvestmentDate={tradeMode === 'investment' && visibleColumns.investmentStartDate}
                 onInvestmentDateChange={handleInvestmentDateChange}
@@ -1873,18 +1854,13 @@ export default function MainApp({ session, onLogout }) {
                 stock={selectedStock}
                 onConfirm={handleBuy}
                 onCancel={() => setShowBuyModal(false)}
-                geData={gePrices}
                 isSubmitting={isSubmitting}
               />
             </ModalContainer>
 
             <ModalContainer isOpen={showBulkBuyModal}>
               <BulkBuyModal
-                stocks={stocks}
-                categories={categories}
                 tradeMode={tradeMode}
-                gePrices={gePrices}
-                geIconMap={geIconMap}
                 onConfirm={(items) => handleBulkOperation('buy', items, setShowBulkBuyModal)}
                 onCancel={() => setShowBulkBuyModal(false)}
                 isSubmitting={isSubmitting}
@@ -1893,11 +1869,7 @@ export default function MainApp({ session, onLogout }) {
 
             <ModalContainer isOpen={showBulkSellModal}>
               <BulkSellModal
-                stocks={stocks}
-                categories={categories}
                 tradeMode={tradeMode}
-                gePrices={gePrices}
-                geIconMap={geIconMap}
                 onConfirm={handleBulkSell}
                 onCancel={() => setShowBulkSellModal(false)}
                 isSubmitting={isSubmitting}
@@ -1920,7 +1892,6 @@ export default function MainApp({ session, onLogout }) {
                 stock={selectedStock}
                 onConfirm={handleSell}
                 onCancel={() => setShowSellModal(false)}
-                geData={gePrices}
                 isSubmitting={isSubmitting}
               />
             </ModalContainer>
@@ -1937,9 +1908,7 @@ export default function MainApp({ session, onLogout }) {
             <ModalContainer isOpen={showAdjustModal}>
               <AdjustModal
                 stock={selectedStock}
-                categories={categories}
                 onConfirm={handleAdjust}
-                mapping={geMapping}
                 onCancel={() => setShowAdjustModal(false)}
               />
             </ModalContainer>
@@ -1954,11 +1923,9 @@ export default function MainApp({ session, onLogout }) {
 
             <ModalContainer isOpen={showNewStockModal}>
               <NewStockModal
-                categories={categories}
                 defaultCategory={newStockCategory}
                 defaultIsInvestment={tradeMode === 'investment'}
                 onConfirm={handleAddStock}
-                mapping={geMapping}
                 archivedStocks={archivedStocks}
                 onRestoreFromArchive={async (stock) => {
                   await handleRestore(stock);
@@ -2019,7 +1986,6 @@ export default function MainApp({ session, onLogout }) {
 
             <ModalContainer isOpen={showProfitChartModal}>
               <ProfitChartModal
-                stocks={stocks}
                 dumpProfit={dumpProfit}
                 referralProfit={referralProfit}
                 bondsProfit={bondsProfit}
@@ -2213,6 +2179,6 @@ export default function MainApp({ session, onLogout }) {
       </div>
       <Footer />
     </div>
-
+    </TradeProvider>
   );
 }

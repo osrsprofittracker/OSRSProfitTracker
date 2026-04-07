@@ -4,6 +4,8 @@ import { Star, Clock, Search, ChevronDown, Bell, BellRing, StickyNote } from 'lu
 import { useTimeseries } from '../hooks/useTimeseries';
 import { useGraphPreferences } from '../hooks/useGraphPreferences';
 import { calculateGETax } from '../utils/taxUtils';
+import { useGEData } from '../contexts/GEDataContext';
+import { useTrade } from '../contexts/TradeContext';
 import ModalContainer from '../components/modals/ModalContainer';
 import NotesModal from '../components/modals/NotesModal';
 import '../styles/graphs-page.css';
@@ -17,7 +19,9 @@ const TIMEFRAMES = [
   { label: '1Y', timestep: '24h', filterDays: 365 },
 ];
 
-export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, userId, initialItemId, navigateToPage, priceAlerts = {}, onPriceAlert, stocks = [], stockNotes = {}, onSaveNote }) {
+export default function GraphsPage({ userId, initialItemId, navigateToPage, priceAlerts = {}, onPriceAlert, stockNotes = {}, onSaveNote }) {
+  const { geMapping: mapping, gePrices: prices, geIconMap: iconMap, mappingLoading } = useGEData();
+  const { stocks } = useTrade();
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);

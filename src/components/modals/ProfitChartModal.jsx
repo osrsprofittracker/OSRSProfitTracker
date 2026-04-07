@@ -1,8 +1,10 @@
 import React from 'react';
 import { formatNumber } from '../../utils/formatters';
 import { calculateStocksProfit } from '../../utils/calculations';
+import { useTrade } from '../../contexts/TradeContext';
 
-export default function ProfitChartModal({ stocks, dumpProfit, referralProfit, bondsProfit, onCancel, numberFormat }) {
+export default function ProfitChartModal({ dumpProfit, referralProfit, bondsProfit, onCancel, numberFormat }) {
+  const { stocks } = useTrade();
   const stocksProfit = calculateStocksProfit(stocks);
   const totalProfit = stocksProfit + dumpProfit + referralProfit + bondsProfit;
 
