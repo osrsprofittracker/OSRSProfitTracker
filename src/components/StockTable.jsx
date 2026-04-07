@@ -138,6 +138,7 @@ function TableHeader({ sortConfig, onSort, visibleColumns, showInvestmentDate })
             onClick={() => col.key && onSort(col.key)}
             className={`th-base ${col.key ? 'th-sortable' : ''}`}
             title={col.tooltip}
+            style={col.style}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               {col.label}
@@ -242,7 +243,7 @@ function StockRow({
         </div>
       </td>
       {visibleColumns.status && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
+        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)', minWidth: '7rem' }}>
           <StatusBadge stock={stock} />
         </td>
       )}
@@ -351,12 +352,10 @@ function StockRow({
 function StatusBadge({ stock }) {
   if (stock.timerEndTime && stock.timerEndTime > Date.now()) {
     return (
-      <div className="td-center">
-        <span className="badge badge-timer">
-          <span>⏰</span>
-          <span>{formatTimer(stock.timerEndTime)}</span>
-        </span>
-      </div>
+      <span className="badge badge-timer">
+        <span>⏰</span>
+        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTimer(stock.timerEndTime)}</span>
+      </span>
     );
   } else if (stock.shares < stock.needed) {
     if (stock.onHold) {
