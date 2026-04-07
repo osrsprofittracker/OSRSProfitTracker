@@ -1,21 +1,22 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { mapRow } from '../utils/mapRow';
 
-function rowToAlert(row) {
-  return {
-    id: row.id,
-    itemId: row.item_id,
-    itemName: row.item_name,
-    highThreshold: row.high_threshold,
-    lowThreshold: row.low_threshold,
-    isActive: row.is_active,
-    createdAt: row.created_at,
-    lastCheckedAt: row.last_checked_at,
-    triggeredAt: row.triggered_at,
-    triggeredType: row.triggered_type,
-    triggeredPrice: row.triggered_price,
-  };
-}
+const ALERT_KEY_MAP = {
+  id: 'id',
+  itemId: 'item_id',
+  itemName: 'item_name',
+  highThreshold: 'high_threshold',
+  lowThreshold: 'low_threshold',
+  isActive: 'is_active',
+  createdAt: 'created_at',
+  lastCheckedAt: 'last_checked_at',
+  triggeredAt: ['triggered_at', null],
+  triggeredType: ['triggered_type', null],
+  triggeredPrice: ['triggered_price', null],
+};
+
+const rowToAlert = (row) => mapRow(row, ALERT_KEY_MAP);
 
 export function usePriceAlerts(userId) {
   const [allAlerts, setAllAlerts] = useState([]);

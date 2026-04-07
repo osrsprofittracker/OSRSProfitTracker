@@ -1578,6 +1578,7 @@ export default function MainApp({ session, onLogout }) {
             newsItems={newsItems}
             jmodComments={jmodComments}
             newJmodCount={notifications.filter(n => n.type === 'jmodReddit' && !n.read).length}
+            newOsrsNewsCount={notifications.filter(n => n.type === 'osrsNews' && !n.read).length}
             priceAlerts={priceAlerts}
             allPriceAlerts={allPriceAlerts}
             geIconMap={geIconMap}
