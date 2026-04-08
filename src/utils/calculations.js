@@ -13,6 +13,14 @@ export const calculateAvgBuyPrice = (stock) => {
   return stock.shares > 0 ? stock.totalCost / stock.shares : 0;
 };
 
+export const calculateCostBasis = (stock, shares) => {
+  return calculateAvgBuyPrice(stock) * shares;
+};
+
+export const calculateSellProfit = (stock, shares, sellPrice) => {
+  return shares * sellPrice - calculateCostBasis(stock, shares);
+};
+
 export const calculateAvgSellPrice = (stock) => {
   return stock.sharesSold > 0 ? stock.totalCostSold / stock.sharesSold : 0;
 };
