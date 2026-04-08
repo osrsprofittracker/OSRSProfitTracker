@@ -64,6 +64,7 @@ import {
   DEFAULT_CATEGORIES,
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
+import { calculateCostBasis, calculateSellProfit, calculateAvgBuyPrice } from './utils/calculations';
 
 const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs' };
 
@@ -782,7 +783,6 @@ export default function MainApp({ session, onLogout }) {
     const { shares, price, startTimer } = data;
     const total = shares * price;
 
-    const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
     const newShares = selectedStock.shares + shares;
     let timerEndTime;
     let newOnHold = selectedStock.onHold; // Track if we should update onHold status
@@ -883,9 +883,8 @@ export default function MainApp({ session, onLogout }) {
   const processSellItem = async (item) => {
     const { stock, shares, price } = item;
     const total = shares * price;
-    const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
-    const costBasisOfSharesSold = avgBuy * shares;
-    const profit = total - costBasisOfSharesSold;
+    const costBasisOfSharesSold = calculateCostBasis(stock, shares);
+    const profit = calculateSellProfit(stock, shares, price);
 
     await updateStock(stock.id, {
       shares: stock.shares - shares,
@@ -996,8 +995,8 @@ export default function MainApp({ session, onLogout }) {
     setIsSubmitting(true);
     const { shares } = data;
 
-    const avgBuy = selectedStock.shares > 0 ? selectedStock.totalCost / selectedStock.shares : 0;
-    const costToRemove = avgBuy * shares;
+    const avgBuy = calculateAvgBuyPrice(selectedStock);
+    const costToRemove = calculateCostBasis(selectedStock, shares);
 
     try {
       await updateStock(selectedStock.id, {
