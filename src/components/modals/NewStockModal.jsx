@@ -1,7 +1,12 @@
+import StepInput from '../StepInput';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { handleMKInput } from '../../utils/formatters';
+import { useGEData } from '../../contexts/GEDataContext';
+import { useTrade } from '../../contexts/TradeContext';
 
-export default function NewStockModal({ categories, defaultCategory = '', defaultIsInvestment = false, mapping = [], archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
+export default function NewStockModal({ defaultCategory = '', defaultIsInvestment = false, archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
+  const { geMapping: mapping } = useGEData();
+  const { categories } = useTrade();
   const [stockType, setStockType] = useState('osrs'); // 'osrs' | 'custom'
   const [name, setName] = useState('');
   const [category, setCategory] = useState(defaultCategory);
@@ -212,10 +217,11 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
         )}
 
         {/* 4H Limit */}
-        <input
+        <StepInput
           type="text"
           value={limit4h}
           onChange={(e) => handleMKInput(e.target.value, setLimit4h)}
+          onStep={(d) => setLimit4h(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
           placeholder="4H Limit (e.g. 10k)"
           style={inputStyle}
           onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
@@ -223,10 +229,11 @@ export default function NewStockModal({ categories, defaultCategory = '', defaul
         />
 
         {/* Desired Stock */}
-        <input
+        <StepInput
           type="text"
           value={needed}
           onChange={(e) => handleMKInput(e.target.value, setNeeded)}
+          onStep={(d) => setNeeded(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
           placeholder="Desired stock (e.g. 100k)"
           style={inputStyle}
           onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}

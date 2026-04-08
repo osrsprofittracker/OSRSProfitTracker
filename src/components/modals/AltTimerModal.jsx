@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 export default function AltTimerModal({ onConfirm, onCancel }) {
   const [days, setDays] = useState(7);
 
+  const stepDays = (delta) => setDays(prev => Math.max(1, Math.min(365, prev + delta)));
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (days > 0) {
@@ -32,22 +34,33 @@ export default function AltTimerModal({ onConfirm, onCancel }) {
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
             Days until check:
           </label>
-          <input
-            type="number"
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-            min="1"
-            max="365"
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              background: 'rgb(15, 23, 42)',
-              border: '1px solid rgb(51, 65, 85)',
-              borderRadius: '0.5rem',
-              color: 'white',
-              fontSize: '1rem'
-            }}
-          />
+          <div className="input-step-wrapper">
+            <input
+              className="input-step-field"
+              type="number"
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+              min="1"
+              max="365"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                background: 'rgb(15, 23, 42)',
+                border: '1px solid rgb(51, 65, 85)',
+                borderRadius: '0.5rem',
+                color: 'white',
+                fontSize: '1rem'
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') { e.preventDefault(); stepDays(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepDays(-1); }
+              }}
+            />
+            <div className="input-step-btns">
+              <button type="button" className="input-step-btn" onClick={() => stepDays(1)}>▲</button>
+              <button type="button" className="input-step-btn" onClick={() => stepDays(-1)}>▼</button>
+            </div>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
           <button

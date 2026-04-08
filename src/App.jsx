@@ -4,7 +4,8 @@ import Auth from './components/Auth';
 import MainApp from './MainApp';
 import UpdatePassword from './components/UpdatePassword';
 import LandingPage from './pages/LandingPage';
-import './styles/components.css';
+import { GEDataProvider } from './contexts/GEDataContext';
+
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -65,6 +66,10 @@ export default function App() {
     );
   }
 
-  return <MainApp session={session} onLogout={() => setShowLanding(false)} />;
+  return (
+    <GEDataProvider>
+      <MainApp session={session} onLogout={() => setShowLanding(false)} />
+    </GEDataProvider>
+  );
 
 }

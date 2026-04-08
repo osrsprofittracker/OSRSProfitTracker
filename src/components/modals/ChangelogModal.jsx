@@ -1,5 +1,6 @@
 import React from 'react';
 import { changelog } from '../../data/changelog';
+import '../../styles/changelog-modal.css';
 
 const TYPE_LABELS = {
   new:      { label: 'New',      className: 'changelog-badge changelog-badge--new' },

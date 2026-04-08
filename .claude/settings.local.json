@@ -37,7 +37,9 @@
       "Skill(pr)",
       "Bash(git:*)",
       "Bash(gh release:*)",
-      "Bash(netlify:*)"
+      "Bash(netlify:*)",
+      "Bash(find /c/Users/daan_/source/repos/OSRS-Bulk -name .env* -o -name *.env)",
+      "Bash(find /c/Users/daan_/source/repos/OSRS-Bulk -name *.sql -o -name *schema* -o -name *migration*)"
     ]
   }
 }

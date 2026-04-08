@@ -1,5 +1,27 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { mapRow } from '../utils/mapRow';
+
+const STOCK_KEY_MAP = {
+  id: 'id',
+  name: 'name',
+  totalCost: 'total_cost',
+  shares: 'shares',
+  sharesSold: 'shares_sold',
+  totalCostSold: 'total_cost_sold',
+  totalCostBasisSold: 'total_cost_basis_sold',
+  limit4h: 'limit4h',
+  needed: 'needed',
+  timerEndTime: 'timer_end_time',
+  category: 'category',
+  position: 'position',
+  onHold: ['on_hold', false],
+  isInvestment: ['is_investment', false],
+  itemId: ['item_id', null],
+  investmentStartDate: ['investment_start_date', null],
+};
+
+const formatStock = (row) => mapRow(row, STOCK_KEY_MAP);
 
 export function useStocks(userId) {
   const [stocks, setStocks] = useState([]);
@@ -22,25 +44,7 @@ export function useStocks(userId) {
       console.error('Error fetching stocks:', error);
       setStocks([]);
     } else {
-      const formattedStocks = (data || []).map(stock => ({
-        id: stock.id,
-        name: stock.name,
-        totalCost: stock.total_cost,
-        shares: stock.shares,
-        sharesSold: stock.shares_sold,
-        totalCostSold: stock.total_cost_sold,
-        totalCostBasisSold: stock.total_cost_basis_sold,
-        limit4h: stock.limit4h,
-        needed: stock.needed,
-        timerEndTime: stock.timer_end_time,
-        category: stock.category,
-        position: stock.position,
-        onHold: stock.on_hold || false,
-        isInvestment: stock.is_investment || false,
-        itemId: stock.item_id || null,
-        investmentStartDate: stock.investment_start_date || null,
-      }));
-      setStocks(formattedStocks);
+      setStocks((data || []).map(formatStock));
     }
     setLoading(false);
   };
@@ -228,24 +232,7 @@ export function useStocks(userId) {
       .eq('archived', true)
       .order('name', { ascending: true });
     if (error) { console.error('Error fetching archived stocks:', error); return []; }
-    return (data || []).map(stock => ({
-      id: stock.id,
-      name: stock.name,
-      totalCost: stock.total_cost,
-      shares: stock.shares,
-      sharesSold: stock.shares_sold,
-      totalCostSold: stock.total_cost_sold,
-      totalCostBasisSold: stock.total_cost_basis_sold,
-      limit4h: stock.limit4h,
-      needed: stock.needed,
-      timerEndTime: stock.timer_end_time,
-      category: stock.category,
-      position: stock.position,
-      onHold: stock.on_hold || false,
-      isInvestment: stock.is_investment || false,
-      itemId: stock.item_id || null,
-      investmentStartDate: stock.investment_start_date || null,
-    }));
+    return (data || []).map(formatStock);
   };
 
     return { stocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };

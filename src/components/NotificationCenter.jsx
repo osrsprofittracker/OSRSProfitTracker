@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, Filter, TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
+import { useGEData } from '../contexts/GEDataContext';
+import '../styles/notification-center.css';
 
 function getTimeAgo(timestamp) {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -68,14 +70,14 @@ export default function NotificationCenter({
   newsItems = [],
   jmodComments = [],
   newJmodCount = 0,
+  newOsrsNewsCount = 0,
   priceAlerts = {},
   allPriceAlerts = [],
-  geIconMap = {},
-  gePrices = {},
   onEditAlert,
   onDismissAlert,
   onNewAlert,
 }) {
+  const { geIconMap, gePrices } = useGEData();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('inbox');
   const [newsFilter, setNewsFilter] = useState('osrsNews');
@@ -131,7 +133,7 @@ export default function NotificationCenter({
                 onClick={() => setActiveTab('news')}
               >
                 News
-                {newJmodCount > 0 && <span className="notification-tab-badge">{newJmodCount > 99 ? '99+' : newJmodCount}</span>}
+                {(newJmodCount + newOsrsNewsCount) > 0 && <span className="notification-tab-badge">{(newJmodCount + newOsrsNewsCount) > 99 ? '99+' : newJmodCount + newOsrsNewsCount}</span>}
               </button>
               <button
                 className={`notification-tab ${activeTab === 'alerts' ? 'notification-tab-active' : ''}`}
@@ -250,6 +252,7 @@ export default function NotificationCenter({
                   onClick={() => setNewsFilter('osrsNews')}
                 >
                   <Newspaper size={14} /> OSRS News
+                  {newOsrsNewsCount > 0 && <span className="notification-filter-badge">{newOsrsNewsCount}</span>}
                 </button>
                 <button
                   className={`notification-news-filter-btn ${newsFilter === 'jmodReddit' ? 'notification-news-filter-btn-active' : ''}`}

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { formatNumber } from '../utils/formatters';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
+import { useGEData } from '../contexts/GEDataContext';
+import { useTrade } from '../contexts/TradeContext';
+import '../styles/home-page.css';
 
 const SORT_OPTIONS = [
   { value: 'profit',     label: 'Profit' },
@@ -13,7 +16,6 @@ const SORT_OPTIONS = [
 ];
 
 export default function HomePage({
-  stocks,
   transactions,
   gpTradedStats,
   profits,
@@ -24,8 +26,9 @@ export default function HomePage({
   onOpenMilestoneModal,
   onOpenMilestoneHistory,
   profitHistory,
-  geData
 }) {
+  const { gePrices: geData } = useGEData();
+  const { stocks } = useTrade();
   const [topItemsSortBy, setTopItemsSortBy] = useState('profit');
   // Use milestoneProgress for period profits (already calculated in MainApp)
   const dayProfit = milestoneProgress?.day || 0;

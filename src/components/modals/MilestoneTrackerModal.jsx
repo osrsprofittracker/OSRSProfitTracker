@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { formatNumber, handleMKInput } from '../../utils/formatters';
+import StepInput from '../StepInput';
 
 const formatPeriodRange = (periodStart, period) => {
   // Parse as local date (YYYY-MM-DD) to avoid UTC shift issues
@@ -369,13 +370,14 @@ export default function MilestoneTrackerModal({
                   Or enter custom amount:
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
+                  <StepInput
                     type="text"
                     value={customGoal}
                     onChange={(e) => handleMKInput(e.target.value, setCustomGoal)}
+                    onStep={(d) => setCustomGoal(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
                     placeholder="Enter custom goal (e.g. 10m)"
+                    wrapperStyle={{ flex: 1 }}
                     style={{
-                      flex: 1,
                       padding: '0.75rem',
                       background: 'rgb(15, 23, 42)',
                       border: '1px solid rgb(51, 65, 85)',

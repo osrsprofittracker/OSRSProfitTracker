@@ -1,9 +1,14 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { createChart, LineSeries, HistogramSeries, CandlestickSeries } from 'lightweight-charts';
-import { Star, Clock, Search, ChevronDown, Bell, BellRing } from 'lucide-react';
+import { Star, Clock, Search, ChevronDown, Bell, BellRing, StickyNote } from 'lucide-react';
 import { useTimeseries } from '../hooks/useTimeseries';
 import { useGraphPreferences } from '../hooks/useGraphPreferences';
 import { calculateGETax } from '../utils/taxUtils';
+import { useGEData } from '../contexts/GEDataContext';
+import { useTrade } from '../contexts/TradeContext';
+import ModalContainer from '../components/modals/ModalContainer';
+import NotesModal from '../components/modals/NotesModal';
+import '../styles/graphs-page.css';
 
 const TIMEFRAMES = [
   { label: '1D', timestep: '5m', filterDays: 1 },
@@ -14,12 +19,16 @@ const TIMEFRAMES = [
   { label: '1Y', timestep: '24h', filterDays: 365 },
 ];
 
-export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, userId, initialItemId, navigateToPage, priceAlerts = {}, onPriceAlert }) {
+export default function GraphsPage({ userId, initialItemId, navigateToPage, priceAlerts = {}, onPriceAlert, stockNotes = {}, onSaveNote }) {
+  const { geMapping: mapping, gePrices: prices, geIconMap: iconMap, mappingLoading } = useGEData();
+  const { stocks } = useTrade();
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [timeframe, setTimeframe] = useState('1D');
   const [chartMode, setChartMode] = useState('line');
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [notesStock, setNotesStock] = useState(null);
 
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -536,6 +545,23 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
     };
   }, [selectedItem, currentPrice, rawData, tf]);
 
+  const matchingStocks = useMemo(() => {
+    if (!selectedItem) return [];
+    return stocks.filter(s => s.itemId === selectedItem.id);
+  }, [selectedItem, stocks]);
+
+  const handleOpenNotes = (stock) => {
+    setNotesStock(stock);
+    setShowNotesModal(true);
+  };
+
+  const handleSaveNote = async (noteText) => {
+    if (!onSaveNote || !notesStock) return;
+    await onSaveNote(notesStock.id, noteText);
+    setShowNotesModal(false);
+    setNotesStock(null);
+  };
+
   const formatPrice = (val) => {
     if (val == null) return '—';
     return val.toLocaleString();
@@ -700,6 +726,26 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
                 {priceAlerts[selectedItem.id]?.isActive ? <BellRing size={14} /> : <Bell size={14} />}
                 {priceAlerts[selectedItem.id]?.isActive ? 'Edit Alert' : 'Set Alert'}
               </button>
+            )}
+            {matchingStocks.length === 1 && (
+              <button
+                className={`graph-alert-btn ${stockNotes[matchingStocks[0].id] ? 'graph-notes-btn-active' : ''}`}
+                onClick={() => handleOpenNotes(matchingStocks[0])}
+              >
+                <StickyNote size={14} />
+                {stockNotes[matchingStocks[0].id] ? 'Edit Note' : 'Add Note'}
+              </button>
+            )}
+            {matchingStocks.length > 1 && (
+              <div className="graph-notes-multi">
+                <button
+                  className={`graph-alert-btn ${matchingStocks.some(s => stockNotes[s.id]) ? 'graph-notes-btn-active' : ''}`}
+                  onClick={() => setShowNotesModal(true)}
+                >
+                  <StickyNote size={14} />
+                  Notes
+                </button>
+              </div>
             )}
           </div>
           <div className="graphs-info-stats">
@@ -883,6 +929,41 @@ export default function GraphsPage({ mapping, prices, iconMap, mappingLoading, u
         )}
       </div>
       <div className="graphs-volume-container" ref={volumeContainerRef}></div>
+
+      <ModalContainer isOpen={showNotesModal && notesStock != null}>
+        <NotesModal
+          stock={notesStock || {}}
+          notes={stockNotes[notesStock?.id] || ''}
+          onConfirm={handleSaveNote}
+          onCancel={() => { setShowNotesModal(false); setNotesStock(null); }}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={showNotesModal && notesStock == null && matchingStocks.length > 1}>
+        <div className="graph-notes-picker">
+          <h2 className="graph-notes-picker-title">Select Stock</h2>
+          <p className="graph-notes-picker-subtitle">This item is linked to multiple stocks. Which one?</p>
+          <div className="graph-notes-picker-list">
+            {matchingStocks.map(stock => (
+              <button
+                key={stock.id}
+                className="graph-notes-picker-item"
+                onClick={() => handleOpenNotes(stock)}
+              >
+                <span>{stock.category}</span>
+                {stock.isInvestment && <span className="graphs-note-investment-tag">Investment</span>}
+                {stockNotes[stock.id] && <span className="graph-notes-picker-has-note">Has note</span>}
+              </button>
+            ))}
+          </div>
+          <button
+            className="graph-notes-picker-cancel"
+            onClick={() => setShowNotesModal(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      </ModalContainer>
     </div>
   );
 }

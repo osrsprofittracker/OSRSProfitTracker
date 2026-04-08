@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Search, Package, FolderOpen, ArrowLeftRight, BarChart3, X } from 'lucide-react';
+import { useGEData } from '../contexts/GEDataContext';
+import { useTrade } from '../contexts/TradeContext';
+import '../styles/global-search.css';
 
 export default function GlobalSearch({
-  stocks = [],
-  categories = [],
   transactions = [],
-  geMapping = [],
-  geIconMap = {},
-  navigateToPage
+  navigateToPage,
+  onExpandCategory
 }) {
+  const { geMapping, geIconMap } = useGEData();
+  const { stocks, categories } = useTrade();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -144,24 +146,31 @@ export default function GlobalSearch({
     setSelectedIndex(0);
   }, [results]);
 
+  const scrollToCategory = useCallback((categoryName) => {
+    onExpandCategory?.(categoryName);
+    setTimeout(() => {
+      const el = document.querySelector(`[data-category="${categoryName}"]`);
+      if (el) {
+        const topbar = document.querySelector('.topbar');
+        const offset = topbar ? topbar.offsetHeight + 16 : 0;
+        const top = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    }, 150);
+  }, [onExpandCategory]);
+
   const handleSelect = useCallback((item) => {
     setIsOpen(false);
     switch (item.type) {
       case 'stock': {
         const category = item.data.category || 'Uncategorized';
         navigateToPage('trade');
-        setTimeout(() => {
-          const el = document.querySelector(`[data-category="${category}"]`);
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        setTimeout(() => scrollToCategory(category), 50);
         break;
       }
       case 'category': {
         navigateToPage('trade');
-        setTimeout(() => {
-          const el = document.querySelector(`[data-category="${item.data.name}"]`);
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        setTimeout(() => scrollToCategory(item.data.name), 50);
         break;
       }
       case 'transaction': {
@@ -173,7 +182,7 @@ export default function GlobalSearch({
         break;
       }
     }
-  }, [navigateToPage]);
+  }, [navigateToPage, scrollToCategory]);
 
   // Keyboard navigation
   useEffect(() => {

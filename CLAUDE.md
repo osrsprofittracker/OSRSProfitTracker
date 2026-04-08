@@ -48,7 +48,7 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 - `MainApp` renders `Header`, `PortfolioSummary`, `CategoryQuickNav`, `MilestoneProgressBar`, `ChartButtons`, `CategorySection` (per category), and `Footer`.
 - `CategorySection` renders a `StockTable` per category.
 - All modals live in `src/components/modals/` and are controlled from `MainApp` via `selectedStock` / modal-open state. `ModalContainer` wraps modal-level concerns.
-- `src/styles/components.css` holds component styles; `src/index.css` holds global styles. No CSS framework.
+- `src/styles/` holds component styles split per-component; `src/index.css` holds global styles. No CSS framework.
 - Icons come from `lucide-react`.
 
 ### Pages
@@ -56,6 +56,63 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 - `HomePage` (`/`) — portfolio summary, stats, recent activity, top items
 - `HistoryPage` — transaction history log
 - Static pages: `About`, `Contact`, `PrivacyPolicy`, `CookiePolicy`, `Terms`
+
+### MainApp.jsx structure
+
+`MainApp.jsx` is the orchestrator. Key sections by line area:
+
+- **Imports** (top ~50 lines): all hooks, components, contexts
+- **Hook calls** (~line 70-190): `useStocks`, `useTransactions`, `useCategories`, etc.
+- **Modal integration** (~line 187): `useModal()` from `ModalContext` for open/close/selectedStock
+- **Handlers** (~line 706): destructured from `useModalHandlers()` hook
+- **JSX** (~line 1400): renders `<ModalManager>` which owns all modal rendering
+
+### Modal pattern
+
+Modals use a context-based system:
+1. `ModalContext` (`src/contexts/ModalContext.jsx`) manages open/close state for all modals via `openModal(name)` / `closeModal(name)`
+2. `useModalHandlers` (`src/hooks/useModalHandlers.js`) contains all confirm/submit handlers (`handleBuy`, `handleBulkBuy`, `handleSell`, etc.)
+3. `ModalManager` (`src/components/ModalManager.jsx`) renders all `<ModalContainer isOpen={...}>` blocks in one place
+4. Individual modal components in `src/components/modals/XModal.jsx` receive `onConfirm` and `onCancel`
+5. `ModalContainer` is a fixed overlay with z-index 200, renders null when closed
+
+### CSS conventions
+
+- Styles live in `src/styles/`, one file per component/feature. Each component imports its own CSS file.
+- `shared.css` — reusable classes (modal base, form elements, common patterns)
+- BEM-like naming: `.component-name`, `.component-name-element`, `.component-name-element.modifier`
+- Modal colors: `rgb(22, 30, 46)` background, `rgba(51, 65, 85, 0.6)` borders
+- Green confirm: `rgb(21, 128, 61)`, gray cancel: `rgba(71, 85, 105, 0.5)`
+- Modal dimensions: `52rem` wide (or smaller for simple modals), `75vh` tall, `0.875rem` border-radius
+- Mobile breakpoint: `@media (max-width: 640px)` — modals go full width, `95vh`
+
+#### CSS file map
+
+| File | Component(s) |
+|---|---|
+| `shared.css` | Reusable modal/form/layout classes |
+| `auth.css` | `Auth`, `UpdatePassword` |
+| `header.css` | `Header` |
+| `quick-nav.css` | `CategoryQuickNav` |
+| `category-section.css` | `CategorySection` |
+| `table.css` | `StockTable` |
+| `global-search.css` | `GlobalSearch` |
+| `notification-center.css` | `NotificationCenter` |
+| `home-page.css` | `HomePage` |
+| `history-page.css` | `HistoryPage` |
+| `graphs-page.css` | `GraphsPage` |
+| `filter-panel.css` | Filter panel in `HistoryPage` |
+| `bulk-modals.css` | `BulkBuyModal`, `BulkSellModal` |
+| `bulk-summary-modal.css` | `BulkSummaryModal` |
+| `changelog-modal.css` | `ChangelogModal` |
+| `price-alert-modal.css` | `PriceAlertModal` |
+| `settings-modal.css` | `SettingsModal` |
+
+### Utilities
+
+- `src/utils/formatters.js`: `formatNumber(num, format)`, `parseMK(str)`, `handleMKInput(value)`
+- `src/utils/calculations.js`: profit math
+- `src/utils/taxUtils.js`: GE tax (2%, 5M cap)
 
 ### Design
 

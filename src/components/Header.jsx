@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, FolderPlus, LogOut } from 'lucide-react';
+import '../styles/header.css';
 
 export default function Header({
     onAddCategory,

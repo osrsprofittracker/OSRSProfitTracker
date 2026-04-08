@@ -3,9 +3,10 @@ import { Plus } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
 import { calculateStocksProfit, calculateTotalProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
+import { useGEData } from '../contexts/GEDataContext';
+import { useTrade } from '../contexts/TradeContext';
 
 export default function PortfolioSummary({
-  stocks,
   dumpProfit,
   referralProfit,
   bondsProfit,
@@ -14,9 +15,10 @@ export default function PortfolioSummary({
   onAddReferralProfit,
   onAddBondsProfit,
   numberFormat,
-  geData = {},
   showUnrealisedProfitStats = false
 }) {
+  const { gePrices: geData } = useGEData();
+  const { stocks } = useTrade();
   const stocksProfit = calculateStocksProfit(stocks);
   const totalProfit = calculateTotalProfit(stocks, dumpProfit, referralProfit, bondsProfit);
 

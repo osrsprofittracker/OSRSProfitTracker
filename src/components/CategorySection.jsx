@@ -3,11 +3,12 @@ import { Plus, Trash2 } from 'lucide-react';
 import StockTable from './StockTable';
 import { formatNumber } from '../utils/formatters';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
+import { useGEData } from '../contexts/GEDataContext';
+import '../styles/category-section.css';
 
 export default function CategorySection({
   category,
   stocks,
-  categories,
   isCollapsed,
   onToggleCollapse,
   onAddStock,
@@ -36,9 +37,6 @@ export default function CategorySection({
   numberFormat,
   showCategoryStats,
   showCategoryUnrealisedProfit = false,
-  geData = {},
-  geIconMap = {},
-  membershipMap = {},
   showMembershipIcon = true,
   onArchive,
   showInvestmentDate = false,
@@ -47,6 +45,7 @@ export default function CategorySection({
   priceAlerts = {},
   onViewGraph,
 }) {
+  const { gePrices: geData, geIconMap, membershipMap } = useGEData();
   const categoryStocks = stocks.filter(s => s.category === category);
 
   return (
@@ -253,9 +252,6 @@ export default function CategorySection({
             currentTime={currentTime}
             numberFormat={numberFormat}
             showCategoryStats={showCategoryStats}
-            geData={geData}
-            geIconMap={geIconMap}
-            membershipMap={membershipMap}
             showMembershipIcon={showMembershipIcon}
             onArchive={onArchive}
             showInvestmentDate={showInvestmentDate}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { playNotificationSound, playPresetPreview, SOUND_PRESETS } from '../../hooks/useNotifications';
+import '../../styles/settings-modal.css';
 
 function SettingTooltip({ text, children }) {
   const [show, setShow] = useState(false);
@@ -286,7 +287,7 @@ function GeneralTab({
   );
 }
 
-function SoundPicker({ soundChoice, onChange }) {
+function SoundPicker({ soundChoice, onChange, volume = 0.7 }) {
   return (
     <div className="sound-picker">
       <div className="sound-picker-grid">
@@ -297,7 +298,7 @@ function SoundPicker({ soundChoice, onChange }) {
             className={`sound-picker-option ${soundChoice === preset.id ? 'sound-picker-option-active' : ''}`}
             onClick={() => {
               onChange({ soundChoice: preset.id });
-              playPresetPreview(preset.id);
+              playPresetPreview(preset.id, volume);
             }}
           >
             <span className="sound-picker-option-label">{preset.label}</span>
@@ -306,7 +307,7 @@ function SoundPicker({ soundChoice, onChange }) {
               className="sound-picker-play-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                playPresetPreview(preset.id);
+                playPresetPreview(preset.id, volume);
               }}
               title={`Preview ${preset.label}`}
             >
@@ -319,7 +320,7 @@ function SoundPicker({ soundChoice, onChange }) {
   );
 }
 
-function NotificationTypeSettings({ typePrefs, onChange }) {
+function NotificationTypeSettings({ typePrefs, onChange, volume = 0.7 }) {
   const handleBrowserPushChange = async (enabled) => {
     if (enabled && Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
@@ -374,6 +375,7 @@ function NotificationTypeSettings({ typePrefs, onChange }) {
             <SoundPicker
               soundChoice={typePrefs.soundChoice}
               onChange={({ soundChoice }) => onChange({ ...typePrefs, soundChoice })}
+              volume={volume}
             />
           )}
         </>
@@ -391,8 +393,9 @@ const NOTIFICATION_TYPES = [
   { key: 'priceAlert', label: 'Price Alerts', description: 'Get notified when a tracked item crosses your price threshold' },
 ];
 
-function NotificationsTab({ notificationPreferences, onNotificationTypeChange }) {
+function NotificationsTab({ notificationPreferences, onNotificationTypeChange, notificationVolume, onNotificationVolumeChange }) {
   const [selectedKey, setSelectedKey] = useState(NOTIFICATION_TYPES[0].key);
+  const volume = (notificationVolume ?? 70) / 100;
 
   const handleTypeChange = (key, updatedTypePrefs) => {
     onNotificationTypeChange(key, updatedTypePrefs);
@@ -402,6 +405,23 @@ function NotificationsTab({ notificationPreferences, onNotificationTypeChange })
   const selectedPrefs = notificationPreferences[selectedKey];
 
   return (
+    <>
+      <div className="notif-volume-section">
+        <div className="notif-volume-row">
+          <span className="notif-volume-label">Volume</span>
+          <input
+            type="range"
+            className="notif-volume-slider"
+            min="0"
+            max="100"
+            value={notificationVolume ?? 70}
+            onChange={(e) => onNotificationVolumeChange(Number(e.target.value))}
+            onMouseUp={() => playPresetPreview('chime', (notificationVolume ?? 70) / 100)}
+            onTouchEnd={() => playPresetPreview('chime', (notificationVolume ?? 70) / 100)}
+          />
+          <span className="notif-volume-value">{notificationVolume ?? 70}%</span>
+        </div>
+      </div>
     <div className="notif-settings-pane">
       <div className="notif-sidebar">
         {NOTIFICATION_TYPES.map((type) => {
@@ -426,9 +446,11 @@ function NotificationsTab({ notificationPreferences, onNotificationTypeChange })
         <NotificationTypeSettings
           typePrefs={selectedPrefs}
           onChange={(updated) => handleTypeChange(selectedKey, updated)}
+          volume={volume}
         />
       </div>
     </div>
+    </>
   );
 }
 
@@ -447,6 +469,8 @@ export default function SettingsModal({
   onShowCategoryUnrealisedProfitChange,
   notificationPreferences,
   onNotificationTypeChange,
+  notificationVolume,
+  onNotificationVolumeChange,
   onCancel,
   onChangePassword
 }) {
@@ -495,6 +519,8 @@ export default function SettingsModal({
           <NotificationsTab
             notificationPreferences={notificationPreferences}
             onNotificationTypeChange={onNotificationTypeChange}
+            notificationVolume={notificationVolume}
+            onNotificationVolumeChange={onNotificationVolumeChange}
           />
         )}
       </div>

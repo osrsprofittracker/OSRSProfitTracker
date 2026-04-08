@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { formatNumber, parseMK, handleMKInput } from '../../utils/formatters';
+import { useGEData } from '../../contexts/GEDataContext';
 
-export default function SellModal({ stock, onConfirm, onCancel, geData = {}, isSubmitting = false }) {
+export default function SellModal({ stock, onConfirm, onCancel, isSubmitting = false }) {
+  const { gePrices: geData } = useGEData();
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState('');
   const [useTotal, setUseTotal] = useState(false);
@@ -55,6 +57,23 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {}, isS
         shares: sharesNum,
         price: parseFloat(price)
       });
+    }
+  };
+
+  const stepShares = (delta) => {
+    const current = parseFloat(parseMK(shares)) || 0;
+    const newVal = Math.max(0, Math.min(stock.shares, current + delta));
+    setShares(newVal.toString());
+  };
+
+  const stepPrice = (delta) => {
+    if (useTotal) {
+      const current = parseFloat(totalAmount) || 0;
+      const newTotal = Math.max(0, current + delta).toString();
+      setTotalAmount(newTotal);
+      if (shares && newTotal) setPrice((parseFloat(newTotal) / parseFloat(shares)).toFixed(2));
+    } else {
+      handlePriceChange(Math.max(0, (parseFloat(price) || 0) + delta).toString());
     }
   };
 
@@ -214,23 +233,34 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {}, isS
               ALL
             </button>
           </div>
-          <input
-            type="text"
-            value={shares}
-            onChange={(e) => handleMKInput(e.target.value, setShares)}
-            placeholder="Number of shares (e.g. 10k)"
-            style={{
-              width: '100%',
-              padding: '0.5rem 1rem',
-              background: 'rgb(51, 65, 85)',
-              borderRadius: '0.5rem',
-              outline: 'none',
-              border: '2px solid transparent',
-              color: 'white'
-            }}
-            onFocus={(e) => e.target.style.borderColor = 'rgb(239, 68, 68)'}
-            onBlur={(e) => { handleSharesBlur(); e.target.style.borderColor = 'transparent'; }}
-          />
+          <div className="input-step-wrapper">
+            <input
+              className="input-step-field"
+              type="text"
+              value={shares}
+              onChange={(e) => handleMKInput(e.target.value, setShares)}
+              placeholder="Number of shares (e.g. 10k)"
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem',
+                background: 'rgb(51, 65, 85)',
+                borderRadius: '0.5rem',
+                outline: 'none',
+                border: '2px solid transparent',
+                color: 'white'
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'rgb(239, 68, 68)'}
+              onBlur={(e) => { handleSharesBlur(); e.target.style.borderColor = 'transparent'; }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') { e.preventDefault(); stepShares(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepShares(-1); }
+              }}
+            />
+            <div className="input-step-btns">
+              <button type="button" className="input-step-btn" onClick={() => stepShares(1)}>▲</button>
+              <button type="button" className="input-step-btn" onClick={() => stepShares(-1)}>▼</button>
+            </div>
+          </div>
         </div>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -304,44 +334,55 @@ export default function SellModal({ stock, onConfirm, onCancel, geData = {}, isS
               ⇄ {useTotal ? 'Price' : 'Total'}
             </button>
           </div>
-          <input
-            type="text"
-            value={useTotal ? formatTotalInput(totalAmount) : price}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (useTotal) {
-                const lower = val.toLowerCase();
-                if (lower.endsWith('k') || lower.endsWith('m')) {
-                  const parsed = parseMK(val.replace(/\./g, ''));
-                  if (parsed !== val) {
-                    setTotalAmount(parsed);
-                    if (shares && parsed) {
-                      setPrice((parseFloat(parsed) / parseFloat(shares)).toFixed(2));
+          <div className="input-step-wrapper">
+            <input
+              className="input-step-field"
+              type="text"
+              value={useTotal ? formatTotalInput(totalAmount) : price}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (useTotal) {
+                  const lower = val.toLowerCase();
+                  if (lower.endsWith('k') || lower.endsWith('m')) {
+                    const parsed = parseMK(val.replace(/\./g, ''));
+                    if (parsed !== val) {
+                      setTotalAmount(parsed);
+                      if (shares && parsed) {
+                        setPrice((parseFloat(parsed) / parseFloat(shares)).toFixed(2));
+                      }
+                      return;
                     }
-                    return;
+                  }
+                  handleTotalInputChange(val);
+                } else {
+                  const parsed = handleMKInput(val, setPrice);
+                  if (shares && parsed) {
+                    setTotalAmount((parseFloat(shares) * parseFloat(parsed)).toFixed(0));
                   }
                 }
-                handleTotalInputChange(val);
-              } else {
-                const parsed = handleMKInput(val, setPrice);
-                if (shares && parsed) {
-                  setTotalAmount((parseFloat(shares) * parseFloat(parsed)).toFixed(0));
-                }
-              }
-            }}
-            placeholder={useTotal ? 'Total revenue (e.g. 10m)' : 'Price per share (e.g. 1.5k)'}
-            style={{
-              width: '100%',
-              padding: '0.5rem 1rem',
-              background: 'rgb(51, 65, 85)',
-              borderRadius: '0.5rem',
-              outline: 'none',
-              border: '2px solid transparent',
-              color: 'white'
-            }}
-            onFocus={(e) => e.target.style.borderColor = 'rgb(239, 68, 68)'}
-            onBlur={(e) => e.target.style.borderColor = 'transparent'}
-          />
+              }}
+              placeholder={useTotal ? 'Total revenue (e.g. 10m)' : 'Price per share (e.g. 1.5k)'}
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem',
+                background: 'rgb(51, 65, 85)',
+                borderRadius: '0.5rem',
+                outline: 'none',
+                border: '2px solid transparent',
+                color: 'white'
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'rgb(239, 68, 68)'}
+              onBlur={(e) => e.target.style.borderColor = 'transparent'}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') { e.preventDefault(); stepPrice(1); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); stepPrice(-1); }
+              }}
+            />
+            <div className="input-step-btns">
+              <button type="button" className="input-step-btn" onClick={() => stepPrice(1)}>▲</button>
+              <button type="button" className="input-step-btn" onClick={() => stepPrice(-1)}>▼</button>
+            </div>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
           <button
