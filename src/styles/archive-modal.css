@@ -1,0 +1,91 @@
+.archive-modal {
+  width: 36rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.archive-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.archive-modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.archive-modal-empty {
+  color: rgb(148, 163, 184);
+}
+
+.archive-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.archive-modal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgb(51, 65, 85);
+  border-radius: 0.5rem;
+  gap: 1rem;
+}
+
+.archive-modal-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.archive-modal-item-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.archive-modal-item-name {
+  font-weight: 600;
+  color: white;
+}
+
+.archive-modal-item-meta {
+  font-size: 0.75rem;
+  color: rgb(148, 163, 184);
+}
+
+/* Confirm modal */
+.archive-confirm-modal {
+  width: 24rem;
+}
+
+.archive-confirm-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.archive-confirm-text {
+  color: rgb(148, 163, 184);
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.archive-confirm-name {
+  color: white;
+}
+
+.archive-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.archive-confirm-actions .btn {
+  flex: 1;
+}
