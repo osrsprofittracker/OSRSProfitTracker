@@ -64,7 +64,7 @@ import {
   DEFAULT_CATEGORIES,
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
-import { calculateCostBasis, calculateSellProfit, calculateAvgBuyPrice } from './utils/calculations';
+import { useModalHandlers } from './hooks/useModalHandlers';
 
 const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs' };
 
@@ -199,12 +199,8 @@ export default function MainApp({ session, onLogout }) {
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showBulkBuyModal, setShowBulkBuyModal] = useState(false);
   const [showBulkSellModal, setShowBulkSellModal] = useState(false);
-  const [bulkSummaryData, setBulkSummaryData] = useState(null);
-  const [isUndoing, setIsUndoing] = useState(false);
-  const [undoResult, setUndoResult] = useState(null);
   const [showSellModal, setShowSellModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -531,30 +527,6 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
-  const handleEditCategory = async (oldCategory, newCategory) => {
-    try {
-      const isInvestment = categories.find(c => c.name === oldCategory && c.isInvestment === (tradeMode === 'investment'))?.isInvestment || false;
-      await updateCategory(oldCategory, newCategory, isInvestment);
-
-      // Refetch everything from database
-      await fetchCategories();
-      await refetch();
-
-      setCollapsedCategories(prev => {
-        const newState = { ...prev };
-        newState[newCategory] = prev[oldCategory];
-        delete newState[oldCategory];
-        return newState;
-      });
-
-      setShowEditCategoryModal(false);
-      alert('Category updated successfully');
-    } catch (error) {
-      console.error('Error updating category:', error);
-      alert(`Failed to update category: ${error.message}`);
-    }
-  };
-
   const calculateMilestoneProgress = () => {
     if (!dataLoaded || !profitHistory) return { day: 0, week: 0, month: 0, year: 0 };
 
@@ -777,371 +749,82 @@ export default function MainApp({ session, onLogout }) {
     });
   };
 
-  const handleBuy = async (data) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    const { shares, price, startTimer } = data;
-    const total = shares * price;
-
-    const newShares = selectedStock.shares + shares;
-    let timerEndTime;
-    let newOnHold = selectedStock.onHold; // Track if we should update onHold status
-
-    if (startTimer) {
-      // If startTimer is checked, always start the timer and take off hold
-      timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
-      newOnHold = false; // Take it off hold when timer starts
-    } else {
-      // If startTimer is NOT checked, keep existing timer
-      timerEndTime = selectedStock.timerEndTime;
-    }
-
-    // Check if timer just ended and stock is still below needed
-    const timerJustEnded = selectedStock.timerEndTime && selectedStock.timerEndTime <= Date.now();
-    if (timerJustEnded && newShares < selectedStock.needed && selectedStock.onHold) {
-      // If timer ended, still below needed, and was on hold, keep it on hold
-      newOnHold = true;
-    } else if (newShares >= selectedStock.needed) {
-      // If we now have enough stock, take it off hold
-      newOnHold = false;
-    }
-
-    try {
-      await updateStock(selectedStock.id, {
-        totalCost: selectedStock.totalCost + total,
-        shares: newShares,
-        timerEndTime
-      });
-
-      await addTransaction({
-        stockId: selectedStock.id,
-        stockName: selectedStock.name,
-        type: 'buy',
-        shares,
-        price,
-        total,
-        date: new Date().toISOString()
-      });
-      await refetch();
-      // Reset notification after successful update so it can fire when the new timer expires
-      if (startTimer) {
-        firedTimerNotifs.current.delete(selectedStock.id);
-        saveFiredTimers();
-      }
-      highlightRow(selectedStock.id);
-      setShowBuyModal(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const processBuyItem = async (item) => {
-    const { stock, shares, price, startTimer } = item;
-    const total = shares * price;
-    const newShares = stock.shares + shares;
-
-    let timerEndTime;
-    let newOnHold = stock.onHold;
-
-    if (startTimer) {
-      timerEndTime = Date.now() + (4 * 60 * 60 * 1000);
-      newOnHold = false;
-    } else {
-      timerEndTime = stock.timerEndTime;
-    }
-
-    const timerJustEnded = stock.timerEndTime && stock.timerEndTime <= Date.now();
-    if (timerJustEnded && newShares < stock.needed && stock.onHold) {
-      newOnHold = true;
-    } else if (newShares >= stock.needed) {
-      newOnHold = false;
-    }
-
-    await updateStock(stock.id, {
-      totalCost: stock.totalCost + total,
-      shares: newShares,
-      timerEndTime,
-    });
-
-    const transaction = await addTransaction({
-      stockId: stock.id,
-      stockName: stock.name,
-      type: 'buy',
-      shares,
-      price,
-      total,
-      date: new Date().toISOString(),
-    });
-
-    if (startTimer) {
-      firedTimerNotifs.current.delete(stock.id);
-    }
-
-    return { stockName: stock.name, shares, price, total, transaction };
-  };
-
-  const processSellItem = async (item) => {
-    const { stock, shares, price } = item;
-    const total = shares * price;
-    const costBasisOfSharesSold = calculateCostBasis(stock, shares);
-    const profit = calculateSellProfit(stock, shares, price);
-
-    await updateStock(stock.id, {
-      shares: stock.shares - shares,
-      totalCost: stock.totalCost - costBasisOfSharesSold,
-      sharesSold: stock.sharesSold + shares,
-      totalCostSold: stock.totalCostSold + total,
-      totalCostBasisSold: (stock.totalCostBasisSold || 0) + costBasisOfSharesSold
-    });
-
-    const transaction = await addTransaction({
-      stockId: stock.id,
-      stockName: stock.name,
-      type: 'sell',
-      shares,
-      price,
-      total,
-      date: new Date().toISOString(),
-    });
-
-    const profitEntry = await addProfitEntry('stock', profit, stock.id, transaction?.id ?? null);
-
-    if (transaction && profitEntry) {
-      await supabase
-        .from('transactions')
-        .update({ profit_history_id: profitEntry.id })
-        .eq('id', transaction.id);
-    }
-
-    return { stockName: stock.name, shares, price, total, transaction, profitEntry, profit };
-  };
-
-  const handleBulkOperation = async (type, items, closeModal) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-
-    try {
-      const completedItems = [];
-      const processItem = type === 'buy' ? processBuyItem : processSellItem;
-
-      for (const item of items) {
-        const completed = await processItem(item);
-        completedItems.push(completed);
-        highlightRow(item.stock.id);
-      }
-
-      if (type === 'buy') {
-        saveFiredTimers();
-      }
-
-      await refetch();
-      closeModal(false);
-      if (items.length > 1) {
-        setBulkSummaryData({ type, items: completedItems });
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
 
+  const closeModal = useCallback((type) => {
+    const setters = {
+      buy: setShowBuyModal,
+      bulkBuy: setShowBulkBuyModal,
+      bulkSell: setShowBulkSellModal,
+      sell: setShowSellModal,
+      remove: setShowRemoveModal,
+      adjust: setShowAdjustModal,
+      delete: setShowDeleteModal,
+      newStock: setShowNewStockModal,
+      category: setShowCategoryModal,
+      deleteCategory: setShowDeleteCategoryModal,
+      editCategory: setShowEditCategoryModal,
+      dumpProfit: setShowDumpProfitModal,
+      referralProfit: setShowReferralProfitModal,
+      bondsProfit: setShowBondsProfitModal,
+      notes: setShowNotesModal,
+    };
+    setters[type]?.(false);
+  }, []);
 
-  const handleSell = async (data) => {
-    const { shares, price } = data;
-    await handleBulkOperation('sell', [{ stock: selectedStock, shares, price }], setShowSellModal);
-  };
-
-  const handleBulkSell = async (items) => {
-    await handleBulkOperation('sell', items, setShowBulkSellModal);
-  };
-
-  const handleBulkUndo = async () => {
-    if (!bulkSummaryData || isUndoing) return;
-    setIsUndoing(true);
-
-    const items = [...bulkSummaryData.items].reverse();
-    let undoneCount = 0;
-    let failedCount = 0;
-    const errors = [];
-
-    for (const item of items) {
-      if (!item.transaction) {
-        failedCount++;
-        errors.push(`${item.stockName}: no transaction reference`);
-        continue;
-      }
-      const result = await undoTransaction(item.transaction);
-      if (result.success) {
-        undoneCount++;
-      } else {
-        failedCount++;
-        errors.push(`${item.stockName}: ${result.warning || result.error || 'unknown error'}`);
-      }
-    }
-
-    await refetch();
-    setUndoResult({ success: failedCount === 0, undoneCount, failedCount, errors });
-    setIsUndoing(false);
-  };
-
-  const handleBulkSummaryDone = () => {
-    setBulkSummaryData(null);
-    setUndoResult(null);
-  };
-
-  const handleRemoveStock = async (data) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    const { shares } = data;
-
-    const avgBuy = calculateAvgBuyPrice(selectedStock);
-    const costToRemove = calculateCostBasis(selectedStock, shares);
-
-    try {
-      await updateStock(selectedStock.id, {
-        shares: selectedStock.shares - shares,
-        totalCost: selectedStock.totalCost - costToRemove,
-      });
-
-      await addTransaction({
-        stockId: selectedStock.id,
-        stockName: selectedStock.name,
-        type: 'remove',
-        shares,
-        price: avgBuy,
-        total: costToRemove,
-        date: new Date().toISOString(),
-      });
-
-      await refetch();
-      highlightRow(selectedStock.id);
-      setShowRemoveModal(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    isSubmitting,
+    bulkSummaryData,
+    isUndoing,
+    undoResult,
+    handleBuy,
+    handleSell,
+    handleBulkBuy,
+    handleBulkSell,
+    handleBulkUndo,
+    handleBulkSummaryDone,
+    handleRemoveStock,
+    handleAdjust,
+    handleDelete,
+    handleAddStock,
+    handleAddCategory,
+    handleDeleteCategory,
+    handleEditCategory,
+    handleAddDumpProfit,
+    handleAddReferralProfit,
+    handleAddBondsProfit,
+    handleUpdateMilestone,
+  } = useModalHandlers({
+    updateStock,
+    addTransaction,
+    deleteStock,
+    addStockToDB: addStockToDB,
+    refetch,
+    addCategory,
+    deleteCategory,
+    updateCategory,
+    fetchCategories,
+    updateProfit,
+    addProfitEntry,
+    updateMilestone,
+    undoTransaction,
+    selectedStock,
+    selectedCategory,
+    categories,
+    tradeMode,
+    closeModal,
+    highlightRow,
+    firedTimerNotifs,
+    saveFiredTimers,
+    setCollapsedCategories,
+    setNewStockCategory,
+    calculateMilestoneProgress,
+    setMilestoneProgress,
+  });
 
   const handleInvestmentDateChange = async (stock, date) => {
     await updateStock(stock.id, { investmentStartDate: date });
     await refetch();
-  };
-
-  const handleAdjust = async (data) => {
-    const { name, needed, category, limit4h, onHold, isInvestment, itemId, investmentStartDate } = data;
-    await updateStock(selectedStock.id, { name, needed, category, limit4h, onHold, isInvestment, itemId, investmentStartDate });
-    await refetch();
-    highlightRow(selectedStock.id);
-    setShowAdjustModal(false);
-  };
-
-  const handleDelete = async () => {
-    await deleteStock(selectedStock.id);
-    await refetch();
-    setShowDeleteModal(false);
-  };
-
-  const handleAddStock = async (data) => {
-    const { name, category, limit4h, needed, isInvestment, itemId, investmentStartDate } = data;
-    await addStockToDB({
-      name,
-      totalCost: 0,
-      shares: 0,
-      sharesSold: 0,
-      totalCostSold: 0,
-      totalCostBasisSold: 0,
-      limit4h,
-      needed,
-      timerEndTime: null,
-      category: category || 'Uncategorized',
-      isInvestment: isInvestment || false,
-      itemId: itemId || null,
-      investmentStartDate: investmentStartDate || null,
-    });
-    await refetch();
-    setNewStockCategory('');
-    setShowNewStockModal(false);
-  };
-
-  const handleAddCategory = async (name, isInvestment = false) => {
-    if (!name.trim()) return;
-    if (!categories.some(c => c.name === name && c.isInvestment === isInvestment)) {
-      await addCategory(name, isInvestment);
-      await fetchCategories();
-    }
-    setShowCategoryModal(false);
-  };
-
-  const handleDeleteCategory = async () => {
-    try {
-      const categoryName = selectedCategory;
-      console.log('Attempting to delete category:', categoryName);
-
-      if (!categoryName) {
-        console.error('No category name provided');
-        alert('Invalid category');
-        return;
-      }
-
-      if (categoryName === 'Uncategorized') {
-        console.error('Attempted to delete Uncategorized');
-        alert('Cannot delete Uncategorized category');
-        return;
-      }
-
-      const result = await deleteCategory(categoryName, tradeMode === 'investment');
-
-      if (result.success) {
-        // Refetch everything from database
-        await refetch();
-        await fetchCategories();
-
-        // Update collapsed categories
-        setCollapsedCategories(prev => {
-          const newState = { ...prev };
-          delete newState[categoryName];
-          return newState;
-        });
-
-        setShowDeleteCategoryModal(false);
-        alert('Category deleted successfully');
-      }
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      alert(`Failed to delete category: ${error.message}`);
-    }
-  };
-
-  const handleAddDumpProfit = async (amount) => {
-    const success = await updateProfit('dumpProfit', amount);
-    if (success) {
-      await addProfitEntry('dump', amount);
-    }
-    setShowDumpProfitModal(false);
-  };
-
-  const handleAddReferralProfit = async (amount) => {
-    const success = await updateProfit('referralProfit', amount);
-    if (success) {
-      await addProfitEntry('referral', amount);
-    }
-    setShowReferralProfitModal(false);
-  };
-
-  const handleAddBondsProfit = async (amount) => {
-    const success = await updateProfit('bondsProfit', amount);
-    if (success) {
-      await addProfitEntry('bonds', amount);
-    }
-    setShowBondsProfitModal(false);
-  };
-
-  const handleUpdateMilestone = async (period, goal, enabled) => {
-    const success = await updateMilestone(period, goal, enabled);
-    if (success) {
-      // Recalculate milestone progress after updating
-      setMilestoneProgress(calculateMilestoneProgress());
-    }
   };
 
   const handleQuickNavNavigate = (category) => {
@@ -1860,7 +1543,7 @@ export default function MainApp({ session, onLogout }) {
             <ModalContainer isOpen={showBulkBuyModal}>
               <BulkBuyModal
                 tradeMode={tradeMode}
-                onConfirm={(items) => handleBulkOperation('buy', items, setShowBulkBuyModal)}
+                onConfirm={handleBulkBuy}
                 onCancel={() => setShowBulkBuyModal(false)}
                 isSubmitting={isSubmitting}
               />
