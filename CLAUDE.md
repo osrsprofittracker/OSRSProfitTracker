@@ -61,19 +61,19 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 
 `MainApp.jsx` is the orchestrator. Key sections by line area:
 
-- **Imports** (top ~60 lines): all hooks, components, modals
-- **Hook calls** (~line 70-150): `useStocks`, `useTransactions`, `useCategories`, etc.
-- **Modal state** (~line 200-230): `useState` booleans for every modal (`showBuyModal`, `showBulkBuyModal`, etc.) plus `selectedStock`, `isSubmitting`
-- **Handlers** (~line 840-1050): `handleBulkBuy`, `handleBulkSell`, `handleBulkUndo`, `handleSell`, `handleRemoveStock`, etc. Each handler does: guard `isSubmitting` -> mutate via hooks -> `refetch()` -> close modal
-- **JSX modals** (~line 1870-1950): all `<ModalContainer isOpen={...}>` blocks
+- **Imports** (top ~50 lines): all hooks, components, contexts
+- **Hook calls** (~line 70-190): `useStocks`, `useTransactions`, `useCategories`, etc.
+- **Modal integration** (~line 187): `useModal()` from `ModalContext` for open/close/selectedStock
+- **Handlers** (~line 706): destructured from `useModalHandlers()` hook
+- **JSX** (~line 1400): renders `<ModalManager>` which owns all modal rendering
 
 ### Modal pattern
 
-Every modal follows this pattern:
-1. State in MainApp: `const [showXModal, setShowXModal] = useState(false)`
-2. Open: `setShowXModal(true)` (from button click or stock action)
-3. Component in `src/components/modals/XModal.jsx` receives `onConfirm` and `onCancel`
-4. Render: `<ModalContainer isOpen={showXModal}><XModal .../></ModalContainer>`
+Modals use a context-based system:
+1. `ModalContext` (`src/contexts/ModalContext.jsx`) manages open/close state for all modals via `openModal(name)` / `closeModal(name)`
+2. `useModalHandlers` (`src/hooks/useModalHandlers.js`) contains all confirm/submit handlers (`handleBuy`, `handleBulkBuy`, `handleSell`, etc.)
+3. `ModalManager` (`src/components/ModalManager.jsx`) renders all `<ModalContainer isOpen={...}>` blocks in one place
+4. Individual modal components in `src/components/modals/XModal.jsx` receive `onConfirm` and `onCancel`
 5. `ModalContainer` is a fixed overlay with z-index 200, renders null when closed
 
 ### CSS conventions

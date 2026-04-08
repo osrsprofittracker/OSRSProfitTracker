@@ -1,6 +1,21 @@
-export const CURRENT_VERSION = "2.6.0";
+export const CURRENT_VERSION = "2.7.0";
 
 export const changelog = [
+  {
+    version: "2.7.0",
+    date: "2026-04-08",
+    changes: [
+      { type: "new", text: "Bulk Buy modal for purchasing multiple items at once from the stock table" },
+      { type: "new", text: "Bulk Sell modal for selling multiple items at once with quantity and price per item" },
+      { type: "new", text: "Post-confirm summary modal after bulk operations showing what was processed, with a bulk undo button" },
+      { type: "new", text: "Notes button on the Graphs page for items linked to a stock, opening the note directly" },
+      { type: "new", text: "Clicking a transaction in global search now auto-filters the History page to that item" },
+      { type: "new", text: "Global volume slider in notification settings to control notification sound volume" },
+      { type: "fix", text: "Navigation bar text no longer clips descenders or gets cut off by width constraints" },
+      { type: "fix", text: "Settings notification panel no longer resizes when toggling sound on or off" },
+      { type: "fix", text: "Notification scroll now works correctly for collapsed categories" },
+    ],
+  },
   {
     version: "2.6.0",
     date: "2026-03-31",
