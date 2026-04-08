@@ -29,6 +29,9 @@ import { calculateCostBasis, calculateSellProfit, calculateAvgBuyPrice } from '.
  * @param {Function} opts.setNewStockCategory
  * @param {Function} opts.calculateMilestoneProgress
  * @param {Function} opts.setMilestoneProgress
+ * @param {Function} opts.archiveStock
+ * @param {Function} opts.restoreStock
+ * @param {Function} opts.fetchArchivedStocks
  */
 export function useModalHandlers({
   updateStock,
@@ -56,11 +59,18 @@ export function useModalHandlers({
   setNewStockCategory,
   calculateMilestoneProgress,
   setMilestoneProgress,
+  archiveStock,
+  restoreStock,
+  fetchArchivedStocks,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bulkSummaryData, setBulkSummaryData] = useState(null);
   const [isUndoing, setIsUndoing] = useState(false);
   const [undoResult, setUndoResult] = useState(null);
+
+  const [archivedStocks, setArchivedStocks] = useState([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [stockToArchive, setStockToArchive] = useState(null);
 
   const processBuyItem = useCallback(async (item) => {
     const { stock, shares, price, startTimer } = item;
@@ -439,6 +449,37 @@ export function useModalHandlers({
     }
   }, [updateMilestone, setMilestoneProgress, calculateMilestoneProgress]);
 
+  const handleOpenArchive = useCallback(async () => {
+    setArchivedLoading(true);
+    const data = await fetchArchivedStocks();
+    setArchivedStocks(data);
+    setArchivedLoading(false);
+    closeModal('archiveConfirm');
+  }, [fetchArchivedStocks, closeModal]);
+
+  const handleArchive = useCallback((stock) => {
+    setStockToArchive(stock);
+  }, []);
+
+  const handleConfirmArchive = useCallback(async () => {
+    await archiveStock(stockToArchive.id);
+    await refetch();
+    setStockToArchive(null);
+    closeModal('archiveConfirm');
+  }, [stockToArchive, archiveStock, refetch, closeModal]);
+
+  const handleRestore = useCallback(async (stock) => {
+    await restoreStock(stock.id);
+    const data = await fetchArchivedStocks();
+    setArchivedStocks(data);
+    await refetch();
+  }, [restoreStock, fetchArchivedStocks, refetch]);
+
+  const refreshArchivedStocks = useCallback(async () => {
+    const data = await fetchArchivedStocks();
+    setArchivedStocks(data);
+  }, [fetchArchivedStocks]);
+
   return {
     isSubmitting,
     bulkSummaryData,
@@ -462,5 +503,13 @@ export function useModalHandlers({
     handleAddReferralProfit,
     handleAddBondsProfit,
     handleUpdateMilestone,
+    archivedStocks,
+    archivedLoading,
+    stockToArchive,
+    handleOpenArchive,
+    handleArchive,
+    handleConfirmArchive,
+    handleRestore,
+    refreshArchivedStocks,
   };
 }

@@ -51,6 +51,8 @@ import CategoryChartModal from './components/modals/CategoryChartModal';
 import SettingsModal from './components/modals/SettingsModal';
 import ChangelogModal from './components/modals/ChangelogModal';
 import PriceAlertModal from './components/modals/PriceAlertModal';
+import ArchiveModal from './components/modals/ArchiveModal';
+import ArchiveConfirmModal from './components/modals/ArchiveConfirmModal';
 import { CURRENT_VERSION } from './data/changelog';
 import { usePriceAlerts } from './hooks/usePriceAlerts';
 import { usePriceAlertChecker } from './hooks/usePriceAlertChecker';
@@ -229,37 +231,7 @@ export default function MainApp({ session, onLogout }) {
   const [newStockCategory, setNewStockCategory] = useState('');
 
   const [showArchive, setShowArchive] = useState(false);
-  const [archivedStocks, setArchivedStocks] = useState([]);
-  const [archivedLoading, setArchivedLoading] = useState(false);
   const [showArchiveConfirmModal, setShowArchiveConfirmModal] = useState(false);
-  const [stockToArchive, setStockToArchive] = useState(null);
-
-  const handleOpenArchive = async () => {
-    setArchivedLoading(true);
-    const data = await fetchArchivedStocks();
-    setArchivedStocks(data);
-    setArchivedLoading(false);
-    setShowArchive(true);
-  };
-
-  const handleArchive = (stock) => {
-    setStockToArchive(stock);
-    setShowArchiveConfirmModal(true);
-  };
-
-  const handleConfirmArchive = async () => {
-    await archiveStock(stockToArchive.id);
-    await refetch();
-    setShowArchiveConfirmModal(false);
-    setStockToArchive(null);
-  };
-
-  const handleRestore = async (stock) => {
-    await restoreStock(stock.id);
-    const data = await fetchArchivedStocks();
-    setArchivedStocks(data);
-    await refetch();
-  };
 
   // Price alert handlers
   const handleOpenPriceAlert = (stockOrItem) => {
@@ -768,6 +740,8 @@ export default function MainApp({ session, onLogout }) {
       referralProfit: setShowReferralProfitModal,
       bondsProfit: setShowBondsProfitModal,
       notes: setShowNotesModal,
+      archive: setShowArchive,
+      archiveConfirm: setShowArchiveConfirmModal,
     };
     setters[type]?.(false);
   }, []);
@@ -794,6 +768,14 @@ export default function MainApp({ session, onLogout }) {
     handleAddReferralProfit,
     handleAddBondsProfit,
     handleUpdateMilestone,
+    archivedStocks,
+    archivedLoading,
+    stockToArchive,
+    handleOpenArchive,
+    handleArchive,
+    handleConfirmArchive,
+    handleRestore,
+    refreshArchivedStocks,
   } = useModalHandlers({
     updateStock,
     addTransaction,
@@ -820,6 +802,9 @@ export default function MainApp({ session, onLogout }) {
     setNewStockCategory,
     calculateMilestoneProgress,
     setMilestoneProgress,
+    archiveStock,
+    restoreStock,
+    fetchArchivedStocks,
   });
 
   const handleInvestmentDateChange = async (stock, date) => {
@@ -1432,8 +1417,7 @@ export default function MainApp({ session, onLogout }) {
               <button
                 onClick={async () => {
                   setNewStockCategory('');
-                  const data = await fetchArchivedStocks();
-                  setArchivedStocks(data);
+                  await refreshArchivedStocks();
                   setShowNewStockModal(true);
                 }}
                 className="btn btn-success"
@@ -1453,7 +1437,10 @@ export default function MainApp({ session, onLogout }) {
                 Bulk Sell
               </button>
               <button
-                onClick={handleOpenArchive}
+                onClick={async () => {
+                  await handleOpenArchive();
+                  setShowArchive(true);
+                }}
                 className="btn btn-secondary"
               >
                 📦 Archive
@@ -1500,7 +1487,10 @@ export default function MainApp({ session, onLogout }) {
                   setSelectedStock(stock);
                   setShowDeleteModal(true);
                 }}
-                onArchive={handleArchive}
+                onArchive={(stock) => {
+                  handleArchive(stock);
+                  setShowArchiveConfirmModal(true);
+                }}
                 onNotes={(stock) => {
                   setSelectedStock(stock);
                   setShowNotesModal(true);
@@ -1761,87 +1751,21 @@ export default function MainApp({ session, onLogout }) {
         </ModalContainer>
 
         <ModalContainer isOpen={showArchive}>
-          <div style={{
-            background: 'rgb(30, 41, 59)',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            width: '36rem',
-            maxWidth: '90vw',
-            maxHeight: '80vh',
-            overflowY: 'auto',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            border: '1px solid rgb(51, 65, 85)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>📦 Archive</h2>
-              <button onClick={() => setShowArchive(false)} className="btn btn-secondary btn-sm">Close</button>
-            </div>
-            {archivedLoading ? (
-              <p style={{ color: 'rgb(148, 163, 184)' }}>Loading...</p>
-            ) : archivedStocks.length === 0 ? (
-              <p style={{ color: 'rgb(148, 163, 184)' }}>No archived stocks.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {archivedStocks.map(stock => (
-                  <div key={stock.id} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0.75rem 1rem', background: 'rgb(51, 65, 85)',
-                    borderRadius: '0.5rem', gap: '1rem'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                      {stock.itemId && geIconMap[stock.itemId] && (
-                        <img src={geIconMap[stock.itemId]} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain', imageRendering: 'pixelated' }} />
-                      )}
-                      <div>
-                        <div style={{ fontWeight: '600', color: 'white' }}>{stock.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'rgb(148, 163, 184)' }}>
-                          {stock.isInvestment ? '📈 Investment' : '💼 Trade'} · {stock.category}
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleRestore(stock)}
-                      className="btn btn-success btn-sm"
-                    >
-                      Restore
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ArchiveModal
+            archivedStocks={archivedStocks}
+            loading={archivedLoading}
+            geIconMap={geIconMap}
+            onRestore={handleRestore}
+            onClose={() => setShowArchive(false)}
+          />
         </ModalContainer>
 
         <ModalContainer isOpen={showArchiveConfirmModal}>
-          <div style={{
-            background: 'rgb(30, 41, 59)',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            width: '24rem',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            border: '1px solid rgb(51, 65, 85)'
-          }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Archive Stock</h2>
-            <p style={{ color: 'rgb(148, 163, 184)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-              Are you sure you want to archive <strong style={{ color: 'white' }}>{stockToArchive?.name}</strong>? It will be removed from your trade screen but can be restored anytime.
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button
-                onClick={handleConfirmArchive}
-                className="btn btn-warning"
-                style={{ flex: 1 }}
-              >
-                📦 Archive
-              </button>
-              <button
-                onClick={() => { setShowArchiveConfirmModal(false); setStockToArchive(null); }}
-                className="btn btn-secondary"
-                style={{ flex: 1 }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+          <ArchiveConfirmModal
+            stock={stockToArchive}
+            onConfirm={handleConfirmArchive}
+            onCancel={() => { setShowArchiveConfirmModal(false); }}
+          />
         </ModalContainer>
 
         <ModalContainer isOpen={showMilestoneModal}>
