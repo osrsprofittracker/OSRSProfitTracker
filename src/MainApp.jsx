@@ -16,43 +16,19 @@ import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEData } from './contexts/GEDataContext';
 import { TradeProvider } from './contexts/TradeContext';
+import { ModalProvider, useModal } from './contexts/ModalContext';
 import { useNotifications } from './hooks/useNotifications';
 import { useOSRSNews } from './hooks/useOSRSNews';
 import { useJmodComments } from './hooks/useJmodComments';
 import CategoryQuickNav from './components/CategoryQuickNav';
 import MilestoneProgressBar from './components/MilestoneProgressBar';
-import MilestoneTrackerModal from './components/modals/MilestoneTrackerModal';
-import AltTimerModal from './components/modals/AltTimerModal';
 import Footer from './components/Footer';
-import EditCategoryModal from './components/modals/EditCategoryModal';
-import TimeCalculatorModal from './components/modals/TimeCalculatorModal';
 import Header from './components/Header';
 import NotificationCenter from './components/NotificationCenter';
 import PortfolioSummary from './components/PortfolioSummary';
 import ChartButtons from './components/ChartButtons';
 import CategorySection from './components/CategorySection';
-import ChangePasswordModal from './components/modals/ChangePasswordModal';
-import ModalContainer from './components/modals/ModalContainer';
-import BuyModal from './components/modals/BuyModal';
-import BulkBuyModal from './components/modals/BulkBuyModal';
-import BulkSellModal from './components/modals/BulkSellModal';
-import BulkSummaryModal from './components/modals/BulkSummaryModal';
-import SellModal from './components/modals/SellModal';
-import RemoveStockModal from './components/modals/RemoveStockModal';
-import AdjustModal from './components/modals/AdjustModal';
-import DeleteModal from './components/modals/DeleteModal';
-import NewStockModal from './components/modals/NewStockModal';
-import CategoryModal from './components/modals/CategoryModal';
-import DeleteCategoryModal from './components/modals/DeleteCategoryModal';
-import ProfitModal from './components/modals/ProfitModal';
-import NotesModal from './components/modals/NotesModal';
-import ProfitChartModal from './components/modals/ProfitChartModal';
-import CategoryChartModal from './components/modals/CategoryChartModal';
-import SettingsModal from './components/modals/SettingsModal';
-import ChangelogModal from './components/modals/ChangelogModal';
-import PriceAlertModal from './components/modals/PriceAlertModal';
-import ArchiveModal from './components/modals/ArchiveModal';
-import ArchiveConfirmModal from './components/modals/ArchiveConfirmModal';
+import ModalManager from './components/ModalManager';
 import { CURRENT_VERSION } from './data/changelog';
 import { usePriceAlerts } from './hooks/usePriceAlerts';
 import { usePriceAlertChecker } from './hooks/usePriceAlertChecker';
@@ -85,10 +61,17 @@ function getPageFromURL() {
   return 'home';
 }
 
-export default function MainApp({ session, onLogout }) {
+export default function MainApp(props) {
+  return (
+    <ModalProvider>
+      <MainAppInner {...props} />
+    </ModalProvider>
+  );
+}
+
+function MainAppInner({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
-  const [showChangelog, setShowChangelog] = useState(false);
   // Custom hooks for Supabase
   const [tradeMode, setTradeMode] = useState('trade');
   const { gePrices, geMapping, geIconMap, membershipMap, mappingLoading } = useGEData();
@@ -197,61 +180,28 @@ export default function MainApp({ session, onLogout }) {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading && !milestonesLoading && !profitHistoryLoading && !gpStatsLoading;
 
-  // Modal states
-  const [showBuyModal, setShowBuyModal] = useState(false);
-  const [showBulkBuyModal, setShowBulkBuyModal] = useState(false);
-  const [showBulkSellModal, setShowBulkSellModal] = useState(false);
-  const [showSellModal, setShowSellModal] = useState(false);
-  const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
-  const [showAdjustModal, setShowAdjustModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
-  const [milestoneInitialView, setMilestoneInitialView] = useState('main');
-  const [showNewStockModal, setShowNewStockModal] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showAltTimerModal, setShowAltTimerModal] = useState(false);
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-  const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
-  const [showDumpProfitModal, setShowDumpProfitModal] = useState(false);
-  const [showReferralProfitModal, setShowReferralProfitModal] = useState(false);
-  const [showBondsProfitModal, setShowBondsProfitModal] = useState(false);
-  const [showNotesModal, setShowNotesModal] = useState(false);
-  const [showProfitChartModal, setShowProfitChartModal] = useState(false);
-  const [showCategoryChartModal, setShowCategoryChartModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showTimeCalculatorModal, setShowTimeCalculatorModal] = useState(false);
-  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
-  const [showPriceAlertModal, setShowPriceAlertModal] = useState(false);
-  const [selectedAlertItem, setSelectedAlertItem] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const [selectedStock, setSelectedStock] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [newStockCategory, setNewStockCategory] = useState('');
-
-  const [showArchive, setShowArchive] = useState(false);
-  const [showArchiveConfirmModal, setShowArchiveConfirmModal] = useState(false);
+  // Modal context
+  const { openModal, closeModal, selectedStock, setSelectedStock, selectedCategory, setSelectedCategory, newStockCategory, setNewStockCategory, setSelectedAlertItem } = useModal();
 
   // Price alert handlers
   const handleOpenPriceAlert = (stockOrItem) => {
     const itemId = stockOrItem.itemId ?? stockOrItem.itemId;
     const itemName = stockOrItem.itemName ?? stockOrItem.name;
     if (!itemId) return;
-    setSelectedAlertItem({ itemId, itemName });
-    setShowPriceAlertModal(true);
+    openModal('priceAlert', { alertItem: { itemId, itemName } });
   };
 
   const handleSavePriceAlert = async (itemId, itemName, highThreshold, lowThreshold) => {
     await savePriceAlert(itemId, itemName, highThreshold, lowThreshold);
-    setShowPriceAlertModal(false);
-    setSelectedAlertItem(null);
+    closeModal('priceAlert');
   };
 
   const handleDeletePriceAlert = async (alertId) => {
     await dismissPriceAlert(alertId);
-    setShowPriceAlertModal(false);
-    setSelectedAlertItem(null);
+    closeModal('priceAlert');
   };
 
   // Notifications
@@ -700,13 +650,13 @@ export default function MainApp({ session, onLogout }) {
     const storageKey = `lastSeenVersion_${userId}`;
     const lastSeen = localStorage.getItem(storageKey);
     if (lastSeen !== CURRENT_VERSION) {
-      setShowChangelog(true);
+      openModal('changelog');
     }
   }, [userId]);
 
   const handleCloseChangelog = () => {
     localStorage.setItem(`lastSeenVersion_${userId}`, CURRENT_VERSION);
-    setShowChangelog(false);
+    closeModal('changelog');
   };
 
   const toggleCategory = (category) => {
@@ -722,29 +672,6 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
-
-  const closeModal = useCallback((type) => {
-    const setters = {
-      buy: setShowBuyModal,
-      bulkBuy: setShowBulkBuyModal,
-      bulkSell: setShowBulkSellModal,
-      sell: setShowSellModal,
-      remove: setShowRemoveModal,
-      adjust: setShowAdjustModal,
-      delete: setShowDeleteModal,
-      newStock: setShowNewStockModal,
-      category: setShowCategoryModal,
-      deleteCategory: setShowDeleteCategoryModal,
-      editCategory: setShowEditCategoryModal,
-      dumpProfit: setShowDumpProfitModal,
-      referralProfit: setShowReferralProfitModal,
-      bondsProfit: setShowBondsProfitModal,
-      notes: setShowNotesModal,
-      archive: setShowArchive,
-      archiveConfirm: setShowArchiveConfirmModal,
-    };
-    setters[type]?.(false);
-  }, []);
 
   const {
     isSubmitting,
@@ -872,7 +799,7 @@ export default function MainApp({ session, onLogout }) {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
     firedAltTimerNotif.current = false;
     await updateSettings({ altAccountTimer: timerEndTime });
-    setShowAltTimerModal(false);
+    closeModal('altTimer');
   };
 
   const handleResetAltTimer = async () => {
@@ -882,7 +809,7 @@ export default function MainApp({ session, onLogout }) {
 
   const handleSaveNotes = async (noteText) => {
     await saveNote(selectedStock.id, noteText);
-    setShowNotesModal(false);
+    closeModal('notes');
   };
 
   // Drag and drop operations
@@ -923,30 +850,11 @@ export default function MainApp({ session, onLogout }) {
   };
 
   const handleStockAction = (stock, action) => {
-    setSelectedStock(stock);
-    switch (action) {
-      case 'buy':
-        setShowBuyModal(true);
-        break;
-      case 'sell':
-        setShowSellModal(true);
-        break;
-      case 'remove':
-        setShowRemoveModal(true);
-        break;
-      case 'adjust':
-        setShowAdjustModal(true);
-        break;
-      case 'delete':
-        setShowDeleteModal(true);
-        break;
-      case 'notes':
-        setShowNotesModal(true);
-        break;
-      case 'calculate':
-        handleCalculateTime(stock);
-        break;
+    if (action === 'calculate') {
+      handleCalculateTime(stock);
+      return;
     }
+    openModal(action, { stock });
   };
 
   const handleStockDragStart = (e, stockId, sourceCategory) => {
@@ -1049,9 +957,8 @@ export default function MainApp({ session, onLogout }) {
     }
   };
 
-  const handleCalculateTime = async (stock) => {
-    setSelectedStock(stock);
-    setShowTimeCalculatorModal(true);
+  const handleCalculateTime = (stock) => {
+    openModal('timeCalculator', { stock });
   };
 
 
@@ -1247,10 +1154,7 @@ export default function MainApp({ session, onLogout }) {
             newOsrsNewsCount={notifications.filter(n => n.type === 'osrsNews' && !n.read).length}
             priceAlerts={priceAlerts}
             allPriceAlerts={allPriceAlerts}
-            onEditAlert={(alert) => {
-              setSelectedAlertItem({ itemId: alert.itemId, itemName: alert.itemName });
-              setShowPriceAlertModal(true);
-            }}
+            onEditAlert={(alert) => openModal('priceAlert', { alertItem: { itemId: alert.itemId, itemName: alert.itemName } })}
             onDismissAlert={dismissPriceAlert}
             onNewAlert={() => navigateToPage('graphs')}
           />
@@ -1269,7 +1173,7 @@ export default function MainApp({ session, onLogout }) {
               <div className="user-dropdown-menu">
                 <button
                   className="user-dropdown-item"
-                  onClick={() => { setShowSettingsModal(true); setUserMenuOpen(false); }}
+                  onClick={() => { openModal('settings'); setUserMenuOpen(false); }}
                 >
                   ⚙️ Settings
                 </button>
@@ -1307,8 +1211,8 @@ export default function MainApp({ session, onLogout }) {
             milestones={milestones}
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => navigateToPage('trade')}
-            onOpenMilestoneModal={() => { setMilestoneInitialView('main'); setShowMilestoneModal(true); }}
-            onOpenMilestoneHistory={() => { setMilestoneInitialView('history'); setShowMilestoneModal(true); }}
+            onOpenMilestoneModal={() => openModal('milestone', { milestoneView: 'main' })}
+            onOpenMilestoneHistory={() => openModal('milestone', { milestoneView: 'history' })}
           />
         ) : currentPage === 'history' ? (
           <HistoryPage
@@ -1354,9 +1258,9 @@ export default function MainApp({ session, onLogout }) {
               referralProfit={referralProfit}
               bondsProfit={bondsProfit}
               visibleProfits={visibleProfits}
-              onAddDumpProfit={() => setShowDumpProfitModal(true)}
-              onAddReferralProfit={() => setShowReferralProfitModal(true)}
-              onAddBondsProfit={() => setShowBondsProfitModal(true)}
+              onAddDumpProfit={() => openModal('dumpProfit')}
+              onAddReferralProfit={() => openModal('referralProfit')}
+              onAddBondsProfit={() => openModal('bondsProfit')}
               numberFormat={numberFormat}
               showUnrealisedProfitStats={showUnrealisedProfitStats}
             />
@@ -1375,15 +1279,15 @@ export default function MainApp({ session, onLogout }) {
                 currentProgress={milestoneProgress}
                 selectedPeriod={selectedMilestonePeriod}
                 onPeriodChange={setSelectedMilestonePeriod}
-                onOpenModal={() => { setMilestoneInitialView('main'); setShowMilestoneModal(true); }}
+                onOpenModal={() => openModal('milestone', { milestoneView: 'main' })}
                 numberFormat={numberFormat}
               />
 
               <ChartButtons
-                onShowProfitChart={() => setShowProfitChartModal(true)}
-                onShowCategoryChart={() => setShowCategoryChartModal(true)}
+                onShowProfitChart={() => openModal('profitChart')}
+                onShowCategoryChart={() => openModal('categoryChart')}
                 altAccountTimer={altAccountTimer}
-                onSetAltTimer={() => setShowAltTimerModal(true)}
+                onSetAltTimer={() => openModal('altTimer')}
                 onResetAltTimer={handleResetAltTimer}
                 currentTime={currentTime}
               />
@@ -1409,29 +1313,28 @@ export default function MainApp({ session, onLogout }) {
             {/* Category Actions */}
             <div className="category-actions-row">
               <button
-                onClick={() => setShowCategoryModal(true)}
+                onClick={() => openModal('category')}
                 className="btn btn-primary"
               >
                 + Add Category
               </button>
               <button
                 onClick={async () => {
-                  setNewStockCategory('');
                   await refreshArchivedStocks();
-                  setShowNewStockModal(true);
+                  openModal('newStock', { newStockCategory: '' });
                 }}
                 className="btn btn-success"
               >
                 + Add Stock
               </button>
               <button
-                onClick={() => setShowBulkBuyModal(true)}
+                onClick={() => openModal('bulkBuy')}
                 className="btn btn-success"
               >
                 Bulk Buy
               </button>
               <button
-                onClick={() => setShowBulkSellModal(true)}
+                onClick={() => openModal('bulkSell')}
                 className="btn btn-danger"
               >
                 Bulk Sell
@@ -1439,7 +1342,7 @@ export default function MainApp({ session, onLogout }) {
               <button
                 onClick={async () => {
                   await handleOpenArchive();
-                  setShowArchive(true);
+                  openModal('archive');
                 }}
                 className="btn btn-secondary"
               >
@@ -1455,46 +1358,19 @@ export default function MainApp({ session, onLogout }) {
                 stocks={categoryStocks}
                 isCollapsed={collapsedCategories[category]}
                 onToggleCollapse={toggleCategory}
-                onAddStock={(cat) => {
-                  setNewStockCategory(cat);
-                  setShowNewStockModal(true);
-                }}
-                onDeleteCategory={(cat) => {
-                  setSelectedCategory(cat);
-                  setShowDeleteCategoryModal(true);
-                }}
-                onEditCategory={(cat) => {
-                  setSelectedCategory(cat);
-                  setShowEditCategoryModal(true);
-                }}
-                onBuy={(stock) => {
-                  setSelectedStock(stock);
-                  setShowBuyModal(true);
-                }}
-                onSell={(stock) => {
-                  setSelectedStock(stock);
-                  setShowSellModal(true);
-                }}
-                onRemove={(stock) => {
-                  setSelectedStock(stock);
-                  setShowRemoveModal(true);
-                }}
-                onAdjust={(stock) => {
-                  setSelectedStock(stock);
-                  setShowAdjustModal(true);
-                }}
-                onDelete={(stock) => {
-                  setSelectedStock(stock);
-                  setShowDeleteModal(true);
-                }}
+                onAddStock={(cat) => openModal('newStock', { newStockCategory: cat })}
+                onDeleteCategory={(cat) => openModal('deleteCategory', { category: cat })}
+                onEditCategory={(cat) => openModal('editCategory', { category: cat })}
+                onBuy={(stock) => openModal('buy', { stock })}
+                onSell={(stock) => openModal('sell', { stock })}
+                onRemove={(stock) => openModal('remove', { stock })}
+                onAdjust={(stock) => openModal('adjust', { stock })}
+                onDelete={(stock) => openModal('delete', { stock })}
                 onArchive={(stock) => {
                   handleArchive(stock);
-                  setShowArchiveConfirmModal(true);
+                  openModal('archiveConfirm');
                 }}
-                onNotes={(stock) => {
-                  setSelectedStock(stock);
-                  setShowNotesModal(true);
-                }}
+                onNotes={(stock) => openModal('notes', { stock })}
                 onCalculate={handleCalculateTime}
                 onDragStart={handleStockDragStart}
                 onDragOver={handleStockDragOver}
@@ -1520,267 +1396,66 @@ export default function MainApp({ session, onLogout }) {
               />
             ))}
 
-            {/* Modals */}
-            <ModalContainer isOpen={showBuyModal}>
-              <BuyModal
-                stock={selectedStock}
-                onConfirm={handleBuy}
-                onCancel={() => setShowBuyModal(false)}
-                isSubmitting={isSubmitting}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showBulkBuyModal}>
-              <BulkBuyModal
-                tradeMode={tradeMode}
-                onConfirm={handleBulkBuy}
-                onCancel={() => setShowBulkBuyModal(false)}
-                isSubmitting={isSubmitting}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showBulkSellModal}>
-              <BulkSellModal
-                tradeMode={tradeMode}
-                onConfirm={handleBulkSell}
-                onCancel={() => setShowBulkSellModal(false)}
-                isSubmitting={isSubmitting}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={bulkSummaryData !== null}>
-              <BulkSummaryModal
-                type={bulkSummaryData?.type}
-                completedItems={bulkSummaryData?.items || []}
-                onUndo={handleBulkUndo}
-                onDone={handleBulkSummaryDone}
-                isUndoing={isUndoing}
-                undoResult={undoResult}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showSellModal}>
-              <SellModal
-                stock={selectedStock}
-                onConfirm={handleSell}
-                onCancel={() => setShowSellModal(false)}
-                isSubmitting={isSubmitting}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showRemoveModal}>
-              <RemoveStockModal
-                stock={selectedStock}
-                onConfirm={handleRemoveStock}
-                onCancel={() => setShowRemoveModal(false)}
-                isSubmitting={isSubmitting}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showAdjustModal}>
-              <AdjustModal
-                stock={selectedStock}
-                onConfirm={handleAdjust}
-                onCancel={() => setShowAdjustModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showDeleteModal}>
-              <DeleteModal
-                stock={selectedStock}
-                onConfirm={handleDelete}
-                onCancel={() => setShowDeleteModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showNewStockModal}>
-              <NewStockModal
-                defaultCategory={newStockCategory}
-                defaultIsInvestment={tradeMode === 'investment'}
-                onConfirm={handleAddStock}
-                archivedStocks={archivedStocks}
-                onRestoreFromArchive={async (stock) => {
-                  await handleRestore(stock);
-                  setShowNewStockModal(false);
-                }}
-                onCancel={() => setShowNewStockModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showCategoryModal}>
-              <CategoryModal
-                defaultIsInvestment={tradeMode === 'investment'}
-                onConfirm={handleAddCategory}
-                onCancel={() => setShowCategoryModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showDeleteCategoryModal}>
-              <DeleteCategoryModal
-                category={selectedCategory}
-                onConfirm={handleDeleteCategory}
-                onCancel={() => setShowDeleteCategoryModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showDumpProfitModal}>
-              <ProfitModal
-                type="dump"
-                onConfirm={handleAddDumpProfit}
-                onCancel={() => setShowDumpProfitModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showReferralProfitModal}>
-              <ProfitModal
-                type="referral"
-                onConfirm={handleAddReferralProfit}
-                onCancel={() => setShowReferralProfitModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showBondsProfitModal}>
-              <ProfitModal
-                type="bonds"
-                onConfirm={handleAddBondsProfit}
-                onCancel={() => setShowBondsProfitModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showNotesModal}>
-              <NotesModal
-                stock={selectedStock}
-                notes={stockNotes[selectedStock?.id]}
-                onConfirm={handleSaveNotes}
-                onCancel={() => setShowNotesModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showProfitChartModal}>
-              <ProfitChartModal
-                dumpProfit={dumpProfit}
-                referralProfit={referralProfit}
-                bondsProfit={bondsProfit}
-                onCancel={() => setShowProfitChartModal(false)}
-                numberFormat={numberFormat}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showCategoryChartModal}>
-              <CategoryChartModal
-                groupedStocks={groupedStocks}
-                onCancel={() => setShowCategoryChartModal(false)}
-                numberFormat={numberFormat}
-              />
-            </ModalContainer>
-
-
-
-            <ModalContainer isOpen={showEditCategoryModal}>
-              <EditCategoryModal
-                category={selectedCategory}
-                categories={categoryNames}
-                onConfirm={handleEditCategory}
-                onCancel={() => setShowEditCategoryModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showTimeCalculatorModal}>
-              <TimeCalculatorModal
-                stock={selectedStock}
-                onClose={() => setShowTimeCalculatorModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showAltTimerModal}>
-              <AltTimerModal
-                onConfirm={handleSetAltTimer}
-                onCancel={() => setShowAltTimerModal(false)}
-              />
-            </ModalContainer>
-
-            <ModalContainer isOpen={showChangePasswordModal}>
-              <ChangePasswordModal
-                onCancel={() => setShowChangePasswordModal(false)}
-              />
-            </ModalContainer>
-
           </>
         )}
 
-        <ModalContainer isOpen={showPriceAlertModal}>
-          <PriceAlertModal
-            itemId={selectedAlertItem?.itemId}
-            itemName={selectedAlertItem?.itemName}
-            currentAlert={selectedAlertItem ? priceAlerts[selectedAlertItem.itemId] : null}
-            gePrice={selectedAlertItem ? gePrices[selectedAlertItem.itemId] : null}
-            onSave={handleSavePriceAlert}
-            onDelete={handleDeletePriceAlert}
-            onCancel={() => { setShowPriceAlertModal(false); setSelectedAlertItem(null); }}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showSettingsModal}>
-          <SettingsModal
-            numberFormat={numberFormat}
-            onNumberFormatChange={(newFormat) => updateSettings({ numberFormat: newFormat })}
-            visibleColumns={visibleColumns}
-            onVisibleColumnsChange={(newColumns) => updateSettings({ visibleColumns: newColumns })}
-            visibleProfits={visibleProfits}
-            onVisibleProfitsChange={(newProfits) => updateSettings({ visibleProfits: newProfits })}
-            showCategoryStats={showCategoryStats}
-            onShowCategoryStatsChange={(value) => updateSettings({ showCategoryStats: value })}
-            showUnrealisedProfitStats={showUnrealisedProfitStats}
-            onShowUnrealisedProfitStatsChange={(v) => updateSettings({ showUnrealisedProfitStats: v })}
-            showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
-            onShowCategoryUnrealisedProfitChange={(v) => updateSettings({ showCategoryUnrealisedProfit: v })}
-            notificationPreferences={notificationPreferences}
-            onNotificationTypeChange={updateNotificationPreference}
-            notificationVolume={notificationVolume}
-            onNotificationVolumeChange={(v) => updateSettings({ notificationVolume: v })}
-            onCancel={() => setShowSettingsModal(false)}
-            onChangePassword={() => {
-              setShowSettingsModal(false);
-              setShowChangePasswordModal(true);
-            }}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showChangelog}>
-          <ChangelogModal onClose={handleCloseChangelog} />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showArchive}>
-          <ArchiveModal
-            archivedStocks={archivedStocks}
-            loading={archivedLoading}
-            geIconMap={geIconMap}
-            onRestore={handleRestore}
-            onClose={() => setShowArchive(false)}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showArchiveConfirmModal}>
-          <ArchiveConfirmModal
-            stock={stockToArchive}
-            onConfirm={handleConfirmArchive}
-            onCancel={() => { setShowArchiveConfirmModal(false); }}
-          />
-        </ModalContainer>
-
-        <ModalContainer isOpen={showMilestoneModal}>
-          <MilestoneTrackerModal
-            milestones={milestones}
-            currentProgress={milestoneProgress}
-            milestoneHistory={milestoneHistory}
-            initialView={milestoneInitialView}
-            onUpdateMilestone={handleUpdateMilestone}
-            onCancel={() => setShowMilestoneModal(false)}
-            numberFormat={numberFormat}
-            PRESET_GOALS={PRESET_GOALS}
-          />
-        </ModalContainer>
-
+        <ModalManager
+          isSubmitting={isSubmitting}
+          bulkSummaryData={bulkSummaryData}
+          isUndoing={isUndoing}
+          undoResult={undoResult}
+          handleBuy={handleBuy}
+          handleSell={handleSell}
+          handleBulkBuy={handleBulkBuy}
+          handleBulkSell={handleBulkSell}
+          handleBulkUndo={handleBulkUndo}
+          handleBulkSummaryDone={handleBulkSummaryDone}
+          handleRemoveStock={handleRemoveStock}
+          handleAdjust={handleAdjust}
+          handleDelete={handleDelete}
+          handleAddStock={handleAddStock}
+          handleAddCategory={handleAddCategory}
+          handleDeleteCategory={handleDeleteCategory}
+          handleEditCategory={handleEditCategory}
+          handleAddDumpProfit={handleAddDumpProfit}
+          handleAddReferralProfit={handleAddReferralProfit}
+          handleAddBondsProfit={handleAddBondsProfit}
+          handleUpdateMilestone={handleUpdateMilestone}
+          archivedStocks={archivedStocks}
+          archivedLoading={archivedLoading}
+          stockToArchive={stockToArchive}
+          handleConfirmArchive={handleConfirmArchive}
+          handleRestore={handleRestore}
+          handleSetAltTimer={handleSetAltTimer}
+          handleSaveNotes={handleSaveNotes}
+          handleCloseChangelog={handleCloseChangelog}
+          handleSavePriceAlert={handleSavePriceAlert}
+          handleDeletePriceAlert={handleDeletePriceAlert}
+          tradeMode={tradeMode}
+          stockNotes={stockNotes}
+          dumpProfit={dumpProfit}
+          referralProfit={referralProfit}
+          bondsProfit={bondsProfit}
+          numberFormat={numberFormat}
+          groupedStocks={groupedStocks}
+          categoryNames={categoryNames}
+          geIconMap={geIconMap}
+          gePrices={gePrices}
+          priceAlerts={priceAlerts}
+          visibleColumns={visibleColumns}
+          visibleProfits={visibleProfits}
+          showCategoryStats={showCategoryStats}
+          showUnrealisedProfitStats={showUnrealisedProfitStats}
+          showCategoryUnrealisedProfit={showCategoryUnrealisedProfit}
+          notificationPreferences={notificationPreferences}
+          updateNotificationPreference={updateNotificationPreference}
+          notificationVolume={notificationVolume}
+          updateSettings={updateSettings}
+          milestones={milestones}
+          milestoneProgress={milestoneProgress}
+          milestoneHistory={milestoneHistory}
+          PRESET_GOALS={PRESET_GOALS}
+        />
 
       </div>
       <Footer />
