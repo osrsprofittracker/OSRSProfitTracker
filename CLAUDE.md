@@ -103,6 +103,7 @@ Modals use a context-based system:
 | `graphs-page.css` | `GraphsPage` |
 | `filter-panel.css` | Filter panel in `HistoryPage` |
 | `bulk-modals.css` | `BulkBuyModal`, `BulkSellModal` |
+| `trade-modal.css` | `TradeModal` (shared buy/sell) |
 | `bulk-summary-modal.css` | `BulkSummaryModal` |
 | `changelog-modal.css` | `ChangelogModal` |
 | `price-alert-modal.css` | `PriceAlertModal` |
