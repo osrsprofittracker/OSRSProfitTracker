@@ -6,12 +6,10 @@ import { useTransactionsContext } from '../contexts/TransactionsContext';
 import { useCategoriesContext } from '../contexts/CategoriesContext';
 import { useProfitsContext } from '../contexts/ProfitsContext';
 import { useMilestonesContext } from '../contexts/MilestonesContext';
+import { useProfitHistoryContext } from '../contexts/ProfitHistoryContext';
 import { useModal } from '../contexts/ModalContext';
 
 /**
- * Remaining params are ephemeral MainApp state that doesn't belong in data contexts,
- * plus addProfitEntry from useProfitHistory (not wrapped per issue #217 scope).
- *
  * @param {Object} opts
  * @param {string} opts.tradeMode
  * @param {Function} opts.highlightRow
@@ -20,7 +18,6 @@ import { useModal } from '../contexts/ModalContext';
  * @param {Function} opts.setCollapsedCategories
  * @param {Function} opts.calculateMilestoneProgress
  * @param {Function} opts.setMilestoneProgress
- * @param {Function} opts.addProfitEntry
  */
 export function useModalHandlers({
   tradeMode,
@@ -30,7 +27,6 @@ export function useModalHandlers({
   setCollapsedCategories,
   calculateMilestoneProgress,
   setMilestoneProgress,
-  addProfitEntry,
 }) {
   const {
     updateStock,
@@ -51,6 +47,7 @@ export function useModalHandlers({
   } = useCategoriesContext();
   const { updateProfit } = useProfitsContext();
   const { updateMilestone } = useMilestonesContext();
+  const { addProfitEntry } = useProfitHistoryContext();
   const { closeModal, selectedStock, selectedCategory, setNewStockCategory } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bulkSummaryData, setBulkSummaryData] = useState(null);
