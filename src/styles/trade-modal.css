@@ -1,0 +1,361 @@
+/* TradeModal — shared buy/sell modal */
+
+.trade-modal {
+  background: rgb(30, 41, 59);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  width: 24rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgb(51, 65, 85);
+}
+
+.trade-modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.trade-modal-banner {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.trade-modal-banner.buy {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgb(34, 197, 94);
+}
+
+.trade-modal-banner.sell {
+  background: rgba(251, 146, 60, 0.1);
+  border: 1px solid rgb(251, 146, 60);
+}
+
+.trade-modal-banner-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trade-modal-banner-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.trade-modal-banner.buy .trade-modal-banner-label {
+  color: rgb(34, 197, 94);
+}
+
+.trade-modal-banner.sell .trade-modal-banner-label {
+  color: rgb(251, 146, 60);
+}
+
+.trade-modal-banner-after {
+  font-size: 0.875rem;
+  color: rgb(156, 163, 175);
+  font-weight: 500;
+}
+
+/* Profit calculator (sell only) */
+.trade-modal-profit {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.trade-modal-profit.positive {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgb(52, 211, 153);
+}
+
+.trade-modal-profit.negative {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgb(248, 113, 113);
+}
+
+.trade-modal-profit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.trade-modal-profit-label {
+  font-size: 0.875rem;
+  color: rgb(209, 213, 219);
+}
+
+.trade-modal-profit-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+}
+
+.trade-modal-profit-divider {
+  border-top: 1px solid rgba(209, 213, 219, 0.2);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.trade-modal-profit-total-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(209, 213, 219);
+}
+
+.trade-modal-profit-total-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.trade-modal-profit-total-value.positive {
+  color: rgb(52, 211, 153);
+}
+
+.trade-modal-profit-total-value.negative {
+  color: rgb(248, 113, 113);
+}
+
+.trade-modal-profit-percent {
+  text-align: right;
+  font-size: 0.75rem;
+  color: rgb(156, 163, 175);
+  margin-top: 0.25rem;
+}
+
+/* Body */
+.trade-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.trade-modal-field-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(209, 213, 219);
+  margin-bottom: 0.5rem;
+}
+
+.trade-modal-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.trade-modal-field-header .trade-modal-field-label {
+  margin-bottom: 0;
+}
+
+.trade-modal-profit-divider .trade-modal-profit-row {
+  margin-bottom: 0;
+}
+
+/* Multiplier buttons (buy) */
+.trade-modal-multipliers {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.trade-modal-multiplier {
+  flex: 1;
+  padding: 0.5rem;
+  background: rgb(71, 85, 105);
+  border-radius: 0.5rem;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.trade-modal-multiplier:hover {
+  background: rgb(51, 65, 85);
+}
+
+.trade-modal-multiplier.active {
+  background: rgb(34, 197, 94);
+}
+
+.trade-modal-multiplier.active:hover {
+  background: rgb(34, 197, 94);
+}
+
+/* ALL button (sell) */
+.trade-modal-all-btn {
+  padding: 0.25rem 0.75rem;
+  background: rgb(185, 28, 28);
+  border-radius: 0.375rem;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.trade-modal-all-btn:hover {
+  background: rgb(153, 27, 27);
+}
+
+/* Input fields — focus border varies by mode */
+.trade-modal-input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: rgb(51, 65, 85);
+  border-radius: 0.5rem;
+  outline: none;
+  border: 2px solid transparent;
+  color: white;
+}
+
+.trade-modal.buy .trade-modal-input:focus {
+  border-color: rgb(34, 197, 94);
+}
+
+.trade-modal.sell .trade-modal-input:focus {
+  border-color: rgb(239, 68, 68);
+}
+
+/* GE quick price buttons */
+.trade-modal-ge-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.trade-modal-ge-btn {
+  padding: 0.2rem 0.5rem;
+  background: rgb(51, 65, 85);
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.trade-modal-ge-btn:hover {
+  background: rgb(71, 85, 105);
+}
+
+.trade-modal-ge-btn.low {
+  color: rgb(134, 239, 172);
+}
+
+.trade-modal-ge-btn.high {
+  color: rgb(147, 197, 253);
+}
+
+/* Mode toggle (price/total) */
+.trade-modal-toggle {
+  padding: 0.375rem 0.75rem;
+  background: rgb(51, 65, 85);
+  border-radius: 0.5rem;
+  border: 1px solid rgb(71, 85, 105);
+  color: rgb(226, 232, 240);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.trade-modal-toggle:hover {
+  background: rgb(71, 85, 105);
+  border-color: rgb(100, 116, 139);
+}
+
+/* Avg / Total result box */
+.trade-modal-result {
+  background: rgba(234, 88, 12, 0.1);
+  border: 1px solid rgb(251, 146, 60);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.trade-modal-result-label {
+  font-size: 1.25rem;
+  color: rgb(251, 146, 60);
+}
+
+.trade-modal-result-value {
+  font-size: 1.25rem;
+  color: rgb(251, 146, 60);
+  font-weight: 500;
+}
+
+/* Timer checkbox (buy) */
+.trade-modal-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.trade-modal-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.trade-modal-checkbox-label {
+  font-size: 0.875rem;
+  color: rgb(209, 213, 219);
+}
+
+/* Action buttons */
+.trade-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 1rem;
+}
+
+.trade-modal-confirm,
+.trade-modal-cancel {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.trade-modal-confirm.buy {
+  background: rgb(21, 128, 61);
+}
+
+.trade-modal-confirm.buy:hover {
+  background: rgb(22, 101, 52);
+}
+
+.trade-modal-confirm.sell {
+  background: rgb(185, 28, 28);
+}
+
+.trade-modal-confirm.sell:hover {
+  background: rgb(153, 27, 27);
+}
+
+.trade-modal-confirm:disabled {
+  background: rgb(100, 100, 100);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.trade-modal-confirm:disabled:hover {
+  background: rgb(100, 100, 100);
+}
+
+.trade-modal-cancel {
+  background: rgb(71, 85, 105);
+}
+
+.trade-modal-cancel:hover {
+  background: rgb(51, 65, 85);
+}
