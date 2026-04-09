@@ -43,23 +43,7 @@ import {
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
 import { useModalHandlers } from './hooks/useModalHandlers';
-
-const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs' };
-
-const HISTORY_EMPTY_FILTERS = {
-  type: 'all', mode: 'all', stockName: '', category: '',
-  dateFrom: '', dateTo: '', gpMin: '', gpMax: '',
-  priceMin: '', priceMax: '', profitMin: '', profitMax: '',
-  qtyMin: '', qtyMax: '', marginMin: '', marginMax: ''
-};
-
-function getPageFromURL() {
-  const path = window.location.pathname;
-  if (path === '/trade') return 'trade';
-  if (path === '/history') return 'history';
-  if (path === '/graphs') return 'graphs';
-  return 'home';
-}
+import { useNavigation } from './hooks/useNavigation';
 
 export default function MainApp(props) {
   return (
@@ -105,76 +89,17 @@ function MainAppInner({ session, onLogout }) {
   const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats,
           showUnrealisedProfitStats, showCategoryUnrealisedProfit, notificationVolume } = settings;
   // Local UI state
-  const [collapsedCategories, setCollapsedCategories] = useState(() => {
-    // Load collapsed state from localStorage on initial render
-    const saved = localStorage.getItem('collapsedCategories');
-    return saved ? JSON.parse(saved) : {};
-  });
-  const [currentPage, setCurrentPage] = useState(getPageFromURL);
-  const [graphItemId, setGraphItemId] = useState(() => new URLSearchParams(window.location.search).get('item'));
-
-  const navigateToPage = useCallback((page, options = {}) => {
-    if (page === 'trade') {
-      refetch();
-      fetchCategories();
-    }
-    if (page === 'home') {
-      refetch();
-      refetchGPStats();
-      refetchProfitHistory();
-    }
-    setCurrentPage(page);
-    let url = PAGE_PATHS[page] || '/';
-    if (options.query) {
-      const params = new URLSearchParams(options.query);
-      url += '?' + params.toString();
-      if (page === 'graphs' && params.has('item')) {
-        setGraphItemId(params.get('item'));
-      }
-      if (page === 'history' && params.has('search')) {
-        applyFilters({ ...HISTORY_EMPTY_FILTERS, stockName: params.get('search') });
-      }
-    } else if (page === 'graphs') {
-      setGraphItemId(null);
-    } else if (page === 'history') {
-      applyFilters({ ...HISTORY_EMPTY_FILTERS });
-    }
-    window.history.pushState({ page }, '', url);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
-
-  // Replace initial history entry so back button works correctly
-  useEffect(() => {
-    const page = getPageFromURL();
-    window.history.replaceState({ page }, '', window.location.pathname + window.location.search);
-  }, []);
-
-  // Handle browser back/forward
-  useEffect(() => {
-    const handlePopState = () => {
-      const page = getPageFromURL();
-      if (page === 'trade') {
-        refetch();
-        fetchCategories();
-      }
-      if (page === 'home') {
-        refetch();
-        refetchGPStats();
-        refetchProfitHistory();
-      }
-      setCurrentPage(page);
-      const searchParams = new URLSearchParams(window.location.search);
-      setGraphItemId(searchParams.get('item'));
-      if (page === 'history') {
-        const searchName = searchParams.get('search');
-        applyFilters(searchName
-          ? { ...HISTORY_EMPTY_FILTERS, stockName: searchName }
-          : { ...HISTORY_EMPTY_FILTERS }
-        );
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
+  const {
+    currentPage,
+    graphItemId,
+    collapsedCategories,
+    setCollapsedCategories,
+    navigateToPage,
+    toggleCategory,
+    expandCategory,
+    handleQuickNavNavigate,
+    handleNotificationNavigate,
+  } = useNavigation({ refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters, stocks, categories });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -659,17 +584,6 @@ function MainAppInner({ session, onLogout }) {
     closeModal('changelog');
   };
 
-  const toggleCategory = (category) => {
-    setCollapsedCategories(prev => {
-      const newState = {
-        ...prev,
-        [category]: !prev[category]
-      };
-      // Save to localStorage whenever state changes
-      localStorage.setItem('collapsedCategories', JSON.stringify(newState));
-      return newState;
-    });
-  };
 
   const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
 
@@ -739,61 +653,6 @@ function MainAppInner({ session, onLogout }) {
     await refetch();
   };
 
-  const handleQuickNavNavigate = (category) => {
-    const scrollToCategory = () => {
-      const el = document.querySelector(`[data-category="${category}"]`);
-      if (el) {
-        const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
-        const offset = topbarHeight + 16;
-        const top = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top, behavior: 'smooth' });
-      }
-    };
-
-    if (collapsedCategories[category]) {
-      setCollapsedCategories(prev => ({ ...prev, [category]: false }));
-      setTimeout(scrollToCategory, 100);
-    } else {
-      scrollToCategory();
-    }
-  };
-
-  const handleNotificationNavigate = useCallback((target) => {
-    if (!target) return;
-    if (target.externalUrl) {
-      window.open(target.externalUrl, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    navigateToPage(target.page);
-    if (target.stockId) {
-      // Find the stock's category and expand it if collapsed
-      const stock = stocks.find(s => s.id === target.stockId);
-      if (stock && stock.categoryId) {
-        const category = categories.find(c => c.id === stock.categoryId);
-        if (category && collapsedCategories[category.name]) {
-          setCollapsedCategories(prev => ({ ...prev, [category.name]: false }));
-        }
-      }
-
-      const maxWait = 500;
-      const interval = 50;
-      let elapsed = 0;
-      const tryScroll = () => {
-        const el = document.querySelector(`[data-stock-id="${target.stockId}"]`);
-        if (el) {
-          const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
-          const top = el.getBoundingClientRect().top + window.scrollY - topbarHeight - 16;
-          window.scrollTo({ top, behavior: 'smooth' });
-          el.classList.add('stock-row-highlight');
-          setTimeout(() => el.classList.remove('stock-row-highlight'), 1500);
-        } else if (elapsed < maxWait) {
-          elapsed += interval;
-          setTimeout(tryScroll, interval);
-        }
-      };
-      setTimeout(tryScroll, interval);
-    }
-  }, [navigateToPage, stocks, categories, collapsedCategories]);
 
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
@@ -1131,14 +990,7 @@ function MainAppInner({ session, onLogout }) {
           <GlobalSearch
             transactions={transactions}
             navigateToPage={navigateToPage}
-            onExpandCategory={(cat) => {
-              setCollapsedCategories(prev => {
-                if (!prev[cat]) return prev;
-                const next = { ...prev, [cat]: false };
-                localStorage.setItem('collapsedCategories', JSON.stringify(next));
-                return next;
-              });
-            }}
+            onExpandCategory={expandCategory}
           />
           <NotificationCenter
             notifications={notifications}
