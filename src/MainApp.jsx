@@ -8,7 +8,6 @@ import { useGPTradedStats } from './hooks/useGPTradedStats';
 import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
 import { useNotificationSettings } from './hooks/useNotificationSettings';
-import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEData } from './contexts/GEDataContext';
 import { TradeProvider } from './contexts/TradeContext';
 import { ModalProvider, useModal } from './contexts/ModalContext';
@@ -17,6 +16,7 @@ import { TransactionsProvider, useTransactionsContext } from './contexts/Transac
 import { CategoriesProvider, useCategoriesContext } from './contexts/CategoriesContext';
 import { ProfitsProvider, useProfitsContext } from './contexts/ProfitsContext';
 import { MilestonesProvider, useMilestonesContext } from './contexts/MilestonesContext';
+import { ProfitHistoryProvider, useProfitHistoryContext } from './contexts/ProfitHistoryContext';
 import { useNotifications } from './hooks/useNotifications';
 import { useOSRSNews } from './hooks/useOSRSNews';
 import { useJmodComments } from './hooks/useJmodComments';
@@ -54,7 +54,9 @@ export default function MainApp(props) {
           <CategoriesProvider userId={userId}>
             <ProfitsProvider userId={userId}>
               <MilestonesProvider userId={userId}>
-                <MainAppInner {...props} />
+                <ProfitHistoryProvider userId={userId}>
+                  <MainAppInner {...props} />
+                </ProfitHistoryProvider>
               </MilestonesProvider>
             </ProfitsProvider>
           </CategoriesProvider>
@@ -89,7 +91,7 @@ function MainAppInner({ session, onLogout }) {
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { notificationPreferences, updateNotificationPreference, loading: notificationSettingsLoading } = useNotificationSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfitsContext();
-  const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
+  const { profitHistory, loading: profitHistoryLoading, refetch: refetchProfitHistory } = useProfitHistoryContext();
   const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestonesContext();
   const { alerts: priceAlerts, allAlerts: allPriceAlerts, loading: priceAlertsLoading, saveAlert: savePriceAlert, dismissAlert: dismissPriceAlert, deactivateAlert: deactivatePriceAlert, updateLastChecked: updatePriceAlertLastChecked, refetch: refetchPriceAlerts } = usePriceAlerts(userId);
 
@@ -636,7 +638,6 @@ function MainAppInner({ session, onLogout }) {
     setCollapsedCategories,
     calculateMilestoneProgress,
     setMilestoneProgress,
-    addProfitEntry,
   });
 
   const handleInvestmentDateChange = async (stock, date) => {
