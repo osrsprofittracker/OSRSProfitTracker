@@ -4,19 +4,19 @@ import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
 import { supabase } from './lib/supabase';
-import { useStocks } from './hooks/useStocks';
-import { useCategories } from './hooks/useCategories';
-import { useTransactions } from './hooks/useTransactions';
 import { useGPTradedStats } from './hooks/useGPTradedStats';
 import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
 import { useNotificationSettings } from './hooks/useNotificationSettings';
-import { useProfits } from './hooks/useProfits';
-import { useMilestones } from './hooks/useMilestones';
 import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEData } from './contexts/GEDataContext';
 import { TradeProvider } from './contexts/TradeContext';
 import { ModalProvider, useModal } from './contexts/ModalContext';
+import { StocksProvider, useStocksContext } from './contexts/StocksContext';
+import { TransactionsProvider, useTransactionsContext } from './contexts/TransactionsContext';
+import { CategoriesProvider, useCategoriesContext } from './contexts/CategoriesContext';
+import { ProfitsProvider, useProfitsContext } from './contexts/ProfitsContext';
+import { MilestonesProvider, useMilestonesContext } from './contexts/MilestonesContext';
 import { useNotifications } from './hooks/useNotifications';
 import { useOSRSNews } from './hooks/useOSRSNews';
 import { useJmodComments } from './hooks/useJmodComments';
@@ -46,9 +46,20 @@ import { useModalHandlers } from './hooks/useModalHandlers';
 import { useNavigation } from './hooks/useNavigation';
 
 export default function MainApp(props) {
+  const userId = props.session.user.id;
   return (
     <ModalProvider>
-      <MainAppInner {...props} />
+      <StocksProvider userId={userId}>
+        <TransactionsProvider userId={userId}>
+          <CategoriesProvider userId={userId}>
+            <ProfitsProvider userId={userId}>
+              <MilestonesProvider userId={userId}>
+                <MainAppInner {...props} />
+              </MilestonesProvider>
+            </ProfitsProvider>
+          </CategoriesProvider>
+        </TransactionsProvider>
+      </StocksProvider>
     </ModalProvider>
   );
 }
@@ -65,21 +76,21 @@ function MainAppInner({ session, onLogout }) {
     fetchCategories();
     setTradeMode(mode);
   };
-  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocks(userId);
-  const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
+  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
+  const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategoriesContext();
   const {
     transactions, loading: transactionsLoading, addTransaction,
     pagedTransactions, pagedLoading, totalCount, totalPages,
     page, pageSize, filters, goToPage, changePageSize, applyFilters, initPaged,
     sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
-  } = useTransactions(userId);
+  } = useTransactionsContext();
  const { stats: gpTradedStats, loading: gpStatsLoading, refetch: refetchGPStats } = useGPTradedStats(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { notificationPreferences, updateNotificationPreference, loading: notificationSettingsLoading } = useNotificationSettings(userId);
-  const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
+  const { profits, loading: profitsLoading, updateProfit } = useProfitsContext();
   const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
-  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestones(userId);
+  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestonesContext();
   const { alerts: priceAlerts, allAlerts: allPriceAlerts, loading: priceAlertsLoading, saveAlert: savePriceAlert, dismissAlert: dismissPriceAlert, deactivateAlert: deactivatePriceAlert, updateLastChecked: updatePriceAlertLastChecked, refetch: refetchPriceAlerts } = usePriceAlerts(userId);
 
   // Destructure profits
@@ -618,34 +629,14 @@ function MainAppInner({ session, onLogout }) {
     handleRestore,
     refreshArchivedStocks,
   } = useModalHandlers({
-    updateStock,
-    addTransaction,
-    deleteStock,
-    addStockToDB: addStockToDB,
-    refetch,
-    addCategory,
-    deleteCategory,
-    updateCategory,
-    fetchCategories,
-    updateProfit,
-    addProfitEntry,
-    updateMilestone,
-    undoTransaction,
-    selectedStock,
-    selectedCategory,
-    categories,
     tradeMode,
-    closeModal,
     highlightRow,
     firedTimerNotifs,
     saveFiredTimers,
     setCollapsedCategories,
-    setNewStockCategory,
     calculateMilestoneProgress,
     setMilestoneProgress,
-    archiveStock,
-    restoreStock,
-    fetchArchivedStocks,
+    addProfitEntry,
   });
 
   const handleInvestmentDateChange = async (stock, date) => {

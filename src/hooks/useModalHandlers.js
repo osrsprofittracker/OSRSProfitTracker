@@ -1,68 +1,57 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculateCostBasis, calculateSellProfit, calculateAvgBuyPrice } from '../utils/calculations';
+import { useStocksContext } from '../contexts/StocksContext';
+import { useTransactionsContext } from '../contexts/TransactionsContext';
+import { useCategoriesContext } from '../contexts/CategoriesContext';
+import { useProfitsContext } from '../contexts/ProfitsContext';
+import { useMilestonesContext } from '../contexts/MilestonesContext';
+import { useModal } from '../contexts/ModalContext';
 
 /**
+ * Remaining params are ephemeral MainApp state that doesn't belong in data contexts,
+ * plus addProfitEntry from useProfitHistory (not wrapped per issue #217 scope).
+ *
  * @param {Object} opts
- * @param {Function} opts.updateStock
- * @param {Function} opts.addTransaction
- * @param {Function} opts.deleteStock
- * @param {Function} opts.addStockToDB
- * @param {Function} opts.refetch
- * @param {Function} opts.addCategory
- * @param {Function} opts.deleteCategory
- * @param {Function} opts.updateCategory
- * @param {Function} opts.fetchCategories
- * @param {Function} opts.updateProfit
- * @param {Function} opts.addProfitEntry
- * @param {Function} opts.updateMilestone
- * @param {Function} opts.undoTransaction
- * @param {Object|null} opts.selectedStock
- * @param {string|null} opts.selectedCategory
- * @param {Array} opts.categories
  * @param {string} opts.tradeMode
- * @param {Function} opts.closeModal - closeModal(type) to close a modal by type key
  * @param {Function} opts.highlightRow
  * @param {React.MutableRefObject<Set>} opts.firedTimerNotifs
  * @param {Function} opts.saveFiredTimers
  * @param {Function} opts.setCollapsedCategories
- * @param {Function} opts.setNewStockCategory
  * @param {Function} opts.calculateMilestoneProgress
  * @param {Function} opts.setMilestoneProgress
- * @param {Function} opts.archiveStock
- * @param {Function} opts.restoreStock
- * @param {Function} opts.fetchArchivedStocks
+ * @param {Function} opts.addProfitEntry
  */
 export function useModalHandlers({
-  updateStock,
-  addTransaction,
-  deleteStock,
-  addStockToDB,
-  refetch,
-  addCategory,
-  deleteCategory: deleteCategoryMutation,
-  updateCategory,
-  fetchCategories,
-  updateProfit,
-  addProfitEntry,
-  updateMilestone,
-  undoTransaction,
-  selectedStock,
-  selectedCategory,
-  categories,
   tradeMode,
-  closeModal,
   highlightRow,
   firedTimerNotifs,
   saveFiredTimers,
   setCollapsedCategories,
-  setNewStockCategory,
   calculateMilestoneProgress,
   setMilestoneProgress,
-  archiveStock,
-  restoreStock,
-  fetchArchivedStocks,
+  addProfitEntry,
 }) {
+  const {
+    updateStock,
+    deleteStock,
+    addStock: addStockToDB,
+    refetch,
+    archiveStock,
+    restoreStock,
+    fetchArchivedStocks,
+  } = useStocksContext();
+  const { addTransaction, undoTransaction } = useTransactionsContext();
+  const {
+    categories,
+    addCategory,
+    deleteCategory: deleteCategoryMutation,
+    updateCategory,
+    fetchCategories,
+  } = useCategoriesContext();
+  const { updateProfit } = useProfitsContext();
+  const { updateMilestone } = useMilestonesContext();
+  const { closeModal, selectedStock, selectedCategory, setNewStockCategory } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bulkSummaryData, setBulkSummaryData] = useState(null);
   const [isUndoing, setIsUndoing] = useState(false);
