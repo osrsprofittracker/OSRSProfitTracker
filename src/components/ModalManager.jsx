@@ -2,8 +2,7 @@ import React from 'react';
 import { useModal } from '../contexts/ModalContext';
 import ModalContainer from './modals/ModalContainer';
 import TradeModal from './modals/TradeModal';
-import BulkBuyModal from './modals/BulkBuyModal';
-import BulkSellModal from './modals/BulkSellModal';
+import BulkTradeModal from './modals/BulkTradeModal';
 import BulkSummaryModal from './modals/BulkSummaryModal';
 import RemoveStockModal from './modals/RemoveStockModal';
 import AdjustModal from './modals/AdjustModal';
@@ -112,7 +111,8 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.bulkBuy}>
-        <BulkBuyModal
+        <BulkTradeModal
+          mode="buy"
           tradeMode={tradeMode}
           onConfirm={handleBulkBuy}
           onCancel={() => closeModal('bulkBuy')}
@@ -121,7 +121,8 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.bulkSell}>
-        <BulkSellModal
+        <BulkTradeModal
+          mode="sell"
           tradeMode={tradeMode}
           onConfirm={handleBulkSell}
           onCancel={() => closeModal('bulkSell')}
