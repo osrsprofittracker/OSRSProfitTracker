@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 const PRESET_GOALS = [10000000, 50000000, 100000000, 500000000, 1000000000]; // 10M, 50M, 100M, 500M, 1B
@@ -86,13 +86,22 @@ export function useMilestones(userId) {
   const [milestoneHistory, setMilestoneHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!userId) return;
-    fetchMilestones();
-    fetchMilestoneHistory();
+  const fetchMilestoneHistory = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('milestone_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('period_start', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching milestone history:', error);
+      return;
+    }
+
+    setMilestoneHistory(data || []);
   }, [userId]);
 
-  const fetchMilestones = async () => {
+  const fetchMilestones = useCallback(async () => {
     const { data, error } = await supabase
       .from('milestones')
       .select('*')
@@ -123,24 +132,15 @@ export function useMilestones(userId) {
       }]);
     }
     setLoading(false);
-  };
+  }, [userId]);
 
-  const fetchMilestoneHistory = async () => {
-    const { data, error } = await supabase
-      .from('milestone_history')
-      .select('*')
-      .eq('user_id', userId)
-      .order('period_start', { ascending: false });
+  useEffect(() => {
+    if (!userId) return;
+    fetchMilestones();
+    fetchMilestoneHistory();
+  }, [userId, fetchMilestones, fetchMilestoneHistory]);
 
-    if (error) {
-      console.error('Error fetching milestone history:', error);
-      return;
-    }
-
-    setMilestoneHistory(data || []);
-  };
-
-  const updateMilestone = async (period, goal, enabled) => {
+  const updateMilestone = useCallback(async (period, goal, enabled) => {
     const newMilestones = {
       ...milestones,
       [period]: { goal, enabled }
@@ -165,9 +165,9 @@ export function useMilestones(userId) {
 
     setMilestones(newMilestones);
     return true;
-  };
+  }, [userId, milestones]);
 
-  const recordMilestoneAchievement = async (period, goalAmount, actualAmount) => {
+  const recordMilestoneAchievement = useCallback(async (period, goalAmount, actualAmount) => {
     const { error } = await supabase
       .from('milestone_history')
       .insert([{
@@ -185,11 +185,11 @@ export function useMilestones(userId) {
 
     await fetchMilestoneHistory();
     return true;
-  };
+  }, [userId, fetchMilestoneHistory]);
 
   // Scans profitHistory to backfill milestone_history for all completed past periods.
   // Safe to call repeatedly — skips periods already recorded.
-  const recordCompletedPeriods = async (profitHistory, currentMilestones) => {
+  const recordCompletedPeriods = useCallback(async (profitHistory, currentMilestones) => {
     if (!profitHistory || profitHistory.length === 0) return;
 
     // Earliest entry date, capped at 1 year back
@@ -251,7 +251,7 @@ export function useMilestones(userId) {
     }
 
     await fetchMilestoneHistory();
-  };
+  }, [userId, fetchMilestoneHistory]);
 
   return {
     milestones,
