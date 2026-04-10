@@ -8,26 +8,18 @@ import { useProfitsContext } from '../contexts/ProfitsContext';
 import { useMilestonesContext } from '../contexts/MilestonesContext';
 import { useProfitHistoryContext } from '../contexts/ProfitHistoryContext';
 import { useModal } from '../contexts/ModalContext';
+import { useUIState, useHighlight } from '../contexts/UIStateContext';
 
-/**
- * @param {Object} opts
- * @param {string} opts.tradeMode
- * @param {Function} opts.highlightRow
- * @param {React.MutableRefObject<Set>} opts.firedTimerNotifs
- * @param {Function} opts.saveFiredTimers
- * @param {Function} opts.setCollapsedCategories
- * @param {Function} opts.calculateMilestoneProgress
- * @param {Function} opts.setMilestoneProgress
- */
-export function useModalHandlers({
-  tradeMode,
-  highlightRow,
-  firedTimerNotifs,
-  saveFiredTimers,
-  setCollapsedCategories,
-  calculateMilestoneProgress,
-  setMilestoneProgress,
-}) {
+export function useModalHandlers() {
+  const {
+    tradeMode,
+    setCollapsedCategories,
+    calculateMilestoneProgress,
+    setMilestoneProgress,
+    firedTimerNotifs,
+    saveFiredTimers,
+  } = useUIState();
+  const { highlightRow } = useHighlight();
   const {
     updateStock,
     deleteStock,
