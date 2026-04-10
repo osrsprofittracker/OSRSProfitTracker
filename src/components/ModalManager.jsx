@@ -6,10 +6,9 @@ import BulkTradeModal from './modals/BulkTradeModal';
 import BulkSummaryModal from './modals/BulkSummaryModal';
 import RemoveStockModal from './modals/RemoveStockModal';
 import AdjustModal from './modals/AdjustModal';
-import DeleteModal from './modals/DeleteModal';
+import ConfirmModal from './modals/ConfirmModal';
 import NewStockModal from './modals/NewStockModal';
 import CategoryModal from './modals/CategoryModal';
-import DeleteCategoryModal from './modals/DeleteCategoryModal';
 import EditCategoryModal from './modals/EditCategoryModal';
 import ProfitModal from './modals/ProfitModal';
 import NotesModal from './modals/NotesModal';
@@ -20,7 +19,6 @@ import ChangelogModal from './modals/ChangelogModal';
 import ChangePasswordModal from './modals/ChangePasswordModal';
 import PriceAlertModal from './modals/PriceAlertModal';
 import ArchiveModal from './modals/ArchiveModal';
-import ArchiveConfirmModal from './modals/ArchiveConfirmModal';
 import MilestoneTrackerModal from './modals/MilestoneTrackerModal';
 import AltTimerModal from './modals/AltTimerModal';
 import TimeCalculatorModal from './modals/TimeCalculatorModal';
@@ -169,8 +167,11 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.delete}>
-        <DeleteModal
-          stock={selectedStock}
+        <ConfirmModal
+          title="Delete Stock"
+          message={<>Are you sure you want to delete <strong>{selectedStock?.name}</strong>? This action cannot be undone.</>}
+          confirmLabel="Delete"
+          confirmVariant="danger"
           onConfirm={handleDelete}
           onCancel={() => closeModal('delete')}
         />
@@ -199,9 +200,12 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.deleteCategory}>
-        <DeleteCategoryModal
-          category={selectedCategory}
-          onConfirm={handleDeleteCategory}
+        <ConfirmModal
+          title="Delete Category"
+          message={<>Are you sure you want to delete the <strong>{selectedCategory}</strong> category? All stocks in this category will be moved to "Uncategorized".</>}
+          confirmLabel="Delete Category"
+          confirmVariant="danger"
+          onConfirm={() => handleDeleteCategory(selectedCategory)}
           onCancel={() => closeModal('deleteCategory')}
         />
       </ModalContainer>
@@ -339,8 +343,11 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.archiveConfirm}>
-        <ArchiveConfirmModal
-          stock={stockToArchive}
+        <ConfirmModal
+          title="Archive Stock"
+          message={<>Are you sure you want to archive <strong>{stockToArchive?.name}</strong>? It will be removed from your trade screen but can be restored anytime.</>}
+          confirmLabel="Archive"
+          confirmVariant="warning"
           onConfirm={handleConfirmArchive}
           onCancel={() => closeModal('archiveConfirm')}
         />
