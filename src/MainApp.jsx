@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
@@ -11,6 +11,7 @@ import { useNotificationSettings } from './hooks/useNotificationSettings';
 import { useGEData } from './contexts/GEDataContext';
 import { TradeProvider } from './contexts/TradeContext';
 import { ModalProvider, useModal } from './contexts/ModalContext';
+import { UIStateProvider, useUIState, useHighlight } from './contexts/UIStateContext';
 import { StocksProvider, useStocksContext } from './contexts/StocksContext';
 import { TransactionsProvider, useTransactionsContext } from './contexts/TransactionsContext';
 import { CategoriesProvider, useCategoriesContext } from './contexts/CategoriesContext';
@@ -55,7 +56,9 @@ export default function MainApp(props) {
             <ProfitsProvider userId={userId}>
               <MilestonesProvider userId={userId}>
                 <ProfitHistoryProvider userId={userId}>
-                  <MainAppInner {...props} />
+                  <UIStateProvider userId={userId}>
+                    <MainAppInner {...props} />
+                  </UIStateProvider>
                 </ProfitHistoryProvider>
               </MilestonesProvider>
             </ProfitsProvider>
@@ -69,8 +72,18 @@ export default function MainApp(props) {
 function MainAppInner({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
-  // Custom hooks for Supabase
-  const [tradeMode, setTradeMode] = useState('trade');
+  const {
+    tradeMode,
+    setTradeMode,
+    collapsedCategories,
+    setCollapsedCategories,
+    milestoneProgress,
+    setMilestoneProgress,
+    calculateMilestoneProgress,
+    firedTimerNotifs,
+    saveFiredTimers,
+  } = useUIState();
+  const { highlightedRows, highlightRow } = useHighlight();
   const { gePrices, geMapping, geIconMap, membershipMap, mappingLoading } = useGEData();
 
   const switchTradeMode = (mode) => {
@@ -105,8 +118,6 @@ function MainAppInner({ session, onLogout }) {
   const {
     currentPage,
     graphItemId,
-    collapsedCategories,
-    setCollapsedCategories,
     navigateToPage,
     toggleCategory,
     expandCategory,
@@ -114,7 +125,6 @@ function MainAppInner({ session, onLogout }) {
     handleNotificationNavigate,
   } = useNavigation({ refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters, stocks, categories });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
   const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading && !milestonesLoading && !profitHistoryLoading && !gpStatsLoading;
 
@@ -165,7 +175,6 @@ function MainAppInner({ session, onLogout }) {
   });
 
   // Track which timer notifications have already fired to avoid duplicates
-  const firedTimerNotifs = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_fired_limit_timers_${userId}`) || '[]')));
   const firedAltTimerNotif = useRef(false);
   const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_fired_milestones_${userId}`) || '[]')));
   const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_seen_news_${userId}`) || '[]')));
@@ -176,11 +185,6 @@ function MainAppInner({ session, onLogout }) {
   const newsNotifsInitialized = useRef(localStorage.getItem(`osrs_news_initialized_${userId}`) === 'true');
   const jmodNotifsInitialized = useRef(localStorage.getItem(`osrs_jmod_initialized_${userId}`) === 'true');
   const timerTimeoutsRef = useRef(new Map());
-
-  // Helper to persist firedTimerNotifs to localStorage
-  const saveFiredTimers = useCallback(() => {
-    localStorage.setItem(`osrs_fired_limit_timers_${userId}`, JSON.stringify(Array.from(firedTimerNotifs.current)));
-  }, [userId]);
 
   // Save when app closes
   useEffect(() => {
@@ -366,13 +370,6 @@ function MainAppInner({ session, onLogout }) {
     }
   }, [userId]); // Remove categoriesLoading and categories from dependencies
   // Helper functions
-  const highlightRow = (stockId) => {
-    setHighlightedRows({ ...highlightedRows, [stockId]: true });
-    setTimeout(() => {
-      setHighlightedRows({ ...highlightedRows, [stockId]: false });
-    }, 1000);
-  };
-
   const handleSort = (key) => {
     setSortConfig({
       key,
@@ -387,101 +384,10 @@ function MainAppInner({ session, onLogout }) {
     }
   };
 
-  const calculateMilestoneProgress = () => {
-    if (!dataLoaded || !profitHistory) return { day: 0, week: 0, month: 0, year: 0 };
-
-    const getStartOfPeriod = (period) => {
-      const date = new Date();
-      switch (period) {
-        case 'day':
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'week':
-          const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-          date.setDate(diff);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'month':
-          date.setDate(1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'year':
-          date.setMonth(0, 1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        default:
-          return date;
-      }
-    };
-
-    const calculatePeriodProfit = (period) => {
-      const startDate = getStartOfPeriod(period);
-      const periodProfits = profitHistory.filter(entry => {
-        const entryDate = new Date(entry.created_at);
-        return entryDate >= startDate && entry.profit_type !== 'bonds';
-      });
-      const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
-      return totalProfit;
-    };
-
-    return {
-      day: calculatePeriodProfit('day'),
-      week: calculatePeriodProfit('week'),
-      month: calculatePeriodProfit('month'),
-      year: calculatePeriodProfit('year')
-    };
-  };
-
   useEffect(() => {
     if (!profitHistory || profitHistoryLoading) return;
 
-    const getStartOfPeriod = (period) => {
-      const date = new Date();
-      switch (period) {
-        case 'day':
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'week':
-          const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-          date.setDate(diff);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'month':
-          date.setDate(1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'year':
-          date.setMonth(0, 1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        default:
-          return date;
-      }
-    };
-
-    const calculatePeriodProfit = (period) => {
-      const startDate = getStartOfPeriod(period);
-
-      const periodProfits = profitHistory.filter(entry => {
-        const entryDate = new Date(entry.created_at);
-        const isInPeriod = entryDate >= startDate;
-        const isNotBonds = entry.profit_type !== 'bonds';
-
-        return isInPeriod && isNotBonds;
-      });
-
-      const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
-
-      return Math.max(0, totalProfit);
-    };
-
-    const newProgress = {
-      day: calculatePeriodProfit('day'),
-      week: calculatePeriodProfit('week'),
-      month: calculatePeriodProfit('month'),
-      year: calculatePeriodProfit('year')
-    };
-
+    const newProgress = calculateMilestoneProgress();
     setMilestoneProgress(newProgress);
 
     // Check for milestone achievements and fire notifications
@@ -528,7 +434,7 @@ function MainAppInner({ session, onLogout }) {
     if (!milestonesLoading) {
       recordCompletedPeriods(profitHistory, milestones);
     }
-  }, [dataLoaded, profitHistory, milestones]);
+  }, [profitHistory, milestones, calculateMilestoneProgress, setMilestoneProgress]);
 
   // OSRS News notification effect
   useEffect(() => {
@@ -598,8 +504,6 @@ function MainAppInner({ session, onLogout }) {
   };
 
 
-  const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
-
   const {
     isSubmitting,
     bulkSummaryData,
@@ -630,15 +534,7 @@ function MainAppInner({ session, onLogout }) {
     handleConfirmArchive,
     handleRestore,
     refreshArchivedStocks,
-  } = useModalHandlers({
-    tradeMode,
-    highlightRow,
-    firedTimerNotifs,
-    saveFiredTimers,
-    setCollapsedCategories,
-    calculateMilestoneProgress,
-    setMilestoneProgress,
-  });
+  } = useModalHandlers();
 
   const handleInvestmentDateChange = async (stock, date) => {
     await updateStock(stock.id, { investmentStartDate: date });

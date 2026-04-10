@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useUIState } from '../contexts/UIStateContext';
 
 const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs' };
 
@@ -28,10 +29,7 @@ export function useNavigation({
 }) {
   const [currentPage, setCurrentPage] = useState(getPageFromURL);
   const [graphItemId, setGraphItemId] = useState(() => new URLSearchParams(window.location.search).get('item'));
-  const [collapsedCategories, setCollapsedCategories] = useState(() => {
-    const saved = localStorage.getItem('collapsedCategories');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const { collapsedCategories, setCollapsedCategories } = useUIState();
 
   const navigateToPage = useCallback((page, options = {}) => {
     if (page === 'trade') {
@@ -171,8 +169,6 @@ export function useNavigation({
   return {
     currentPage,
     graphItemId,
-    collapsedCategories,
-    setCollapsedCategories,
     navigateToPage,
     toggleCategory,
     expandCategory,
