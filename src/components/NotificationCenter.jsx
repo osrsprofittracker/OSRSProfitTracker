@@ -1,63 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, Filter, TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
-import { formatNumber } from '../utils/formatters';
+import { Bell, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
+import { formatNumber, getTimeAgo } from '../utils/formatters';
+import { getTypeIcon, getTypeColor } from '../utils/notificationUtils';
 import { useGEData } from '../contexts/GEDataContext';
 import '../styles/notification-center.css';
-
-function getTimeAgo(timestamp) {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return 'just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-function getTypeIcon(type) {
-  switch (type) {
-    case 'limitTimer':
-      return <Clock size={16} />;
-    case 'altAccountTimer':
-      return <User size={16} />;
-    case 'milestone':
-      return <Trophy size={16} />;
-    case 'osrsNews':
-      return <Newspaper size={16} />;
-    case 'jmodReddit':
-      return <MessageSquare size={16} />;
-    case 'priceAlert':
-    case 'priceAlertHigh':
-      return <TrendingUp size={16} />;
-    case 'priceAlertLow':
-      return <TrendingDown size={16} />;
-    default:
-      return <Bell size={16} />;
-  }
-}
-
-function getTypeColor(type) {
-  switch (type) {
-    case 'limitTimer':
-      return 'var(--notification-timer-color, rgb(202, 138, 4))';
-    case 'altAccountTimer':
-      return 'var(--notification-alt-color, rgb(168, 85, 247))';
-    case 'milestone':
-      return 'var(--notification-milestone-color, rgb(34, 197, 94))';
-    case 'osrsNews':
-      return 'var(--notification-news-color, rgb(14, 165, 233))';
-    case 'jmodReddit':
-      return 'var(--notification-jmod-color, rgb(255, 149, 0))';
-    case 'priceAlert':
-    case 'priceAlertLow':
-      return 'rgb(239, 68, 68)';
-    case 'priceAlertHigh':
-      return 'rgb(74, 222, 128)';
-    default:
-      return 'rgb(148, 163, 184)';
-  }
-}
 
 export default function NotificationCenter({
   notifications = [],
