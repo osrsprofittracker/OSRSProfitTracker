@@ -65,6 +65,7 @@ export default function ModalManager({
   bondsProfit,
   numberFormat,
   groupedStocks,
+  groupedStatsStocks,
   categoryNames,
   geIconMap,
   gePrices,
@@ -255,7 +256,7 @@ export default function ModalManager({
 
       <ModalContainer isOpen={modals.categoryChart}>
         <CategoryChartModal
-          groupedStocks={groupedStocks}
+          groupedStocks={groupedStatsStocks || groupedStocks}
           onCancel={() => closeModal('categoryChart')}
           numberFormat={numberFormat}
         />

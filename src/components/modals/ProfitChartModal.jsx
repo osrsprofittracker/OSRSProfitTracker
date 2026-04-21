@@ -4,8 +4,9 @@ import { calculateStocksProfit } from '../../utils/calculations';
 import { useTrade } from '../../contexts/TradeContext';
 
 export default function ProfitChartModal({ dumpProfit, referralProfit, bondsProfit, onCancel, numberFormat }) {
-  const { stocks } = useTrade();
-  const stocksProfit = calculateStocksProfit(stocks);
+  const { stocks, allStocks } = useTrade();
+  const stocksForStats = allStocks?.length > 0 ? allStocks : stocks;
+  const stocksProfit = calculateStocksProfit(stocksForStats);
   const totalProfit = stocksProfit + dumpProfit + referralProfit + bondsProfit;
 
   const segments = [];

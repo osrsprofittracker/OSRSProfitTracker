@@ -19,6 +19,7 @@ export default function HomePage({
   transactions,
   gpTradedStats,
   profits,
+  statsStocks = null,
   numberFormat,
   milestones,
   milestoneProgress,
@@ -28,7 +29,8 @@ export default function HomePage({
   profitHistory,
 }) {
   const { gePrices: geData } = useGEData();
-  const { stocks } = useTrade();
+  const { stocks, allStocks } = useTrade();
+  const stocksForStats = statsStocks || (allStocks?.length > 0 ? allStocks : stocks);
   const [topItemsSortBy, setTopItemsSortBy] = useState('profit');
   // Use milestoneProgress for period profits (already calculated in MainApp)
   const dayProfit = milestoneProgress?.day || 0;
@@ -37,7 +39,7 @@ export default function HomePage({
   const yearProfit = milestoneProgress?.year || 0;
 
   // Calculate total realized profit (from sells) FIRST
-  const totalRealizedProfit = stocks?.reduce((sum, stock) => {
+  const totalRealizedProfit = stocksForStats?.reduce((sum, stock) => {
     return sum + (stock.totalCostSold - (stock.totalCostBasisSold || 0));
   }, 0) || 0;
 
@@ -54,20 +56,20 @@ export default function HomePage({
   const totalGPTraded = gpTradedStats?.total || 0;
 
   // Calculate inventory metrics
-  const inventoryValue = stocks?.reduce((sum, stock) =>
+  const inventoryValue = stocksForStats?.reduce((sum, stock) =>
     sum + stock.totalCost, 0
   ) || 0;
 
-  const itemsInStock = stocks?.reduce((sum, stock) => sum + stock.shares, 0) || 0;
+  const itemsInStock = stocksForStats?.reduce((sum, stock) => sum + stock.shares, 0) || 0;
 
-  const uniqueItems = stocks?.filter(s => s.shares > 0).length || 0;
+  const uniqueItems = stocksForStats?.filter(s => s.shares > 0).length || 0;
 
   const averageValuePerItem = itemsInStock > 0 ? inventoryValue / itemsInStock : 0;
 
   // Recent activity (last 10 transactions)
   const recentActivity = transactions?.slice(0, 10) || [];
 
-  const topItems = stocks
+  const topItems = stocksForStats
     ?.map(stock => {
       const realizedProfit = stock.totalCostSold - (stock.totalCostBasisSold || 0);
       const margin = stock.totalCostBasisSold > 0

@@ -9,6 +9,7 @@ import '../styles/category-section.css';
 export default function CategorySection({
   category,
   stocks,
+  statsStocks = null,
   isCollapsed,
   onToggleCollapse,
   onAddStock,
@@ -47,6 +48,7 @@ export default function CategorySection({
 }) {
   const { gePrices: geData, geIconMap, membershipMap } = useGEData();
   const categoryStocks = stocks.filter(s => s.category === category);
+  const categoryStatsStocks = (statsStocks || stocks).filter(s => s.category === category);
 
   return (
     <div className="category-container" data-category={category}>
@@ -67,14 +69,14 @@ export default function CategorySection({
               {category} ({categoryStocks.length})
             </h2>
             {showCategoryStats && (() => {
-              const timerCount = categoryStocks.filter(s => s.timerEndTime && s.timerEndTime > Date.now()).length;
-              const okCount = categoryStocks.filter(s =>
+              const timerCount = categoryStatsStocks.filter(s => s.timerEndTime && s.timerEndTime > Date.now()).length;
+              const okCount = categoryStatsStocks.filter(s =>
                 (!s.timerEndTime || s.timerEndTime <= Date.now()) &&
                 s.shares >= s.needed &&
                 !s.onHold
               ).length;
-              const holdCount = categoryStocks.filter(s => s.onHold).length;
-              const lowCount = categoryStocks.filter(s =>
+              const holdCount = categoryStatsStocks.filter(s => s.onHold).length;
+              const lowCount = categoryStatsStocks.filter(s =>
                 (!s.timerEndTime || s.timerEndTime <= Date.now()) &&
                 s.shares < s.needed &&
                 !s.onHold
@@ -191,31 +193,31 @@ export default function CategorySection({
           <div className="category-stats">
             <StatItem
               label="Total Cost"
-              value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.totalCost, 0), numberFormat)}
+              value={formatNumber(categoryStatsStocks.reduce((sum, s) => sum + s.totalCost, 0), numberFormat)}
               color="rgb(96, 165, 250)"
             />
             <StatItem
               label="Total Shares"
-              value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.shares, 0), numberFormat)}
+              value={formatNumber(categoryStatsStocks.reduce((sum, s) => sum + s.shares, 0), numberFormat)}
               color="rgb(251, 146, 60)"
             />
             <StatItem
               label="Total Profit"
-              value={formatNumber(categoryStocks.reduce((sum, s) => sum + (s.totalCostSold - (s.totalCostBasisSold || 0)), 0), numberFormat)}
+              value={formatNumber(categoryStatsStocks.reduce((sum, s) => sum + (s.totalCostSold - (s.totalCostBasisSold || 0)), 0), numberFormat)}
               color="rgb(52, 211, 153)"
             />
             <StatItem
               label="Sold Shares"
-              value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.sharesSold, 0), numberFormat)}
+              value={formatNumber(categoryStatsStocks.reduce((sum, s) => sum + s.sharesSold, 0), numberFormat)}
               color="rgb(168, 85, 247)"
             />
             <StatItem
               label="Sold Cost"
-              value={formatNumber(categoryStocks.reduce((sum, s) => sum + s.totalCostSold, 0), numberFormat)}
+              value={formatNumber(categoryStatsStocks.reduce((sum, s) => sum + s.totalCostSold, 0), numberFormat)}
               color="rgb(192, 132, 252)"
             />
             {showCategoryUnrealisedProfit && (() => {
-              const total = categoryStocks.reduce((sum, s) => {
+              const total = categoryStatsStocks.reduce((sum, s) => {
                 const high = s.itemId ? geData[s.itemId]?.high : null;
                 const val = calculateUnrealizedProfit(s, high, s.itemId);
                 return sum + (val ?? 0);

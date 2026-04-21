@@ -91,7 +91,7 @@ function MainAppInner({ session, onLogout }) {
     fetchCategories();
     setTradeMode(mode);
   };
-  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
+  const { stocks, allStocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategoriesContext();
   const {
     transactions, loading: transactionsLoading, addTransaction,
@@ -713,6 +713,9 @@ function MainAppInner({ session, onLogout }) {
   const filteredStocks = stocks.filter(s =>
     tradeMode === 'investment' ? s.isInvestment : !s.isInvestment
   );
+  const filteredAllStocks = allStocks.filter(s =>
+    tradeMode === 'investment' ? s.isInvestment : !s.isInvestment
+  );
   const filteredCategories = categories.filter(c =>
     tradeMode === 'investment' ? c.isInvestment : !c.isInvestment
   );
@@ -723,6 +726,10 @@ function MainAppInner({ session, onLogout }) {
     acc[cat.name] = filteredStocks.filter(s => s.category === cat.name);
     return acc;
   }, {});
+  const groupedStatsStocks = filteredCategories.reduce((acc, cat) => {
+    acc[cat.name] = filteredAllStocks.filter(s => s.category === cat.name);
+    return acc;
+  }, {});
 
   // Add uncategorized investment/trade stocks that have no matching category
   const uncategorizedFiltered = filteredStocks.filter(s =>
@@ -731,11 +738,17 @@ function MainAppInner({ session, onLogout }) {
   if (uncategorizedFiltered.length > 0 && !filteredCategories.some(c => c.name === 'Uncategorized')) {
     groupedStocks['Uncategorized'] = uncategorizedFiltered;
   }
+  const uncategorizedStats = filteredAllStocks.filter(s =>
+    s.category === 'Uncategorized' || !s.category || !categoryNames.includes(s.category)
+  );
+  if (uncategorizedStats.length > 0 && !filteredCategories.some(c => c.name === 'Uncategorized')) {
+    groupedStatsStocks['Uncategorized'] = uncategorizedStats;
+  }
 
 
 
   return (
-    <TradeProvider stocks={stocks} categories={categories} refetchStocks={refetch} refetchCategories={fetchCategories}>
+    <TradeProvider stocks={stocks} allStocks={allStocks} categories={categories} refetchStocks={refetch} refetchCategories={fetchCategories}>
     <div style={{
       minHeight: '100vh',
       background: 'rgb(15, 23, 42)',
@@ -947,6 +960,7 @@ function MainAppInner({ session, onLogout }) {
             profitHistory={profitHistory}
             gpTradedStats={gpTradedStats}
             profits={profits}
+            statsStocks={allStocks}
             numberFormat={numberFormat}
             milestones={milestones}
             milestoneProgress={milestoneProgress}
@@ -997,6 +1011,7 @@ function MainAppInner({ session, onLogout }) {
               dumpProfit={dumpProfit}
               referralProfit={referralProfit}
               bondsProfit={bondsProfit}
+              statsStocks={allStocks}
               visibleProfits={visibleProfits}
               onAddDumpProfit={() => openModal('dumpProfit')}
               onAddReferralProfit={() => openModal('referralProfit')}
@@ -1096,6 +1111,7 @@ function MainAppInner({ session, onLogout }) {
                 key={category}
                 category={category}
                 stocks={categoryStocks}
+                statsStocks={groupedStatsStocks[category] || []}
                 isCollapsed={collapsedCategories[category]}
                 onToggleCollapse={toggleCategory}
                 onAddStock={(cat) => openModal('newStock', { newStockCategory: cat })}
@@ -1178,6 +1194,7 @@ function MainAppInner({ session, onLogout }) {
           bondsProfit={bondsProfit}
           numberFormat={numberFormat}
           groupedStocks={groupedStocks}
+          groupedStatsStocks={groupedStatsStocks}
           categoryNames={categoryNames}
           geIconMap={geIconMap}
           gePrices={gePrices}
