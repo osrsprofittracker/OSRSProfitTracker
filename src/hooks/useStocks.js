@@ -19,12 +19,14 @@ const STOCK_KEY_MAP = {
   isInvestment: ['is_investment', false],
   itemId: ['item_id', null],
   investmentStartDate: ['investment_start_date', null],
+  archived: ['archived', false],
 };
 
 const formatStock = (row) => mapRow(row, STOCK_KEY_MAP);
 
 export function useStocks(userId) {
   const [stocks, setStocks] = useState([]);
+  const [allStocks, setAllStocks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchStocks = useCallback(async () => {
@@ -32,14 +34,16 @@ export function useStocks(userId) {
       .from('stocks')
       .select('*')
       .eq('user_id', userId)
-      .eq('archived', false)
       .order('position', { ascending: true });
 
     if (error) {
       console.error('Error fetching stocks:', error);
       setStocks([]);
+      setAllStocks([]);
     } else {
-      setStocks((data || []).map(formatStock));
+      const formattedStocks = (data || []).map(formatStock);
+      setAllStocks(formattedStocks);
+      setStocks(formattedStocks.filter(stock => !stock.archived));
     }
     setLoading(false);
   }, [userId]);
@@ -235,5 +239,5 @@ export function useStocks(userId) {
     return (data || []).map(formatStock);
   }, [userId]);
 
-  return { stocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
+  return { stocks, allStocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
 }
