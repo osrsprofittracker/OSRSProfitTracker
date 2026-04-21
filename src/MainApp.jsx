@@ -130,6 +130,9 @@ function MainAppInner({ session, onLogout }) {
 
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userDropdownRef = useRef(null);
+  const userMenuOpenRef = useRef(false);
+  const ignoreNextUserMenuClickRef = useRef(false);
 
   // Modal context
   const { openModal, closeModal, selectedStock, setSelectedStock, selectedCategory, setSelectedCategory, newStockCategory, setNewStockCategory, setSelectedAlertItem } = useModal();
@@ -202,6 +205,22 @@ function MainAppInner({ session, onLogout }) {
       setCurrentTime(Date.now());
     }, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    userMenuOpenRef.current = userMenuOpen;
+  }, [userMenuOpen]);
+
+  useEffect(() => {
+    function handleMouseDownOutside(event) {
+      if (!userMenuOpenRef.current) return;
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleMouseDownOutside, true);
+    return () => document.removeEventListener('mousedown', handleMouseDownOutside, true);
   }, []);
 
   // Detect timer expirations for notifications
@@ -911,10 +930,22 @@ function MainAppInner({ session, onLogout }) {
             onDismissAlert={dismissPriceAlert}
             onNewAlert={() => navigateToPage('graphs')}
           />
-          <div className="user-dropdown-wrapper">
+          <div className="user-dropdown-wrapper" ref={userDropdownRef}>
             <button
               className="user-dropdown-trigger"
-              onClick={() => setUserMenuOpen(prev => !prev)}
+              onPointerDown={() => {
+                if (!userMenuOpen) {
+                  setUserMenuOpen(true);
+                  ignoreNextUserMenuClickRef.current = true;
+                }
+              }}
+              onClick={() => {
+                if (ignoreNextUserMenuClickRef.current) {
+                  ignoreNextUserMenuClickRef.current = false;
+                  return;
+                }
+                setUserMenuOpen(prev => !prev);
+              }}
             >
               <span className="user-dropdown-name">
                 {session?.user?.user_metadata?.username || userEmail}
