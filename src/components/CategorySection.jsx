@@ -159,7 +159,7 @@ export default function CategorySection({
             onMouseOver={(e) => e.currentTarget.style.background = 'rgb(30, 64, 175)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'rgb(29, 78, 216)'}
           >
-            <Plus size={12} /> Add Stock
+            <Plus size={12} /> Add Item
           </button>
           {category !== 'Uncategorized' && (
             <button
@@ -197,7 +197,7 @@ export default function CategorySection({
               color="rgb(96, 165, 250)"
             />
             <StatItem
-              label="Total Shares"
+              label="Total Quantity"
               value={formatNumber(categoryStatsStocks.reduce((sum, s) => sum + s.shares, 0), numberFormat)}
               color="rgb(251, 146, 60)"
             />
@@ -207,7 +207,7 @@ export default function CategorySection({
               color="rgb(52, 211, 153)"
             />
             <StatItem
-              label="Sold Shares"
+              label="Sold Quantity"
               value={formatNumber(categoryStatsStocks.reduce((sum, s) => sum + s.sharesSold, 0), numberFormat)}
               color="rgb(168, 85, 247)"
             />
@@ -270,9 +270,9 @@ export default function CategorySection({
 
 const statTooltips = {
   'Total Cost': 'GP spent buying items in this category',
-  'Total Shares': 'Items currently held in this category',
+  'Total Quantity': 'Items currently held in this category',
   'Total Profit': 'Profit from sold items in this category',
-  'Sold Shares': 'Items sold in this category',
+  'Sold Quantity': 'Items sold in this category',
   'Sold Cost': 'GP received from sales in this category',
   'Unreal. Profit': 'Estimated profit if sold at GE high (after 2% tax)'
 };

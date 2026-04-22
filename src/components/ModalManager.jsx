@@ -169,7 +169,7 @@ export default function ModalManager({
 
       <ModalContainer isOpen={modals.delete}>
         <ConfirmModal
-          title="Delete Stock"
+          title="Delete Item"
           message={<>Are you sure you want to delete <strong>{selectedStock?.name}</strong>? This action cannot be undone.</>}
           confirmLabel="Delete"
           confirmVariant="danger"
@@ -203,7 +203,7 @@ export default function ModalManager({
       <ModalContainer isOpen={modals.deleteCategory}>
         <ConfirmModal
           title="Delete Category"
-          message={<>Are you sure you want to delete the <strong>{selectedCategory}</strong> category? All stocks in this category will be moved to "Uncategorized".</>}
+          message={<>Are you sure you want to delete the <strong>{selectedCategory}</strong> category? All items in this category will be moved to "Uncategorized".</>}
           confirmLabel="Delete Category"
           confirmVariant="danger"
           onConfirm={() => handleDeleteCategory(selectedCategory)}
@@ -345,7 +345,7 @@ export default function ModalManager({
 
       <ModalContainer isOpen={modals.archiveConfirm}>
         <ConfirmModal
-          title="Archive Stock"
+          title="Archive Item"
           message={<>Are you sure you want to archive <strong>{stockToArchive?.name}</strong>? It will be removed from your trade screen but can be restored anytime.</>}
           confirmLabel="Archive"
           confirmVariant="warning"

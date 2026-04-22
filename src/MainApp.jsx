@@ -657,7 +657,7 @@ function MainAppInner({ session, onLogout }) {
           }
         } catch (error) {
           console.error('Error moving stock to category:', error);
-          alert('Failed to move stock');
+          alert('Failed to move item');
         }
       }
       return;
@@ -719,7 +719,7 @@ function MainAppInner({ session, onLogout }) {
       }
     } catch (error) {
       console.error('Error handling stock drop:', error);
-      alert('Failed to move stock');
+      alert('Failed to move item');
     }
   };
 
@@ -893,7 +893,7 @@ function MainAppInner({ session, onLogout }) {
               backgroundClip: 'text',
               margin: 0
             }}>
-              Stock Portfolio Tracker
+              OSRS Portfolio Tracker
             </h1>
             <a
               href="https://github.com/osrsprofittracker/OSRSProfitTracker/releases"
@@ -1111,7 +1111,7 @@ function MainAppInner({ session, onLogout }) {
                 }}
                 className="btn btn-success"
               >
-                + Add Stock
+                + Add Item
               </button>
               <button
                 onClick={() => openModal('bulkBuy')}

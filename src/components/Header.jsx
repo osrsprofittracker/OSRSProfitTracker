@@ -19,7 +19,7 @@ export default function Header({
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text'
                 }}>
-                    Stock Portfolio Tracker
+                    OSRS Portfolio Tracker
                 </h1>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                     <a
@@ -50,7 +50,7 @@ export default function Header({
                         <FolderPlus size={18} /> Add Category
                     </button>
                     <button className="btn btn-primary" onClick={onAddStock}>
-                        <Plus size={18} /> Add Stock
+                        <Plus size={18} /> Add Item
                     </button>
                     <button className="btn btn-secondary" onClick={onOpenSettings}>
                         ⚙️ Settings

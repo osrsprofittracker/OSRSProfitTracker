@@ -445,7 +445,7 @@ export default function HistoryPage({
             <p>⚠️ <strong>Cannot undo this buy</strong></p>
             <p className="history-modal-sub">
               {undoWarning.reason === 'stock_not_found'
-                ? <>The stock for <strong>{undoWarning.stockName}</strong> no longer exists and cannot be reverted.</>
+                ? <>The item entry for <strong>{undoWarning.stockName}</strong> no longer exists and cannot be reverted.</>
                 : <>There are sells recorded after this buy for <strong>{undoWarning.stockName}</strong>. Undo those sells first before undoing this buy.</>
               }
             </p>

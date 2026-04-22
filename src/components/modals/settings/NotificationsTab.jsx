@@ -99,7 +99,7 @@ function NotificationTypeSettings({ typePrefs, onChange, volume = 0.7 }) {
 }
 
 const NOTIFICATION_TYPES = [
-  { key: 'limitTimer', label: '4H Limit Timer', description: "Get notified when a stock's GE buy limit resets" },
+  { key: 'limitTimer', label: '4H Limit Timer', description: "Get notified when an item's GE buy limit resets" },
   { key: 'altAccountTimer', label: 'Alt Account Timer', description: 'Get notified when your alt account timer is ready' },
   { key: 'milestones', label: 'Milestones', description: 'Get notified when you reach a profit milestone' },
   { key: 'osrsNews', label: 'OSRS News', description: 'Get notified when new OSRS blog posts are published' },

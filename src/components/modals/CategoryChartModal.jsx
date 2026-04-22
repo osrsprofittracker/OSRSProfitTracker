@@ -62,10 +62,10 @@ export default function CategoryChartModal({ groupedStocks, onCancel, numberForm
 
   const modes = [
     { key: 'totalCost', label: 'Total Cost', color: 'rgb(96, 165, 250)' },
-    { key: 'shares', label: 'Shares', color: 'rgb(251, 146, 60)' },
+    { key: 'shares', label: 'Quantity', color: 'rgb(251, 146, 60)' },
     { key: 'profit', label: 'Profit', color: 'rgb(52, 211, 153)' },
     { key: 'soldCost', label: 'Sold Cost', color: 'rgb(192, 132, 252)' },
-    { key: 'soldShares', label: 'Sold Shares', color: 'rgb(168, 85, 247)' }
+    { key: 'soldShares', label: 'Sold Quantity', color: 'rgb(168, 85, 247)' }
   ];
 
   return (

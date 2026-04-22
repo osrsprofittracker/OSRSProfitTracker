@@ -204,7 +204,7 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
   };
 
   const modeClass = isBuy ? 'mode-buy' : 'mode-sell';
-  const emptyPickerText = isBuy ? 'No stocks found' : 'No stocks with holdings found';
+  const emptyPickerText = isBuy ? 'No items found' : 'No items with holdings found';
   const emptyConfigText = isBuy
     ? 'Select items from the left panel to get started'
     : 'Select items from the left panel to sell';
@@ -243,7 +243,7 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
           <div className="bulk-trade-search">
             <input
               type="text"
-              placeholder="Search stocks..."
+              placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -345,7 +345,7 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
                           value={item.shares}
                           onChange={(e) => handleSharesInput(id, e.target.value)}
                           onStep={(d) => updateItem(id, 'shares', Math.max(0, (parseFloat(item.shares) || 0) + d).toString())}
-                          placeholder="Shares"
+                          placeholder="Quantity"
                         />
                         <StepInput
                           type="text"
@@ -431,7 +431,7 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
                       <div className="budget-info">
                         {allocation ? (
                           <div className="shares-calc">
-                            {formatNumber(allocation.shares)} shares @ {formatNumber(allocation.price)} = {formatNumber(allocation.spent, 'full')} GP
+                            {formatNumber(allocation.shares)} qty @ {formatNumber(allocation.price)} = {formatNumber(allocation.spent, 'full')} GP
                           </div>
                         ) : (
                           <div>{parseFloat(item.price) > 0 ? 'Enter budget above' : 'Set a buy price'}</div>

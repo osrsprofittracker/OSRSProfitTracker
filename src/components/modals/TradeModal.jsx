@@ -115,11 +115,11 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
 
     if (!isBuy) {
       if (sharesNum > stock.shares) {
-        alert(`Cannot sell ${sharesNum} shares. You only have ${stock.shares} shares available.`);
+        alert(`Cannot sell ${sharesNum} quantity. You only have ${stock.shares} quantity available.`);
         return;
       }
       if (sharesNum <= 0) {
-        alert('Please enter a valid number of shares to sell.');
+        alert('Please enter a valid quantity to sell.');
         return;
       }
       onConfirm({ shares: sharesNum, price: priceNum });
@@ -151,11 +151,11 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
       <div className={`trade-modal-banner ${isBuy ? 'buy' : 'sell'}`}>
         <div className="trade-modal-banner-row">
           <span className="trade-modal-banner-label">
-            {isBuy ? 'Current' : 'Available'}: {formatNumber(stock.shares)} shares
+            {isBuy ? 'Current' : 'Available'}: {formatNumber(stock.shares)} quantity
           </span>
           {shares && parseFloat(shares) > 0 && (
             <span className="trade-modal-banner-after">
-              After: {formatNumber(isBuy ? stock.shares + parseFloat(shares) : stock.shares - parseFloat(shares))} shares
+              After: {formatNumber(isBuy ? stock.shares + parseFloat(shares) : stock.shares - parseFloat(shares))} quantity
             </span>
           )}
         </div>
@@ -195,7 +195,7 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
         <div>
           {isBuy ? (
             <>
-              <label className="trade-modal-field-label">Shares</label>
+              <label className="trade-modal-field-label">Quantity</label>
               <div className="trade-modal-multipliers">
                 {[1, 2, 3, 4, 5].map(mult => (
                   <button
@@ -211,7 +211,7 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
           ) : (
             <div className="trade-modal-field-header">
               <label className="trade-modal-field-label">
-                Shares (Max: {stock.shares?.toLocaleString()})
+                Quantity (Max: {stock.shares?.toLocaleString()})
               </label>
               <button
                 onClick={() => setShares(stock.shares.toString())}
@@ -227,7 +227,7 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
               type="text"
               value={shares}
               onChange={(e) => handleMKInput(e.target.value, setShares)}
-              placeholder="Number of shares (e.g. 10k)"
+              placeholder="Quantity (e.g. 10k)"
               onBlur={handleSharesBlur}
               onKeyDown={(e) => {
                 if (e.key === 'ArrowUp') { e.preventDefault(); stepShares(1); }
@@ -244,7 +244,7 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
         <div>
           <div className="trade-modal-field-header">
             <label className="trade-modal-field-label">
-              {useTotal ? (isBuy ? 'Total Cost' : 'Total Revenue') : 'Price per Share'}
+              {useTotal ? (isBuy ? 'Total Cost' : 'Total Revenue') : 'Price per Item'}
             </label>
             {!useTotal && (geLow || geHigh) && (
               <div className="trade-modal-ge-buttons">
@@ -299,7 +299,7 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
               }}
               placeholder={useTotal
                 ? (isBuy ? 'Total cost (e.g. 10m)' : 'Total revenue (e.g. 10m)')
-                : 'Price per share (e.g. 1.5k)'}
+                : 'Price per item (e.g. 1.5k)'}
               onKeyDown={(e) => {
                 if (e.key === 'ArrowUp') { e.preventDefault(); stepPrice(1); }
                 else if (e.key === 'ArrowDown') { e.preventDefault(); stepPrice(-1); }

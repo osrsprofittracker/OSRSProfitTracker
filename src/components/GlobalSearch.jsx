@@ -127,7 +127,7 @@ export default function GlobalSearch({
   const sections = useMemo(() => {
     const groups = [];
     const types = [
-      { key: 'stock', label: 'Stocks', icon: Package },
+      { key: 'stock', label: 'Items', icon: Package },
       { key: 'category', label: 'Categories', icon: FolderOpen },
       { key: 'transaction', label: 'Transactions', icon: ArrowLeftRight },
       { key: 'ge-item', label: 'GE Items', icon: BarChart3 }
