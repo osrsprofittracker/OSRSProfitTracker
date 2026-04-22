@@ -158,7 +158,7 @@ export default function Auth({ onBack }) {
             fontWeight: 'bold',
             textAlign: 'center'
           }}>
-            Stock Portfolio Tracker
+            OSRS Portfolio Tracker
           </h1>
 
           <p style={{

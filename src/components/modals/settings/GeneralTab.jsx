@@ -17,11 +17,11 @@ function ProfitCheckbox({ profit, checked, onChange }) {
 }
 
 const COLUMNS = [
-  { key: 'status', label: 'Status', tooltip: "Shows item status: ⏰Timer (4H limit active), ✓OK (holding at desired stock), 🔒Hold (excess stock), 🔴Low (below desired stock)." },
+  { key: 'status', label: 'Status', tooltip: "Shows item status: ⏰Timer (4H limit active), ✓OK (holding at target quantity), 🔒Hold (excess quantity), 🔴Low (below target quantity)." },
   { key: 'avgBuy', label: 'Avg Buy' },
   { key: 'avgSell', label: 'Avg Sell' },
   { key: 'profit', label: 'Profit' },
-  { key: 'desiredStock', label: 'Desired Stock', tooltip: 'The target quantity you want to hold. Used to calculate how much more to buy.' },
+  { key: 'desiredStock', label: 'Target Quantity', tooltip: 'The target quantity you want to hold. Used to calculate how much more to buy.' },
   { key: 'limit4h', label: '4H Limit' },
   { key: 'geHigh', label: 'GE High' },
   { key: 'geLow', label: 'GE Low' },

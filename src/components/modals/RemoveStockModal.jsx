@@ -17,12 +17,12 @@ export default function RemoveStockModal({ stock, onConfirm, onCancel, isSubmitt
     const sharesNum = parseFloat(shares);
 
     if (sharesNum > stock.shares) {
-      alert(`Cannot remove ${sharesNum} shares. You only have ${stock.shares} shares available.`);
+      alert(`Cannot remove ${sharesNum} quantity. You only have ${stock.shares} quantity available.`);
       return;
     }
 
     if (sharesNum <= 0) {
-      alert('Please enter a valid number of shares to remove.');
+      alert('Please enter a valid quantity to remove.');
       return;
     }
 
@@ -54,11 +54,11 @@ export default function RemoveStockModal({ stock, onConfirm, onCancel, isSubmitt
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '0.875rem', color: 'rgb(168, 85, 247)', fontWeight: '600' }}>
-            Available: {formatNumber(stock.shares)} shares
+            Available: {formatNumber(stock.shares)} quantity
           </span>
           {shares && parseFloat(shares) > 0 && (
             <span style={{ fontSize: '0.875rem', color: 'rgb(156, 163, 175)', fontWeight: '500' }}>
-              After: {formatNumber(stock.shares - parseFloat(shares))} shares
+              After: {formatNumber(stock.shares - parseFloat(shares))} quantity
             </span>
           )}
         </div>
@@ -96,7 +96,7 @@ export default function RemoveStockModal({ stock, onConfirm, onCancel, isSubmitt
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)' }}>
-              Shares (Max: {stock.shares?.toLocaleString()})
+              Quantity (Max: {stock.shares?.toLocaleString()})
             </label>
             <button
               onClick={() => setShares(stock.shares.toString())}
@@ -122,7 +122,7 @@ export default function RemoveStockModal({ stock, onConfirm, onCancel, isSubmitt
             value={shares}
             onChange={(e) => handleMKInput(e.target.value, setShares)}
             onStep={(d) => setShares(prev => Math.max(0, Math.min(stock.shares, (parseFloat(prev) || 0) + d)).toString())}
-            placeholder="Number of shares (e.g. 10k)"
+            placeholder="Quantity (e.g. 10k)"
             style={{
               width: '100%',
               padding: '0.5rem 1rem',

@@ -50,7 +50,7 @@ export default function PortfolioSummary({
 
         {/* Total Shares */}
         <SummaryCard
-          label="Total Stock:"
+          label="Total Quantity:"
           value={formatNumber(totalShares)}
           color="rgb(251, 146, 60)"
           tooltip="Total items you currently hold"
@@ -77,7 +77,7 @@ export default function PortfolioSummary({
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         {/* Stock Profit */}
         <SummaryCard
-          label="Stock Profit:"
+          label="Item Profit:"
           value={formatNumber(stocksProfit)}
           color={stocksProfit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
           tooltip="Profit from flipping items"

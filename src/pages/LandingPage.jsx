@@ -250,7 +250,7 @@ export default function LandingPage({ onGetStarted }) {
                                 lineHeight: '1.6'
                             }}>
                                 Get a bird's-eye view of your entire OSRS portfolio. Track total portfolio value,
-                                stock investments, revenue, and profits all in one place.
+                                item investments, revenue, and profits all in one place.
                             </p>
                         </div>
                         <div style={{
@@ -348,7 +348,7 @@ export default function LandingPage({ onGetStarted }) {
                                 marginBottom: '1.5rem',
                                 lineHeight: '1.5'
                             }}>
-                                See where your GP comes from - stocks, dumps, referrals, and bonds
+                                See where your GP comes from - items, dumps, referrals, and bonds
                             </p>
                             <div style={{
                                 background: 'rgb(15, 23, 42)',

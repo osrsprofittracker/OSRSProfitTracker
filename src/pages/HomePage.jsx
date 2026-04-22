@@ -8,9 +8,9 @@ import '../styles/home-page.css';
 const SORT_OPTIONS = [
   { value: 'profit',     label: 'Profit' },
   { value: 'margin',     label: 'Margin' },
-  { value: 'stock',      label: 'Stock' },
+  { value: 'stock',      label: 'Quantity' },
   { value: 'totalCost',  label: 'Total Cost' },
-  { value: 'soldStock',  label: 'Total Sold Stock' },
+  { value: 'soldStock',  label: 'Total Sold Quantity' },
   { value: 'soldCost',   label: 'Total Sold Cost' },
   { value: 'unrealized', label: 'Unrealized Profit' },
 ];
@@ -391,7 +391,7 @@ export default function HomePage({
                   } else if (topItemsSortBy === 'totalCost') {
                     displayValue = formatNumber(item.totalCost, numberFormat);
                     displayValueClass = 'activity-item-value-neutral';
-                    subtitle = `Shares held: ${item.shares?.toLocaleString()}`;
+                    subtitle = `Quantity held: ${item.shares?.toLocaleString()}`;
                   } else if (topItemsSortBy === 'soldStock') {
                     displayValue = item.sharesSold?.toLocaleString();
                     displayValueClass = 'activity-item-value-neutral';

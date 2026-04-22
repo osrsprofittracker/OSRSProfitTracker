@@ -625,8 +625,8 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
 
       <ModalContainer isOpen={showNotesModal && notesStock == null && matchingStocks.length > 1}>
         <div className="graph-notes-picker">
-          <h2 className="graph-notes-picker-title">Select Stock</h2>
-          <p className="graph-notes-picker-subtitle">This item is linked to multiple stocks. Which one?</p>
+          <h2 className="graph-notes-picker-title">Select Item Entry</h2>
+          <p className="graph-notes-picker-subtitle">This item is linked to multiple item entries. Which one?</p>
           <div className="graph-notes-picker-list">
             {matchingStocks.map(stock => (
               <button

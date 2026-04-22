@@ -14,7 +14,7 @@ export default function ProfitChartModal({ dumpProfit, referralProfit, bondsProf
     segments.push({ 
       percent: stocksProfit / totalProfit, 
       color: 'rgb(96, 165, 250)', 
-      label: 'Stocks', 
+      label: 'Items', 
       value: stocksProfit 
     });
   }

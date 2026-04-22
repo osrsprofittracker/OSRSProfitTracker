@@ -186,7 +186,7 @@ export default function NewStockModal({ defaultCategory = '', defaultIsInvestmen
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Stock name"
+            placeholder="Item name"
             style={inputStyle}
             onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
             onBlur={(e) => e.target.style.borderColor = 'transparent'}
@@ -228,13 +228,13 @@ export default function NewStockModal({ defaultCategory = '', defaultIsInvestmen
           onBlur={(e) => e.target.style.borderColor = 'transparent'}
         />
 
-        {/* Desired Stock */}
+        {/* Target Quantity */}
         <StepInput
           type="text"
           value={needed}
           onChange={(e) => handleMKInput(e.target.value, setNeeded)}
           onStep={(d) => setNeeded(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
-          placeholder="Desired stock (e.g. 100k)"
+          placeholder="Target quantity (e.g. 100k)"
           style={inputStyle}
           onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
           onBlur={(e) => e.target.style.borderColor = 'transparent'}
