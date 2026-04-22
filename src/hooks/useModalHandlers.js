@@ -40,7 +40,14 @@ export function useModalHandlers() {
   const { updateProfit } = useProfitsContext();
   const { updateMilestone } = useMilestonesContext();
   const { addProfitEntry } = useProfitHistoryContext();
-  const { closeModal, selectedStock, selectedCategory, setNewStockCategory } = useModal();
+  const {
+    openModal,
+    closeModal,
+    selectedStock,
+    selectedCategory,
+    newStockPreset,
+    setNewStockCategory
+  } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bulkSummaryData, setBulkSummaryData] = useState(null);
   const [isUndoing, setIsUndoing] = useState(false);
@@ -306,7 +313,7 @@ export function useModalHandlers() {
 
   const handleAddStock = useCallback(async (data) => {
     const { name, category, limit4h, needed, isInvestment, itemId, investmentStartDate } = data;
-    await addStockToDB({
+    const inserted = await addStockToDB({
       name,
       totalCost: 0,
       shares: 0,
@@ -321,10 +328,36 @@ export function useModalHandlers() {
       itemId: itemId || null,
       investmentStartDate: investmentStartDate || null,
     });
+
+    if (!inserted) return;
+
     await refetch();
+    const shouldOpenBuyAfterCreate = !!newStockPreset?.openBuyAfterCreate;
     setNewStockCategory('');
     closeModal('newStock');
-  }, [addStockToDB, refetch, setNewStockCategory, closeModal]);
+
+    if (shouldOpenBuyAfterCreate) {
+      openModal('buy', {
+        stock: {
+          id: inserted.id,
+          name: name.trim(),
+          totalCost: 0,
+          shares: 0,
+          sharesSold: 0,
+          totalCostSold: 0,
+          totalCostBasisSold: 0,
+          limit4h,
+          needed: parseFloat(needed) || 0,
+          timerEndTime: null,
+          category: category || 'Uncategorized',
+          onHold: false,
+          isInvestment: !!isInvestment,
+          itemId: itemId || null,
+          investmentStartDate: investmentStartDate || null,
+        }
+      });
+    }
+  }, [addStockToDB, refetch, newStockPreset, setNewStockCategory, closeModal, openModal]);
 
   const handleAddCategory = useCallback(async (name, isInvestment = false) => {
     if (!name.trim()) return;

@@ -1,18 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bell, TrendingUp, TrendingDown, Trash2 } from 'lucide-react';
 import { formatNumber } from '../../utils/formatters';
 import '../../styles/price-alert-modal.css';
 
-export default function PriceAlertModal({ itemId, itemName, currentAlert, gePrice, onSave, onDelete, onCancel }) {
+export default function PriceAlertModal({
+  itemId,
+  itemName,
+  currentAlert,
+  defaultHighThreshold = null,
+  defaultLowThreshold = null,
+  gePrice,
+  onSave,
+  onDelete,
+  onCancel
+}) {
+  const resolvedHighThreshold = currentAlert?.highThreshold ?? defaultHighThreshold;
+  const resolvedLowThreshold = currentAlert?.lowThreshold ?? defaultLowThreshold;
   const [highThreshold, setHighThreshold] = useState(
-    currentAlert?.highThreshold ? String(currentAlert.highThreshold) : ''
+    resolvedHighThreshold ? String(resolvedHighThreshold) : ''
   );
   const [lowThreshold, setLowThreshold] = useState(
-    currentAlert?.lowThreshold ? String(currentAlert.lowThreshold) : ''
+    resolvedLowThreshold ? String(resolvedLowThreshold) : ''
   );
   const [error, setError] = useState('');
 
   const isEditing = !!currentAlert?.isActive;
+
+  useEffect(() => {
+    const high = currentAlert?.highThreshold ?? defaultHighThreshold;
+    const low = currentAlert?.lowThreshold ?? defaultLowThreshold;
+    setHighThreshold(high ? String(high) : '');
+    setLowThreshold(low ? String(low) : '');
+    setError('');
+  }, [itemId, currentAlert?.id, defaultHighThreshold, defaultLowThreshold]);
 
   const stepHigh = (delta) => {
     const newVal = Math.max(0, (parseInt(highThreshold) || 0) + delta);

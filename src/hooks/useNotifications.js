@@ -11,6 +11,9 @@ const TYPE_PREF_KEY = {
   priceAlert: 'priceAlert',
   priceAlertHigh: 'priceAlert',
   priceAlertLow: 'priceAlert',
+  watchlistAlert: 'watchlistAlert',
+  watchlistAlertHigh: 'watchlistAlert',
+  watchlistAlertLow: 'watchlistAlert',
 };
 
 // --- WAV generation helpers ---

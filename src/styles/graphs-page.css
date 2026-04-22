@@ -94,6 +94,7 @@
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 .graphs-info-name {
@@ -564,6 +565,110 @@
 
 .graph-alert-btn-active:hover {
   background: rgb(71, 85, 105);
+}
+
+.graph-watchlist-btn {
+  border-color: rgb(217, 119, 6);
+  color: rgb(253, 186, 116);
+}
+
+.graph-watchlist-btn:hover {
+  border-color: rgb(245, 158, 11);
+  color: rgb(254, 215, 170);
+}
+
+.graph-watchlist-btn-active {
+  border-color: rgb(22, 163, 74);
+  color: rgb(134, 239, 172);
+}
+
+.graph-watchlist-btn-active:hover {
+  border-color: rgb(34, 197, 94);
+}
+
+.graph-alert-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.graphs-watchlist-feedback {
+  margin-top: -0.35rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.graphs-watchlist-feedback--ok {
+  color: rgb(134, 239, 172);
+}
+
+.graphs-watchlist-feedback--error {
+  color: rgb(252, 165, 165);
+}
+
+.graph-watchlist-modal {
+  background: rgb(30, 41, 59);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  color: white;
+  max-width: 28rem;
+  padding: 1.25rem;
+  width: 90vw;
+}
+
+.graph-watchlist-modal-title {
+  color: rgb(226, 232, 240);
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.graph-watchlist-modal-subtitle {
+  color: rgb(148, 163, 184);
+  font-size: 0.9rem;
+  margin: 0.35rem 0 1rem;
+}
+
+.graph-watchlist-modal-fields {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.graph-watchlist-modal-label {
+  color: rgb(148, 163, 184);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 0.3rem;
+  text-transform: uppercase;
+}
+
+.graph-watchlist-modal-input {
+  background: rgb(15, 23, 42);
+  border: 1px solid rgb(71, 85, 105);
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  width: 100%;
+}
+
+.graph-watchlist-modal-input:focus {
+  border-color: rgb(96, 165, 250);
+  outline: none;
+}
+
+.graph-watchlist-modal-error {
+  color: rgb(248, 113, 113);
+  font-size: 0.82rem;
+  margin-top: 0.8rem;
+}
+
+.graph-watchlist-modal-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
 }
 
 /* Graph Notes */

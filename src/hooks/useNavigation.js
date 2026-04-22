@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUIState } from '../contexts/UIStateContext';
 
-const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs' };
+const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs', watchlist: '/watchlist' };
 
 const HISTORY_EMPTY_FILTERS = {
   type: 'all', mode: 'all', stockName: '', category: '',
@@ -15,6 +15,7 @@ function getPageFromURL() {
   if (path === '/trade') return 'trade';
   if (path === '/history') return 'history';
   if (path === '/graphs') return 'graphs';
+  if (path === '/watchlist') return 'watchlist';
   return 'home';
 }
 
