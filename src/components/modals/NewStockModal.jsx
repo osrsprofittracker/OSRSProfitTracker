@@ -1,21 +1,21 @@
-import StepInput from '../StepInput';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import StepInput from '../StepInput';
 import { handleMKInput } from '../../utils/formatters';
 import { useGEData } from '../../contexts/GEDataContext';
 import { useTrade } from '../../contexts/TradeContext';
 
-export default function NewStockModal({ defaultCategory = '', defaultIsInvestment = false, archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
+export default function NewStockModal({ defaultCategory = '', defaultIsInvestment = false, defaultItem = null, archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
   const { geMapping: mapping } = useGEData();
   const { categories } = useTrade();
   const [stockType, setStockType] = useState('osrs'); // 'osrs' | 'custom'
-  const [name, setName] = useState('');
+  const [name, setName] = useState(defaultItem?.itemName || '');
   const [category, setCategory] = useState(defaultCategory);
-  const [limit4h, setLimit4h] = useState('');
+  const [limit4h, setLimit4h] = useState(defaultItem?.limit4h ? String(defaultItem.limit4h) : '');
   const [needed, setNeeded] = useState('');
   const [isInvestment, setIsInvestment] = useState(defaultIsInvestment || false);
   const [investmentStartDate, setInvestmentStartDate] = useState('');
-  const [itemId, setItemId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [itemId, setItemId] = useState(defaultItem?.itemId ?? null);
+  const [searchQuery, setSearchQuery] = useState(defaultItem?.itemName || '');
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -38,6 +38,16 @@ export default function NewStockModal({ defaultCategory = '', defaultIsInvestmen
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!defaultItem) return;
+    setStockType('osrs');
+    setName(defaultItem.itemName || '');
+    setSearchQuery(defaultItem.itemName || '');
+    setItemId(defaultItem.itemId ?? null);
+    setLimit4h(defaultItem.limit4h ? String(defaultItem.limit4h) : '');
+    setShowDropdown(false);
+  }, [defaultItem]);
 
   const handleSelectItem = (item) => {
     setItemId(item.id);

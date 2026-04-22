@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut } from 'lucide-react';
+import { Eye, LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
+import WatchlistPage from './pages/WatchlistPage';
 import { supabase } from './lib/supabase';
 import { useGPTradedStats } from './hooks/useGPTradedStats';
 import { useStockNotes } from './hooks/useStockNotes.js';
@@ -33,6 +34,8 @@ import ModalManager from './components/ModalManager';
 import { CURRENT_VERSION } from './data/changelog';
 import { usePriceAlerts } from './hooks/usePriceAlerts';
 import { usePriceAlertChecker } from './hooks/usePriceAlertChecker';
+import { useWatchlist } from './hooks/useWatchlist';
+import { useWatchlistAlertChecker } from './hooks/useWatchlistAlertChecker';
 import GlobalSearch from './components/GlobalSearch';
 
 import {
@@ -91,7 +94,7 @@ function MainAppInner({ session, onLogout }) {
     fetchCategories();
     setTradeMode(mode);
   };
-  const { stocks, allStocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
+  const { stocks, allStocks, loading: stocksLoading, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategoriesContext();
   const {
     transactions, loading: transactionsLoading, addTransaction,
@@ -107,6 +110,14 @@ function MainAppInner({ session, onLogout }) {
   const { profitHistory, loading: profitHistoryLoading, refetch: refetchProfitHistory } = useProfitHistoryContext();
   const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestonesContext();
   const { alerts: priceAlerts, allAlerts: allPriceAlerts, loading: priceAlertsLoading, saveAlert: savePriceAlert, dismissAlert: dismissPriceAlert, deactivateAlert: deactivatePriceAlert, updateLastChecked: updatePriceAlertLastChecked, refetch: refetchPriceAlerts } = usePriceAlerts(userId);
+  const {
+    watchlistItems,
+    loading: watchlistLoading,
+    addWatchlistItem,
+    updateWatchlistItem,
+    deleteWatchlistItem,
+    refetch: refetchWatchlist
+  } = useWatchlist(userId);
 
   // Destructure profits
   const { dumpProfit, referralProfit, bondsProfit } = profits;
@@ -139,10 +150,12 @@ function MainAppInner({ session, onLogout }) {
 
   // Price alert handlers
   const handleOpenPriceAlert = (stockOrItem) => {
-    const itemId = stockOrItem.itemId ?? stockOrItem.itemId;
+    const itemId = stockOrItem.itemId ?? null;
     const itemName = stockOrItem.itemName ?? stockOrItem.name;
+    const defaultHighThreshold = stockOrItem.defaultHighThreshold ?? null;
+    const defaultLowThreshold = stockOrItem.defaultLowThreshold ?? null;
     if (!itemId) return;
-    openModal('priceAlert', { alertItem: { itemId, itemName } });
+    openModal('priceAlert', { alertItem: { itemId, itemName, defaultHighThreshold, defaultLowThreshold } });
   };
 
   const handleSavePriceAlert = async (itemId, itemName, highThreshold, lowThreshold) => {
@@ -153,6 +166,88 @@ function MainAppInner({ session, onLogout }) {
   const handleDeletePriceAlert = async (alertId) => {
     await dismissPriceAlert(alertId);
     closeModal('priceAlert');
+  };
+
+  const handleAddWatchlistItem = async (item) => {
+    const success = await addWatchlistItem(item);
+    if (success) {
+      await refetchWatchlist();
+    }
+    return success;
+  };
+
+  const handleUpdateWatchlistItem = async (id, updates) => {
+    const success = await updateWatchlistItem(id, updates);
+    if (success) {
+      await refetchWatchlist();
+    }
+    return success;
+  };
+
+  const handleDeleteWatchlistItem = async (id) => {
+    const success = await deleteWatchlistItem(id);
+    if (success) {
+      await refetchWatchlist();
+    }
+    return success;
+  };
+
+  const handleQuickAddWatchlistFromGraphs = async (item) => {
+    if (!item?.itemId || !item?.itemName) return false;
+
+    const alreadyTracked = watchlistItems.some(w => w.itemId === item.itemId);
+    if (alreadyTracked) return true;
+
+    let targetBuyPrice = item.targetBuyPrice ?? null;
+    let targetSellPrice = item.targetSellPrice ?? null;
+
+    // Only auto-generate defaults when caller doesn't provide any target.
+    if (!targetBuyPrice && !targetSellPrice) {
+      const livePrice = gePrices[item.itemId];
+      const fallbackBuy = livePrice?.low != null ? Math.max(1, Math.floor(livePrice.low * 0.98)) : null;
+      const fallbackSell = livePrice?.high != null ? Math.max(1, Math.ceil(livePrice.high * 1.02)) : null;
+      targetBuyPrice = fallbackBuy;
+      targetSellPrice = fallbackSell;
+    }
+
+
+    const success = await addWatchlistItem({
+      itemId: item.itemId,
+      itemName: item.itemName,
+      targetBuyPrice,
+      targetSellPrice,
+      notes: item.notes ?? '',
+    });
+
+    if (success) {
+      await refetchWatchlist();
+    }
+
+    return success;
+  };
+
+  const handleConvertWatchlistToStock = async (watchlistItem) => {
+    const targetStock = allStocks.find(stock => stock.itemId === watchlistItem.itemId && !stock.archived);
+    const mappedItem = geMapping.find(item => item.id === watchlistItem.itemId);
+    const defaultLimit4h = mappedItem?.limit || 0;
+
+    if (!targetStock) {
+      navigateToPage('trade');
+      openModal('newStock', {
+        newStockCategory: 'Uncategorized',
+        newStockPreset: {
+          itemId: watchlistItem.itemId,
+          itemName: watchlistItem.itemName,
+          limit4h: defaultLimit4h,
+          openBuyAfterCreate: true,
+        }
+      });
+      return true;
+    }
+
+    navigateToPage('trade');
+    openModal('buy', { stock: targetStock });
+    return true;
   };
 
   // Notifications
@@ -175,6 +270,12 @@ function MainAppInner({ session, onLogout }) {
     addNotification,
     deactivateAlert: deactivatePriceAlert,
     updateLastChecked: updatePriceAlertLastChecked,
+  });
+
+  useWatchlistAlertChecker({
+    watchlistItems,
+    gePrices,
+    addNotification,
   });
 
   // Track which timer notifications have already fired to avoid duplicates
@@ -578,6 +679,10 @@ function MainAppInner({ session, onLogout }) {
     closeModal('notes');
   };
 
+  const handleBuyWithWatchlistCleanup = async (data) => {
+    await handleBuy(data);
+  };
+
   // Drag and drop operations
   const handleCategoryDragStart = (e, category) => {
 
@@ -880,6 +985,32 @@ function MainAppInner({ session, onLogout }) {
             >
               📊 Graphs
             </button>
+            <button
+              onClick={() => navigateToPage('watchlist')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: currentPage === 'watchlist' ? 'rgb(168, 85, 247)' : 'transparent',
+                border: 'none',
+                borderRadius: '0.5rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'background 0.2s',
+                fontSize: '0.875rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+              onMouseOver={(e) => {
+                if (currentPage !== 'watchlist') e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                if (currentPage !== 'watchlist') e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <Eye size={14} />
+              Watchlist
+            </button>
           </div>
 
           {/* Center - Title */}
@@ -992,10 +1123,12 @@ function MainAppInner({ session, onLogout }) {
             gpTradedStats={gpTradedStats}
             profits={profits}
             statsStocks={allStocks}
+            watchlistItems={watchlistItems}
             numberFormat={numberFormat}
             milestones={milestones}
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => navigateToPage('trade')}
+            onNavigateToWatchlist={() => navigateToPage('watchlist')}
             onOpenMilestoneModal={() => openModal('milestone', { milestoneView: 'main' })}
             onOpenMilestoneHistory={() => openModal('milestone', { milestoneView: 'history' })}
           />
@@ -1025,10 +1158,22 @@ function MainAppInner({ session, onLogout }) {
             userId={userId}
             initialItemId={graphItemId}
             navigateToPage={navigateToPage}
+            watchlistItems={watchlistItems}
+            onQuickAddWatchlist={handleQuickAddWatchlistFromGraphs}
             priceAlerts={priceAlerts}
             onPriceAlert={handleOpenPriceAlert}
             stockNotes={stockNotes}
             onSaveNote={saveNote}
+          />
+        ) : currentPage === 'watchlist' ? (
+          <WatchlistPage
+            watchlistItems={watchlistItems}
+            loading={watchlistLoading}
+            onAddWatchlistItem={handleAddWatchlistItem}
+            onUpdateWatchlistItem={handleUpdateWatchlistItem}
+            onDeleteWatchlistItem={handleDeleteWatchlistItem}
+            onConvertToStock={handleConvertWatchlistToStock}
+            onOpenPriceAlert={handleOpenPriceAlert}
           />
         ) : (
           <>
@@ -1191,7 +1336,7 @@ function MainAppInner({ session, onLogout }) {
           bulkSummaryData={bulkSummaryData}
           isUndoing={isUndoing}
           undoResult={undoResult}
-          handleBuy={handleBuy}
+          handleBuy={handleBuyWithWatchlistCleanup}
           handleSell={handleSell}
           handleBulkBuy={handleBulkBuy}
           handleBulkSell={handleBulkSell}

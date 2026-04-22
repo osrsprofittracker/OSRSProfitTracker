@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useChart } from '../hooks/useChart';
-import { Star, Clock, Search, ChevronDown, Bell, BellRing, StickyNote } from 'lucide-react';
+import { Star, Clock, Search, ChevronDown, Bell, BellRing, StickyNote, Eye, Check } from 'lucide-react';
 import { useTimeseries } from '../hooks/useTimeseries';
 import { useGraphPreferences } from '../hooks/useGraphPreferences';
 import { calculateGETax } from '../utils/taxUtils';
@@ -19,7 +19,17 @@ const TIMEFRAMES = [
   { label: '1Y', timestep: '24h', filterDays: 365 },
 ];
 
-export default function GraphsPage({ userId, initialItemId, navigateToPage, priceAlerts = {}, onPriceAlert, stockNotes = {}, onSaveNote }) {
+export default function GraphsPage({
+  userId,
+  initialItemId,
+  navigateToPage,
+  watchlistItems = [],
+  onQuickAddWatchlist,
+  priceAlerts = {},
+  onPriceAlert,
+  stockNotes = {},
+  onSaveNote,
+}) {
   const { geMapping: mapping, gePrices: prices, geIconMap: iconMap, mappingLoading } = useGEData();
   const { stocks } = useTrade();
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +39,12 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
   const [chartMode, setChartMode] = useState('line');
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [notesStock, setNotesStock] = useState(null);
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
+  const [watchlistTargetLow, setWatchlistTargetLow] = useState('');
+  const [watchlistTargetHigh, setWatchlistTargetHigh] = useState('');
+  const [watchlistModalError, setWatchlistModalError] = useState('');
+  const [watchlistActionState, setWatchlistActionState] = useState(null);
+  const [watchlistSubmitting, setWatchlistSubmitting] = useState(false);
 
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -234,6 +250,74 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
     return stocks.filter(s => s.itemId === selectedItem.id);
   }, [selectedItem, stocks]);
 
+  const selectedWatchlistItem = useMemo(() => {
+    if (!selectedItem) return null;
+    return watchlistItems.find(item => item.itemId === selectedItem.id) || null;
+  }, [selectedItem, watchlistItems]);
+
+  useEffect(() => {
+    setWatchlistActionState(null);
+    setWatchlistSubmitting(false);
+    setShowWatchlistModal(false);
+    setWatchlistTargetLow('');
+    setWatchlistTargetHigh('');
+    setWatchlistModalError('');
+  }, [selectedItem?.id]);
+
+  const handleWatchlistClick = async () => {
+    if (!selectedItem) return;
+
+    if (selectedWatchlistItem) {
+      navigateToPage('watchlist');
+      return;
+    }
+
+    if (!onQuickAddWatchlist) return;
+
+    const linkedAlert = priceAlerts[selectedItem.id];
+    const defaultLow = linkedAlert?.lowThreshold ?? (currentPrice?.low != null ? Math.max(1, Math.floor(currentPrice.low * 0.98)) : null);
+    const defaultHigh = linkedAlert?.highThreshold ?? (currentPrice?.high != null ? Math.max(1, Math.ceil(currentPrice.high * 1.02)) : null);
+    setWatchlistTargetLow(defaultLow ? String(defaultLow) : '');
+    setWatchlistTargetHigh(defaultHigh ? String(defaultHigh) : '');
+    setWatchlistModalError('');
+    setShowWatchlistModal(true);
+  };
+
+  const handleWatchlistModalConfirm = async () => {
+    if (!selectedItem || !onQuickAddWatchlist || watchlistSubmitting) return;
+
+    const parsedLow = watchlistTargetLow.trim() ? Number(watchlistTargetLow) : null;
+    const parsedHigh = watchlistTargetHigh.trim() ? Number(watchlistTargetHigh) : null;
+
+    if (!parsedLow && !parsedHigh) {
+      setWatchlistModalError('Set at least one target price.');
+      return;
+    }
+
+    if ((parsedLow != null && (!Number.isFinite(parsedLow) || parsedLow <= 0)) ||
+        (parsedHigh != null && (!Number.isFinite(parsedHigh) || parsedHigh <= 0))) {
+      setWatchlistModalError('Target prices must be positive numbers.');
+      return;
+    }
+
+    setWatchlistSubmitting(true);
+    const success = await onQuickAddWatchlist({
+      itemId: selectedItem.id,
+      itemName: selectedItem.name,
+      targetBuyPrice: parsedLow != null ? Math.floor(parsedLow) : null,
+      targetSellPrice: parsedHigh != null ? Math.floor(parsedHigh) : null,
+    });
+    setWatchlistSubmitting(false);
+
+    if (success) {
+      setShowWatchlistModal(false);
+      setWatchlistActionState({ tone: 'ok', text: `${selectedItem.name} added to watchlist.` });
+      return;
+    }
+
+    setWatchlistActionState({ tone: 'error', text: 'Could not add item to watchlist. Try again.' });
+  };
+
   const handleOpenNotes = (stock) => {
     setNotesStock(stock);
     setShowNotesModal(true);
@@ -405,10 +489,25 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
             {onPriceAlert && (
               <button
                 className={`graph-alert-btn ${priceAlerts[selectedItem.id]?.isActive ? 'graph-alert-btn-active' : ''}`}
-                onClick={() => onPriceAlert({ itemId: selectedItem.id, itemName: selectedItem.name })}
+                onClick={() => onPriceAlert({
+                  itemId: selectedItem.id,
+                  itemName: selectedItem.name,
+                  defaultHighThreshold: selectedWatchlistItem?.targetSellPrice ?? null,
+                  defaultLowThreshold: selectedWatchlistItem?.targetBuyPrice ?? null,
+                })}
               >
                 {priceAlerts[selectedItem.id]?.isActive ? <BellRing size={14} /> : <Bell size={14} />}
                 {priceAlerts[selectedItem.id]?.isActive ? 'Edit Alert' : 'Set Alert'}
+              </button>
+            )}
+            {onQuickAddWatchlist && (
+              <button
+                className={`graph-alert-btn graph-watchlist-btn ${selectedWatchlistItem ? 'graph-watchlist-btn-active' : ''}`}
+                onClick={handleWatchlistClick}
+                disabled={watchlistSubmitting}
+              >
+                {selectedWatchlistItem ? <Check size={14} /> : <Eye size={14} />}
+                {selectedWatchlistItem ? 'In Watchlist' : watchlistSubmitting ? 'Adding...' : 'Watchlist'}
               </button>
             )}
             {matchingStocks.length === 1 && (
@@ -432,6 +531,11 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
               </div>
             )}
           </div>
+          {watchlistActionState && (
+            <div className={`graphs-watchlist-feedback graphs-watchlist-feedback--${watchlistActionState.tone}`}>
+              {watchlistActionState.text}
+            </div>
+          )}
           <div className="graphs-info-stats">
             {currentPrice && (
               <>
@@ -646,6 +750,62 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
           >
             Cancel
           </button>
+        </div>
+      </ModalContainer>
+
+      <ModalContainer isOpen={showWatchlistModal}>
+        <div className="graph-watchlist-modal">
+          <h2 className="graph-watchlist-modal-title">Quick Add to Watchlist</h2>
+          <p className="graph-watchlist-modal-subtitle">{selectedItem?.name}</p>
+
+          <div className="graph-watchlist-modal-fields">
+            <label className="graph-watchlist-modal-label">Target Buy (Low)</label>
+            <input
+              type="number"
+              min="1"
+              className="graph-watchlist-modal-input"
+              value={watchlistTargetLow}
+              onChange={(event) => {
+                setWatchlistTargetLow(event.target.value);
+                setWatchlistModalError('');
+              }}
+              placeholder="e.g. 2500000"
+            />
+
+            <label className="graph-watchlist-modal-label">Target Sell (High)</label>
+            <input
+              type="number"
+              min="1"
+              className="graph-watchlist-modal-input"
+              value={watchlistTargetHigh}
+              onChange={(event) => {
+                setWatchlistTargetHigh(event.target.value);
+                setWatchlistModalError('');
+              }}
+              placeholder="e.g. 2700000"
+            />
+          </div>
+
+          {watchlistModalError && (
+            <div className="graph-watchlist-modal-error">{watchlistModalError}</div>
+          )}
+
+          <div className="graph-watchlist-modal-actions">
+            <button
+              className="btn-modal-cancel"
+              onClick={() => setShowWatchlistModal(false)}
+              disabled={watchlistSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn-modal-confirm"
+              onClick={handleWatchlistModalConfirm}
+              disabled={watchlistSubmitting}
+            >
+              {watchlistSubmitting ? 'Adding...' : 'Add to Watchlist'}
+            </button>
+          </div>
         </div>
       </ModalContainer>
     </div>

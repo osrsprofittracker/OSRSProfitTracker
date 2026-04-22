@@ -92,6 +92,7 @@ export default function ModalManager({
     selectedStock,
     selectedCategory,
     newStockCategory,
+    newStockPreset,
     selectedAlertItem,
     milestoneInitialView,
     openModal,
@@ -182,6 +183,7 @@ export default function ModalManager({
         <NewStockModal
           defaultCategory={newStockCategory}
           defaultIsInvestment={tradeMode === 'investment'}
+          defaultItem={newStockPreset}
           onConfirm={handleAddStock}
           archivedStocks={archivedStocks}
           onRestoreFromArchive={async (stock) => {
@@ -295,6 +297,8 @@ export default function ModalManager({
         <PriceAlertModal
           itemId={selectedAlertItem?.itemId}
           itemName={selectedAlertItem?.itemName}
+          defaultHighThreshold={selectedAlertItem?.defaultHighThreshold}
+          defaultLowThreshold={selectedAlertItem?.defaultLowThreshold}
           currentAlert={selectedAlertItem ? priceAlerts[selectedAlertItem.itemId] : null}
           gePrice={selectedAlertItem ? gePrices[selectedAlertItem.itemId] : null}
           onSave={handleSavePriceAlert}

@@ -34,6 +34,8 @@ export default function NotificationCenter({
     ? notifications
     : inboxFilter === 'priceAlert'
       ? notifications.filter(n => n.type === 'priceAlert' || n.type === 'priceAlertHigh' || n.type === 'priceAlertLow')
+      : inboxFilter === 'watchlistAlert'
+        ? notifications.filter(n => n.type === 'watchlistAlert' || n.type === 'watchlistAlertHigh' || n.type === 'watchlistAlertLow')
       : notifications.filter(n => n.type === inboxFilter);
 
   const alertsList = allPriceAlerts;
@@ -122,10 +124,13 @@ export default function NotificationCenter({
                     { key: 'osrsNews', label: 'News' },
                     { key: 'jmodReddit', label: 'Jmod' },
                     { key: 'priceAlert', label: 'Alerts' },
+                    { key: 'watchlistAlert', label: 'Watchlist' },
                   ].map(f => {
                     const count = f.count ?? (
                       f.key === 'priceAlert'
                         ? notifications.filter(n => n.type === 'priceAlert' || n.type === 'priceAlertHigh' || n.type === 'priceAlertLow').length
+                        : f.key === 'watchlistAlert'
+                          ? notifications.filter(n => n.type === 'watchlistAlert' || n.type === 'watchlistAlertHigh' || n.type === 'watchlistAlertLow').length
                         : notifications.filter(n => n.type === f.key).length
                     );
                     return (

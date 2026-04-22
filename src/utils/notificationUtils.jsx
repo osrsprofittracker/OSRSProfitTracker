@@ -17,6 +17,11 @@ export function getTypeIcon(type) {
       return <TrendingUp size={16} />;
     case 'priceAlertLow':
       return <TrendingDown size={16} />;
+    case 'watchlistAlert':
+    case 'watchlistAlertHigh':
+      return <TrendingUp size={16} />;
+    case 'watchlistAlertLow':
+      return <TrendingDown size={16} />;
     default:
       return <Bell size={16} />;
   }
@@ -39,6 +44,11 @@ export function getTypeColor(type) {
       return 'rgb(239, 68, 68)';
     case 'priceAlertHigh':
       return 'rgb(74, 222, 128)';
+    case 'watchlistAlert':
+    case 'watchlistAlertLow':
+      return 'rgb(217, 119, 6)';
+    case 'watchlistAlertHigh':
+      return 'rgb(251, 191, 36)';
     default:
       return 'rgb(148, 163, 184)';
   }

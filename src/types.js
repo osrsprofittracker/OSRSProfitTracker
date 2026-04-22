@@ -210,6 +210,18 @@
  * @property {number|null} triggeredPrice - Price that triggered the alert
  */
 
+/**
+ * @typedef {Object} WatchlistItem
+ * @property {number} id
+ * @property {number} itemId - GE item ID
+ * @property {string} itemName
+ * @property {number|null} targetBuyPrice - Alert when live low <= this
+ * @property {number|null} targetSellPrice - Alert when live high >= this
+ * @property {string} notes
+ * @property {string|null} createdAt - ISO timestamp
+ * @property {string|null} updatedAt - ISO timestamp
+ */
+
 // ──────────────────────────────────────────────
 // Notification (useNotifications)
 // ──────────────────────────────────────────────
@@ -217,7 +229,7 @@
 /**
  * @typedef {Object} Notification
  * @property {number} id
- * @property {string} type - e.g. 'limitTimer', 'altAccountTimer', 'milestone', 'osrsNews', 'jmodReddit', 'priceAlertHigh', 'priceAlertLow'
+ * @property {string} type - e.g. 'limitTimer', 'altAccountTimer', 'milestone', 'osrsNews', 'jmodReddit', 'priceAlertHigh', 'priceAlertLow', 'watchlistAlertHigh', 'watchlistAlertLow'
  * @property {string} message
  * @property {number} timestamp - Date.now() value
  * @property {boolean} read
@@ -245,6 +257,7 @@
  * @property {NotificationTypePreference} osrsNews
  * @property {NotificationTypePreference} jmodReddit
  * @property {NotificationTypePreference} priceAlert
+ * @property {NotificationTypePreference} watchlistAlert
  */
 
 // ──────────────────────────────────────────────

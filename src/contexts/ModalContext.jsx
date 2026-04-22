@@ -36,6 +36,7 @@ export function ModalProvider({ children }) {
   const [selectedStock, setSelectedStock] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [newStockCategory, setNewStockCategory] = useState('');
+  const [newStockPreset, setNewStockPreset] = useState(null);
   const [selectedAlertItem, setSelectedAlertItem] = useState(null);
   const [milestoneInitialView, setMilestoneInitialView] = useState('main');
 
@@ -43,6 +44,7 @@ export function ModalProvider({ children }) {
     if (payload?.stock) setSelectedStock(payload.stock);
     if (payload?.category) setSelectedCategory(payload.category);
     if (payload?.newStockCategory !== undefined) setNewStockCategory(payload.newStockCategory);
+    if (payload?.newStockPreset !== undefined) setNewStockPreset(payload.newStockPreset);
     if (payload?.alertItem) setSelectedAlertItem(payload.alertItem);
     if (payload?.milestoneView) setMilestoneInitialView(payload.milestoneView);
 
@@ -53,6 +55,7 @@ export function ModalProvider({ children }) {
     setModals(prev => ({ ...prev, [type]: false }));
 
     if (type === 'priceAlert') setSelectedAlertItem(null);
+    if (type === 'newStock') setNewStockPreset(null);
   }, []);
 
   const value = useMemo(() => ({
@@ -65,11 +68,13 @@ export function ModalProvider({ children }) {
     setSelectedCategory,
     newStockCategory,
     setNewStockCategory,
+    newStockPreset,
+    setNewStockPreset,
     selectedAlertItem,
     setSelectedAlertItem,
     milestoneInitialView,
     setMilestoneInitialView,
-  }), [modals, openModal, closeModal, selectedStock, selectedCategory, newStockCategory, selectedAlertItem, milestoneInitialView]);
+  }), [modals, openModal, closeModal, selectedStock, selectedCategory, newStockCategory, newStockPreset, selectedAlertItem, milestoneInitialView]);
 
   return (
     <ModalContext.Provider value={value}>
