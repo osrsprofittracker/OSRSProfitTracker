@@ -5,10 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "test:smoke": "vitest run --passWithNoTests",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@netlify/blobs": "^10.7.4",
@@ -20,12 +17,7 @@
     "recharts": "^3.8.1"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^4.0.0",
-    "@vitest/ui": "^4.1.5",
-    "jsdom": "^29.1.1",
-    "vite": "^7.3.1",
-    "vitest": "^4.1.5"
+    "vite": "^7.3.1"
   }
 }
