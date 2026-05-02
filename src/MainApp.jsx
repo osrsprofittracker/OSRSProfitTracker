@@ -29,7 +29,7 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import NotificationCenter from './components/NotificationCenter';
 import PortfolioSummary from './components/PortfolioSummary';
-import ChartButtons from './components/ChartButtons';
+import AltAccountTimer from './components/AltAccountTimer';
 import CategorySection from './components/CategorySection';
 import ModalManager from './components/ModalManager';
 import { CURRENT_VERSION } from './data/changelog';
@@ -1217,7 +1217,7 @@ function MainAppInner({ session, onLogout }) {
               showUnrealisedProfitStats={showUnrealisedProfitStats}
             />
 
-            {/* Milestone Progress Bar and Chart Buttons Row */}
+            {/* Milestone Progress Bar and Alt Account Timer Row */}
             <div style={{
               display: 'flex',
               gap: '1rem',
@@ -1235,9 +1235,7 @@ function MainAppInner({ session, onLogout }) {
                 numberFormat={numberFormat}
               />
 
-              <ChartButtons
-                onShowProfitChart={() => openModal('profitChart')}
-                onShowCategoryChart={() => openModal('categoryChart')}
+              <AltAccountTimer
                 altAccountTimer={altAccountTimer}
                 onSetAltTimer={() => openModal('altTimer')}
                 onResetAltTimer={handleResetAltTimer}
