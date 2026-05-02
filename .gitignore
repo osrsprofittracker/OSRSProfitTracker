@@ -13,5 +13,6 @@ dist/
 
 # Claude Code
 .claude/settings.local.json
+.superpowers/
 # Local Netlify folder
 .netlify
