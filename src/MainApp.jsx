@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Eye, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { BarChart3, Eye, LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import WatchlistPage from './pages/WatchlistPage';
 import { supabase } from './lib/supabase';
 import { useGPTradedStats } from './hooks/useGPTradedStats';
@@ -135,6 +136,10 @@ function MainAppInner({ session, onLogout }) {
     handleQuickNavNavigate,
     handleNotificationNavigate,
   } = useNavigation({ refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters, stocks, categories });
+  const initialTabParam = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab');
+  }, [currentPage]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentTime, setCurrentTime] = useState(Date.now());
   const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading && !milestonesLoading && !profitHistoryLoading && !gpStatsLoading;
@@ -986,6 +991,13 @@ function MainAppInner({ session, onLogout }) {
               📊 Graphs
             </button>
             <button
+              onClick={() => navigateToPage('analytics')}
+              className={`topbar-nav-btn${currentPage === 'analytics' ? ' is-active' : ''}`}
+            >
+              <BarChart3 size={14} />
+              Analytics
+            </button>
+            <button
               onClick={() => navigateToPage('watchlist')}
               style={{
                 padding: '0.75rem 1.5rem',
@@ -1164,6 +1176,15 @@ function MainAppInner({ session, onLogout }) {
             onPriceAlert={handleOpenPriceAlert}
             stockNotes={stockNotes}
             onSaveNote={saveNote}
+          />
+        ) : currentPage === 'analytics' ? (
+          <AnalyticsPage
+            userId={userId}
+            transactions={transactions}
+            profitHistory={profitHistory}
+            profits={profits}
+            numberFormat={numberFormat}
+            initialTab={initialTabParam}
           />
         ) : currentPage === 'watchlist' ? (
           <WatchlistPage
