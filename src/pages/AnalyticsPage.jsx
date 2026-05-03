@@ -33,7 +33,6 @@ export default function AnalyticsPage({
   const [activeTab, setActiveTab] = useState(() => (
     ANALYTICS_TABS.includes(initialTab) ? initialTab : 'profit'
   ));
-  const [mountedTabs, setMountedTabs] = useState(() => new Set([activeTab]));
 
   const allTimeStart = useMemo(() => {
     const dates = [
@@ -102,7 +101,6 @@ export default function AnalyticsPage({
 
   const handleTabChange = (next) => {
     setActiveTab(next);
-    setMountedTabs((previous) => new Set(previous).add(next));
 
     const url = new URL(window.location.href);
     url.searchParams.set('tab', next);
@@ -145,46 +143,38 @@ export default function AnalyticsPage({
       <TabNav activeTab={activeTab} onChange={handleTabChange} />
 
       <div className="analytics-tab-content">
-        {mountedTabs.has('profit') && (
-          <div hidden={activeTab !== 'profit'}>
-            <ProfitTab
-              userId={userId}
-              buckets={current.buckets}
-              priorBuckets={prior.buckets}
-              timeframe={timeframe}
-              transactions={safeTransactions}
-              stocks={safeStocksForStats}
-              profitHistory={safeProfitHistory}
-              numberFormat={numberFormat}
-              onNavigateToHistory={(dateFrom, dateTo = dateFrom) => navigateToPage?.('history', {
-                query: { dateFrom, dateTo },
-              })}
-              allTimeBuckets={allTime.buckets}
-              totalProfitValue={derivedTotalProfit}
-              fallbackData={fallbackData}
-            />
-          </div>
+        {activeTab === 'profit' && (
+          <ProfitTab
+            userId={userId}
+            buckets={current.buckets}
+            priorBuckets={prior.buckets}
+            timeframe={timeframe}
+            transactions={safeTransactions}
+            stocks={safeStocksForStats}
+            profitHistory={safeProfitHistory}
+            numberFormat={numberFormat}
+            onNavigateToHistory={(dateFrom, dateTo = dateFrom) => navigateToPage?.('history', {
+              query: { dateFrom, dateTo },
+            })}
+            allTimeBuckets={allTime.buckets}
+            totalProfitValue={derivedTotalProfit}
+            fallbackData={fallbackData}
+          />
         )}
-        {mountedTabs.has('items') && (
-          <div hidden={activeTab !== 'items'}>
-            <ItemsTab
-              stocks={safeStocksForStats}
-              transactions={safeTransactions}
-              profitHistory={safeProfitHistory}
-              timeframe={timeframe}
-              numberFormat={numberFormat}
-            />
-          </div>
+        {activeTab === 'items' && (
+          <ItemsTab
+            stocks={safeStocksForStats}
+            transactions={safeTransactions}
+            profitHistory={safeProfitHistory}
+            timeframe={timeframe}
+            numberFormat={numberFormat}
+          />
         )}
-        {mountedTabs.has('categories') && (
-          <div hidden={activeTab !== 'categories'}>
-            <CategoriesTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
-          </div>
+        {activeTab === 'categories' && (
+          <CategoriesTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
         )}
-        {mountedTabs.has('goals') && (
-          <div hidden={activeTab !== 'goals'}>
-            <GoalsTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
-          </div>
+        {activeTab === 'goals' && (
+          <GoalsTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
         )}
       </div>
     </div>
