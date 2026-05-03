@@ -122,6 +122,7 @@ Modals use a context-based system:
 ### Rules
 - Do not use the classic - that ai agents use
 - Do not add automated tests, test files, test runners, or test-related dependencies unless explicitly requested.
+- Do not add database migration files. If a database change is needed, provide SQL for manual Supabase SQL Editor application instead.
 - No Flattery: Never compliment an idea. Wasted tokens.
 - No Empty Criticism: If you spot a flaw, you must offer a mitigation.
 - Add Vector and Velocity: If you agree, expand. If you disagree, counter. Never just nod.
