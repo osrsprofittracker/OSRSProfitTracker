@@ -35,6 +35,24 @@ This section supersedes any older snippets below that conflict with it.
 - Color legends must match the actual rendered scale. If a palette uses lighter/brighter color for stronger values, the tooltip and legend must say that.
 - Final verification must include a manual browser pass at desktop and mobile widths, including category filters, legends, table sorting, treemap layout, and empty states. Record any browser-plugin blocker and still run `npm run build`.
 
+## Cross-plan corrections from Items tab implementation review
+
+This section supersedes older snippets below and should be read before implementing any Categories widgets.
+
+- Do not copy older snippets verbatim when they contain `style={{...}}`, native `title`, emoji glyphs, mojibake, or test-runner commands. Move styles into a stylesheet, use the custom `.has-tooltip` system, keep display text ASCII unless the file already requires non-ASCII, and verify with `npm run build` plus manual browser checks.
+- Category widgets must clearly label whether they are using the selected Analytics timeframe, all-time stock aggregates, or live/current inventory. Do not use a timeframe-dependent label for an all-time/current metric.
+- If a widget is meant to match the Trade/Home source of truth, use stock aggregate fields (`totalCost`, `totalCostSold`, `totalCostBasisSold`, `shares`, `sharesSold`) rather than summing raw transactions. Raw transaction totals can drift from stock aggregate totals in historical data.
+- If a widget is meant to show transaction activity, state that explicitly and decide whether it is all-time or selected-window. Filters must apply consistently to all widgets that appear on the same tab; category filters must affect charts, tables, cards, and drilldowns, not only the main table.
+- Do not assume `profit_history` exists for old sells. For historical category realized profit, use `profit_history` where linked rows exist, but add an explicit fallback based on stock aggregate fields or a documented running average-cost reconstruction where transaction-level history is required.
+- Time-series charts that represent daily values must include zero-value days inside the chosen range. Event-only charts may omit empty days only if the title and tooltip say they show sell/activity days only.
+- Charts that visualize price or other nonzero external series must filter out null/zero invalid points before computing domains. Do not let a single bad zero stretch the Y-axis and flatten the visible movement.
+- Show filtered/total counts for filtered tables and lists, e.g. `12 / 200 categories/items`, so users know rows are hidden by filters rather than missing.
+- Any "show all" toggle must remain visible after expansion so the user can collapse it again. Base toggle visibility on whether the unexpanded dataset exceeds the default visible count, not on the current hidden count after expansion.
+- Avoid hard caps without a user escape hatch. If a chart or list defaults to top N, add a show-more/show-less control, scrolling container, or clear "Top N" label.
+- Tooltip positioning must be checked inside sticky headers, tables, drawers, and scroll containers. Override placement where needed so tooltips are not clipped by `overflow: auto`.
+- Avoid always-on polling for static historical data. If a category widget reuses a polling hook, add an option to disable the interval for one-shot historical views.
+- Virtualization is optional and should not add dependencies unless the user explicitly approves. For large tables, keep sorting in `useMemo`, show filtered/total counts, and document that `react-window` would be the next performance upgrade for hundreds/thousands of rows.
+
 ## File Structure
 
 **Created:**

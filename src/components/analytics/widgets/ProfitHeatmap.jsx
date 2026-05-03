@@ -8,6 +8,12 @@ const ROWS = 7;
 const SVG_WIDTH = COLS * (CELL + GAP) - GAP;
 const SVG_HEIGHT = ROWS * (CELL + GAP) - GAP;
 
+function parseIsoDateUtc(iso) {
+  if (!iso) return new Date();
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
 const totalProfit = (bucket) => (
   Number(bucket.profit_items || 0)
   + Number(bucket.profit_dump || 0)
@@ -17,15 +23,19 @@ const totalProfit = (bucket) => (
 
 function buildLast365Days(endIso) {
   const days = [];
-  const end = endIso ? new Date(`${endIso}T00:00:00`) : new Date();
+  const end = endIso ? parseIsoDateUtc(endIso) : new Date();
 
   for (let index = 364; index >= 0; index -= 1) {
     const date = new Date(end);
-    date.setDate(date.getDate() - index);
+    date.setUTCDate(date.getUTCDate() - index);
     days.push(date.toISOString().slice(0, 10));
   }
 
   return days;
+}
+
+function dayOfWeekOffset(iso) {
+  return parseIsoDateUtc(iso).getUTCDay();
 }
 
 function quantiles(values, count) {
@@ -34,7 +44,9 @@ function quantiles(values, count) {
 
   const out = [];
   for (let index = 1; index <= count; index += 1) {
-    out.push(sorted[Math.min(sorted.length - 1, Math.floor((sorted.length * index) / count) - 1)]);
+    const quantileIndex = Math.floor((sorted.length * index) / count) - 1;
+    const clampedIndex = Math.max(0, Math.min(sorted.length - 1, quantileIndex));
+    out.push(sorted[clampedIndex]);
   }
   return out;
 }
@@ -63,6 +75,7 @@ export default function ProfitHeatmap({
 }) {
   const [hovered, setHovered] = useState(null);
   const days = useMemo(() => buildLast365Days(endDate), [endDate]);
+  const startOffset = useMemo(() => (days.length ? dayOfWeekOffset(days[0]) : 0), [days]);
   const profitByDate = useMemo(() => {
     const map = new Map();
     for (const bucket of allBuckets) {
@@ -104,8 +117,9 @@ export default function ProfitHeatmap({
         >
           {days.map((date, index) => {
             const profit = profitByDate.get(date) || 0;
-            const x = Math.floor(index / ROWS) * (CELL + GAP);
-            const y = (index % ROWS) * (CELL + GAP);
+            const gridIndex = index + startOffset;
+            const x = Math.floor(gridIndex / ROWS) * (CELL + GAP);
+            const y = (gridIndex % ROWS) * (CELL + GAP);
 
             return (
               <rect

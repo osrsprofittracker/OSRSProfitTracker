@@ -113,6 +113,7 @@ export default function AnalyticsPage({
   const periodProfit = useMemo(() => (
     timeframe.window === 'All' ? derivedTotalProfit : sumProfit(current.buckets)
   ), [timeframe.window, derivedTotalProfit, current.buckets]);
+  const hasPriorPeriod = timeframe.window !== 'All';
 
   const inventoryValue = useMemo(
     () => safeStocksForStats.reduce((sum, stock) => sum + (stock.totalCost || 0), 0),
@@ -154,9 +155,9 @@ export default function AnalyticsPage({
         loading={current.loading || allTime.loading}
         totalProfit={derivedTotalProfit}
         periodProfit={periodProfit}
-        priorPeriodProfit={sumProfit(prior.buckets)}
+        priorPeriodProfit={hasPriorPeriod ? sumProfit(prior.buckets) : null}
         gpTraded={sumGpTraded(current.buckets)}
-        priorGpTraded={sumGpTraded(prior.buckets)}
+        priorGpTraded={hasPriorPeriod ? sumGpTraded(prior.buckets) : null}
         inventoryValue={inventoryValue}
         numberFormat={numberFormat}
       />
@@ -185,7 +186,13 @@ export default function AnalyticsPage({
         )}
         {mountedTabs.has('items') && (
           <div hidden={activeTab !== 'items'}>
-            <ItemsTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
+            <ItemsTab
+              stocks={safeStocksForStats}
+              transactions={safeTransactions}
+              profitHistory={safeProfitHistory}
+              timeframe={timeframe}
+              numberFormat={numberFormat}
+            />
           </div>
         )}
         {mountedTabs.has('categories') && (

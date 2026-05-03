@@ -34,6 +34,25 @@ This section supersedes any older snippets below that conflict with it.
 - Avoid raw "bucket" wording in user-facing copy unless the tooltip explains it as a grouping interval such as day, week, or month.
 - Final verification must include a manual browser pass at desktop and mobile widths, including active goals, missing goals, sparse milestone history, estimator empty states, and hover tooltips. Record any browser-plugin blocker and still run `npm run build`.
 
+## Cross-plan corrections from Items tab implementation review
+
+This section supersedes older snippets below and should be read before implementing any Goals widgets.
+
+- Do not copy older snippets verbatim when they contain `style={{...}}`, native `title`, emoji glyphs, mojibake, or test-runner commands. Move styles into a stylesheet, use the custom `.has-tooltip` system, keep display text ASCII unless the file already requires non-ASCII, and verify with `npm run build` plus manual browser checks.
+- Every Goals widget must state its data source and timeframe in the label or tooltip: selected Analytics timeframe, all-time milestone history, current in-progress milestone period, or completed historical periods. Do not use a timeframe-dependent label for an all-time/current metric.
+- If a goal widget compares against Trade/Home totals, use the same stock aggregate plus extra-profit source as the app total. Do not derive matching totals by summing raw transactions unless the widget is explicitly transaction-activity based.
+- Do not assume `profit_history` exists for all historical sells. If a goal widget needs realized profit before linked `profit_history` was introduced, prefer milestone history when available; otherwise use an explicitly documented fallback from stock aggregates or running average-cost reconstruction.
+- Time-series goal charts must include zero-value days/periods inside the chosen range where the chart implies continuous progress. Event-only history tables may omit empty periods only if the heading and tooltip say they show recorded milestone events only.
+- Cumulative and pace charts must not change the value for the same calendar date just because the global timeframe changed. If a local baseline reset is offered, label it clearly.
+- Any chart that can flatten because of invalid zero/null data must filter invalid points before computing domains. Charts that can cross zero must keep a visible zero reference line.
+- Filters and period controls must apply consistently to all dependent widgets in the Goals tab. If a chart uses all-time milestone history while another uses selected-window progress, the difference must be visible in tooltips.
+- Show filtered/total counts for filtered history tables or lists, e.g. `12 / 200 periods`, so users know rows are hidden by filters rather than missing.
+- Any "show all" toggle must remain visible after expansion so the user can collapse it again. Base toggle visibility on whether the unexpanded dataset exceeds the default visible count, not on the current hidden count after expansion.
+- Avoid hard caps without a user escape hatch. If a chart or list defaults to top N, add show-more/show-less, scrolling, or an explicit "Top N" label.
+- Tooltip positioning must be checked inside sticky headers, tables, cards, and scroll containers. Override placement where needed so tooltips are not clipped by `overflow: auto`.
+- Avoid always-on polling for static historical data. Goal widgets should not start recurring fetch intervals unless they are showing live/in-progress values and the refresh behavior is documented.
+- Virtualization is optional and should not add dependencies unless the user explicitly approves. For large milestone-history tables, keep sorting/filtering in `useMemo`, show filtered/total counts, and document that `react-window` would be the next performance upgrade for hundreds/thousands of rows.
+
 ## File Structure
 
 **Created:**

@@ -4,7 +4,7 @@
 
 **Goal:** Stand up the `/analytics` route with a working KPI band, tab nav, global timeframe selector, and the Supabase data layer. After this plan, `/analytics` is reachable from the top nav, the four tabs render empty placeholders, the four KPI cards show live numbers, and the legacy pie-chart modals are gone.
 
-**Architecture:** New Postgres RPC `get_analytics_buckets` aggregates profit and GP traded into daily/weekly/monthly buckets. A `useAnalytics` hook wraps the RPC with a client-side fallback aggregator. A `useAnalyticsTimeframe` hook owns the global window/bucket state. `AnalyticsPage` composes a KPI band + tab nav + active tab content. `recharts` is added as a dep for later tab work; `vitest` is added so we can test the data layer. Existing `ChartButtons`, `ProfitChartModal`, and `CategoryChartModal` are deleted, and the Alt Account Timer is relocated to the trade page.
+**Architecture:** New Postgres RPC `get_analytics_buckets` aggregates realized profit from `profit_history` and GP traded from `transactions` into daily/weekly/monthly buckets. A `useAnalytics` hook wraps the RPC with a client-side fallback aggregator that produces the same shape from existing app state. A `useAnalyticsTimeframe` hook owns the global window/bucket state. `AnalyticsPage` composes a KPI band + tab nav + active tab content. `recharts` is added as a dep for later tab work; `vitest` is added so we can test the data layer. Existing `ChartButtons`, `ProfitChartModal`, and `CategoryChartModal` are deleted, and the Alt Account Timer is relocated to the trade page.
 
 **Tech Stack:** React 18, Vite 7, Supabase JS 2, recharts (new), vitest (new), lucide-react (existing).
 
@@ -15,6 +15,7 @@
 ## File Structure
 
 **Created:**
+> Note: create `supabase/migrations` during Task A2 because this repo does not currently contain a Supabase migration folder.
 - `supabase/migrations/2026_05_02_analytics_buckets.sql` — RPC migration
 - `src/hooks/useAnalyticsTimeframe.js` — window/bucket state
 - `src/hooks/useAnalyticsTimeframe.test.js`
@@ -34,6 +35,7 @@
 - `src/test-setup.js` — vitest jsdom setup
 
 **Modified:**
+- `src/hooks/useNavigation.js` â€” add `/analytics` to page routing and back/forward handling
 - `package.json` — add `recharts`, `vitest`, `@vitest/ui`, `jsdom`, `@testing-library/react`
 - `src/MainApp.jsx` — add analytics route + nav button, remove ChartButtons usage, render AltAccountTimer in trade page header
 - `src/hooks/useModalHandlers.js` — remove profit/category chart modal handlers
@@ -72,6 +74,7 @@ In `package.json`, change the `"scripts"` block to:
   "dev": "vite",
   "build": "vite build",
   "preview": "vite preview",
+  "test:smoke": "vitest run --passWithNoTests",
   "test": "vitest run",
   "test:watch": "vitest"
 }
@@ -80,17 +83,17 @@ In `package.json`, change the `"scripts"` block to:
 - [ ] **Step 3: Create `vitest.config.js`**
 
 ```js
+import { mergeConfig } from 'vite';
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
+import viteConfig from './vite.config';
 
-export default defineConfig({
-  plugins: [react()],
+export default mergeConfig(viteConfig, defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.js'],
     globals: true,
   },
-});
+}));
 ```
 
 - [ ] **Step 4: Create `src/test-setup.js`**
@@ -101,7 +104,7 @@ import '@testing-library/jest-dom/vitest';
 
 - [ ] **Step 5: Smoke-test the runner**
 
-Run: `npm test`
+Run: `npm run test:smoke`
 Expected: "No test files found" (exit 0). The runner is wired up.
 
 - [ ] **Step 6: Commit**
@@ -119,6 +122,12 @@ git commit -m "chore: add recharts and vitest"
 - Create: `supabase/migrations/2026_05_02_analytics_buckets.sql`
 
 - [ ] **Step 1: Create the migration file**
+
+Create the folder first if needed:
+
+```bash
+mkdir -p supabase/migrations
+```
 
 ```sql
 -- supabase/migrations/2026_05_02_analytics_buckets.sql
@@ -155,18 +164,19 @@ begin
   return query
   with sells as (
     select
-      date_trunc(p_bucket, t.date)::date as bucket_date,
+      date_trunc(p_bucket, coalesce(t.date, ph.created_at))::date as bucket_date,
       coalesce(s.category, 'Uncategorized') as category,
-      (t.total - coalesce(t.cost_basis, 0)) as profit,
-      t.total as turnover,
+      ph.amount as profit,
+      coalesce(t.total, 0) as turnover,
       1 as sells_count,
-      case when (t.total - coalesce(t.cost_basis, 0)) > 0 then 1 else 0 end as is_win
-    from transactions t
-    left join stocks s on s.id = t.stock_id
-    where t.user_id = p_user_id
-      and t.type = 'sell'
-      and t.date >= p_start
-      and t.date <  p_end + interval '1 day'
+      case when ph.amount > 0 then 1 else 0 end as is_win
+    from profit_history ph
+    left join transactions t on t.id = ph.transaction_id and t.user_id = ph.user_id
+    left join stocks s on s.id = coalesce(ph.stock_id, t.stock_id) and s.user_id = ph.user_id
+    where ph.user_id = p_user_id
+      and ph.profit_type = 'stock'
+      and coalesce(t.date, ph.created_at) >= p_start
+      and coalesce(t.date, ph.created_at) <  p_end + interval '1 day'
   ),
   buys as (
     select
@@ -246,9 +256,9 @@ $$;
 grant execute on function public.get_analytics_buckets(uuid, date, date, text) to authenticated;
 ```
 
-> **NOTE:** The migration assumes `transactions` has a `cost_basis` column populated for sells. If it doesn't, see the integration test in Task B2 — the fallback aggregator computes basis from the matching stock and the migration may need a follow-up to add the column. Check the actual schema before running.
+> **NOTE:** The current app does not write `transactions.cost_basis`; the SQL above intentionally uses `profit_history` for realized item profit.
 
-- [ ] **Step 2: Verify the schema assumption**
+- [ ] **Step 2: Verify the schema assumptions**
 
 Run a Supabase REST query to inspect the `transactions` table columns. From `.env`, take `SUPABASE_SERVICE_ROLE_KEY` and `VITE_SUPABASE_URL`:
 
@@ -258,7 +268,7 @@ curl "$VITE_SUPABASE_URL/rest/v1/transactions?select=*&limit=1" \
   -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
 ```
 
-Confirm whether `cost_basis` exists. If not, the migration must compute basis differently (e.g., look up `stocks.total_cost_basis_sold` proportionally). **Stop and ask before running the migration if the column is missing.**
+Confirm `profit_history` has `profit_type`, `amount`, `stock_id`, `transaction_id`, and `created_at`, and `transactions` has `stock_id`, `type`, `total`, and `date`. If `profit_history.transaction_id` is missing in production, stop and update the migration to bucket stock profit by `profit_history.created_at` only and use `profit_history.stock_id` for category.
 
 - [ ] **Step 3: Apply the migration**
 
@@ -443,10 +453,9 @@ import { aggregateBucketsLocally } from './useAnalytics';
 const t = (overrides) => ({
   id: 1,
   user_id: 'u1',
-  stock_id: 1,
+  stockId: 1,
   type: 'sell',
   total: 0,
-  cost_basis: 0,
   date: '2026-04-15',
   ...overrides,
 });
@@ -455,11 +464,14 @@ describe('aggregateBucketsLocally', () => {
   it('buckets sells into days, computes profit_items and gp_traded', () => {
     const transactions = [
       t({ id: 1, type: 'buy',  total: 100, date: '2026-04-15' }),
-      t({ id: 2, type: 'sell', total: 200, cost_basis: 120, date: '2026-04-15', stock_id: 1 }),
-      t({ id: 3, type: 'sell', total: 150, cost_basis: 100, date: '2026-04-16', stock_id: 1 }),
+      t({ id: 2, type: 'sell', total: 200, date: '2026-04-15', stockId: 1 }),
+      t({ id: 3, type: 'sell', total: 150, date: '2026-04-16', stockId: 1 }),
     ];
     const stocks = [{ id: 1, category: 'Runes' }];
-    const profitHistory = [];
+    const profitHistory = [
+      { id: 10, profit_type: 'stock', amount: 80, stock_id: 1, transaction_id: 2, created_at: '2026-04-15T10:00:00Z' },
+      { id: 11, profit_type: 'stock', amount: 50, stock_id: 1, transaction_id: 3, created_at: '2026-04-16T10:00:00Z' },
+    ];
     const result = aggregateBucketsLocally({
       transactions, stocks, profitHistory,
       start: '2026-04-15', end: '2026-04-16', bucket: 'day',
@@ -504,11 +516,14 @@ describe('aggregateBucketsLocally', () => {
   it('counts losing sells in sells_count but not wins_count', () => {
     const result = aggregateBucketsLocally({
       transactions: [
-        t({ id: 1, type: 'sell', total: 50,  cost_basis: 100, date: '2026-04-15' }),
-        t({ id: 2, type: 'sell', total: 200, cost_basis: 120, date: '2026-04-15' }),
+        t({ id: 1, type: 'sell', total: 50,  date: '2026-04-15' }),
+        t({ id: 2, type: 'sell', total: 200, date: '2026-04-15' }),
       ],
       stocks: [{ id: 1, category: 'Runes' }],
-      profitHistory: [],
+      profitHistory: [
+        { profit_type: 'stock', amount: -50, stock_id: 1, transaction_id: 1, created_at: '2026-04-15T10:00:00Z' },
+        { profit_type: 'stock', amount: 80, stock_id: 1, transaction_id: 2, created_at: '2026-04-15T11:00:00Z' },
+      ],
       start: '2026-04-15', end: '2026-04-15', bucket: 'day',
     });
     expect(result[0]).toMatchObject({ sells_count: 2, wins_count: 1 });
@@ -517,12 +532,16 @@ describe('aggregateBucketsLocally', () => {
   it('buckets weekly when bucket=week', () => {
     const result = aggregateBucketsLocally({
       transactions: [
-        t({ id: 1, type: 'sell', total: 100, cost_basis: 50, date: '2026-04-13' }), // Mon
-        t({ id: 2, type: 'sell', total: 100, cost_basis: 50, date: '2026-04-19' }), // Sun, same ISO week
-        t({ id: 3, type: 'sell', total: 100, cost_basis: 50, date: '2026-04-20' }), // Mon, next week
+        t({ id: 1, type: 'sell', total: 100, date: '2026-04-13' }), // Mon
+        t({ id: 2, type: 'sell', total: 100, date: '2026-04-19' }), // Sun, same ISO week
+        t({ id: 3, type: 'sell', total: 100, date: '2026-04-20' }), // Mon, next week
       ],
       stocks: [{ id: 1, category: 'Runes' }],
-      profitHistory: [],
+      profitHistory: [
+        { profit_type: 'stock', amount: 50, stock_id: 1, transaction_id: 1, created_at: '2026-04-13T10:00:00Z' },
+        { profit_type: 'stock', amount: 50, stock_id: 1, transaction_id: 2, created_at: '2026-04-19T10:00:00Z' },
+        { profit_type: 'stock', amount: 50, stock_id: 1, transaction_id: 3, created_at: '2026-04-20T10:00:00Z' },
+      ],
       start: '2026-04-13', end: '2026-04-20', bucket: 'week',
     });
     expect(result).toHaveLength(2);
@@ -564,6 +583,7 @@ const truncBucket = (dateStr, bucket) => {
 
 export function aggregateBucketsLocally({ transactions, stocks, profitHistory, start, end, bucket }) {
   const stockMap = new Map(stocks.map(s => [s.id, s]));
+  const txMap = new Map(transactions.map(tx => [tx.id, tx]));
   const inWindow = (iso) => iso >= start && iso <= end;
   const buckets = new Map();
 
@@ -590,21 +610,25 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
     const key = truncBucket(iso, bucket);
     const b = ensureBucket(key);
     b.gp_traded += Number(tx.total) || 0;
-    if (tx.type === 'sell') {
-      const profit = (Number(tx.total) || 0) - (Number(tx.cost_basis) || 0);
-      b.profit_items += profit;
-      b.sells_count += 1;
-      if (profit > 0) b.wins_count += 1;
-      const cat = stockMap.get(tx.stock_id)?.category || 'Uncategorized';
-      b.by_category[cat] = (b.by_category[cat] || 0) + profit;
-    }
   }
 
   for (const ph of profitHistory) {
-    const iso = String(ph.created_at).slice(0, 10);
+    const tx = txMap.get(ph.transaction_id);
+    const isoSource = ph.profit_type === 'stock' && tx?.date ? tx.date : ph.created_at;
+    const iso = String(isoSource).slice(0, 10);
     if (!inWindow(iso)) continue;
     const key = truncBucket(iso, bucket);
     const b = ensureBucket(key);
+    if (ph.profit_type === 'stock') {
+      const stockId = ph.stock_id ?? tx?.stock_id ?? tx?.stockId;
+      const profit = Number(ph.amount) || 0;
+      b.profit_items += profit;
+      b.sells_count += 1;
+      if (profit > 0) b.wins_count += 1;
+      const cat = stockMap.get(stockId)?.category || 'Uncategorized';
+      b.by_category[cat] = (b.by_category[cat] || 0) + profit;
+      continue;
+    }
     if (ph.profit_type === 'dump')     b.profit_dump     += Number(ph.amount) || 0;
     if (ph.profit_type === 'referral') b.profit_referral += Number(ph.amount) || 0;
     if (ph.profit_type === 'bonds')    b.profit_bonds    += Number(ph.amount) || 0;
@@ -787,6 +811,20 @@ git commit -m "feat(analytics): add useAnalytics hook with RPC and local fallbac
   margin-bottom: 1rem;
 }
 
+.analytics-kpi-delta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.analytics-kpi-delta.is-positive { color: rgb(34, 197, 94); }
+.analytics-kpi-delta.is-negative { color: rgb(239, 68, 68); }
+.analytics-kpi-delta.is-neutral { color: rgb(148, 163, 184); }
+
+.analytics-kpi-skeleton {
+  min-height: 7rem;
+  opacity: 0.5;
+}
+
 @media (max-width: 640px) {
   .analytics-page { padding: 0.75rem; }
   .analytics-kpi-band { grid-template-columns: repeat(2, 1fr); }
@@ -850,9 +888,9 @@ const formatDelta = (current, prior, numberFormat) => {
 };
 
 function KpiCard({ label, icon, value, deltaPct, numberFormat, valueClass = '' }) {
-  const deltaColor = deltaPct == null
-    ? 'rgb(148, 163, 184)'
-    : deltaPct >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)';
+  const deltaClass = deltaPct == null
+    ? 'is-neutral'
+    : deltaPct >= 0 ? 'is-positive' : 'is-negative';
   return (
     <div className="summary-card">
       <div className="summary-card-header">
@@ -863,7 +901,7 @@ function KpiCard({ label, icon, value, deltaPct, numberFormat, valueClass = '' }
         {formatNumber(value, numberFormat)}
       </div>
       {deltaPct != null && (
-        <div style={{ color: deltaColor, fontSize: '0.8125rem', fontWeight: 600 }}>
+        <div className={`analytics-kpi-delta ${deltaClass}`}>
           {deltaPct >= 0 ? '▲' : '▼'} {Math.abs(deltaPct).toFixed(1)}% vs prior
         </div>
       )}
@@ -885,7 +923,7 @@ export default function KpiBand({
     return (
       <div className="analytics-kpi-band">
         {[0,1,2,3].map(i => (
-          <div key={i} className="summary-card" style={{ minHeight: '7rem', opacity: 0.5 }}>
+          <div key={i} className="summary-card analytics-kpi-skeleton">
             <div className="summary-card-label">Loading…</div>
           </div>
         ))}
@@ -1028,13 +1066,18 @@ const subtractDays = (iso, days) => {
   d.setDate(d.getDate() - days);
   return d.toISOString().slice(0, 10);
 };
+const addDays = (iso, days) => {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
 
 const sumProfit = (buckets) =>
   buckets.reduce((s, b) => s + (b.profit_items || 0) + (b.profit_dump || 0) + (b.profit_referral || 0) + (b.profit_bonds || 0), 0);
 
 const sumGpTraded = (buckets) => buckets.reduce((s, b) => s + (b.gp_traded || 0), 0);
 
-export default function AnalyticsPage({ userId, transactions, profitHistory, numberFormat, initialTab }) {
+export default function AnalyticsPage({ userId, transactions, profitHistory, profits, numberFormat, initialTab, navigateToPage }) {
   const { allStocks, stocks } = useTrade();
   const stocksForStats = allStocks?.length > 0 ? allStocks : stocks;
 
@@ -1043,7 +1086,15 @@ export default function AnalyticsPage({ userId, transactions, profitHistory, num
   });
   const [mountedTabs, setMountedTabs] = useState(() => new Set([activeTab]));
 
-  const tf = useAnalyticsTimeframe(userId);
+  const allTimeStart = useMemo(() => {
+    const dates = [
+      ...(transactions || []).map(t => String(t.date).slice(0, 10)),
+      ...(profitHistory || []).map(p => String(p.created_at).slice(0, 10)),
+    ].filter(Boolean);
+    return dates.length > 0 ? dates.sort()[0] : null;
+  }, [transactions, profitHistory]);
+
+  const tf = useAnalyticsTimeframe(userId, allTimeStart);
   const priorStart = useMemo(
     () => subtractDays(tf.start, daysBetween(tf.start, tf.end)),
     [tf.start, tf.end]
@@ -1055,18 +1106,16 @@ export default function AnalyticsPage({ userId, transactions, profitHistory, num
   );
 
   const current = useAnalytics({ userId, start: tf.start, end: tf.end, bucket: tf.bucket, fallbackData });
-  const prior = useAnalytics({ userId, start: priorStart, end: tf.start, bucket: tf.bucket, fallbackData });
+  const prior = useAnalytics({ userId, start: priorStart, end: addDays(tf.start, -1), bucket: tf.bucket, fallbackData });
 
   const totalProfit = useMemo(() => {
     const stocksProfit = (stocksForStats || []).reduce(
       (s, st) => s + (st.totalCostSold - (st.totalCostBasisSold || 0)),
       0
     );
-    const otherProfit = (profitHistory || [])
-      .filter(p => ['dump','referral','bonds'].includes(p.profit_type))
-      .reduce((s, p) => s + (p.amount || 0), 0);
+    const otherProfit = (profits?.dumpProfit || 0) + (profits?.referralProfit || 0) + (profits?.bondsProfit || 0);
     return stocksProfit + otherProfit;
-  }, [stocksForStats, profitHistory]);
+  }, [stocksForStats, profits]);
 
   const inventoryValue = useMemo(
     () => (stocksForStats || []).reduce((s, st) => s + (st.totalCost || 0), 0),
@@ -1139,8 +1188,45 @@ git commit -m "feat(analytics): add AnalyticsPage shell"
 
 **Files:**
 - Modify: `src/MainApp.jsx`
+- Modify: `src/hooks/useNavigation.js`
 
-- [ ] **Step 1: Add import**
+- [ ] **Step 1: Add analytics routing to `useNavigation`**
+
+In `src/hooks/useNavigation.js`, update the page map and URL parser:
+
+```js
+const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs', analytics: '/analytics', watchlist: '/watchlist' };
+
+function getPageFromURL() {
+  const path = window.location.pathname;
+  if (path === '/trade') return 'trade';
+  if (path === '/history') return 'history';
+  if (path === '/graphs') return 'graphs';
+  if (path === '/analytics') return 'analytics';
+  if (path === '/watchlist') return 'watchlist';
+  return 'home';
+}
+```
+
+This is required for direct refresh on `/analytics` and browser back/forward; adding only a button in `MainApp.jsx` is not enough.
+
+Also extend the existing History query handling in `navigateToPage` so later analytics widgets can deep-link a day into History:
+
+```js
+if (page === 'history' && params.has('search')) {
+  applyFilters({ ...HISTORY_EMPTY_FILTERS, stockName: params.get('search') });
+} else if (page === 'history' && (params.has('dateFrom') || params.has('dateTo'))) {
+  applyFilters({
+    ...HISTORY_EMPTY_FILTERS,
+    dateFrom: params.get('dateFrom') || '',
+    dateTo: params.get('dateTo') || '',
+  });
+}
+```
+
+Mirror the same `dateFrom` / `dateTo` handling inside the existing `popstate` history branch so back/forward and direct History URLs behave the same way.
+
+- [ ] **Step 2: Add import**
 
 Near the other page imports (around lines 3–6) add:
 
@@ -1148,52 +1234,44 @@ Near the other page imports (around lines 3–6) add:
 import AnalyticsPage from './pages/AnalyticsPage';
 ```
 
-- [ ] **Step 2: Add nav button**
+- [ ] **Step 3: Add nav button**
 
 Locate the `📊 Graphs` nav button block in `MainApp.jsx` (around lines 966–987). Immediately after that closing `</button>` and before the Watchlist button, insert:
 
 ```jsx
 <button
   onClick={() => navigateToPage('analytics')}
-  style={{
-    padding: '0.75rem 1.5rem',
-    background: currentPage === 'analytics' ? 'rgb(168, 85, 247)' : 'transparent',
-    border: 'none',
-    borderRadius: '0.5rem',
-    color: 'white',
-    cursor: 'pointer',
-    fontWeight: '600',
-    transition: 'background 0.2s',
-    fontSize: '0.875rem'
-  }}
-  onMouseOver={(e) => {
-    if (currentPage !== 'analytics') e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
-  }}
-  onMouseOut={(e) => {
-    if (currentPage !== 'analytics') e.currentTarget.style.background = 'transparent';
-  }}
+  className={`topbar-nav-btn${currentPage === 'analytics' ? ' is-active' : ''}`}
 >
   📈 Analytics
 </button>
 ```
 
-- [ ] **Step 3: Render the page**
+If `topbar-nav-btn` does not already exist, add it to `src/styles/header.css` or the stylesheet that owns topbar styles. Do not add new inline styles.
+
+- [ ] **Step 4: Render the page**
+
+Corrected placement: insert analytics into the existing ternary before the Watchlist branch. The original app falls through to Trade as the final branch, so a standalone block after Watchlist is wrong.
 
 Find the page-render switch in `MainApp.jsx` (the block with `<HomePage>`, `<HistoryPage>`, `<GraphsPage>`, `<WatchlistPage>` near lines 1120–1175). After the `<WatchlistPage>` block, add:
 
 ```jsx
-{currentPage === 'analytics' && (
+        ) : currentPage === 'analytics' ? (
   <AnalyticsPage
     userId={userId}
     transactions={transactions}
     profitHistory={profitHistory}
+    profits={profits}
     numberFormat={settings?.numberFormat}
     initialTab={initialTabParam}
+    navigateToPage={navigateToPage}
   />
-)}
+        ) : currentPage === 'watchlist' ? (
 ```
 
-- [ ] **Step 4: Wire `initialTabParam` from URL**
+This branch must be inserted into the existing ternary before the Watchlist branch. Do not append a separate `{currentPage === 'analytics' && ...}` block after Watchlist.
+
+- [ ] **Step 5: Wire `initialTabParam` from URL**
 
 In the same `MainApp.jsx`, find where `currentPage` and other page-state are derived (search for `navigateToPage`). Add:
 
@@ -1204,9 +1282,9 @@ const initialTabParam = useMemo(() => {
 }, [currentPage]);
 ```
 
-Place this near the top of the component body, after existing `useMemo` hooks.
+Also update the React import at the top of `MainApp.jsx` from `useState, useEffect, useRef` to `useState, useEffect, useMemo, useRef`.
 
-- [ ] **Step 5: Verify routing in the browser**
+- [ ] **Step 6: Verify routing in the browser**
 
 Run: `npm run dev`
 Open the app, click the new **📈 Analytics** nav button, expect:
@@ -1215,10 +1293,10 @@ Open the app, click the new **📈 Analytics** nav button, expect:
 - Click each tab — the placeholder text changes; URL updates `?tab=...`.
 - Refresh on `/analytics?tab=items` — Items tab is active on load.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/MainApp.jsx
+git add src/MainApp.jsx src/hooks/useNavigation.js
 git commit -m "feat(analytics): wire AnalyticsPage route and nav button"
 ```
 
@@ -1234,6 +1312,8 @@ git commit -m "feat(analytics): wire AnalyticsPage route and nav button"
 - [ ] **Step 1: Create the new component**
 
 Copy the alt-timer JSX from `src/components/ChartButtons.jsx` (the first inner `div` block including the timer label, value, and Set/Reset buttons — lines ~32–100). Wrap it as a self-contained component:
+
+Before writing this component, move the visual styles into CSS classes. The code below preserves the timer behavior, but any `style={{...}}` object copied from `ChartButtons` must be converted to classes before committing.
 
 ```jsx
 // src/components/AltAccountTimer.jsx
@@ -1333,7 +1413,7 @@ Where `<ChartButtons ... />` was rendered, replace with:
 ```jsx
 <AltAccountTimer
   altAccountTimer={altAccountTimer}
-  onSetAltTimer={handleSetAltTimer}
+  onSetAltTimer={() => openModal('altTimer')}
   onResetAltTimer={handleResetAltTimer}
   currentTime={currentTime}
 />
@@ -1423,6 +1503,13 @@ Before opening the PR, walk through:
 ---
 
 ## Self-review notes
+
+Compatibility check after reading Plans 2-5:
+
+- Plans 2 and 3 must not rely on `transactions.cost_basis`; this Plan 1 contract defines realized item profit through `profit_history` (`profit_type: 'stock'`) and bucket-level `profit_items` / `by_category`.
+- Any later per-item "top item" or ROI helper that needs per-transaction realized profit should join `profit_history.transaction_id` to the transaction id instead of recomputing from transaction rows.
+- Plans 4 and 5 can keep using `buckets`, `by_category`, `priorBuckets`, `milestones`, `milestoneHistory`, and `milestoneProgress` once their `AnalyticsPage` prop-passing steps are applied.
+- New analytics UI added in later plans must follow the same no-inline-CSS rule used in this corrected foundation plan.
 
 Spec coverage check:
 
