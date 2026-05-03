@@ -60,6 +60,12 @@ const mergeGpTraded = (buckets, gpTotals) => {
   return [...byDate.values()].sort((a, b) => a.bucket_date.localeCompare(b.bucket_date));
 };
 
+const signatureFor = (rows = []) => (
+  rows.length > 0
+    ? `${rows.length}-${rows[0]?.id || ''}-${rows[rows.length - 1]?.id || ''}`
+    : '0'
+);
+
 export function aggregateBucketsLocally({ transactions, stocks, profitHistory, start, end, bucket }) {
   const stockMap = new Map((stocks || []).map((stock) => [stock.id, stock]));
   const txMap = new Map((transactions || []).map((tx) => [tx.id, tx]));
@@ -137,11 +143,16 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
       return;
     }
 
-    const transactions = fallbackData?.transactions || [];
-    const transactionSignature = transactions.length > 0
-      ? `${transactions.length}-${transactions[0]?.id || ''}-${transactions[transactions.length - 1]?.id || ''}`
-      : '0';
-    const cacheKey = `${userId}-${start}-${end}-${bucket}-${transactionSignature}`;
+    const hasFallbackData = Boolean(fallbackData);
+    const cacheKey = [
+      userId,
+      start,
+      end,
+      bucket,
+      signatureFor(fallbackData?.transactions),
+      signatureFor(fallbackData?.stocks),
+      signatureFor(fallbackData?.profitHistory),
+    ].join('-');
     if (cache.has(cacheKey)) {
       setState({ buckets: cache.get(cacheKey), loading: false, error: null, fromFallback: false });
       return;
@@ -149,6 +160,13 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
 
     const requestId = ++requestIdRef.current;
     setState((current) => ({ ...current, loading: true, error: null }));
+
+    if (hasFallbackData) {
+      const local = aggregateBucketsLocally({ ...fallbackData, start, end, bucket });
+      cache.set(cacheKey, local);
+      setState({ buckets: local, loading: false, error: null, fromFallback: false });
+      return;
+    }
 
     supabase.rpc('get_analytics_buckets', {
       p_user_id: userId,
