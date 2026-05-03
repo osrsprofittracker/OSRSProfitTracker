@@ -9,29 +9,9 @@ import ItemsTab from '../components/analytics/ItemsTab';
 import CategoriesTab from '../components/analytics/CategoriesTab';
 import GoalsTab from '../components/analytics/GoalsTab';
 import { useTrade } from '../contexts/TradeContext';
+import { addDays, daysBetween, subtractDays, sumProfit } from '../utils/analyticsHelpers';
 import '../styles/analytics-page.css';
 import '../styles/analytics-widgets.css';
-
-const subtractDays = (iso, days) => {
-  const date = new Date(iso);
-  date.setDate(date.getDate() - days);
-  return date.toISOString().slice(0, 10);
-};
-
-const addDays = (iso, days) => {
-  const date = new Date(iso);
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
-};
-
-const sumProfit = (buckets) => buckets.reduce(
-  (sum, bucket) => sum
-    + (bucket.profit_items || 0)
-    + (bucket.profit_dump || 0)
-    + (bucket.profit_referral || 0)
-    + (bucket.profit_bonds || 0),
-  0
-);
 
 const sumGpTraded = (buckets) => buckets.reduce((sum, bucket) => sum + (bucket.gp_traded || 0), 0);
 
@@ -180,6 +160,7 @@ export default function AnalyticsPage({
                 query: { dateFrom, dateTo },
               })}
               allTimeBuckets={allTime.buckets}
+              totalProfitValue={derivedTotalProfit}
               fallbackData={fallbackData}
             />
           </div>
@@ -208,9 +189,4 @@ export default function AnalyticsPage({
       </div>
     </div>
   );
-}
-
-function daysBetween(startIso, endIso) {
-  const ms = new Date(endIso) - new Date(startIso);
-  return Math.max(1, Math.round(ms / 86400000));
 }

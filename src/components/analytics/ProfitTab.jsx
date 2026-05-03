@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import ProfitOverTimeChart from './widgets/ProfitOverTimeChart';
+import ProfitVelocityWidget from './widgets/ProfitVelocityWidget';
 import CumulativeProfitChart from './widgets/CumulativeProfitChart';
 import ProfitBySourceChart from './widgets/ProfitBySourceChart';
 import GpTradedChart from './widgets/GpTradedChart';
@@ -8,36 +9,13 @@ import PeriodComparisonCards from './widgets/PeriodComparisonCards';
 import BestDaysTable from './widgets/BestDaysTable';
 import ProfitKpiStrip from './widgets/ProfitKpiStrip';
 import ProfitHeatmap from './widgets/ProfitHeatmap';
-
-const totalProfit = (bucket) => (
-  Number(bucket.profit_items || 0)
-  + Number(bucket.profit_dump || 0)
-  + Number(bucket.profit_referral || 0)
-  + Number(bucket.profit_bonds || 0)
-);
-
-const subtractDays = (iso, days) => {
-  const date = new Date(iso);
-  date.setDate(date.getDate() - days);
-  return date.toISOString().slice(0, 10);
-};
-
-const addDays = (iso, days) => {
-  const date = new Date(iso);
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
-};
-
-const subtractYears = (iso, years) => {
-  const date = new Date(iso);
-  date.setFullYear(date.getFullYear() - years);
-  return date.toISOString().slice(0, 10);
-};
-
-const daysBetween = (startIso, endIso) => {
-  const ms = new Date(endIso) - new Date(startIso);
-  return Math.max(1, Math.round(ms / 86400000));
-};
+import {
+  addDays,
+  daysBetween,
+  subtractDays,
+  subtractYears,
+  totalProfit,
+} from '../../utils/analyticsHelpers';
 
 const periodLabelFor = (window) => {
   switch (window) {
@@ -67,6 +45,7 @@ export default function ProfitTab({
   numberFormat,
   onNavigateToHistory,
   allTimeBuckets = [],
+  totalProfitValue,
   fallbackData,
 }) {
   const span = daysBetween(timeframe.start, timeframe.end);
@@ -109,6 +88,12 @@ export default function ProfitTab({
 
   return (
     <div className="analytics-stack">
+      <ProfitVelocityWidget
+        allBuckets={allTimeBuckets}
+        endDate={timeframe.end}
+        numberFormat={numberFormat}
+        totalProfitValue={totalProfitValue}
+      />
       <ProfitOverTimeChart buckets={buckets} numberFormat={numberFormat} />
       <CumulativeProfitChart
         buckets={dailyBuckets}

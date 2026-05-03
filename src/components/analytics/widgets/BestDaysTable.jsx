@@ -1,5 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatNumber } from '../../../utils/formatters';
+import {
+  addDays,
+  parseIsoDateUtc,
+  periodSpanDays,
+  subtractDays,
+  toIsoDate,
+  totalProfit,
+} from '../../../utils/analyticsHelpers';
 
 const TIMEFRAMES = ['1W', '1M', '3M', '6M', '1Y', 'All'];
 const PERIODS = [
@@ -8,15 +16,6 @@ const PERIODS = [
   { key: 'month', label: 'Months' },
   { key: 'year', label: 'Years' },
 ];
-
-const totalProfit = (bucket) => (
-  Number(bucket.profit_items || 0)
-  + Number(bucket.profit_dump || 0)
-  + Number(bucket.profit_referral || 0)
-  + Number(bucket.profit_bonds || 0)
-);
-
-const toIso = (date) => date.toISOString().slice(0, 10);
 
 const daysForWindow = (window) => {
   switch (window) {
@@ -35,31 +34,19 @@ const daysForWindow = (window) => {
   }
 };
 
-const subtractDays = (iso, days) => {
-  const date = new Date(`${iso}T00:00:00`);
-  date.setUTCDate(date.getUTCDate() - days);
-  return toIso(date);
-};
-
 const startOfWeek = (iso) => {
-  const date = new Date(`${iso}T00:00:00`);
+  const date = parseIsoDateUtc(iso);
   const day = date.getUTCDay();
   const diff = day === 0 ? -6 : 1 - day;
   date.setUTCDate(date.getUTCDate() + diff);
-  return toIso(date);
-};
-
-const addDays = (iso, days) => {
-  const date = new Date(`${iso}T00:00:00`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return toIso(date);
+  return toIsoDate(date);
 };
 
 const endOfMonth = (iso) => {
-  const date = new Date(`${iso.slice(0, 7)}-01T00:00:00`);
+  const date = parseIsoDateUtc(`${iso.slice(0, 7)}-01`);
   date.setUTCMonth(date.getUTCMonth() + 1);
   date.setUTCDate(0);
-  return toIso(date);
+  return toIsoDate(date);
 };
 
 const endOfYear = (iso) => `${iso.slice(0, 4)}-12-31`;
@@ -83,11 +70,6 @@ const labelForPeriod = (start, period) => {
   if (period === 'month') return start.slice(0, 7);
   if (period === 'year') return start.slice(0, 4);
   return start;
-};
-
-const periodSpanDays = (startDate, endDate) => {
-  if (!startDate || !endDate) return 0;
-  return Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / 86400000) + 1);
 };
 
 const availablePeriodsForSpan = (spanDays) => (

@@ -262,6 +262,100 @@
   margin-top: 0.5rem;
 }
 
+.analytics-velocity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.analytics-velocity-card {
+  min-width: 0;
+  background: rgb(15, 23, 42);
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  border-radius: 0.625rem;
+  padding: 0.75rem;
+}
+
+.analytics-velocity-card.has-tooltip:hover::after,
+.analytics-velocity-card.has-tooltip:focus-visible::after,
+.analytics-velocity-eta.has-tooltip:hover::after,
+.analytics-velocity-eta.has-tooltip:focus-visible::after {
+  white-space: pre-line;
+  max-width: 26rem;
+  text-align: left;
+}
+
+.analytics-velocity-label {
+  color: rgb(148, 163, 184);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.analytics-velocity-value {
+  color: white;
+  font-size: 1.375rem;
+  font-weight: 800;
+  margin-top: 0.25rem;
+}
+
+.analytics-velocity-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.analytics-velocity-status {
+  border: 1px solid rgba(71, 85, 105, 0.6);
+  border-radius: 999px;
+  padding: 0.1875rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.analytics-velocity-delta.is-positive,
+.analytics-velocity-status.is-positive {
+  color: rgb(34, 197, 94);
+}
+
+.analytics-velocity-delta.is-negative,
+.analytics-velocity-status.is-negative {
+  color: rgb(239, 68, 68);
+}
+
+.analytics-velocity-delta.is-neutral,
+.analytics-velocity-status.is-neutral {
+  color: rgb(148, 163, 184);
+}
+
+.analytics-velocity-sparkline {
+  height: 2.5rem;
+  margin-top: 0.625rem;
+}
+
+.analytics-velocity-paces {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid rgba(51, 65, 85, 0.7);
+}
+
+.analytics-velocity-eta {
+  min-width: 0;
+  background: rgb(15, 23, 42);
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  border-radius: 0.5rem;
+  color: rgb(203, 213, 225);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.5rem 0.625rem;
+}
+
 .analytics-kpi-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -372,6 +466,14 @@
   }
 
   .analytics-kpi-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-velocity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-velocity-paces {
     grid-template-columns: 1fr;
   }
 }

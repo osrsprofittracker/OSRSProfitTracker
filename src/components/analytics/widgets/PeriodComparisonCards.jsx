@@ -1,15 +1,7 @@
 import React from 'react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { formatNumber } from '../../../utils/formatters';
-
-const totalProfit = (bucket) => (
-  Number(bucket.profit_items || 0)
-  + Number(bucket.profit_dump || 0)
-  + Number(bucket.profit_referral || 0)
-  + Number(bucket.profit_bonds || 0)
-);
-
-const sumProfit = (buckets = []) => buckets.reduce((sum, bucket) => sum + totalProfit(bucket), 0);
+import { sumProfit, totalProfit } from '../../../utils/analyticsHelpers';
 
 const deltaClass = (delta) => (delta >= 0 ? 'is-positive' : 'is-negative');
 

@@ -9,13 +9,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { formatNumber } from '../../../utils/formatters';
-
-const totalProfit = (bucket) => (
-  Number(bucket.profit_items || 0)
-  + Number(bucket.profit_dump || 0)
-  + Number(bucket.profit_referral || 0)
-  + Number(bucket.profit_bonds || 0)
-);
+import { totalProfit } from '../../../utils/analyticsHelpers';
 
 function CumulativeTooltip({ active, payload, label, numberFormat }) {
   if (!active || !payload?.length) return null;

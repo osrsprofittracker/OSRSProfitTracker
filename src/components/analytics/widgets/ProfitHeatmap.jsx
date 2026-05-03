@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { formatNumber } from '../../../utils/formatters';
+import { parseIsoDateUtc, totalProfit } from '../../../utils/analyticsHelpers';
 
 const CELL = 10;
 const GAP = 2;
@@ -7,19 +8,6 @@ const COLS = 53;
 const ROWS = 7;
 const SVG_WIDTH = COLS * (CELL + GAP) - GAP;
 const SVG_HEIGHT = ROWS * (CELL + GAP) - GAP;
-
-function parseIsoDateUtc(iso) {
-  if (!iso) return new Date();
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-const totalProfit = (bucket) => (
-  Number(bucket.profit_items || 0)
-  + Number(bucket.profit_dump || 0)
-  + Number(bucket.profit_referral || 0)
-  + Number(bucket.profit_bonds || 0)
-);
 
 function buildLast365Days(endIso) {
   const days = [];

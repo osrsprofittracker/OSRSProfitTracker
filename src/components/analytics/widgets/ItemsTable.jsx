@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { formatNumber } from '../../../utils/formatters';
 import { calculateGETax } from '../../../utils/taxUtils';
@@ -61,6 +61,8 @@ const numericKeys = new Set([
   'windowGpTraded',
 ]);
 
+const PAGE_SIZE = 50;
+
 function SortIcon({ active, direction }) {
   if (!active) return <ArrowUpDown size={14} className="items-table-sort-icon" aria-hidden="true" />;
   if (direction === 'asc') return <ArrowUp size={14} className="items-table-sort-icon" aria-hidden="true" />;
@@ -94,6 +96,7 @@ const valueClass = (key, value) => {
 export default function ItemsTable({ items = [], totalItems = items.length, numberFormat, onRowClick }) {
   const [sortKey, setSortKey] = useState('totalProfit');
   const [sortDir, setSortDir] = useState('desc');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const sorted = useMemo(() => {
     const rows = [...items];
@@ -113,6 +116,15 @@ export default function ItemsTable({ items = [], totalItems = items.length, numb
 
     return rows;
   }, [items, sortKey, sortDir]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [items, sortKey, sortDir]);
+
+  const usesPager = sorted.length > PAGE_SIZE;
+  const visibleRows = usesPager ? sorted.slice(0, visibleCount) : sorted;
+  const canShowMore = usesPager && visibleRows.length < sorted.length;
+  const hiddenCount = Math.max(0, sorted.length - visibleRows.length);
 
   const handleSort = (key) => {
     if (key === sortKey) {
@@ -160,7 +172,7 @@ export default function ItemsTable({ items = [], totalItems = items.length, numb
             </tr>
           </thead>
           <tbody>
-            {sorted.map((item) => (
+            {visibleRows.map((item) => (
               <tr
                 key={item.id}
                 tabIndex={0}
@@ -190,6 +202,22 @@ export default function ItemsTable({ items = [], totalItems = items.length, numb
           </tbody>
         </table>
       </div>
+      {usesPager && (
+        <div className="items-table-pager">
+          <span className="items-table-pager-count">
+            Showing {visibleRows.length} of {sorted.length}
+          </span>
+          {canShowMore && (
+            <button
+              type="button"
+              className="items-table-show-more"
+              onClick={() => setVisibleCount((count) => Math.min(count + PAGE_SIZE, sorted.length))}
+            >
+              Show {Math.min(PAGE_SIZE, hiddenCount)} more
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
