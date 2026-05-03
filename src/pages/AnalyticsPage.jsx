@@ -171,7 +171,15 @@ export default function AnalyticsPage({
           />
         )}
         {activeTab === 'categories' && (
-          <CategoriesTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
+          <CategoriesTab
+            buckets={current.buckets}
+            priorBuckets={prior.buckets}
+            stocks={safeStocksForStats}
+            transactions={safeTransactions}
+            profitHistory={safeProfitHistory}
+            timeframe={timeframe}
+            numberFormat={numberFormat}
+          />
         )}
         {activeTab === 'goals' && (
           <GoalsTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
