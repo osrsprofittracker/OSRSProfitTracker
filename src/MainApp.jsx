@@ -1185,6 +1185,7 @@ function MainAppInner({ session, onLogout }) {
             profits={profits}
             numberFormat={numberFormat}
             initialTab={initialTabParam}
+            navigateToPage={navigateToPage}
           />
         ) : currentPage === 'watchlist' ? (
           <WatchlistPage

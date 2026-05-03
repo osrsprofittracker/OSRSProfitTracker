@@ -9,7 +9,8 @@ export default function TimeframeSelector({ window, options, onChange }) {
           type="button"
           role="tab"
           aria-selected={window === option}
-          className={`analytics-timeframe-btn${window === option ? ' is-active' : ''}`}
+          className={`analytics-timeframe-btn has-tooltip${window === option ? ' is-active' : ''}`}
+          data-tooltip={`Show analytics for ${option === 'All' ? 'all available history' : `the last ${option}`}.`}
           onClick={() => onChange(option)}
         >
           {option}

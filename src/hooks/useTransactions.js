@@ -15,19 +15,32 @@ export function useTransactions(userId) {
   const [pagedLoading, setPagedLoading] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false })
-      .limit(1000);
+    const allData = [];
+    const batchSize = 1000;
+    let from = 0;
+    let hasMore = true;
 
-    if (error) {
-      console.error('Error fetching transactions:', error);
-      setTransactions([]);
-    } else {
-      setTransactions((data || []).map(formatRow));
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false })
+        .range(from, from + batchSize - 1);
+
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        setTransactions([]);
+        setLoading(false);
+        return;
+      }
+
+      allData.push(...(data || []));
+      hasMore = (data || []).length === batchSize;
+      from += batchSize;
     }
+
+    setTransactions(allData.map(formatRow));
     setLoading(false);
   }, [userId]);
 

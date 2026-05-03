@@ -13,8 +13,18 @@ function KpiCard({ label, icon, value, deltaPct, numberFormat, valueClass = '' }
     ? 'is-neutral'
     : deltaPct >= 0 ? 'is-positive' : 'is-negative';
 
+  const tooltip = {
+    'Total Profit': 'All-time realized profit using the same accounting as the Trade and Home screens: item profit plus dump, referral, and bonds profit.',
+    'Period Profit': 'Realized profit inside the selected analytics timeframe. On All, this uses the same total as Total Profit.',
+    'GP Traded': 'Total GP value of transactions in the selected timeframe, including buys and sells.',
+    'Inventory Value': 'Current GP cost basis of items still held in your tracked stock.',
+  }[label] || `${label} for the current analytics view.`;
+
   return (
-    <div className="summary-card">
+    <div
+      className="summary-card has-tooltip"
+      data-tooltip={tooltip}
+    >
       <div className="summary-card-header">
         <span className="summary-card-icon analytics-kpi-icon">{icon}</span>
         <span className="summary-card-label">{label}</span>
@@ -71,6 +81,7 @@ export default function KpiBand({
         value={periodProfit}
         deltaPct={periodDelta}
         numberFormat={numberFormat}
+        valueClass="profit-main-value"
       />
       <KpiCard
         label="GP Traded"

@@ -10,6 +10,7 @@ import CategoriesTab from '../components/analytics/CategoriesTab';
 import GoalsTab from '../components/analytics/GoalsTab';
 import { useTrade } from '../contexts/TradeContext';
 import '../styles/analytics-page.css';
+import '../styles/analytics-widgets.css';
 
 const subtractDays = (iso, days) => {
   const date = new Date(iso);
@@ -41,6 +42,7 @@ export default function AnalyticsPage({
   profits,
   numberFormat,
   initialTab,
+  navigateToPage,
 }) {
   const { allStocks, stocks } = useTrade();
   const stocksForStats = allStocks?.length > 0 ? allStocks : stocks;
@@ -89,8 +91,15 @@ export default function AnalyticsPage({
     bucket: timeframe.bucket,
     fallbackData,
   });
+  const allTime = useAnalytics({
+    userId,
+    start: allTimeStart || '2020-01-01',
+    end: timeframe.end,
+    bucket: 'day',
+    fallbackData,
+  });
 
-  const totalProfit = useMemo(() => {
+  const derivedTotalProfit = useMemo(() => {
     const stocksProfit = safeStocksForStats.reduce(
       (sum, stock) => sum + (stock.totalCostSold - (stock.totalCostBasisSold || 0)),
       0
@@ -101,6 +110,9 @@ export default function AnalyticsPage({
 
     return stocksProfit + otherProfit;
   }, [safeStocksForStats, profits]);
+  const periodProfit = useMemo(() => (
+    timeframe.window === 'All' ? derivedTotalProfit : sumProfit(current.buckets)
+  ), [timeframe.window, derivedTotalProfit, current.buckets]);
 
   const inventoryValue = useMemo(
     () => safeStocksForStats.reduce((sum, stock) => sum + (stock.totalCost || 0), 0),
@@ -139,9 +151,9 @@ export default function AnalyticsPage({
       )}
 
       <KpiBand
-        loading={current.loading}
-        totalProfit={totalProfit}
-        periodProfit={sumProfit(current.buckets)}
+        loading={current.loading || allTime.loading}
+        totalProfit={derivedTotalProfit}
+        periodProfit={periodProfit}
         priorPeriodProfit={sumProfit(prior.buckets)}
         gpTraded={sumGpTraded(current.buckets)}
         priorGpTraded={sumGpTraded(prior.buckets)}
@@ -154,7 +166,21 @@ export default function AnalyticsPage({
       <div className="analytics-tab-content">
         {mountedTabs.has('profit') && (
           <div hidden={activeTab !== 'profit'}>
-            <ProfitTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
+            <ProfitTab
+              userId={userId}
+              buckets={current.buckets}
+              priorBuckets={prior.buckets}
+              timeframe={timeframe}
+              transactions={safeTransactions}
+              stocks={safeStocksForStats}
+              profitHistory={safeProfitHistory}
+              numberFormat={numberFormat}
+              onNavigateToHistory={(dateFrom, dateTo = dateFrom) => navigateToPage?.('history', {
+                query: { dateFrom, dateTo },
+              })}
+              allTimeBuckets={allTime.buckets}
+              fallbackData={fallbackData}
+            />
           </div>
         )}
         {mountedTabs.has('items') && (

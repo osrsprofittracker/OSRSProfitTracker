@@ -21,6 +21,45 @@ const truncBucket = (dateStr, bucket) => {
   return truncMonth(dateStr);
 };
 
+const aggregateGpTradedLocally = ({ transactions, start, end, bucket }) => {
+  const totals = new Map();
+
+  for (const tx of transactions || []) {
+    const iso = String(tx.date || '').slice(0, 10);
+    if (iso < start || iso > end) continue;
+
+    const key = truncBucket(iso, bucket);
+    totals.set(key, (totals.get(key) || 0) + (Number(tx.total) || 0));
+  }
+
+  return totals;
+};
+
+const mergeGpTraded = (buckets, gpTotals) => {
+  if (!gpTotals?.size) return buckets;
+
+  const byDate = new Map((buckets || []).map((row) => [row.bucket_date, { ...row }]));
+
+  for (const [bucketDate, gpTraded] of gpTotals.entries()) {
+    const row = byDate.get(bucketDate) || {
+      bucket_date: bucketDate,
+      profit_items: 0,
+      profit_dump: 0,
+      profit_referral: 0,
+      profit_bonds: 0,
+      gp_traded: 0,
+      by_category: {},
+      sells_count: 0,
+      wins_count: 0,
+    };
+
+    row.gp_traded = gpTraded;
+    byDate.set(bucketDate, row);
+  }
+
+  return [...byDate.values()].sort((a, b) => a.bucket_date.localeCompare(b.bucket_date));
+};
+
 export function aggregateBucketsLocally({ transactions, stocks, profitHistory, start, end, bucket }) {
   const stockMap = new Map((stocks || []).map((stock) => [stock.id, stock]));
   const txMap = new Map((transactions || []).map((tx) => [tx.id, tx]));
@@ -98,7 +137,11 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
       return;
     }
 
-    const cacheKey = `${userId}-${start}-${end}-${bucket}`;
+    const transactions = fallbackData?.transactions || [];
+    const transactionSignature = transactions.length > 0
+      ? `${transactions.length}-${transactions[0]?.id || ''}-${transactions[transactions.length - 1]?.id || ''}`
+      : '0';
+    const cacheKey = `${userId}-${start}-${end}-${bucket}-${transactionSignature}`;
     if (cache.has(cacheKey)) {
       setState({ buckets: cache.get(cacheKey), loading: false, error: null, fromFallback: false });
       return;
@@ -123,7 +166,15 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
         return;
       }
 
-      const buckets = data || [];
+      const localGpTraded = fallbackData?.transactions
+        ? aggregateGpTradedLocally({
+            transactions: fallbackData.transactions,
+            start,
+            end,
+            bucket,
+          })
+        : null;
+      const buckets = mergeGpTraded(data || [], localGpTraded);
       cache.set(cacheKey, buckets);
       setState({ buckets, loading: false, error: null, fromFallback: false });
     });

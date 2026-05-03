@@ -29,25 +29,27 @@ export const formatNumber = (num, numberFormat = 'compact') => {
 
   // Round to nearest integer first
   const rounded = Math.round(num);
+  const sign = rounded < 0 ? '-' : '';
+  const absolute = Math.abs(rounded);
 
   if (numberFormat === 'full') {
     return rounded.toLocaleString();
   }
 
   // Compact format
-   if (rounded < 100_000) {
+   if (absolute < 100_000) {
     return rounded.toLocaleString();
   }
 
-  if (rounded < 10_000_000) {
-    return (rounded / 1_000).toFixed(0) + ' K';
+  if (absolute < 10_000_000) {
+    return sign + (absolute / 1_000).toFixed(0) + ' K';
   }
 
-  if (rounded < 1_000_000_000) {
-    return (rounded / 1_000_000).toFixed(2) + ' M';
+  if (absolute < 1_000_000_000) {
+    return sign + (absolute / 1_000_000).toFixed(2) + ' M';
   }
 
-  return (rounded / 1_000_000_000).toFixed(2) + ' B';
+  return sign + (absolute / 1_000_000_000).toFixed(2) + ' B';
 };
 
 export function formatAvgPrice(value, numberFormat) {
