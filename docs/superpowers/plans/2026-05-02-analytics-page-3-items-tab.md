@@ -4,7 +4,7 @@
 
 **Goal:** Fill in the Items tab on `/analytics` with eight widgets: full sortable items table (no top-10 cap), filter bar, item drilldown drawer, movers list, buying-vs-selling activity chart, stale-inventory table, ROI distribution histogram, and CSV export.
 
-**Architecture:** All widgets read from `stocks` (already in `TradeContext`), `transactions`, and `profitHistory`. Per-item profit-in-window comes from joining transactions to stocks within the timeframe. The drilldown drawer reuses `useTimeseries` for GE price overlay. CSV export is a pure browser download (no server round-trip).
+**Architecture:** All widgets read from `stocks` (already in `TradeContext`), `transactions`, and `profitHistory`. Per-item profit-in-window comes from joining `profitHistory` stock-profit rows to transactions by `transaction_id`; do not use `transactions.cost_basis`, because the current app does not write that column. The drilldown drawer reuses `useTimeseries` for GE price overlay. CSV export is a pure browser download (no server round-trip).
 
 **Tech Stack:** React 18, recharts, lucide-react.
 
@@ -13,6 +13,28 @@
 **Prerequisite:** Plan 1 must be merged.
 
 ---
+
+## Plan-wide corrections from foundation review
+
+- Use camelCase transaction fields from `useTransactions` (`stockId`, `stockName`, `profitHistoryId`) in app code. Test fixtures may still include `stock_id`, so helper functions should support both with `tx.stockId ?? tx.stock_id`.
+- Every realized item-profit calculation must use `profitHistory` rows where `profit_type === 'stock'`, keyed by `transaction_id`.
+- `roiPct` should use a conservative basis estimate from the matching sell transaction: if sell quantity and sell total exist, `estimatedBasis = max(total - profit, 0)`. This is an estimate because the ledger does not persist cost basis per transaction.
+- Do not add inline CSS while implementing this plan. Move any `style={{...}}` shown in older snippets into `src/styles/analytics-items.css` or `src/styles/analytics-widgets.css` before committing.
+
+## Cross-plan corrections from Profit tab bug review
+
+This section supersedes any older snippets below that conflict with it.
+
+- Do not add automated tests, test files, test runners, or test dependencies unless the user explicitly asks for them. If older steps say to create `*.test.js` or use Vitest, skip those steps and use `npm run build` plus manual browser checks instead.
+- All item widgets must use complete transaction data. `useTransactions.fetchTransactions()` must paginate with Supabase `range()` batches and must not rely on `.limit(1000)`.
+- If a widget label says "Total Profit", it must match the Trade/Home source: `stocks.totalCostSold - stocks.totalCostBasisSold` for item realized profit, plus extra-profit sources only where the widget explicitly includes non-item profit.
+- Windowed item profit comes from `profit_history` stock rows joined by `transaction_id`. If a sell has no linked profit row, do not invent profit from missing cost basis; use it only for volume/activity fallback and make the empty profit state clear.
+- Top-item or mover calculations must not show `-` when transaction data exists. Fall back to highest sell GP volume when profit linkage is unavailable, and show `-` only when the period truly has no item sell activity.
+- Any time-series or cumulative item chart should build from daily all-time data first, then filter or aggregate for the selected window. Do not use week/month bucket start dates as if they are exact transaction dates.
+- Add custom hover tooltips for section headers, KPI labels, filters, export buttons, table columns, drawer controls, and ambiguous terms. Do not combine native `title` with the custom tooltip system.
+- Avoid raw "bucket" wording in user-facing text unless the tooltip explains it as a grouping interval such as day, week, or month.
+- Charts that can cross zero must draw a visible zero reference line and compute the Y-axis domain from actual positive and negative values. If no visible values are negative, zero should sit at the bottom.
+- Final verification must include a manual browser pass at desktop and mobile widths, including sorting, filters, drilldown drawer, export, and empty states. Record any browser-plugin blocker and still run `npm run build`.
 
 ## File Structure
 
@@ -26,7 +48,6 @@
 - `src/components/analytics/widgets/RoiHistogram.jsx`
 - `src/components/analytics/widgets/ExportCsvButton.jsx`
 - `src/utils/itemAnalytics.js` — per-item aggregation helpers
-- `src/utils/itemAnalytics.test.js`
 - `src/styles/analytics-items.css`
 
 **Modified:**
@@ -40,13 +61,12 @@
 
 **Files:**
 - Create: `src/utils/itemAnalytics.js`
-- Test: `src/utils/itemAnalytics.test.js`
 
-- [ ] **Step 1: Write failing tests**
+- [ ] **Step 1: Draft helper acceptance examples in the plan or notes; do not create test files unless explicitly requested**
 
 ```js
-// src/utils/itemAnalytics.test.js
-import { describe, it, expect } from 'vitest';
+// Acceptance examples only. Do not create src/utils/itemAnalytics.test.js unless explicitly requested.
+// If tests are requested later, convert these examples to the repo's chosen test style at that time.
 import {
   computeItemMetrics,
   computeMovers,
@@ -70,8 +90,8 @@ const stock = (overrides = {}) => ({
   ...overrides,
 });
 const tx = (overrides = {}) => ({
-  id: 1, user_id: 'u', stock_id: 1, type: 'sell',
-  total: 0, cost_basis: 0, shares: 0, date: '2026-04-15',
+  id: 1, user_id: 'u', stockId: 1, type: 'sell',
+  total: 0, shares: 0, date: '2026-04-15',
   ...overrides,
 });
 
@@ -80,9 +100,12 @@ describe('computeItemMetrics', () => {
     const stocks = [stock({ id: 1, shares: 10, totalCost: 100 })];
     const transactions = [
       tx({ id: 1, type: 'buy',  total: 100, shares: 10, date: '2026-04-15' }),
-      tx({ id: 2, type: 'sell', total: 200, cost_basis: 120, shares: 6, date: '2026-04-16' }),
+      tx({ id: 2, type: 'sell', total: 200, shares: 6, date: '2026-04-16' }),
     ];
-    const out = computeItemMetrics({ stocks, transactions, start: '2026-04-15', end: '2026-04-30' });
+    const profitHistory = [
+      { profit_type: 'stock', amount: 80, stock_id: 1, transaction_id: 2, created_at: '2026-04-16T10:00:00Z' },
+    ];
+    const out = computeItemMetrics({ stocks, transactions, profitHistory, start: '2026-04-15', end: '2026-04-30' });
     expect(out).toHaveLength(1);
     expect(out[0]).toMatchObject({
       id: 1,
@@ -96,7 +119,7 @@ describe('computeItemMetrics', () => {
 
   it('respects archived flag in result', () => {
     const stocks = [stock({ id: 1, archived: true })];
-    const out = computeItemMetrics({ stocks, transactions: [], start: '2026-04-01', end: '2026-04-30' });
+    const out = computeItemMetrics({ stocks, transactions: [], profitHistory: [], start: '2026-04-01', end: '2026-04-30' });
     expect(out[0].archived).toBe(true);
   });
 });
@@ -144,9 +167,9 @@ describe('computeBuyingVsSelling', () => {
     const out = computeBuyingVsSelling({
       stocks: [stock({ id: 1, name: 'A' }), stock({ id: 2, name: 'B' })],
       transactions: [
-        tx({ stock_id: 1, type: 'buy',  total: 100 }),
-        tx({ stock_id: 1, type: 'sell', total: 50  }),
-        tx({ stock_id: 2, type: 'sell', total: 200 }),
+        tx({ stockId: 1, type: 'buy',  total: 100 }),
+        tx({ stockId: 1, type: 'sell', total: 50  }),
+        tx({ stockId: 2, type: 'sell', total: 200 }),
       ],
       start: '2026-04-15', end: '2026-04-30',
     });
@@ -175,8 +198,14 @@ Expected: FAIL with module not found.
 // src/utils/itemAnalytics.js
 const inWindow = (iso, start, end) => iso >= start && iso <= end;
 const isoOf = (d) => String(d).slice(0, 10);
+const stockIdOf = (tx) => tx.stockId ?? tx.stock_id;
 
-export function computeItemMetrics({ stocks, transactions, start, end }) {
+export function computeItemMetrics({ stocks, transactions, profitHistory = [], start, end }) {
+  const profitByTx = new Map();
+  for (const p of profitHistory) {
+    if (p.profit_type !== 'stock' || !p.transaction_id) continue;
+    profitByTx.set(p.transaction_id, (profitByTx.get(p.transaction_id) || 0) + (Number(p.amount) || 0));
+  }
   const byStock = new Map();
   for (const s of stocks) {
     byStock.set(s.id, {
@@ -192,7 +221,7 @@ export function computeItemMetrics({ stocks, transactions, start, end }) {
   }
   for (const tx of transactions) {
     const iso = isoOf(tx.date);
-    const m = byStock.get(tx.stock_id);
+    const m = byStock.get(stockIdOf(tx));
     if (!m) continue;
     if (tx.type === 'buy') {
       if (!m.firstBuyDate || iso < m.firstBuyDate) m.firstBuyDate = iso;
@@ -203,11 +232,12 @@ export function computeItemMetrics({ stocks, transactions, start, end }) {
     } else if (tx.type === 'sell') {
       if (!m.lastSellDate || iso > m.lastSellDate) m.lastSellDate = iso;
       if (inWindow(iso, start, end)) {
-        const profit = (Number(tx.total) || 0) - (Number(tx.cost_basis) || 0);
+        const profit = profitByTx.get(tx.id) || 0;
+        const estimatedBasis = Math.max((Number(tx.total) || 0) - profit, 0);
         m.windowProfit += profit;
         m.windowGpTraded += Number(tx.total) || 0;
         m.windowSells += 1;
-        m.windowBasis += Number(tx.cost_basis) || 0;
+        m.windowBasis += estimatedBasis;
       }
     }
   }
@@ -230,9 +260,10 @@ export function computeStaleInventory({ items, transactions, today = new Date(),
   const lastSellByStock = new Map();
   for (const tx of transactions) {
     if (tx.type !== 'sell') continue;
-    const prev = lastSellByStock.get(tx.stock_id);
+    const id = stockIdOf(tx);
+    const prev = lastSellByStock.get(id);
     const iso = isoOf(tx.date);
-    if (!prev || iso > prev) lastSellByStock.set(tx.stock_id, iso);
+    if (!prev || iso > prev) lastSellByStock.set(id, iso);
   }
   const todayIso = today.toISOString().slice(0, 10);
   return items
@@ -252,7 +283,7 @@ export function computeBuyingVsSelling({ stocks, transactions, start, end }) {
   const byStock = new Map(stocks.map(s => [s.id, { id: s.id, name: s.name, buys: 0, sells: 0 }]));
   for (const tx of transactions) {
     if (!inWindow(isoOf(tx.date), start, end)) continue;
-    const m = byStock.get(tx.stock_id);
+    const m = byStock.get(stockIdOf(tx));
     if (!m) continue;
     if (tx.type === 'buy')  m.buys  += Number(tx.total) || 0;
     if (tx.type === 'sell') m.sells += Number(tx.total) || 0;
@@ -300,7 +331,7 @@ Expected: PASS, all tests green.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/utils/itemAnalytics.js src/utils/itemAnalytics.test.js
+git add src/utils/itemAnalytics.js
 git commit -m "feat(analytics): add per-item aggregation helpers"
 ```
 
@@ -560,25 +591,33 @@ import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'rec
 import { useTimeseries } from '../../../hooks/useTimeseries';
 import { formatNumber } from '../../../utils/formatters';
 
-export default function ItemDrilldownDrawer({ item, transactions, numberFormat, onClose }) {
+export default function ItemDrilldownDrawer({ item, transactions, profitHistory, numberFormat, onClose }) {
   if (!item) return null;
-  const { data: priceData } = useTimeseries(item.itemId || null, '24h');
+  const { data: priceData } = useTimeseries(item.itemId || null, '1h');
 
   const itemTxs = useMemo(
-    () => transactions.filter(tx => tx.stock_id === item.id).slice(0, 50),
+    () => transactions.filter(tx => (tx.stockId ?? tx.stock_id) === item.id).slice(0, 50),
     [transactions, item.id]
   );
+  const profitByTx = useMemo(() => {
+    const map = new Map();
+    for (const p of profitHistory || []) {
+      if (p.profit_type !== 'stock' || !p.transaction_id) continue;
+      map.set(p.transaction_id, (map.get(p.transaction_id) || 0) + (Number(p.amount) || 0));
+    }
+    return map;
+  }, [profitHistory]);
 
   const profitSeries = useMemo(() => {
     const byDay = new Map();
     for (const tx of itemTxs) {
       if (tx.type !== 'sell') continue;
       const d = String(tx.date).slice(0, 10);
-      const profit = (Number(tx.total) || 0) - (Number(tx.cost_basis) || 0);
+      const profit = profitByTx.get(tx.id) || 0;
       byDay.set(d, (byDay.get(d) || 0) + profit);
     }
     return [...byDay.entries()].sort().map(([date, profit]) => ({ date, profit }));
-  }, [itemTxs]);
+  }, [itemTxs, profitByTx]);
 
   return (
     <>
@@ -951,7 +990,7 @@ import RoiHistogram from './widgets/RoiHistogram';
 import ExportCsvButton from './widgets/ExportCsvButton';
 import '../../styles/analytics-items.css';
 
-export default function ItemsTab({ stocks, transactions, timeframe, numberFormat }) {
+export default function ItemsTab({ stocks, transactions, profitHistory, timeframe, numberFormat }) {
   const [selectedCategories, setSelectedCategories] = useState(new Set());
   const [hasStockOnly, setHasStockOnly] = useState(false);
   const [soldInWindowOnly, setSoldInWindowOnly] = useState(false);
@@ -959,8 +998,8 @@ export default function ItemsTab({ stocks, transactions, timeframe, numberFormat
   const [drillItem, setDrillItem] = useState(null);
 
   const items = useMemo(
-    () => computeItemMetrics({ stocks, transactions, start: timeframe.start, end: timeframe.end }),
-    [stocks, transactions, timeframe.start, timeframe.end]
+    () => computeItemMetrics({ stocks, transactions, profitHistory, start: timeframe.start, end: timeframe.end }),
+    [stocks, transactions, profitHistory, timeframe.start, timeframe.end]
   );
 
   const categories = useMemo(
@@ -1030,6 +1069,7 @@ export default function ItemsTab({ stocks, transactions, timeframe, numberFormat
         <ItemDrilldownDrawer
           item={drillItem}
           transactions={transactions}
+          profitHistory={profitHistory}
           numberFormat={numberFormat}
           onClose={() => setDrillItem(null)}
         />
@@ -1049,6 +1089,7 @@ In `src/pages/AnalyticsPage.jsx`, replace the `<ItemsTab>` line:
     <ItemsTab
       stocks={stocksForStats}
       transactions={transactions || []}
+      profitHistory={profitHistory || []}
       timeframe={tf}
       numberFormat={numberFormat}
     />

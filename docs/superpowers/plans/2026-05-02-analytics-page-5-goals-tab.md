@@ -14,6 +14,26 @@
 
 ---
 
+## Plan-wide corrections from foundation review
+
+- `milestone_history` rows created by existing code may have `period_start` for backfilled completed periods, but manual achievement rows may only have `achieved_at`. Goal helpers must use `period_start || achieved_at?.slice(0, 10)` for dates.
+- Do not add inline CSS while implementing this plan. Move any `style={{...}}` shown in older snippets into `src/styles/analytics-widgets.css` or a goals-specific stylesheet before committing.
+
+## Cross-plan corrections from Profit tab bug review
+
+This section supersedes any older snippets below that conflict with it.
+
+- Do not add automated tests, test files, test runners, or test dependencies unless the user explicitly asks for them. If older steps say to create `*.test.js` or use Vitest, skip those steps and use `npm run build` plus manual browser checks instead.
+- Goal progress labels must state their profit source. Current-period pace from `useAnalytics` buckets is period analytics profit; all-time app totals must match the Trade/Home stock plus extra-profit calculation when labeled as total profit.
+- Goal widgets that compare periods must use complete data. Transactions used for sell counts, GP traded, or item-derived fallback must come from paginated `useTransactions`, not a `.limit(1000)` query.
+- Do not let time grouping distort goal comparisons. Build daily all-time series first, then aggregate into day/week/month/year periods using explicit period boundaries.
+- Cumulative goal overlays must keep the same cumulative value for the same calendar date across global timeframes unless a clearly labeled local "Window baseline" control resets the visible window to zero.
+- Add custom hover tooltips for section headers, KPI labels, goal period controls, estimator assumptions, streak definitions, chart lines, and table columns. Do not combine native `title` with the custom tooltip system.
+- Comparison KPI tooltips must state the basis: selected period versus the immediately previous same-length period, or completed milestone periods when using `milestone_history`.
+- Charts that can cross zero must draw a visible zero reference line and compute the Y-axis domain from actual values. If no visible values are negative, zero should sit at the bottom.
+- Avoid raw "bucket" wording in user-facing copy unless the tooltip explains it as a grouping interval such as day, week, or month.
+- Final verification must include a manual browser pass at desktop and mobile widths, including active goals, missing goals, sparse milestone history, estimator empty states, and hover tooltips. Record any browser-plugin blocker and still run `npm run build`.
+
 ## File Structure
 
 **Created:**
@@ -24,7 +44,6 @@
 - `src/components/analytics/widgets/TimeToGoalEstimator.jsx`
 - `src/components/analytics/widgets/AvgVsGoalKpis.jsx`
 - `src/utils/goalAnalytics.js`
-- `src/utils/goalAnalytics.test.js`
 
 **Modified:**
 - `src/components/analytics/GoalsTab.jsx` — replace placeholder
@@ -37,18 +56,18 @@
 
 **Files:**
 - Create: `src/utils/goalAnalytics.js`
-- Test: `src/utils/goalAnalytics.test.js`
 
-- [ ] **Step 1: Write failing tests**
+- [ ] **Step 1: Draft helper acceptance examples in the plan or notes; do not create test files unless explicitly requested**
 
 ```js
-// src/utils/goalAnalytics.test.js
-import { describe, it, expect } from 'vitest';
+// Acceptance examples only. Do not create src/utils/goalAnalytics.test.js unless explicitly requested.
+// If tests are requested later, convert these examples to the repo's chosen test style at that time.
 import {
   computeHitRateSeries,
   computeStreaks,
   computeAvgVsGoal,
   estimateTimeToGoal,
+  periodDate,
 } from './goalAnalytics';
 
 const h = (period, period_start, actual, goal) => ({
@@ -133,25 +152,26 @@ Expected: FAIL with module not found.
 ```js
 // src/utils/goalAnalytics.js
 const isHit = (h) => (h.actual_amount || 0) >= (h.goal_amount || 0) && (h.goal_amount || 0) > 0;
+export const periodDate = (h) => h.period_start || String(h.achieved_at || '').slice(0, 10);
 
 export function computeHitRateSeries(history, period, windowSize = 5) {
   const filtered = history
-    .filter(h => h.period === period)
-    .sort((a, b) => a.period_start.localeCompare(b.period_start));
+    .filter(h => h.period === period && periodDate(h))
+    .sort((a, b) => periodDate(a).localeCompare(periodDate(b)));
   const out = [];
   for (let i = 0; i < filtered.length; i++) {
     const start = Math.max(0, i - windowSize + 1);
     const slice = filtered.slice(start, i + 1);
     const hits = slice.filter(isHit).length;
-    out.push({ date: filtered[i].period_start, rate: slice.length > 0 ? hits / slice.length : 0 });
+    out.push({ date: periodDate(filtered[i]), rate: slice.length > 0 ? hits / slice.length : 0 });
   }
   return out;
 }
 
 export function computeStreaks(history, period) {
   const filtered = history
-    .filter(h => h.period === period)
-    .sort((a, b) => a.period_start.localeCompare(b.period_start));
+    .filter(h => h.period === period && periodDate(h))
+    .sort((a, b) => periodDate(a).localeCompare(periodDate(b)));
   let longest = 0;
   let run = 0;
   let current = 0;
@@ -197,7 +217,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/utils/goalAnalytics.js src/utils/goalAnalytics.test.js
+git add src/utils/goalAnalytics.js
 git commit -m "feat(analytics): add goal aggregation helpers"
 ```
 
@@ -341,6 +361,7 @@ git commit -m "feat(analytics): add StreakCounter widget"
 // src/components/analytics/widgets/MilestoneHistoryTable.jsx
 import React, { useMemo, useState } from 'react';
 import { formatNumber } from '../../../utils/formatters';
+import { periodDate } from '../../../utils/goalAnalytics';
 
 const PERIODS = ['all', 'day', 'week', 'month', 'year'];
 
@@ -351,7 +372,7 @@ export default function MilestoneHistoryTable({ milestoneHistory, numberFormat }
     const filtered = period === 'all'
       ? milestoneHistory
       : milestoneHistory.filter(h => h.period === period);
-    return [...filtered].sort((a, b) => b.period_start.localeCompare(a.period_start));
+    return [...filtered].sort((a, b) => periodDate(b).localeCompare(periodDate(a)));
   }, [milestoneHistory, period]);
 
   return (
@@ -384,9 +405,9 @@ export default function MilestoneHistoryTable({ milestoneHistory, numberFormat }
             {rows.map(r => {
               const hit = (r.actual_amount || 0) >= (r.goal_amount || 0) && (r.goal_amount || 0) > 0;
               return (
-                <tr key={`${r.period}-${r.period_start}`}>
+                <tr key={`${r.period}-${periodDate(r)}-${r.achieved_at || ''}`}>
                   <td>{r.period}</td>
-                  <td>{r.period_start}</td>
+                  <td>{periodDate(r)}</td>
                   <td>{formatNumber(r.goal_amount, numberFormat)}</td>
                   <td>{formatNumber(r.actual_amount, numberFormat)}</td>
                   <td style={{ color: hit ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)', fontWeight: 600 }}>
@@ -427,6 +448,7 @@ git commit -m "feat(analytics): add MilestoneHistoryTable widget"
 import React, { useMemo, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, ReferenceLine } from 'recharts';
 import { formatNumber } from '../../../utils/formatters';
+import { periodDate } from '../../../utils/goalAnalytics';
 
 const PERIODS = [
   { key: 'day',   label: 'Daily' },
@@ -440,9 +462,9 @@ export default function ProfitVsGoalChart({ milestoneHistory, milestones, number
   const data = useMemo(() => {
     const goal = milestones?.[period]?.goal || 0;
     return milestoneHistory
-      .filter(h => h.period === period)
-      .sort((a, b) => a.period_start.localeCompare(b.period_start))
-      .map(h => ({ date: h.period_start, profit: h.actual_amount || 0, goal }));
+      .filter(h => h.period === period && periodDate(h))
+      .sort((a, b) => periodDate(a).localeCompare(periodDate(b)))
+      .map(h => ({ date: periodDate(h), profit: h.actual_amount || 0, goal }));
   }, [milestoneHistory, period, milestones]);
 
   return (

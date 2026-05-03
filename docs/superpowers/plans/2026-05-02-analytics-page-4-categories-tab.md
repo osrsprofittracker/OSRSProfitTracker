@@ -14,6 +14,27 @@
 
 ---
 
+## Plan-wide corrections from foundation review
+
+- Use Plan 1's `by_category` bucket field as the source for per-category realized profit. Do not recalculate category profit from transaction cost basis.
+- `uniqueItems` means tracked items in the category, including currently unheld items; count every stock row, not only rows with `shares > 0`.
+- Do not add inline CSS while implementing this plan. Move any `style={{...}}` shown in older snippets into `src/styles/analytics-widgets.css` or a category-specific stylesheet before committing.
+
+## Cross-plan corrections from Profit tab bug review
+
+This section supersedes any older snippets below that conflict with it.
+
+- Do not add automated tests, test files, test runners, or test dependencies unless the user explicitly asks for them. If older steps say to create `*.test.js` or use Vitest, skip those steps and use `npm run build` plus manual browser checks instead.
+- Category realized-profit widgets must make their source explicit. `by_category` is bucketed analytics profit; app-wide totals labeled "Total Profit" must match the Trade/Home stock source where that label is used.
+- `by_category` can miss older sells if the RPC depends on `profit_history.transaction_id`. For historical sell volume or GP-traded comparisons, use complete local transactions loaded with pagination rather than capped RPC data.
+- Any cumulative or trend chart should build from daily all-time data first, then filter or aggregate. Do not let week/month bucket start dates change the value shown for the same calendar date across timeframes.
+- Do not display raw "bucket" wording in the UI unless a tooltip explains it as a grouping interval such as day, week, or month.
+- Add custom hover tooltips for section headers, KPI labels, chart controls, legend items where useful, donut metric toggles, and table columns. Do not combine native `title` with the custom tooltip system.
+- Period-comparison tooltips must state the comparison basis: selected global timeframe versus the immediately previous same-length timeframe.
+- Charts that can cross zero must draw a visible zero reference line and compute the Y-axis domain from actual stacked category totals. If no visible values are negative, zero should sit at the bottom.
+- Color legends must match the actual rendered scale. If a palette uses lighter/brighter color for stronger values, the tooltip and legend must say that.
+- Final verification must include a manual browser pass at desktop and mobile widths, including category filters, legends, table sorting, treemap layout, and empty states. Record any browser-plugin blocker and still run `npm run build`.
+
 ## File Structure
 
 **Created:**
@@ -25,7 +46,6 @@
 - `src/components/analytics/widgets/CategoryMarginChart.jsx`
 - `src/components/analytics/widgets/InventoryTreemap.jsx`
 - `src/utils/categoryAnalytics.js`
-- `src/utils/categoryAnalytics.test.js`
 
 **Modified:**
 - `src/components/analytics/CategoriesTab.jsx` — replace placeholder
@@ -38,13 +58,12 @@
 
 **Files:**
 - Create: `src/utils/categoryAnalytics.js`
-- Test: `src/utils/categoryAnalytics.test.js`
 
-- [ ] **Step 1: Write failing tests**
+- [ ] **Step 1: Draft helper acceptance examples in the plan or notes; do not create test files unless explicitly requested**
 
 ```js
-// src/utils/categoryAnalytics.test.js
-import { describe, it, expect } from 'vitest';
+// Acceptance examples only. Do not create src/utils/categoryAnalytics.test.js unless explicitly requested.
+// If tests are requested later, convert these examples to the repo's chosen test style at that time.
 import {
   pivotCategoryTimeseries,
   computeCategoryBreakdown,
@@ -163,7 +182,7 @@ export function computeCategoryBreakdown({ stocks, buckets }) {
       windowProfit: 0,
     });
     const m = byCat.get(cat);
-    m.uniqueItems += s.shares > 0 ? 1 : 0;
+    m.uniqueItems += 1;
     m.inventoryValue += s.totalCost || 0;
     m.totalRealized += (s.totalCostSold || 0) - (s.totalCostBasisSold || 0);
     m.basis += s.totalCostBasisSold || 0;
@@ -238,7 +257,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/utils/categoryAnalytics.js src/utils/categoryAnalytics.test.js
+git add src/utils/categoryAnalytics.js
 git commit -m "feat(analytics): add per-category aggregation helpers"
 ```
 

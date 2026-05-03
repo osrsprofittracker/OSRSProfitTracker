@@ -2,17 +2,45 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fill in the Profit tab on `/analytics` with eight widgets: profit-over-time line, cumulative profit area, profit-by-source stacked bar, GP-traded bar, period-comparison cards, best/worst-days table, KPI strip (avg profit/sell, avg margin %, win rate), and a profit heatmap.
+**Goal:** Fill in the Profit tab on `/analytics` with eight widgets: profit-over-time line, cumulative profit area, profit-by-source stacked bar, GP-traded bar, period-comparison cards, best-periods table, KPI strip (avg profit/sell, avg margin %, win rate), and a profit heatmap.
 
-**Architecture:** All widgets read from the `buckets` array returned by `useAnalytics` (already wired in Plan 1) and from existing in-context data (`transactions`, `stocks`, `profitHistory`) for per-day breakdowns the bucketed RPC doesn't return. Charts use `recharts`. The heatmap is a custom SVG grid.
+**Architecture:** All widgets read from the `buckets` array returned by `useAnalytics` (already wired in Plan 1) and from existing in-context data (`transactions`, `stocks`, `profitHistory`) for per-day breakdowns the bucketed RPC doesn't return. Realized per-transaction profit must be joined from `profitHistory` rows by `transaction_id`; do not calculate item profit from `transactions.cost_basis`, because the current app does not write that column. Charts use `recharts`. The heatmap is a custom SVG grid.
 
-**Tech Stack:** React 18, recharts, vitest, lucide-react.
+**Tech Stack:** React 18, recharts, lucide-react.
 
 **Reference spec:** `docs/superpowers/specs/2026-05-02-analytics-page-design.md` § Profit tab
 
 **Prerequisite:** Plan 1 must be merged (the page shell, hooks, and RPC are required).
 
 ---
+
+## Plan-wide corrections from foundation review
+
+- Use the Plan 1 bucket contract: `profit_items`, `profit_dump`, `profit_referral`, `profit_bonds`, `gp_traded`, `by_category`, `sells_count`, and `wins_count`.
+- Do not use `transactions.cost_basis`. For any per-transaction profit, build a map from `profitHistory.filter(p => p.profit_type === 'stock')` keyed by `transaction_id`.
+- The existing app maps transaction rows to camelCase (`stockId`, `stockName`, `profitHistoryId`), so widget code should read `tx.stockId` first and only fall back to `tx.stock_id` for test fixtures.
+- Do not add inline CSS while implementing this plan. Move any `style={{...}}` shown in older snippets into `src/styles/analytics-widgets.css` or a widget-specific stylesheet before committing.
+
+## Post-implementation corrections from Profit tab bug review
+
+This section supersedes any older snippets below that conflict with it.
+
+- Do not add automated tests, test files, test runners, or test dependencies unless the user explicitly asks for them. If older steps say to use Vitest, skip those steps and use `npm run build` plus the manual browser checklist instead.
+- Total profit labeled as app-wide "Total Profit" must match the Trade/Home calculation: `stocks.totalCostSold - stocks.totalCostBasisSold + dump/referral/bonds`. Bucketed `profit_history` analytics are period analytics and must be labeled as such.
+- When `timeframe=all`, Period Profit must either use the same all-time total source as Trade/Home or clearly say it is bucketed analytics profit. Do not show two different values with the same meaning.
+- `useTransactions.fetchTransactions()` must load every transaction with Supabase pagination (`range()` batches), not `.limit(1000)`. Analytics that depend on transactions must wait for complete transaction data before caching or rendering totals.
+- Do not trust RPC `gp_traded` for sell turnover unless the SQL has been manually updated and backfilled. The known bug was older sells missing from `profit_history.transaction_id`; merge or override GP-traded buckets from complete local transaction totals.
+- Cumulative profit must be built from daily all-time buckets, then filtered to the selected window. Do not compute cumulative lines from week/month buckets, because bucket start dates change the value shown for the same calendar date.
+- Default cumulative mode should keep the all-time baseline so the same date has the same cumulative value across timeframes. If a local "Window baseline" toggle exists, label it that way and explain that it resets the selected window to zero.
+- User-facing copy should avoid raw "bucket" wording unless immediately explained as "grouping interval: day, week, or month".
+- The best-periods widget replaces the earlier best/worst-days widget. Show best periods only, add a local timeframe selector independent of the page timeframe, and add grouping controls for day/week/month/year.
+- Best-period "Top item" must be calculated independently from the best source. Rank item profit entries inside the winning period; if profit linkage is missing, fall back to highest sell GP volume. Show `-` only when the period has no item profit and no item sell transactions.
+- Add custom hover tooltips for every section header, KPI, chart control, modal button, and ambiguous label. Do not put both `title` and custom tooltip attributes on the same element, because that creates duplicate browser and custom tooltips.
+- Profit KPI tooltips must state their comparison basis: selected global timeframe versus the immediately previous same-length timeframe.
+- Profit by source must draw a clear zero reference line. Its Y-axis domain must come from actual stacked positive/negative totals: if all values are non-negative, zero sits at the bottom; only allocate negative space when visible data goes below zero.
+- Heatmap tooltip/copy must say lighter/brighter green means more profit. Do not say darker green if the palette uses lighter cells for stronger profit.
+- Compact number formatting must preserve signs and use absolute thresholds, e.g. `-2.50 M` rather than falling through to a raw negative.
+- Final verification must include manual visual checks at desktop and mobile widths. If the browser plugin is unavailable, record that blocker and still run `npm run build`.
 
 ## File Structure
 
@@ -22,10 +50,13 @@
 - `src/components/analytics/widgets/ProfitBySourceChart.jsx`
 - `src/components/analytics/widgets/GpTradedChart.jsx`
 - `src/components/analytics/widgets/PeriodComparisonCards.jsx`
-- `src/components/analytics/widgets/BestWorstDaysTable.jsx`
+- `src/components/analytics/widgets/BestDaysTable.jsx`
 - `src/components/analytics/widgets/ProfitKpiStrip.jsx`
 - `src/components/analytics/widgets/ProfitHeatmap.jsx`
 - `src/styles/analytics-widgets.css`
+- `src/hooks/useAnalytics.js` - modified to merge complete transaction-derived GP-traded buckets and avoid stale cache keys
+- `src/hooks/useTransactions.js` - modified to load all transactions with pagination
+- `src/utils/formatters.js` - modified to preserve sign in compact formatting
 
 **Modified:**
 - `src/components/analytics/ProfitTab.jsx` — replace placeholder with the real layout
@@ -308,7 +339,7 @@ export default function CumulativeProfitChart({ buckets, allTimeBaseline = 0, nu
           className={`analytics-toggle${allTime ? ' is-on' : ''}`}
           onClick={() => setAllTime(v => !v)}
         >
-          All-time origin
+          Window baseline
         </button>
       </div>
       <div className="analytics-widget-body" style={{ height: 240 }}>
@@ -430,7 +461,7 @@ export default function GpTradedChart({ buckets, numberFormat }) {
           className={`analytics-toggle${showTxCount ? ' is-on' : ''}`}
           onClick={() => setShowTxCount(v => !v)}
         >
-          Show sells per bucket
+          Show sell count
         </button>
       </div>
       <div className="analytics-widget-body" style={{ height: 260 }}>
@@ -501,7 +532,7 @@ function Card({ label, current, prior, sparkline, numberFormat, hasData }) {
           {pct >= 0 ? '▲' : '▼'} {Math.abs(pct).toFixed(1)}% vs prior
         </div>
       )}
-      <div style={{ height: 36, marginTop: '0.5rem' }}>
+      <div className="analytics-mini-chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={sparkline.map((v, i) => ({ i, v }))}>
             <Line type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} dot={false} />
@@ -532,27 +563,29 @@ git commit -m "feat(analytics): add PeriodComparisonCards widget"
 
 ---
 
-### Task B6: `BestWorstDaysTable`
+### Task B6: `BestDaysTable`
 
 **Files:**
-- Create: `src/components/analytics/widgets/BestWorstDaysTable.jsx`
+- Create: `src/components/analytics/widgets/BestDaysTable.jsx`
+
+**Important correction:** This task must render best periods only. If the older illustrative snippet below still contains `bottom` rows or a bottom table, delete that code during implementation and replace it with local controls for timeframe and grouping (`day`, `week`, `month`, `year`).
 
 - [ ] **Step 1: Implement**
 
 ```jsx
-// src/components/analytics/widgets/BestWorstDaysTable.jsx
+// src/components/analytics/widgets/BestDaysTable.jsx
 import React, { useMemo } from 'react';
 import { formatNumber } from '../../../utils/formatters';
 
 const total = (b) => b.profit_items + b.profit_dump + b.profit_referral + b.profit_bonds;
 
-const topItemForBucket = (transactions, stockMap, bucketDate) => {
+const topItemForBucket = (transactions, stockMap, profitByTx, bucketDate) => {
   const sums = new Map();
   for (const tx of transactions) {
     if (tx.type !== 'sell') continue;
     if (String(tx.date).slice(0, 10) !== bucketDate) continue;
-    const profit = (Number(tx.total) || 0) - (Number(tx.cost_basis) || 0);
-    const stock = stockMap.get(tx.stock_id);
+    const profit = profitByTx.get(tx.id) || 0;
+    const stock = stockMap.get(tx.stockId ?? tx.stock_id);
     const name = stock?.name || tx.stockName || 'Unknown';
     sums.set(name, (sums.get(name) || 0) + profit);
   }
@@ -563,8 +596,16 @@ const topItemForBucket = (transactions, stockMap, bucketDate) => {
   return best?.name || '—';
 };
 
-export default function BestWorstDaysTable({ buckets, transactions, stocks, numberFormat, onNavigateToHistory }) {
+export default function BestDaysTable({ buckets, transactions, stocks, profitHistory, numberFormat, onNavigateToHistory }) {
   const stockMap = useMemo(() => new Map(stocks.map(s => [s.id, s])), [stocks]);
+  const profitByTx = useMemo(() => {
+    const map = new Map();
+    for (const p of profitHistory || []) {
+      if (p.profit_type !== 'stock' || !p.transaction_id) continue;
+      map.set(p.transaction_id, (map.get(p.transaction_id) || 0) + (Number(p.amount) || 0));
+    }
+    return map;
+  }, [profitHistory]);
   const ranked = useMemo(() => {
     return [...buckets]
       .map(b => ({ date: b.bucket_date, profit: total(b), sells: b.sells_count }))
@@ -581,7 +622,7 @@ export default function BestWorstDaysTable({ buckets, transactions, stocks, numb
         {formatNumber(row.profit, numberFormat)}
       </td>
       <td>{row.sells}</td>
-      <td>{topItemForBucket(transactions, stockMap, row.date)}</td>
+      <td>{topItemForBucket(transactions, stockMap, profitByTx, row.date)}</td>
     </tr>
   );
 
@@ -592,14 +633,14 @@ export default function BestWorstDaysTable({ buckets, transactions, stocks, numb
       </div>
       <div className="analytics-widget-body">
         <div style={{ marginBottom: '0.75rem' }}>
-          <div className="analytics-widget-subtitle" style={{ marginBottom: '0.25rem' }}>Top 5 days</div>
+          <div className="analytics-widget-subtitle">Top 5 periods</div>
           <table className="analytics-bw-table">
             <thead><tr><th>Date</th><th>Profit</th><th>Sells</th><th>Top item</th></tr></thead>
             <tbody>{top.map(r => <Row key={r.date} row={r} />)}</tbody>
           </table>
         </div>
         <div>
-          <div className="analytics-widget-subtitle" style={{ marginBottom: '0.25rem' }}>Bottom 5 days</div>
+          <div className="analytics-widget-subtitle">Do not render worst periods</div>
           <table className="analytics-bw-table">
             <thead><tr><th>Date</th><th>Profit</th><th>Sells</th><th>Top item</th></tr></thead>
             <tbody>{bottom.map(r => <Row key={r.date} row={r} />)}</tbody>
@@ -614,8 +655,8 @@ export default function BestWorstDaysTable({ buckets, transactions, stocks, numb
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/components/analytics/widgets/BestWorstDaysTable.jsx
-git commit -m "feat(analytics): add BestWorstDaysTable widget"
+git add src/components/analytics/widgets/BestDaysTable.jsx
+git commit -m "feat(analytics): add BestDaysTable widget"
 ```
 
 ---
@@ -821,13 +862,17 @@ import CumulativeProfitChart from './widgets/CumulativeProfitChart';
 import ProfitBySourceChart from './widgets/ProfitBySourceChart';
 import GpTradedChart from './widgets/GpTradedChart';
 import PeriodComparisonCards from './widgets/PeriodComparisonCards';
-import BestWorstDaysTable from './widgets/BestWorstDaysTable';
+import BestDaysTable from './widgets/BestDaysTable';
 import ProfitKpiStrip from './widgets/ProfitKpiStrip';
 import ProfitHeatmap from './widgets/ProfitHeatmap';
 import '../../styles/analytics-widgets.css';
 
 const subtractDays = (iso, days) => {
   const d = new Date(iso); d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+};
+const addDays = (iso, days) => {
+  const d = new Date(iso); d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 };
 const subtractYears = (iso, years) => {
@@ -866,7 +911,7 @@ export default function ProfitTab({
   const samePeriodLYEnd   = subtractYears(timeframe.end, 1);
 
   const lastPeriod = useAnalytics({
-    userId, start: lastPeriodStart, end: timeframe.start, bucket: timeframe.bucket, fallbackData,
+    userId, start: lastPeriodStart, end: addDays(timeframe.start, -1), bucket: timeframe.bucket, fallbackData,
   });
   const samePeriodLY = useAnalytics({
     userId, start: samePeriodLYStart, end: samePeriodLYEnd, bucket: timeframe.bucket, fallbackData,
@@ -900,10 +945,11 @@ export default function ProfitTab({
         numberFormat={numberFormat}
       />
       <div className="analytics-grid-2">
-        <BestWorstDaysTable
+        <BestDaysTable
           buckets={buckets}
           transactions={transactions}
           stocks={stocks}
+          profitHistory={profitHistory}
           numberFormat={numberFormat}
           onNavigateToHistory={onNavigateToHistory}
         />
@@ -927,6 +973,8 @@ export default function ProfitTab({
 
 In `src/pages/AnalyticsPage.jsx`, change the `<ProfitTab>` usage to include the new props. Replace the existing line:
 
+If `AnalyticsPage` does not already receive `navigateToPage`, add it to the page props and pass it from `MainApp.jsx`.
+
 ```jsx
 {mountedTabs.has('profit')     && <div hidden={activeTab !== 'profit'}>     <ProfitTab     buckets={current.buckets} timeframe={tf} numberFormat={numberFormat} /></div>}
 ```
@@ -945,7 +993,7 @@ with:
       stocks={stocksForStats}
       profitHistory={profitHistory}
       numberFormat={numberFormat}
-      onNavigateToHistory={(date) => {/* router hook into HistoryPage filter */}}
+      onNavigateToHistory={(date) => navigateToPage('history', { query: { dateFrom: date, dateTo: date } })}
       totalProfitAllTime={totalProfit}
       fallbackData={fallbackData}
     />
@@ -956,7 +1004,7 @@ with:
 - [ ] **Step 3: Verify in browser**
 
 Run: `npm run dev`
-Navigate to `/analytics`. Each timeframe pill should produce visible chart updates. Hover a chart, expect a styled tooltip. Toggle the "All-time origin" button on Cumulative — the line baseline shifts. Toggle "Show sells per bucket" on GP traded — a yellow line appears. Heatmap shows 365 cells for the last year.
+Navigate to `/analytics`. Each timeframe pill should produce visible chart updates. Hover every section header, KPI, chart control, and modal button, and expect exactly one styled tooltip. Toggle the "Window baseline" button on Cumulative; the line should explicitly reset the visible window to zero while default mode keeps all-time cumulative values consistent across timeframes. Toggle "Show sell count" on GP traded; a yellow count line appears. Heatmap shows 365 cells for the last year and explains that lighter/brighter green means more profit.
 
 - [ ] **Step 4: Commit**
 
@@ -970,11 +1018,11 @@ git commit -m "feat(analytics): wire all profit-tab widgets"
 ## Manual verification checklist
 
 - [ ] Profit-over-time line chart renders, with zero baseline reference
-- [ ] Cumulative profit area chart renders; "All-time origin" toggle changes baseline
+- [ ] Cumulative profit area chart renders; "Window baseline" toggle changes baseline while default all-time values stay consistent across filters
 - [ ] Profit-by-source stacked bars render with all 4 source colors and a legend
-- [ ] GP-traded bars render; "Show sells per bucket" toggle adds a yellow line
+- [ ] GP-traded bars render from complete transaction data; "Show sell count" toggle adds a yellow line
 - [ ] Period comparison shows three cards; if the user has < 1 year of history, the same-period-last-year card says "Not enough history"
-- [ ] Best/Worst days table shows top 5 and bottom 5; clicking a row triggers a history navigation
+- [ ] Best periods table shows best days/weeks/months/years with its own timeframe selector; clicking a row triggers history navigation
 - [ ] Profit KPI strip shows three KPIs with deltas
 - [ ] Heatmap shows 365 cells with color gradients; hovering shows date + profit
 - [ ] All charts respect the global timeframe selector
@@ -987,11 +1035,11 @@ git commit -m "feat(analytics): wire all profit-tab widgets"
 Spec coverage check (Profit tab section):
 
 - Widget 1 Profit over time — ✅ Task B1
-- Widget 2 Cumulative profit + all-time origin toggle — ✅ Task B2
+- Widget 2 Cumulative profit + window baseline toggle — ✅ Task B2
 - Widget 3 Profit by source stacked bar — ✅ Task B3
 - Widget 4 GP traded bar + tx-count overlay — ✅ Task B4
 - Widget 5 Period comparison cards — ✅ Task B5
-- Widget 6 Best/worst days — ✅ Task B6
+- Widget 6 Best periods — ✅ Task B6
 - Widget 7 KPI strip (avg/sell, avg margin, win rate) — ✅ Task B7
 - Widget 8 Profit heatmap — ✅ Task B8
 
