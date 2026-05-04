@@ -12,6 +12,36 @@ const transactionIdOf = (row) => row?.transactionId ?? row?.transaction_id;
 const profitTypeOf = (row) => row?.profitType ?? row?.profit_type;
 const isoOf = (value) => String(value || '').slice(0, 10);
 
+const MS_PER_DAY = 86400000;
+
+const parseIsoDateUtc = (iso) => {
+  const [year, month, day] = String(iso || '').slice(0, 10).split('-').map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
+const addDays = (iso, days) => {
+  const date = parseIsoDateUtc(iso);
+  if (!date) return iso;
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
+const enumerateDays = (start, end) => {
+  const startDate = parseIsoDateUtc(start);
+  const endDate = parseIsoDateUtc(end);
+  if (!startDate || !endDate || startDate > endDate) return [];
+
+  const days = [];
+  const span = Math.round((endDate - startDate) / MS_PER_DAY);
+  for (let offset = 0; offset <= span; offset += 1) {
+    days.push(addDays(start, offset));
+  }
+  return days;
+};
+
+const isTradeType = (type) => type === 'buy' || type === 'sell';
+
 const latestHighOf = (stock, gePrices) => {
   const itemId = itemIdOf(stock);
   return itemId ? gePrices?.[itemId]?.high : null;
@@ -30,6 +60,9 @@ const emptyCategoryRow = (category) => ({
   unrealizedProfit: 0,
   windowBasis: 0,
   windowProfit: 0,
+  tradesWindow: 0,
+  avgInventoryWindow: 0,
+  turnoverPct: null,
 });
 
 const ensureCategory = (map, category) => {
@@ -183,7 +216,10 @@ const addTransactionWindowMetrics = ({
     const positionKey = String(stock.id);
     const position = positions.get(positionKey) || { shares: 0, cost: 0 };
 
-    if (inWindow) row.gpTradedWindow += total;
+    if (inWindow && isTradeType(transaction.type)) {
+      row.gpTradedWindow += total;
+      row.tradesWindow += 1;
+    }
 
     if (transaction.type === 'buy') {
       position.shares += shares;
@@ -211,6 +247,75 @@ const addTransactionWindowMetrics = ({
     positions.set(positionKey, position);
   }
 };
+
+export function computeCategoryAverageInventory({
+  stocks = [],
+  transactions = [],
+  start,
+  end,
+}) {
+  if (!start || !end) return new Map();
+
+  const days = enumerateDays(start, end);
+  if (!days.length) return new Map();
+
+  const stocksById = new Map((stocks || []).map((stock) => [String(stock.id), stock]));
+  const positions = new Map((stocks || []).map((stock) => [
+    String(stock.id),
+    {
+      stock,
+      shares: 0,
+      cost: 0,
+    },
+  ]));
+  const sortedTransactions = [...(transactions || [])]
+    .filter((transaction) => stocksById.has(String(stockIdOf(transaction))))
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
+  let txIndex = 0;
+  const totals = new Map();
+
+  for (const day of days) {
+    while (
+      txIndex < sortedTransactions.length
+      && isoOf(sortedTransactions[txIndex].date) <= day
+    ) {
+      const transaction = sortedTransactions[txIndex];
+      const stock = stocksById.get(String(stockIdOf(transaction)));
+      const key = String(stock.id);
+      const position = positions.get(key) || { stock, shares: 0, cost: 0 };
+      const shares = toNumber(transaction.shares);
+      const total = toNumber(transaction.total);
+
+      if (transaction.type === 'buy') {
+        position.shares += shares;
+        position.cost += total;
+      }
+
+      if (transaction.type === 'sell') {
+        const avgCost = position.shares > 0 ? position.cost / position.shares : 0;
+        const estimatedBasis = avgCost * shares;
+        position.shares = Math.max(0, position.shares - shares);
+        position.cost = Math.max(0, position.cost - estimatedBasis);
+      }
+
+      positions.set(key, position);
+      txIndex += 1;
+    }
+
+    for (const position of positions.values()) {
+      const category = categoryOf(position.stock);
+      totals.set(category, (totals.get(category) || 0) + Math.max(0, position.cost));
+    }
+  }
+
+  const averages = new Map();
+  for (const [category, total] of totals.entries()) {
+    averages.set(category, total / days.length);
+  }
+
+  return averages;
+}
 
 export function computeCategoryBreakdown({
   stocks = [],
@@ -257,11 +362,29 @@ export function computeCategoryBreakdown({
     end,
   });
 
+  const avgInventoryByCategory = computeCategoryAverageInventory({
+    stocks,
+    transactions,
+    start,
+    end,
+  });
+
+  for (const [category, avgInventory] of avgInventoryByCategory.entries()) {
+    ensureCategory(byCategory, category).avgInventoryWindow = avgInventory;
+  }
+
   return [...byCategory.values()]
-    .map((row) => ({
-      ...row,
-      avgMarginPct: row.windowBasis > 0 ? (row.windowProfit / row.windowBasis) * 100 : 0,
-    }))
+    .map((row) => {
+      const turnoverPct = row.avgInventoryWindow > 0
+        ? (row.windowProfit / row.avgInventoryWindow) * 100
+        : null;
+
+      return {
+        ...row,
+        avgMarginPct: row.windowBasis > 0 ? (row.windowProfit / row.windowBasis) * 100 : 0,
+        turnoverPct,
+      };
+    })
     .sort((a, b) => b.windowProfit - a.windowProfit);
 }
 
@@ -348,4 +471,81 @@ export function sumBucketsByCategory(buckets = []) {
   }
 
   return totals;
+}
+
+export function buildCategoryHeatmapRows({ buckets = [], categories = [] }) {
+  const categorySet = new Set(categories || []);
+
+  if (categorySet.size === 0) {
+    for (const bucket of buckets || []) {
+      for (const category of Object.keys(bucket.by_category || {})) {
+        categorySet.add(category);
+      }
+    }
+  }
+
+  const dates = (buckets || []).map((bucket) => bucket.bucket_date).filter(Boolean);
+
+  return [...categorySet].sort().map((category) => ({
+    category,
+    cells: dates.map((date) => {
+      const bucket = (buckets || []).find((row) => row.bucket_date === date);
+      return {
+        date,
+        profit: toNumber(bucket?.by_category?.[category]),
+      };
+    }),
+  }));
+}
+
+export function buildCategoryDrilldownData({
+  category,
+  breakdownRows = [],
+  buckets = [],
+  stocks = [],
+  transactions = [],
+  start,
+  end,
+  limit = 12,
+}) {
+  const matchingStocks = (stocks || []).filter((stock) => categoryOf(stock) === category);
+  const stockIds = new Set(matchingStocks.map((stock) => String(stock.id)));
+  const metrics = breakdownRows.find((row) => row.category === category) || emptyCategoryRow(category);
+  const profitSeries = (buckets || []).map((bucket) => ({
+    date: bucket.bucket_date,
+    profit: toNumber(bucket.by_category?.[category]),
+  }));
+  const recentTransactions = (transactions || [])
+    .filter((transaction) => stockIds.has(String(stockIdOf(transaction))))
+    .filter((transaction) => isTradeType(transaction.type))
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+    .slice(0, limit);
+  const windowTransactions = (transactions || [])
+    .filter((transaction) => stockIds.has(String(stockIdOf(transaction))))
+    .filter((transaction) => isTradeType(transaction.type))
+    .filter((transaction) => {
+      const iso = isoOf(transaction.date);
+      return !start || !end || (iso >= start && iso <= end);
+    });
+  const topItems = matchingStocks
+    .map((stock) => ({
+      ...stock,
+      windowGpTraded: windowTransactions
+        .filter((transaction) => String(stockIdOf(transaction)) === String(stock.id))
+        .reduce((sum, transaction) => sum + toNumber(transaction.total), 0),
+      totalRealized: toNumber(stock.totalCostSold) - toNumber(stock.totalCostBasisSold),
+    }))
+    .sort((a, b) => (
+      (toNumber(b.windowGpTraded) || toNumber(b.totalRealized))
+      - (toNumber(a.windowGpTraded) || toNumber(a.totalRealized))
+    ))
+    .slice(0, limit);
+
+  return {
+    category,
+    metrics,
+    profitSeries,
+    topItems,
+    recentTransactions,
+  };
 }
