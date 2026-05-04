@@ -73,6 +73,7 @@ const formatCell = (row, key, numberFormat) => {
   const value = row[key];
   if (key === 'avgMarginPct') return `${(Number(value) || 0).toFixed(1)}%`;
   if (key === 'turnoverPct') {
+    if (value == null) return '-';
     const numericValue = Number(value);
     if (!Number.isFinite(numericValue)) return '-';
     return `${numericValue.toFixed(1)}%`;
