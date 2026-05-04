@@ -279,6 +279,16 @@
   background: rgba(51, 65, 85, 0.35);
 }
 
+.category-table-row.is-clickable {
+  cursor: pointer;
+}
+
+.category-table-row.is-clickable:hover,
+.category-table-row.is-clickable:focus-visible {
+  background: rgba(34, 197, 94, 0.08);
+  outline: none;
+}
+
 .category-table.is-readonly thead th {
   color: rgb(203, 213, 225);
   font-weight: 700;

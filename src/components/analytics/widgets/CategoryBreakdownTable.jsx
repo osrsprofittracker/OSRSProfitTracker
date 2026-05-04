@@ -29,6 +29,16 @@ const COLUMNS = [
     tooltip: 'Buy plus sell GP volume in the selected timeframe.',
   },
   {
+    key: 'tradesWindow',
+    label: 'Trades',
+    tooltip: 'Buy and sell transaction count in the selected timeframe.',
+  },
+  {
+    key: 'turnoverPct',
+    label: 'Turnover',
+    tooltip: 'Selected-timeframe category profit divided by average inventory tied up over the same timeframe. Estimated from loaded transactions and current stock data.',
+  },
+  {
     key: 'windowProfit',
     label: 'Profit',
     tooltip: 'Selected-timeframe realized item profit from analytics by-category buckets.',
@@ -45,6 +55,8 @@ const numericKeys = new Set([
   'inventoryValue',
   'unrealizedProfit',
   'gpTradedWindow',
+  'tradesWindow',
+  'turnoverPct',
   'windowProfit',
   'avgMarginPct',
 ]);
@@ -60,12 +72,17 @@ function SortIcon({ active, direction }) {
 const formatCell = (row, key, numberFormat) => {
   const value = row[key];
   if (key === 'avgMarginPct') return `${(Number(value) || 0).toFixed(1)}%`;
+  if (key === 'turnoverPct') {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return '-';
+    return `${numericValue.toFixed(1)}%`;
+  }
   if (numericKeys.has(key)) return formatNumber(value, numberFormat);
   return value || '-';
 };
 
 const valueClass = (key, value) => {
-  if (key !== 'windowProfit' && key !== 'avgMarginPct' && key !== 'unrealizedProfit') return '';
+  if (key !== 'windowProfit' && key !== 'avgMarginPct' && key !== 'unrealizedProfit' && key !== 'turnoverPct') return '';
   if ((Number(value) || 0) < 0) return 'items-profit-negative';
   return 'items-profit-positive';
 };
@@ -75,6 +92,7 @@ export default function CategoryBreakdownTable({
   totalCategories = rows.length,
   timeframeLabel = 'selected',
   numberFormat,
+  onRowClick,
 }) {
   const [sortKey, setSortKey] = useState('windowProfit');
   const [sortDir, setSortDir] = useState('desc');
@@ -115,6 +133,26 @@ export default function CategoryBreakdownTable({
     setSortDir(numericKeys.has(key) ? 'desc' : 'asc');
   };
 
+  const handleRowKeyDown = (event, row) => {
+    if (!onRowClick || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    onRowClick(row);
+  };
+
+  const getHeaderLabel = (column) => {
+    if (
+      column.key === 'windowProfit'
+      || column.key === 'gpTradedWindow'
+      || column.key === 'tradesWindow'
+      || column.key === 'turnoverPct'
+      || column.key === 'avgMarginPct'
+    ) {
+      return `${column.label} (${timeframeLabel})`;
+    }
+
+    return column.label;
+  };
+
   return (
     <div className="analytics-widget">
       <div className="analytics-widget-header">
@@ -140,12 +178,7 @@ export default function CategoryBreakdownTable({
                     data-tooltip={column.tooltip}
                     onClick={() => handleSort(column.key)}
                   >
-                    <span>
-                      {column.key === 'windowProfit' && `Profit (${timeframeLabel})`}
-                      {column.key === 'gpTradedWindow' && `GP traded (${timeframeLabel})`}
-                      {column.key === 'avgMarginPct' && `Margin (${timeframeLabel})`}
-                      {column.key !== 'windowProfit' && column.key !== 'gpTradedWindow' && column.key !== 'avgMarginPct' && column.label}
-                    </span>
+                    <span>{getHeaderLabel(column)}</span>
                     <SortIcon active={sortKey === column.key} direction={sortDir} />
                   </button>
                 </th>
@@ -154,7 +187,13 @@ export default function CategoryBreakdownTable({
           </thead>
           <tbody>
             {visibleRows.map((row) => (
-              <tr className="category-table-row" key={row.category}>
+              <tr
+                className={`category-table-row${onRowClick ? ' is-clickable' : ''}`}
+                key={row.category}
+                tabIndex={onRowClick ? 0 : undefined}
+                onClick={() => onRowClick?.(row)}
+                onKeyDown={(event) => handleRowKeyDown(event, row)}
+              >
                 {COLUMNS.map((column) => (
                   <td key={column.key} className={valueClass(column.key, row[column.key])}>
                     {formatCell(row, column.key, numberFormat)}
