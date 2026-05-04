@@ -41,6 +41,7 @@ const enumerateDays = (start, end) => {
 };
 
 const isTradeType = (type) => type === 'buy' || type === 'sell';
+const isInventoryType = (type) => isTradeType(type) || type === 'remove';
 
 const latestHighOf = (stock, gePrices) => {
   const itemId = itemIdOf(stock);
@@ -260,16 +261,27 @@ export function computeCategoryAverageInventory({
   if (!days.length) return new Map();
 
   const stocksById = new Map((stocks || []).map((stock) => [String(stock.id), stock]));
+  const stocksWithHistory = new Set(
+    (transactions || [])
+      .filter((transaction) => isInventoryType(transaction.type))
+      .filter((transaction) => {
+        const iso = isoOf(transaction.date);
+        return iso && iso <= end && stocksById.has(String(stockIdOf(transaction)));
+      })
+      .map((transaction) => String(stockIdOf(transaction)))
+  );
   const positions = new Map((stocks || []).map((stock) => [
     String(stock.id),
     {
       stock,
-      shares: 0,
-      cost: 0,
+      shares: stocksWithHistory.has(String(stock.id)) ? 0 : toNumber(stock.shares),
+      cost: stocksWithHistory.has(String(stock.id)) ? 0 : toNumber(stock.totalCost),
     },
   ]));
   const sortedTransactions = [...(transactions || [])]
     .filter((transaction) => stocksById.has(String(stockIdOf(transaction))))
+    .filter((transaction) => isInventoryType(transaction.type))
+    .filter((transaction) => Boolean(isoOf(transaction.date)))
     .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
 
   let txIndex = 0;
@@ -375,9 +387,12 @@ export function computeCategoryBreakdown({
 
   return [...byCategory.values()]
     .map((row) => {
-      const turnoverPct = row.avgInventoryWindow > 0
-        ? (row.windowProfit / row.avgInventoryWindow) * 100
-        : null;
+      let turnoverPct = null;
+      if (row.avgInventoryWindow > 0) {
+        turnoverPct = (row.windowProfit / row.avgInventoryWindow) * 100;
+      } else if (row.windowProfit === 0) {
+        turnoverPct = 0;
+      }
 
       return {
         ...row,
@@ -485,11 +500,14 @@ export function buildCategoryHeatmapRows({ buckets = [], categories = [] }) {
   }
 
   const dates = (buckets || []).map((bucket) => bucket.bucket_date).filter(Boolean);
+  const bucketsByDate = new Map((buckets || [])
+    .filter((bucket) => bucket.bucket_date)
+    .map((bucket) => [bucket.bucket_date, bucket]));
 
   return [...categorySet].sort().map((category) => ({
     category,
     cells: dates.map((date) => {
-      const bucket = (buckets || []).find((row) => row.bucket_date === date);
+      const bucket = bucketsByDate.get(date);
       return {
         date,
         profit: toNumber(bucket?.by_category?.[category]),
