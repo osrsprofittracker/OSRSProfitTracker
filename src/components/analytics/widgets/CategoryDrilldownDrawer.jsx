@@ -45,6 +45,8 @@ const formatTurnover = (value) => {
   return `${numericValue.toFixed(1)}%`;
 };
 
+const formatDate = (value) => (value ? String(value).slice(0, 10) : '-');
+
 export default function CategoryDrilldownDrawer({
   category,
   breakdownRows = [],
@@ -235,7 +237,7 @@ export default function CategoryDrilldownDrawer({
             <tbody>
               {data.recentTransactions.map((transaction) => (
                 <tr key={transaction.id}>
-                  <td>{String(transaction.date).slice(0, 10)}</td>
+                  <td>{formatDate(transaction.date)}</td>
                   <td><span className="items-badge">{transaction.type}</span></td>
                   <td>{formatNumber(transaction.shares, numberFormat)}</td>
                   <td>{formatNumber(transaction.total, numberFormat)}</td>
