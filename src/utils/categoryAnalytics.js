@@ -292,7 +292,7 @@ export function computeCategoryAverageInventory({
         position.cost += total;
       }
 
-      if (transaction.type === 'sell') {
+      if (transaction.type === 'sell' || transaction.type === 'remove') {
         const avgCost = position.shares > 0 ? position.cost / position.shares : 0;
         const estimatedBasis = avgCost * shares;
         position.shares = Math.max(0, position.shares - shares);
