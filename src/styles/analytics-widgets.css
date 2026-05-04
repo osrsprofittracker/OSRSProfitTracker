@@ -597,6 +597,11 @@
   color: rgb(239, 68, 68);
 }
 
+.analytics-comparison-delta.is-neutral,
+.analytics-kpi-mini-delta.is-neutral {
+  color: rgb(148, 163, 184);
+}
+
 .analytics-sparkline {
   height: 2.25rem;
   margin-top: 0.5rem;
@@ -784,10 +789,108 @@
   stroke-width: 2;
 }
 
+.goal-streak-strip,
+.goal-avg-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.goal-estimator-strip {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.goal-streak-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.goal-avg-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.goal-history-count {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.goal-history-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-height: 0;
+}
+
+.goal-history-scroll {
+  max-height: 24rem;
+  overflow-y: auto;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 0.5rem;
+}
+
+.goal-history-scroll .analytics-bw-table thead th {
+  position: sticky;
+  top: 0;
+  background: rgb(22, 30, 46);
+  z-index: 1;
+}
+
+.goal-history-scroll .has-tooltip:hover::after,
+.goal-history-scroll .has-tooltip:focus-visible::after {
+  top: calc(100% + 0.375rem);
+  bottom: auto;
+}
+
+.goal-history-toggle {
+  align-self: flex-start;
+}
+
+.goal-result-hit {
+  color: rgb(34, 197, 94);
+  font-weight: 700;
+}
+
+.goal-result-miss {
+  color: rgb(239, 68, 68);
+  font-weight: 700;
+}
+
+.goal-partial-badge {
+  display: inline-block;
+  margin-left: 0.375rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 0.25rem;
+  background: rgba(168, 85, 247, 0.15);
+  color: rgb(196, 181, 253);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: help;
+}
+
+.goal-vs-profit-legend {
+  margin-top: 0.625rem;
+}
+
+.analytics-legend-swatch.goal-swatch-profit {
+  background: rgb(34, 197, 94);
+}
+
+.analytics-legend-swatch.goal-swatch-goal {
+  background: rgb(168, 85, 247);
+}
+
 @media (max-width: 1023px) {
   .analytics-grid-2,
   .analytics-grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .goal-streak-strip,
+  .goal-avg-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -818,6 +921,12 @@
   }
 
   .analytics-velocity-paces {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-streak-strip,
+  .goal-avg-strip,
+  .goal-estimator-strip {
     grid-template-columns: 1fr;
   }
 }

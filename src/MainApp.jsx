@@ -1186,6 +1186,9 @@ function MainAppInner({ session, onLogout }) {
             numberFormat={numberFormat}
             initialTab={initialTabParam}
             navigateToPage={navigateToPage}
+            milestones={milestones}
+            milestoneHistory={milestoneHistory}
+            milestoneProgress={milestoneProgress}
           />
         ) : currentPage === 'watchlist' ? (
           <WatchlistPage

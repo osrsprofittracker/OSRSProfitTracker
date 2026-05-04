@@ -23,6 +23,9 @@ export default function AnalyticsPage({
   numberFormat,
   initialTab,
   navigateToPage,
+  milestones,
+  milestoneHistory,
+  milestoneProgress,
 }) {
   const { allStocks, stocks } = useTrade();
   const stocksForStats = allStocks?.length > 0 ? allStocks : stocks;
@@ -182,7 +185,13 @@ export default function AnalyticsPage({
           />
         )}
         {activeTab === 'goals' && (
-          <GoalsTab buckets={current.buckets} timeframe={timeframe} numberFormat={numberFormat} />
+          <GoalsTab
+            milestones={milestones}
+            milestoneHistory={milestoneHistory}
+            milestoneProgress={milestoneProgress}
+            numberFormat={numberFormat}
+            firstActivityDate={allTimeStart}
+          />
         )}
       </div>
     </div>
