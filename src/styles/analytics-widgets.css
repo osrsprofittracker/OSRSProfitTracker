@@ -940,3 +940,86 @@
     grid-template-columns: 1fr;
   }
 }
+
+.category-time-heatmap-wrap {
+  overflow-x: auto;
+}
+
+.category-time-heatmap-svg {
+  display: block;
+  min-width: 46rem;
+  width: 100%;
+  height: auto;
+}
+
+.category-time-heatmap-date,
+.category-time-heatmap-label {
+  fill: rgb(148, 163, 184);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.category-time-heatmap-label {
+  fill: rgb(226, 232, 240);
+}
+
+.category-time-heatmap-active {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.category-time-heatmap-cell {
+  cursor: help;
+  stroke: rgba(15, 23, 42, 0.85);
+  stroke-width: 1;
+  outline: none;
+}
+
+.category-time-heatmap-cell:focus {
+  stroke: white;
+  stroke-width: 2;
+}
+
+.category-time-heatmap-cell.is-zero {
+  fill: rgb(30, 41, 59);
+}
+
+.category-time-heatmap-cell.is-positive.shade-0 {
+  fill: #1f3b2c;
+}
+
+.category-time-heatmap-cell.is-positive.shade-1 {
+  fill: #15803d;
+}
+
+.category-time-heatmap-cell.is-positive.shade-2 {
+  fill: #16a34a;
+}
+
+.category-time-heatmap-cell.is-positive.shade-3 {
+  fill: #22c55e;
+}
+
+.category-time-heatmap-cell.is-positive.shade-4 {
+  fill: #4ade80;
+}
+
+.category-time-heatmap-cell.is-negative.shade-0 {
+  fill: #3b1f24;
+}
+
+.category-time-heatmap-cell.is-negative.shade-1 {
+  fill: #7f1d1d;
+}
+
+.category-time-heatmap-cell.is-negative.shade-2 {
+  fill: #b91c1c;
+}
+
+.category-time-heatmap-cell.is-negative.shade-3 {
+  fill: #dc2626;
+}
+
+.category-time-heatmap-cell.is-negative.shade-4 {
+  fill: #f87171;
+}
