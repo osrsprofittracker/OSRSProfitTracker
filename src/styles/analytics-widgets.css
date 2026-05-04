@@ -1023,3 +1023,11 @@
 .category-time-heatmap-cell.is-negative.shade-4 {
   fill: #f87171;
 }
+
+.category-drawer-kpis {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.category-drawer-kpis .analytics-kpi-mini-value {
+  overflow-wrap: anywhere;
+}
