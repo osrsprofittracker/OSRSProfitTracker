@@ -9,6 +9,29 @@ const TOP_LABEL_HEIGHT = 3 * CELL_SIZE;
 const ROW_HEIGHT = CELL_SIZE + CELL_GAP;
 const DATE_LABEL_INTERVAL = 1;
 
+const toNumber = (value) => Number(value) || 0;
+
+function normalizeBucketsByDate(buckets = []) {
+  const byDate = new Map();
+
+  for (const bucket of buckets || []) {
+    if (!bucket?.bucket_date) continue;
+
+    const existing = byDate.get(bucket.bucket_date) || {
+      bucket_date: bucket.bucket_date,
+      by_category: {},
+    };
+
+    for (const [category, value] of Object.entries(bucket.by_category || {})) {
+      existing.by_category[category] = toNumber(existing.by_category[category]) + toNumber(value);
+    }
+
+    byDate.set(bucket.bucket_date, existing);
+  }
+
+  return [...byDate.values()].sort((a, b) => a.bucket_date.localeCompare(b.bucket_date));
+}
+
 function buildQuantiles(values, count = 5) {
   const sorted = [...values].filter((value) => value > 0).sort((a, b) => a - b);
   if (!sorted.length) return [];
@@ -42,13 +65,17 @@ export default function CategoryTimeHeatmap({
   numberFormat,
 }) {
   const [activeCell, setActiveCell] = useState(null);
+  const normalizedBuckets = useMemo(
+    () => normalizeBucketsByDate(buckets),
+    [buckets]
+  );
   const rows = useMemo(
-    () => buildCategoryHeatmapRows({ buckets, categories }),
-    [buckets, categories]
+    () => buildCategoryHeatmapRows({ buckets: normalizedBuckets, categories }),
+    [normalizedBuckets, categories]
   );
   const dates = useMemo(
-    () => (buckets || []).map((bucket) => bucket.bucket_date).filter(Boolean),
-    [buckets]
+    () => normalizedBuckets.map((bucket) => bucket.bucket_date),
+    [normalizedBuckets]
   );
   const values = useMemo(
     () => rows.flatMap((row) => row.cells.map((cell) => cell.profit)),
@@ -94,9 +121,12 @@ export default function CategoryTimeHeatmap({
           <svg
             className="category-time-heatmap-svg"
             viewBox={`0 0 ${width} ${height}`}
+            width={width}
+            height={height}
             role="img"
             aria-label="Category profit heatmap over time"
           >
+            <title>Category profit heatmap over time</title>
             {dates.map((date, index) => {
               const x = LABEL_WIDTH + index * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2;
               const shouldLabel = index % DATE_LABEL_INTERVAL === 0;
@@ -154,6 +184,12 @@ export default function CategoryTimeHeatmap({
                         onMouseLeave={() => setActiveCell(null)}
                         onFocus={() => setActiveCell(active)}
                         onBlur={() => setActiveCell(null)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            setActiveCell(active);
+                          }
+                        }}
                       />
                     );
                   })}

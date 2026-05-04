@@ -947,8 +947,8 @@
 
 .category-time-heatmap-svg {
   display: block;
-  min-width: 46rem;
-  width: 100%;
+  width: auto;
+  max-width: none;
   height: auto;
 }
 
