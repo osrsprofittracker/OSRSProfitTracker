@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import CategoryStackedAreaChart from './widgets/CategoryStackedAreaChart';
 import CategoryBreakdownTable from './widgets/CategoryBreakdownTable';
 import CategoryShareDonut from './widgets/CategoryShareDonut';
 import CategoryPeriodComparison from './widgets/CategoryPeriodComparison';
 import CategoryContributionBar from './widgets/CategoryContributionBar';
+import CategoryTimeHeatmap from './widgets/CategoryTimeHeatmap';
+import CategoryDrilldownDrawer from './widgets/CategoryDrilldownDrawer';
 import CategoryMarginChart from './widgets/CategoryMarginChart';
 import InventoryTreemap from './widgets/InventoryTreemap';
 import {
@@ -29,6 +31,7 @@ export default function CategoriesTab({
 }) {
   const { gePrices } = useGEData();
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [drillCategory, setDrillCategory] = useState(null);
   const timeframeLabel = timeframe?.window || 'selected';
 
   const categories = useMemo(() => {
@@ -55,6 +58,10 @@ export default function CategoriesTab({
     () => filterBucketsByCategories(priorBuckets, selectedCategories),
     [priorBuckets, selectedCategories]
   );
+  const visibleCategories = useMemo(
+    () => (selectedCategories.length > 0 ? selectedCategories : categories),
+    [selectedCategories, categories]
+  );
 
   const breakdown = useMemo(
     () => computeCategoryBreakdown({
@@ -68,6 +75,13 @@ export default function CategoriesTab({
     }),
     [filteredStocks, filteredBuckets, gePrices, transactions, profitHistory, timeframe?.start, timeframe?.end]
   );
+
+  useEffect(() => {
+    if (!drillCategory) return;
+    if (!visibleCategories.includes(drillCategory.category)) {
+      setDrillCategory(null);
+    }
+  }, [drillCategory, visibleCategories]);
 
   const toggleCategory = (category) => {
     setSelectedCategories((current) => (
@@ -112,7 +126,13 @@ export default function CategoriesTab({
       <CategoryStackedAreaChart buckets={filteredBuckets} numberFormat={numberFormat} />
       <CategoryContributionBar
         buckets={filteredBuckets}
-        categories={selectedCategories.length > 0 ? selectedCategories : categories}
+        categories={visibleCategories}
+        numberFormat={numberFormat}
+      />
+      <CategoryTimeHeatmap
+        buckets={filteredBuckets}
+        categories={visibleCategories}
+        timeframeLabel={timeframeLabel}
         numberFormat={numberFormat}
       />
       <div className="analytics-grid-2">
@@ -128,6 +148,7 @@ export default function CategoriesTab({
         totalCategories={categories.length}
         timeframeLabel={timeframeLabel}
         numberFormat={numberFormat}
+        onRowClick={setDrillCategory}
       />
       <CategoryPeriodComparison
         currentBuckets={filteredBuckets}
@@ -136,6 +157,18 @@ export default function CategoriesTab({
         numberFormat={numberFormat}
       />
       <InventoryTreemap stocks={filteredStocks} numberFormat={numberFormat} />
+      {drillCategory && (
+        <CategoryDrilldownDrawer
+          category={drillCategory.category}
+          breakdownRows={breakdown}
+          buckets={filteredBuckets}
+          stocks={filteredStocks}
+          transactions={transactions}
+          timeframe={timeframe}
+          numberFormat={numberFormat}
+          onClose={() => setDrillCategory(null)}
+        />
+      )}
     </div>
   );
 }
