@@ -88,6 +88,12 @@ const valueClass = (key, value) => {
   return 'items-profit-positive';
 };
 
+const numericValueForSort = (row, key) => {
+  const value = row[key];
+  if (key === 'turnoverPct' && (value == null || !Number.isFinite(Number(value)))) return null;
+  return Number(value) || 0;
+};
+
 export default function CategoryBreakdownTable({
   rows = [],
   totalCategories = rows.length,
@@ -108,7 +114,14 @@ export default function CategoryBreakdownTable({
         return sortDir === 'asc' ? comparison : -comparison;
       }
 
-      const comparison = (Number(a[sortKey]) || 0) - (Number(b[sortKey]) || 0);
+      const aValue = numericValueForSort(a, sortKey);
+      const bValue = numericValueForSort(b, sortKey);
+
+      if (aValue === null && bValue === null) return 0;
+      if (aValue === null) return 1;
+      if (bValue === null) return -1;
+
+      const comparison = aValue - bValue;
       return sortDir === 'asc' ? comparison : -comparison;
     });
 
@@ -191,6 +204,8 @@ export default function CategoryBreakdownTable({
               <tr
                 className={`category-table-row${onRowClick ? ' is-clickable' : ''}`}
                 key={row.category}
+                role={onRowClick ? 'button' : undefined}
+                aria-label={onRowClick ? `Open ${row.category} category details` : undefined}
                 tabIndex={onRowClick ? 0 : undefined}
                 onClick={() => onRowClick?.(row)}
                 onKeyDown={(event) => handleRowKeyDown(event, row)}
