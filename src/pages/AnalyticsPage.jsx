@@ -170,7 +170,9 @@ export default function AnalyticsPage({
             transactions={safeTransactions}
             profitHistory={safeProfitHistory}
             timeframe={timeframe}
+            timeframeOptions={timeframe.options}
             numberFormat={numberFormat}
+            onTimeframeChange={timeframe.setWindow}
           />
         )}
         {activeTab === 'categories' && (
@@ -181,7 +183,9 @@ export default function AnalyticsPage({
             transactions={safeTransactions}
             profitHistory={safeProfitHistory}
             timeframe={timeframe}
+            timeframeOptions={timeframe.options}
             numberFormat={numberFormat}
+            onTimeframeChange={timeframe.setWindow}
           />
         )}
         {activeTab === 'goals' && (

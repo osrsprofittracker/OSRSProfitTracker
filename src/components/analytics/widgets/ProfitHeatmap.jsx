@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { formatNumber } from '../../../utils/formatters';
 import { parseIsoDateUtc, totalProfit } from '../../../utils/analyticsHelpers';
 
@@ -8,6 +8,9 @@ const COLS = 53;
 const ROWS = 7;
 const SVG_WIDTH = COLS * (CELL + GAP) - GAP;
 const SVG_HEIGHT = ROWS * (CELL + GAP) - GAP;
+const TOOLTIP_WIDTH = 112;
+const TOOLTIP_HEIGHT = 36;
+const TOOLTIP_TEXT_SIZE = 10;
 
 function buildLast365Days(endIso) {
   const days = [];
@@ -55,13 +58,29 @@ function colorFor(profit, posSteps, negSteps) {
   return shades[Math.min(Math.max(shadeIndex, 0), shades.length - 1)];
 }
 
+function tooltipPosition(x, y, width, height) {
+  const rightSide = x + CELL + 7;
+  const leftSide = x - width - 7;
+  const tooltipX = rightSide + width <= SVG_WIDTH ? rightSide : Math.max(0, leftSide);
+
+  return {
+    x: tooltipX,
+    y: Math.max(0, Math.min(SVG_HEIGHT - height, y - Math.floor((height - CELL) / 2))),
+  };
+}
+
 export default function ProfitHeatmap({
   allBuckets = [],
   endDate,
   numberFormat,
   onCellClick,
 }) {
-  const [hovered, setHovered] = useState(null);
+  const tooltipRef = useRef(null);
+  const tooltipRectRef = useRef(null);
+  const svgRef = useRef(null);
+  const tooltipDateRef = useRef(null);
+  const tooltipProfitRef = useRef(null);
+  const activeCellLabelRef = useRef(null);
   const days = useMemo(() => buildLast365Days(endDate), [endDate]);
   const startOffset = useMemo(() => (days.length ? dayOfWeekOffset(days[0]) : 0), [days]);
   const profitByDate = useMemo(() => {
@@ -80,6 +99,44 @@ export default function ProfitHeatmap({
     () => quantiles(values.filter((value) => value < 0).map((value) => Math.abs(value)), 5).map((value) => -value),
     [values]
   );
+  const showCellDetail = (cell) => {
+    const profit = Number(cell.profit) || 0;
+    const svgWidth = svgRef.current?.getBoundingClientRect().width || SVG_WIDTH;
+    const scale = Math.max(1, svgWidth / SVG_WIDTH);
+    const tooltipWidth = TOOLTIP_WIDTH / scale;
+    const tooltipHeight = TOOLTIP_HEIGHT / scale;
+    const tooltipTextSize = TOOLTIP_TEXT_SIZE / scale;
+    const tooltip = tooltipPosition(cell.x, cell.y, tooltipWidth, tooltipHeight);
+
+    if (tooltipRef.current) {
+      tooltipRef.current.setAttribute('transform', `translate(${tooltip.x} ${tooltip.y})`);
+      tooltipRef.current.classList.add('is-visible');
+    }
+    if (tooltipRectRef.current) {
+      tooltipRectRef.current.setAttribute('width', tooltipWidth);
+      tooltipRectRef.current.setAttribute('height', tooltipHeight);
+      tooltipRectRef.current.setAttribute('rx', 6 / scale);
+    }
+    if (tooltipDateRef.current) tooltipDateRef.current.textContent = cell.date;
+    if (tooltipProfitRef.current) {
+      tooltipProfitRef.current.textContent = formatNumber(profit, numberFormat);
+      tooltipProfitRef.current.setAttribute('class', profit < 0 ? 'is-negative' : 'is-positive');
+    }
+    tooltipDateRef.current?.setAttribute('font-size', tooltipTextSize);
+    tooltipProfitRef.current?.setAttribute('font-size', tooltipTextSize);
+    tooltipDateRef.current?.setAttribute('x', 7 / scale);
+    tooltipDateRef.current?.setAttribute('y', 13 / scale);
+    tooltipProfitRef.current?.setAttribute('x', 7 / scale);
+    tooltipProfitRef.current?.setAttribute('y', 28 / scale);
+    if (activeCellLabelRef.current) {
+      activeCellLabelRef.current.textContent = `${cell.date}: ${formatNumber(profit, numberFormat)}`;
+    }
+  };
+
+  const hideCellDetail = () => {
+    tooltipRef.current?.classList.remove('is-visible');
+    if (activeCellLabelRef.current) activeCellLabelRef.current.textContent = '';
+  };
 
   return (
     <div className="analytics-widget">
@@ -90,14 +147,15 @@ export default function ProfitHeatmap({
         >
           Profit heatmap (last 365 days)
         </h3>
-        {hovered && (
-          <span className="analytics-widget-subtitle">
-            {hovered.date}: {formatNumber(hovered.profit, numberFormat)}
-          </span>
-        )}
+        <span
+          ref={activeCellLabelRef}
+          className="analytics-widget-subtitle analytics-heatmap-active"
+          aria-live="polite"
+        />
       </div>
       <div className="analytics-heatmap-wrap">
         <svg
+          ref={svgRef}
           className="analytics-heatmap-svg"
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
           role="img"
@@ -108,6 +166,12 @@ export default function ProfitHeatmap({
             const gridIndex = index + startOffset;
             const x = Math.floor(gridIndex / ROWS) * (CELL + GAP);
             const y = (gridIndex % ROWS) * (CELL + GAP);
+            const active = {
+              date,
+              profit,
+              x,
+              y,
+            };
 
             return (
               <rect
@@ -122,10 +186,10 @@ export default function ProfitHeatmap({
                 tabIndex="0"
                 role="button"
                 aria-label={`${date}: ${formatNumber(profit, numberFormat)}`}
-                onMouseEnter={() => setHovered({ date, profit })}
-                onMouseLeave={() => setHovered(null)}
-                onFocus={() => setHovered({ date, profit })}
-                onBlur={() => setHovered(null)}
+                onMouseEnter={() => showCellDetail(active)}
+                onMouseLeave={hideCellDetail}
+                onFocus={() => showCellDetail(active)}
+                onBlur={hideCellDetail}
                 onClick={() => onCellClick?.(date)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
@@ -136,6 +200,11 @@ export default function ProfitHeatmap({
               />
             );
           })}
+          <g ref={tooltipRef} className="analytics-heatmap-svg-tooltip">
+            <rect ref={tooltipRectRef} width={TOOLTIP_WIDTH} height={TOOLTIP_HEIGHT} rx="6" />
+            <text ref={tooltipDateRef} x="7" y="13" />
+            <text ref={tooltipProfitRef} x="7" y="28" />
+          </g>
         </svg>
       </div>
     </div>

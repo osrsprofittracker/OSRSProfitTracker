@@ -35,6 +35,7 @@ export default function CategoryPeriodComparison({
   priorBuckets = [],
   timeframeLabel = 'selected',
   numberFormat,
+  onRowClick,
 }) {
   const columns = columnsFor(timeframeLabel);
   const rows = useMemo(() => {
@@ -88,7 +89,17 @@ export default function CategoryPeriodComparison({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr className="category-table-row" key={row.category}>
+              <tr
+                className={`category-table-row${onRowClick ? ' is-clickable' : ''}`}
+                key={row.category}
+                tabIndex={onRowClick ? 0 : undefined}
+                onClick={() => onRowClick?.(row)}
+                onKeyDown={(event) => {
+                  if (!onRowClick || (event.key !== 'Enter' && event.key !== ' ')) return;
+                  event.preventDefault();
+                  onRowClick(row);
+                }}
+              >
                 <td>{row.category}</td>
                 <td>{formatNumber(row.current, numberFormat)}</td>
                 <td>{formatNumber(row.prior, numberFormat)}</td>

@@ -27,7 +27,9 @@ export default function CategoriesTab({
   transactions = [],
   profitHistory = [],
   timeframe,
+  timeframeOptions = [],
   numberFormat,
+  onTimeframeChange,
 }) {
   const { gePrices } = useGEData();
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -155,6 +157,7 @@ export default function CategoriesTab({
         priorBuckets={filteredPriorBuckets}
         timeframeLabel={timeframeLabel}
         numberFormat={numberFormat}
+        onRowClick={setDrillCategory}
       />
       <InventoryTreemap stocks={filteredStocks} numberFormat={numberFormat} />
       {drillCategory && (
@@ -164,9 +167,12 @@ export default function CategoriesTab({
           buckets={filteredBuckets}
           stocks={filteredStocks}
           transactions={transactions}
+          profitHistory={profitHistory}
           timeframe={timeframe}
+          timeframeOptions={timeframeOptions}
           numberFormat={numberFormat}
           onClose={() => setDrillCategory(null)}
+          onTimeframeChange={onTimeframeChange}
         />
       )}
     </div>

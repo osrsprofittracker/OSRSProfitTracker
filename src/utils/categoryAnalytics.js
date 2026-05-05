@@ -522,20 +522,72 @@ export function buildCategoryDrilldownData({
   buckets = [],
   stocks = [],
   transactions = [],
+  profitHistory = [],
   start,
   end,
   limit = 12,
 }) {
   const matchingStocks = (stocks || []).filter((stock) => categoryOf(stock) === category);
   const stockIds = new Set(matchingStocks.map((stock) => String(stock.id)));
+  const stocksById = new Map(matchingStocks.map((stock) => [String(stock.id), stock]));
   const metrics = breakdownRows.find((row) => row.category === category) || emptyCategoryRow(category);
   const profitSeries = (buckets || []).map((bucket) => ({
     date: bucket.bucket_date,
     profit: toNumber(bucket.by_category?.[category]),
   }));
+  const profitByTransaction = buildProfitByTransaction(profitHistory);
+  const positions = new Map();
+  const windowProfitByStock = new Map();
+  const categoryTransactions = (transactions || [])
+    .filter((transaction) => stockIds.has(String(stockIdOf(transaction))));
+
+  for (const transaction of [...categoryTransactions].sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))) {
+    const stockId = String(stockIdOf(transaction));
+    const position = positions.get(stockId) || { shares: 0, cost: 0 };
+    const shares = toNumber(transaction.shares);
+    const total = toNumber(transaction.total);
+
+    if (transaction.type === 'buy') {
+      position.shares += shares;
+      position.cost += total;
+      positions.set(stockId, position);
+      continue;
+    }
+
+    if (transaction.type !== 'sell') {
+      if (transaction.type === 'remove') {
+        const removeAvgCost = position.shares > 0 ? position.cost / position.shares : 0;
+        const removeBasis = removeAvgCost * shares;
+        position.shares = Math.max(0, position.shares - shares);
+        position.cost = Math.max(0, position.cost - removeBasis);
+      }
+      positions.set(stockId, position);
+      continue;
+    }
+
+    const avgCost = position.shares > 0 ? position.cost / position.shares : 0;
+    const estimatedBasis = avgCost * shares;
+    const iso = isoOf(transaction.date);
+
+    if (!start || !end || (iso >= start && iso <= end)) {
+      const transactionProfit = profitByTransaction.has(String(transaction.id))
+        ? profitByTransaction.get(String(transaction.id))
+        : total - estimatedBasis;
+      windowProfitByStock.set(stockId, (windowProfitByStock.get(stockId) || 0) + transactionProfit);
+    }
+
+    position.shares = Math.max(0, position.shares - shares);
+    position.cost = Math.max(0, position.cost - estimatedBasis);
+    positions.set(stockId, position);
+  }
+
   const recentTransactions = (transactions || [])
     .filter((transaction) => stockIds.has(String(stockIdOf(transaction))))
     .filter((transaction) => isTradeType(transaction.type))
+    .map((transaction) => ({
+      ...transaction,
+      itemName: stocksById.get(String(stockIdOf(transaction)))?.name || 'Unknown item',
+    }))
     .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
     .slice(0, limit);
   const windowTransactions = (transactions || [])
@@ -551,13 +603,14 @@ export function buildCategoryDrilldownData({
       windowGpTraded: windowTransactions
         .filter((transaction) => String(stockIdOf(transaction)) === String(stock.id))
         .reduce((sum, transaction) => sum + toNumber(transaction.total), 0),
+      windowProfit: windowProfitByStock.get(String(stock.id)) || 0,
       totalRealized: toNumber(stock.totalCostSold) - toNumber(stock.totalCostBasisSold),
     }))
-    .sort((a, b) => (
-      (toNumber(b.windowGpTraded) || toNumber(b.totalRealized))
-      - (toNumber(a.windowGpTraded) || toNumber(a.totalRealized))
-    ))
-    .slice(0, limit);
+    .filter((stock) => (
+      toNumber(stock.windowGpTraded) !== 0
+      || toNumber(stock.windowProfit) !== 0
+      || toNumber(stock.shares) !== 0
+    ));
 
   return {
     category,

@@ -17,7 +17,9 @@ export default function ItemsTab({
   transactions = [],
   profitHistory = [],
   timeframe,
+  timeframeOptions = [],
   numberFormat,
+  onTimeframeChange,
 }) {
   const { gePrices } = useGEData();
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -96,8 +98,10 @@ export default function ItemsTab({
           transactions={transactions}
           profitHistory={profitHistory}
           timeframe={timeframe}
+          timeframeOptions={timeframeOptions}
           numberFormat={numberFormat}
           onClose={() => setDrillItem(null)}
+          onTimeframeChange={onTimeframeChange}
         />
       )}
     </div>

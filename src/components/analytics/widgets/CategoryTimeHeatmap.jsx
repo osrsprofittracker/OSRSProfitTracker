@@ -1,13 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { buildCategoryHeatmapRows } from '../../../utils/categoryAnalytics';
 import { formatNumber } from '../../../utils/formatters';
 
 const CELL_SIZE = 18;
 const CELL_GAP = 3;
-const LABEL_WIDTH = 9 * CELL_SIZE;
-const TOP_LABEL_HEIGHT = 3 * CELL_SIZE;
+const CELL_WIDTH = 46;
+const LABEL_WIDTH = 190;
+const TOP_LABEL_HEIGHT = 28;
 const ROW_HEIGHT = CELL_SIZE + CELL_GAP;
-const DATE_LABEL_INTERVAL = 1;
+const DEFAULT_VISIBLE_ROWS = 18;
+const TOOLTIP_WIDTH = 112;
+const TOOLTIP_HEIGHT = 36;
 
 const toNumber = (value) => Number(value) || 0;
 
@@ -58,13 +61,33 @@ function cellLabel(category, date, profit, numberFormat) {
   return `${category}, ${date}: ${formatNumber(profit, numberFormat)} profit`;
 }
 
+function tooltipPosition(x, y, width) {
+  const rightSide = x + CELL_WIDTH + 8;
+  const leftSide = x - TOOLTIP_WIDTH - 8;
+  const tooltipX = rightSide + TOOLTIP_WIDTH <= width ? rightSide : Math.max(LABEL_WIDTH, leftSide);
+
+  return {
+    x: tooltipX,
+    y: Math.max(2, y - Math.floor((TOOLTIP_HEIGHT - CELL_SIZE) / 2)),
+  };
+}
+
+function compactLabel(value) {
+  const label = String(value || '');
+  return label.length > 17 ? `${label.slice(0, 16)}...` : label;
+}
+
 export default function CategoryTimeHeatmap({
   buckets = [],
   categories = [],
   timeframeLabel = 'selected',
   numberFormat,
 }) {
-  const [activeCell, setActiveCell] = useState(null);
+  const tooltipRef = useRef(null);
+  const tooltipCategoryRef = useRef(null);
+  const tooltipProfitRef = useRef(null);
+  const tooltipDateRef = useRef(null);
+  const activeCellLabelRef = useRef(null);
   const normalizedBuckets = useMemo(
     () => normalizeBucketsByDate(buckets),
     [buckets]
@@ -73,13 +96,23 @@ export default function CategoryTimeHeatmap({
     () => buildCategoryHeatmapRows({ buckets: normalizedBuckets, categories }),
     [normalizedBuckets, categories]
   );
+  const rankedRows = useMemo(() => (
+    [...rows].sort((a, b) => {
+      const aTotal = a.cells.reduce((sum, cell) => sum + Math.abs(cell.profit), 0);
+      const bTotal = b.cells.reduce((sum, cell) => sum + Math.abs(cell.profit), 0);
+      if (aTotal !== bTotal) return bTotal - aTotal;
+      return a.category.localeCompare(b.category);
+    })
+  ), [rows]);
+  const [showAll, setShowAll] = useState(false);
+  const visibleRows = showAll ? rankedRows : rankedRows.slice(0, DEFAULT_VISIBLE_ROWS);
   const dates = useMemo(
     () => normalizedBuckets.map((bucket) => bucket.bucket_date),
     [normalizedBuckets]
   );
   const values = useMemo(
-    () => rows.flatMap((row) => row.cells.map((cell) => cell.profit)),
-    [rows]
+    () => rankedRows.flatMap((row) => row.cells.map((cell) => cell.profit)),
+    [rankedRows]
   );
   const positiveThresholds = useMemo(
     () => buildQuantiles(values.filter((value) => value > 0)),
@@ -90,8 +123,32 @@ export default function CategoryTimeHeatmap({
     [values]
   );
 
-  const width = LABEL_WIDTH + dates.length * (CELL_SIZE + CELL_GAP);
-  const height = TOP_LABEL_HEIGHT + rows.length * ROW_HEIGHT;
+  const width = LABEL_WIDTH + dates.length * (CELL_WIDTH + CELL_GAP);
+  const height = TOP_LABEL_HEIGHT + visibleRows.length * ROW_HEIGHT;
+  const hasHiddenRows = rankedRows.length > DEFAULT_VISIBLE_ROWS;
+  const showCellDetail = (cell) => {
+    const profit = Number(cell.profit) || 0;
+
+    if (tooltipRef.current) {
+      tooltipRef.current.setAttribute('transform', `translate(${cell.tooltip.x} ${cell.tooltip.y})`);
+      tooltipRef.current.classList.add('is-visible');
+    }
+
+    if (tooltipCategoryRef.current) tooltipCategoryRef.current.textContent = compactLabel(cell.category);
+    if (tooltipProfitRef.current) {
+      tooltipProfitRef.current.textContent = formatNumber(profit, numberFormat);
+      tooltipProfitRef.current.setAttribute('class', profit < 0 ? 'is-negative' : 'is-positive');
+    }
+    if (tooltipDateRef.current) tooltipDateRef.current.textContent = String(cell.date).slice(5);
+    if (activeCellLabelRef.current) {
+      activeCellLabelRef.current.textContent = `${cell.category} - ${cell.date}: ${formatNumber(profit, numberFormat)}`;
+    }
+  };
+
+  const hideCellDetail = () => {
+    tooltipRef.current?.classList.remove('is-visible');
+    if (activeCellLabelRef.current) activeCellLabelRef.current.textContent = '';
+  };
 
   return (
     <div className="analytics-widget">
@@ -107,97 +164,120 @@ export default function CategoryTimeHeatmap({
             Rows are categories, columns are dates in {timeframeLabel}.
           </p>
         </div>
-        {activeCell && (
-          <span className="analytics-widget-subtitle category-time-heatmap-active">
-            {activeCell.category} - {activeCell.date}: {formatNumber(activeCell.profit, numberFormat)}
-          </span>
-        )}
+        <span
+          ref={activeCellLabelRef}
+          className="analytics-widget-subtitle category-time-heatmap-active"
+          aria-live="polite"
+        />
       </div>
 
-      {!rows.length || !dates.length ? (
+      {!rankedRows.length || !dates.length ? (
         <div className="analytics-widget-empty">No category profit in this window.</div>
       ) : (
-        <div className="category-time-heatmap-wrap">
-          <svg
-            className="category-time-heatmap-svg"
-            viewBox={`0 0 ${width} ${height}`}
-            width={width}
-            height={height}
-            role="img"
-            aria-label="Category profit heatmap over time"
-          >
-            <title>Category profit heatmap over time</title>
-            {dates.map((date, index) => {
-              const x = LABEL_WIDTH + index * (CELL_SIZE + CELL_GAP) + CELL_SIZE / 2;
-              const shouldLabel = index % DATE_LABEL_INTERVAL === 0;
+        <>
+          <div className="category-time-heatmap-wrap">
+            <svg
+              className="category-time-heatmap-svg"
+              viewBox={`0 0 ${width} ${height}`}
+              width={width}
+              height={height}
+              role="img"
+              aria-label="Category profit heatmap over time"
+            >
+              <title>Category profit heatmap over time</title>
+              {dates.map((date, index) => {
+                const x = LABEL_WIDTH + index * (CELL_WIDTH + CELL_GAP) + CELL_WIDTH / 2;
 
-              return shouldLabel ? (
-                <text
-                  key={date}
-                  className="category-time-heatmap-date"
-                  transform={`translate(${x} ${TOP_LABEL_HEIGHT - 8}) rotate(-45)`}
-                  textAnchor="end"
-                >
-                  {date}
-                </text>
-              ) : null;
-            })}
-
-            {rows.map((row, rowIndex) => {
-              const y = TOP_LABEL_HEIGHT + rowIndex * ROW_HEIGHT;
-
-              return (
-                <g key={row.category}>
+                return (
                   <text
-                    className="category-time-heatmap-label"
-                    x={LABEL_WIDTH - 10}
-                    y={y + CELL_SIZE - 4}
-                    textAnchor="end"
+                    key={date}
+                    className="category-time-heatmap-date"
+                    x={x}
+                    y={17}
+                    textAnchor="middle"
                   >
-                    {row.category}
+                    {date.slice(5)}
                   </text>
-                  {row.cells.map((cell, cellIndex) => {
-                    const x = LABEL_WIDTH + cellIndex * (CELL_SIZE + CELL_GAP);
-                    const className = `category-time-heatmap-cell ${shadeClass(
-                      cell.profit,
-                      positiveThresholds,
-                      negativeThresholds
-                    )}`;
-                    const active = {
-                      category: row.category,
-                      date: cell.date,
-                      profit: cell.profit,
-                    };
+                );
+              })}
 
-                    return (
-                      <rect
-                        key={`${row.category}-${cell.date}`}
-                        className={className}
-                        x={x}
-                        y={y}
-                        width={CELL_SIZE}
-                        height={CELL_SIZE}
-                        rx="3"
-                        tabIndex="0"
-                        aria-label={cellLabel(row.category, cell.date, cell.profit, numberFormat)}
-                        onMouseEnter={() => setActiveCell(active)}
-                        onMouseLeave={() => setActiveCell(null)}
-                        onFocus={() => setActiveCell(active)}
-                        onBlur={() => setActiveCell(null)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            setActiveCell(active);
-                          }
-                        }}
-                      />
-                    );
-                  })}
-                </g>
-              );
-            })}
-          </svg>
-        </div>
+              {visibleRows.map((row, rowIndex) => {
+                const y = TOP_LABEL_HEIGHT + rowIndex * ROW_HEIGHT;
+
+                return (
+                  <g key={row.category}>
+                    <text
+                      className="category-time-heatmap-label"
+                      x={LABEL_WIDTH - 12}
+                      y={y + CELL_SIZE - 4}
+                      textAnchor="end"
+                    >
+                      {row.category}
+                    </text>
+                    {row.cells.map((cell, cellIndex) => {
+                      const x = LABEL_WIDTH + cellIndex * (CELL_WIDTH + CELL_GAP);
+                      const className = `category-time-heatmap-cell ${shadeClass(
+                        cell.profit,
+                        positiveThresholds,
+                        negativeThresholds
+                      )}`;
+                      const active = {
+                        category: row.category,
+                        date: cell.date,
+                        profit: cell.profit,
+                        tooltip: tooltipPosition(x, y, width),
+                      };
+
+                      return (
+                        <rect
+                          key={`${row.category}-${cell.date}`}
+                          className={className}
+                          x={x}
+                          y={y}
+                          width={CELL_WIDTH}
+                          height={CELL_SIZE}
+                          rx="3"
+                          tabIndex="0"
+                          aria-label={cellLabel(row.category, cell.date, cell.profit, numberFormat)}
+                          onMouseEnter={() => showCellDetail(active)}
+                          onMouseLeave={hideCellDetail}
+                          onFocus={() => showCellDetail(active)}
+                          onBlur={hideCellDetail}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              showCellDetail(active);
+                            }
+                          }}
+                        />
+                      );
+                    })}
+                  </g>
+                );
+              })}
+              <g ref={tooltipRef} className="category-time-heatmap-svg-tooltip">
+                <rect width={TOOLTIP_WIDTH} height={TOOLTIP_HEIGHT} rx="6" />
+                <text ref={tooltipCategoryRef} x="7" y="13" />
+                <text ref={tooltipProfitRef} x="7" y="28" />
+                <text ref={tooltipDateRef} x="76" y="28" className="is-muted" />
+              </g>
+            </svg>
+          </div>
+          {hasHiddenRows && (
+            <div className="category-time-heatmap-footer">
+              <span className="items-table-pager-count">
+                Showing {visibleRows.length} of {rankedRows.length} categories
+              </span>
+              <button
+                type="button"
+                className="items-table-show-more"
+                onClick={() => setShowAll((value) => !value)}
+              >
+                {showAll ? 'Show fewer' : 'Show all'}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

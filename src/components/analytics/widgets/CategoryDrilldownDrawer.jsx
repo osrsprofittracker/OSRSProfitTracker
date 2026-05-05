@@ -53,9 +53,12 @@ export default function CategoryDrilldownDrawer({
   buckets = [],
   stocks = [],
   transactions = [],
+  profitHistory = [],
   timeframe,
+  timeframeOptions = [],
   numberFormat,
   onClose,
+  onTimeframeChange,
 }) {
   const data = useMemo(
     () => buildCategoryDrilldownData({
@@ -64,6 +67,7 @@ export default function CategoryDrilldownDrawer({
       buckets,
       stocks,
       transactions,
+      profitHistory,
       start: timeframe?.start,
       end: timeframe?.end,
     }),
@@ -73,11 +77,22 @@ export default function CategoryDrilldownDrawer({
       buckets,
       stocks,
       transactions,
+      profitHistory,
       timeframe?.start,
       timeframe?.end,
     ]
   );
   const { metrics } = data;
+  const timeframeLabel = timeframe?.window || 'selected';
+  const sortedTopItems = useMemo(() => (
+    [...data.topItems]
+      .sort((a, b) => {
+        const profitComparison = (Number(b.windowProfit) || 0) - (Number(a.windowProfit) || 0);
+        if (profitComparison !== 0) return profitComparison;
+        return (Number(b.windowGpTraded) || 0) - (Number(a.windowGpTraded) || 0);
+      })
+      .slice(0, 12)
+  ), [data.topItems]);
 
   return (
     <>
@@ -96,19 +111,35 @@ export default function CategoryDrilldownDrawer({
           <div>
             <h2 className="items-drawer-title">{category}</h2>
             <p className="items-drawer-subtitle">
-              {`Category analytics for ${timeframe?.window || 'selected'}`}
+              {`Category analytics for ${timeframeLabel}`}
             </p>
           </div>
           <button
             type="button"
-            className="items-drawer-close has-tooltip"
+            className="items-drawer-close"
             onClick={onClose}
             aria-label="Close category details"
-            data-tooltip="Close this category drilldown."
           >
             <X size={18} aria-hidden="true" />
           </button>
         </div>
+
+        {timeframeOptions.length > 0 && onTimeframeChange && (
+          <div className="category-drawer-timeframe" aria-label="Category drilldown timeframe">
+            {timeframeOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={`category-drawer-timeframe-btn${timeframe?.window === option ? ' is-active' : ''}`}
+                aria-label={`Set Analytics timeframe to ${option === 'All' ? 'all available history' : option}`}
+                aria-pressed={timeframe?.window === option}
+                onClick={() => onTimeframeChange(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="items-drawer-kpis category-drawer-kpis">
           <div
@@ -187,7 +218,7 @@ export default function CategoryDrilldownDrawer({
         <section className="items-drawer-section">
           <h3
             className="items-drawer-section-title has-tooltip"
-            data-tooltip="Items in this category ranked by selected-window GP traded, falling back to all-time realized profit."
+            data-tooltip="Items in this category ranked by selected-window profit. GP traded uses the same Analytics timeframe."
           >
             Top items
           </h3>
@@ -197,19 +228,23 @@ export default function CategoryDrilldownDrawer({
                 <th>Item</th>
                 <th>Held</th>
                 <th>Window GP</th>
+                <th>Profit</th>
               </tr>
             </thead>
             <tbody>
-              {data.topItems.map((item) => (
+              {sortedTopItems.map((item) => (
                 <tr key={item.id}>
                   <td>{item.name}</td>
                   <td>{formatNumber(item.shares, numberFormat)}</td>
                   <td>{formatNumber(item.windowGpTraded, numberFormat)}</td>
+                  <td className={(Number(item.windowProfit) || 0) < 0 ? 'items-profit-negative' : 'items-profit-positive'}>
+                    {formatNumber(item.windowProfit, numberFormat)}
+                  </td>
                 </tr>
               ))}
-              {data.topItems.length === 0 && (
+              {sortedTopItems.length === 0 && (
                 <tr>
-                  <td className="items-table-empty" colSpan={3}>
+                  <td className="items-table-empty" colSpan={4}>
                     No items in this category
                   </td>
                 </tr>
@@ -228,6 +263,7 @@ export default function CategoryDrilldownDrawer({
           <table className="analytics-bw-table">
             <thead>
               <tr>
+                <th>Item</th>
                 <th>Date</th>
                 <th>Type</th>
                 <th>Qty</th>
@@ -237,6 +273,7 @@ export default function CategoryDrilldownDrawer({
             <tbody>
               {data.recentTransactions.map((transaction) => (
                 <tr key={transaction.id}>
+                  <td>{transaction.itemName}</td>
                   <td>{formatDate(transaction.date)}</td>
                   <td><span className="items-badge">{transaction.type}</span></td>
                   <td>{formatNumber(transaction.shares, numberFormat)}</td>
@@ -245,7 +282,7 @@ export default function CategoryDrilldownDrawer({
               ))}
               {data.recentTransactions.length === 0 && (
                 <tr>
-                  <td className="items-table-empty" colSpan={4}>
+                  <td className="items-table-empty" colSpan={5}>
                     No transactions recorded for this category
                   </td>
                 </tr>

@@ -66,8 +66,10 @@ export default function ItemDrilldownDrawer({
   transactions = [],
   profitHistory = [],
   timeframe,
+  timeframeOptions = [],
   numberFormat,
   onClose,
+  onTimeframeChange,
 }) {
   const { data: priceData, loading: priceLoading, error: priceError } = useTimeseries(
     item?.itemId,
@@ -113,14 +115,30 @@ export default function ItemDrilldownDrawer({
           </div>
           <button
             type="button"
-            className="items-drawer-close has-tooltip"
+            className="items-drawer-close"
             onClick={onClose}
             aria-label="Close item details"
-            data-tooltip="Close this item drilldown."
           >
             <X size={18} aria-hidden="true" />
           </button>
         </div>
+
+        {timeframeOptions.length > 0 && onTimeframeChange && (
+          <div className="category-drawer-timeframe" aria-label="Item drilldown timeframe">
+            {timeframeOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={`category-drawer-timeframe-btn${timeframe?.window === option ? ' is-active' : ''}`}
+                aria-label={`Set Analytics timeframe to ${option === 'All' ? 'all available history' : option}`}
+                aria-pressed={timeframe?.window === option}
+                onClick={() => onTimeframeChange(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="items-drawer-kpis">
           <div
