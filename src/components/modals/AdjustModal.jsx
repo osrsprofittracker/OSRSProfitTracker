@@ -3,6 +3,7 @@ import { handleMKInput } from '../../utils/formatters';
 import { useGEData } from '../../contexts/GEDataContext';
 import { useTrade } from '../../contexts/TradeContext';
 import StepInput from '../StepInput';
+import { searchGEItems } from '../../utils/geItemSearch';
 
 export default function AdjustModal({ stock, onConfirm, onCancel }) {
   const { geMapping: mapping } = useGEData();
@@ -32,9 +33,7 @@ export default function AdjustModal({ stock, onConfirm, onCancel }) {
   const currentCategories = categories.filter(c => c.isInvestment === (stock.isInvestment || false)).map(c => c.name);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return mapping.filter(item => item.name.toLowerCase().includes(q)).slice(0, 50);
+    return searchGEItems(mapping, searchQuery, 50);
   }, [searchQuery, mapping]);
 
   useEffect(() => {

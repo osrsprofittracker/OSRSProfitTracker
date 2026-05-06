@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bell, Eye, Plus, RefreshCw, ShoppingCart, Trash2 } from 'lucide-react';
 import { useGEData } from '../contexts/GEDataContext';
 import { formatNumber } from '../utils/formatters';
+import { searchGEItems } from '../utils/geItemSearch';
 import '../styles/watchlist-page.css';
 
 function parseTargetValue(value) {
@@ -37,9 +38,7 @@ export default function WatchlistPage({
   const dropdownRef = useRef(null);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return geMapping.filter(item => item.name.toLowerCase().includes(q)).slice(0, 40);
+    return searchGEItems(geMapping, searchQuery, 40);
   }, [searchQuery, geMapping]);
 
   useEffect(() => {
