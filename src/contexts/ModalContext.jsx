@@ -20,8 +20,6 @@ const MODAL_DEFAULTS = {
   referralProfit: false,
   bondsProfit: false,
   notes: false,
-  profitChart: false,
-  categoryChart: false,
   settings: false,
   timeCalculator: false,
   editCategory: false,

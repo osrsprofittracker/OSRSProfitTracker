@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Eye, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { BarChart3, Eye, LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import WatchlistPage from './pages/WatchlistPage';
 import { supabase } from './lib/supabase';
 import { useGPTradedStats } from './hooks/useGPTradedStats';
@@ -28,7 +29,7 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import NotificationCenter from './components/NotificationCenter';
 import PortfolioSummary from './components/PortfolioSummary';
-import ChartButtons from './components/ChartButtons';
+import AltAccountTimer from './components/AltAccountTimer';
 import CategorySection from './components/CategorySection';
 import ModalManager from './components/ModalManager';
 import { CURRENT_VERSION } from './data/changelog';
@@ -135,6 +136,10 @@ function MainAppInner({ session, onLogout }) {
     handleQuickNavNavigate,
     handleNotificationNavigate,
   } = useNavigation({ refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters, stocks, categories });
+  const initialTabParam = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab');
+  }, [currentPage]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentTime, setCurrentTime] = useState(Date.now());
   const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading && !milestonesLoading && !profitHistoryLoading && !gpStatsLoading;
@@ -986,6 +991,13 @@ function MainAppInner({ session, onLogout }) {
               📊 Graphs
             </button>
             <button
+              onClick={() => navigateToPage('analytics')}
+              className={`topbar-nav-btn${currentPage === 'analytics' ? ' is-active' : ''}`}
+            >
+              <BarChart3 size={14} />
+              Analytics
+            </button>
+            <button
               onClick={() => navigateToPage('watchlist')}
               style={{
                 padding: '0.75rem 1.5rem',
@@ -1165,6 +1177,19 @@ function MainAppInner({ session, onLogout }) {
             stockNotes={stockNotes}
             onSaveNote={saveNote}
           />
+        ) : currentPage === 'analytics' ? (
+          <AnalyticsPage
+            userId={userId}
+            transactions={transactions}
+            profitHistory={profitHistory}
+            profits={profits}
+            numberFormat={numberFormat}
+            initialTab={initialTabParam}
+            navigateToPage={navigateToPage}
+            milestones={milestones}
+            milestoneHistory={milestoneHistory}
+            milestoneProgress={milestoneProgress}
+          />
         ) : currentPage === 'watchlist' ? (
           <WatchlistPage
             watchlistItems={watchlistItems}
@@ -1196,7 +1221,7 @@ function MainAppInner({ session, onLogout }) {
               showUnrealisedProfitStats={showUnrealisedProfitStats}
             />
 
-            {/* Milestone Progress Bar and Chart Buttons Row */}
+            {/* Milestone Progress Bar and Alt Account Timer Row */}
             <div style={{
               display: 'flex',
               gap: '1rem',
@@ -1214,9 +1239,7 @@ function MainAppInner({ session, onLogout }) {
                 numberFormat={numberFormat}
               />
 
-              <ChartButtons
-                onShowProfitChart={() => openModal('profitChart')}
-                onShowCategoryChart={() => openModal('categoryChart')}
+              <AltAccountTimer
                 altAccountTimer={altAccountTimer}
                 onSetAltTimer={() => openModal('altTimer')}
                 onResetAltTimer={handleResetAltTimer}

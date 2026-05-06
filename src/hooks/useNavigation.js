@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUIState } from '../contexts/UIStateContext';
 
-const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs', watchlist: '/watchlist' };
+const PAGE_PATHS = {
+  home: '/',
+  trade: '/trade',
+  history: '/history',
+  graphs: '/graphs',
+  analytics: '/analytics',
+  watchlist: '/watchlist',
+};
 
 const HISTORY_EMPTY_FILTERS = {
   type: 'all', mode: 'all', stockName: '', category: '',
@@ -15,8 +22,25 @@ function getPageFromURL() {
   if (path === '/trade') return 'trade';
   if (path === '/history') return 'history';
   if (path === '/graphs') return 'graphs';
+  if (path === '/analytics') return 'analytics';
   if (path === '/watchlist') return 'watchlist';
   return 'home';
+}
+
+function filtersFromHistoryParams(params) {
+  if (params.has('search')) {
+    return { ...HISTORY_EMPTY_FILTERS, stockName: params.get('search') };
+  }
+
+  if (params.has('dateFrom') || params.has('dateTo')) {
+    return {
+      ...HISTORY_EMPTY_FILTERS,
+      dateFrom: params.get('dateFrom') || '',
+      dateTo: params.get('dateTo') || '',
+    };
+  }
+
+  return { ...HISTORY_EMPTY_FILTERS };
 }
 
 export function useNavigation({
@@ -50,8 +74,8 @@ export function useNavigation({
       if (page === 'graphs' && params.has('item')) {
         setGraphItemId(params.get('item'));
       }
-      if (page === 'history' && params.has('search')) {
-        applyFilters({ ...HISTORY_EMPTY_FILTERS, stockName: params.get('search') });
+      if (page === 'history') {
+        applyFilters(filtersFromHistoryParams(params));
       }
     } else if (page === 'graphs') {
       setGraphItemId(null);
@@ -84,11 +108,7 @@ export function useNavigation({
       const searchParams = new URLSearchParams(window.location.search);
       setGraphItemId(searchParams.get('item'));
       if (page === 'history') {
-        const searchName = searchParams.get('search');
-        applyFilters(searchName
-          ? { ...HISTORY_EMPTY_FILTERS, stockName: searchName }
-          : { ...HISTORY_EMPTY_FILTERS }
-        );
+        applyFilters(filtersFromHistoryParams(searchParams));
       }
     };
     window.addEventListener('popstate', handlePopState);

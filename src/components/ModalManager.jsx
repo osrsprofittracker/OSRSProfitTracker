@@ -12,8 +12,6 @@ import CategoryModal from './modals/CategoryModal';
 import EditCategoryModal from './modals/EditCategoryModal';
 import ProfitModal from './modals/ProfitModal';
 import NotesModal from './modals/NotesModal';
-import ProfitChartModal from './modals/ProfitChartModal';
-import CategoryChartModal from './modals/CategoryChartModal';
 import SettingsModal from './modals/SettingsModal';
 import ChangelogModal from './modals/ChangelogModal';
 import ChangePasswordModal from './modals/ChangePasswordModal';
@@ -60,12 +58,7 @@ export default function ModalManager({
   // Data
   tradeMode,
   stockNotes,
-  dumpProfit,
-  referralProfit,
-  bondsProfit,
   numberFormat,
-  groupedStocks,
-  groupedStatsStocks,
   categoryNames,
   geIconMap,
   gePrices,
@@ -243,24 +236,6 @@ export default function ModalManager({
           notes={stockNotes[selectedStock?.id]}
           onConfirm={handleSaveNotes}
           onCancel={() => closeModal('notes')}
-        />
-      </ModalContainer>
-
-      <ModalContainer isOpen={modals.profitChart}>
-        <ProfitChartModal
-          dumpProfit={dumpProfit}
-          referralProfit={referralProfit}
-          bondsProfit={bondsProfit}
-          onCancel={() => closeModal('profitChart')}
-          numberFormat={numberFormat}
-        />
-      </ModalContainer>
-
-      <ModalContainer isOpen={modals.categoryChart}>
-        <CategoryChartModal
-          groupedStocks={groupedStatsStocks || groupedStocks}
-          onCancel={() => closeModal('categoryChart')}
-          numberFormat={numberFormat}
         />
       </ModalContainer>
 

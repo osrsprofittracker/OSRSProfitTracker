@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 const BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
 const USER_AGENT = 'OSRSProfitTracker - osrsprofittracker@gmail.com';
 
-export function useTimeseries(itemId, timestep) {
+export function useTimeseries(itemId, timestep, options = {}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const refetchIntervalMs = options.refetchIntervalMs ?? 60_000;
 
   useEffect(() => {
     if (!itemId || !timestep) {
@@ -37,9 +38,12 @@ export function useTimeseries(itemId, timestep) {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [itemId, timestep]);
+    const interval = refetchIntervalMs ? setInterval(fetchData, refetchIntervalMs) : null;
+    return () => {
+      cancelled = true;
+      if (interval) clearInterval(interval);
+    };
+  }, [itemId, timestep, refetchIntervalMs]);
 
   return { data, loading, error };
 }
