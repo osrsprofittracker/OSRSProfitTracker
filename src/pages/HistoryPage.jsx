@@ -3,6 +3,7 @@ import { Star } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
 import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
+import ItemIcon from '../components/ItemIcon';
 import '../styles/table.css';
 import '../styles/history-page.css';
 import '../styles/filter-panel.css';
@@ -350,11 +351,12 @@ export default function HistoryPage({
                 </td>
                 <td className="history-cell history-cell--name">
                   <span className="history-item-name">
-                    {stockItemIdMap[t.stockId] && geIconMap[stockItemIdMap[t.stockId]] && (
-                      <img
+                    {stockItemIdMap[t.stockId] && (
+                      <ItemIcon
                         src={geIconMap[stockItemIdMap[t.stockId]]}
                         alt=""
                         className="history-item-icon"
+                        fallbackText={t.stockName}
                       />
                     )}
                     {showMembershipIcon && stockItemIdMap[t.stockId] && stockItemIdMap[t.stockId] in membershipMap && (

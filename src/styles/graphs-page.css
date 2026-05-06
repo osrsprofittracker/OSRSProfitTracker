@@ -104,6 +104,12 @@
   margin: 0;
 }
 
+.graphs-info-icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
 .graphs-info-wiki-link {
   font-size: 0.75rem;
   font-weight: 500;

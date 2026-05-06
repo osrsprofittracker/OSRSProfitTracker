@@ -3,6 +3,7 @@ import { Bell, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSqu
 import { formatNumber, getTimeAgo } from '../utils/formatters';
 import { getTypeIcon, getTypeColor } from '../utils/notificationUtils';
 import { useGEData } from '../contexts/GEDataContext';
+import ItemIcon from './ItemIcon';
 import '../styles/notification-center.css';
 
 export default function NotificationCenter({
@@ -295,13 +296,12 @@ export default function NotificationCenter({
                       const livePrice = gePrices[alert.itemId];
                       return (
                         <div key={alert.id} className="notification-alert-item">
-                          {geIconMap[alert.itemId] && (
-                            <img
-                              src={geIconMap[alert.itemId]}
-                              alt=""
-                              className="notification-alert-icon"
-                            />
-                          )}
+                          <ItemIcon
+                            src={geIconMap[alert.itemId]}
+                            alt=""
+                            className="notification-alert-icon"
+                            fallbackText={alert.itemName}
+                          />
                           <div className="notification-alert-info">
                             <div className="notification-alert-name">{alert.itemName}</div>
                             <div className="notification-alert-thresholds">

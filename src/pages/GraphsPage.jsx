@@ -8,6 +8,7 @@ import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
 import ModalContainer from '../components/modals/ModalContainer';
 import NotesModal from '../components/modals/NotesModal';
+import ItemIcon from '../components/ItemIcon';
 import { searchGEItems } from '../utils/geItemSearch';
 import '../styles/graphs-page.css';
 
@@ -352,13 +353,12 @@ export default function GraphsPage({
       className="graphs-dropdown-item"
       onClick={() => handleSelectItem(item)}
     >
-      {iconMap[item.id] && (
-        <img
-          src={iconMap[item.id]}
-          alt=""
-          className="graphs-dropdown-icon"
-        />
-      )}
+      <ItemIcon
+        src={iconMap[item.id]}
+        alt=""
+        className="graphs-dropdown-icon"
+        fallbackText={item.name}
+      />
       <span className="graphs-dropdown-name">{item.name}</span>
       {item.limit && (
         <span className="graphs-dropdown-limit">Limit: {item.limit.toLocaleString()}</span>
@@ -437,15 +437,12 @@ export default function GraphsPage({
                     onDragOver={handleFavDragOver}
                     onDrop={(e) => handleFavDrop(e, fav.itemId)}
                   >
-                    {iconMap[fav.itemId] ? (
-                      <img
-                        src={iconMap[fav.itemId]}
-                        alt={fav.itemName}
-                        className="graphs-quick-access-icon"
-                      />
-                    ) : (
-                      <span className="graphs-quick-access-fallback">{fav.itemName.charAt(0)}</span>
-                    )}
+                    <ItemIcon
+                      src={iconMap[fav.itemId]}
+                      alt={fav.itemName}
+                      className="graphs-quick-access-icon"
+                      fallbackText={fav.itemName}
+                    />
                   </button>
                 );
               })}
@@ -457,13 +454,12 @@ export default function GraphsPage({
       {selectedItem && (
         <div className="graphs-info-panel">
           <div className="graphs-info-header">
-            {iconMap[selectedItem.id] && (
-              <img
-                src={iconMap[selectedItem.id]}
-                alt=""
-                style={{ width: 32, height: 32, imageRendering: 'pixelated' }}
-              />
-            )}
+            <ItemIcon
+              src={iconMap[selectedItem.id]}
+              alt=""
+              className="graphs-info-icon"
+              fallbackText={selectedItem.name}
+            />
             <h3 className="graphs-info-name">{selectedItem.name}</h3>
             <button
               className={`graphs-favorite-star graphs-favorite-star--header ${isFavorite(selectedItem.id) ? 'graphs-favorite-star--active' : ''}`}
@@ -654,13 +650,12 @@ export default function GraphsPage({
                             className="graphs-empty-card"
                             onClick={() => handleSelectItem(item)}
                           >
-                            {iconMap[rec.itemId] && (
-                              <img
-                                src={iconMap[rec.itemId]}
-                                alt=""
-                                className="graphs-empty-card-icon"
-                              />
-                            )}
+                            <ItemIcon
+                              src={iconMap[rec.itemId]}
+                              alt=""
+                              className="graphs-empty-card-icon"
+                              fallbackText={rec.itemName}
+                            />
                             <span className="graphs-empty-card-name">{rec.itemName}</span>
                           </button>
                         );
@@ -684,13 +679,12 @@ export default function GraphsPage({
                             className="graphs-empty-card"
                             onClick={() => handleSelectItem(item)}
                           >
-                            {iconMap[fav.itemId] && (
-                              <img
-                                src={iconMap[fav.itemId]}
-                                alt=""
-                                className="graphs-empty-card-icon"
-                              />
-                            )}
+                            <ItemIcon
+                              src={iconMap[fav.itemId]}
+                              alt=""
+                              className="graphs-empty-card-icon"
+                              fallbackText={fav.itemName}
+                            />
                             <span className="graphs-empty-card-name">{fav.itemName}</span>
                           </button>
                         );

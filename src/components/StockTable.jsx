@@ -4,6 +4,7 @@ import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { useGEData } from '../contexts/GEDataContext';
+import ItemIcon from './ItemIcon';
 import '../styles/table.css';
 import { sortStocks } from '../utils/calculations';
 
@@ -204,11 +205,12 @@ function StockRow({
       </td>
       <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600', color: 'white', border: '1px solid rgb(51, 65, 85)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          {stock.itemId && geIconMap[stock.itemId] && (
-            <img
+          {stock.itemId && (
+            <ItemIcon
               src={geIconMap[stock.itemId]}
               alt=""
-              style={{ width: '20px', height: '20px', objectFit: 'contain', imageRendering: 'pixelated' }}
+              className="stock-table-item-icon"
+              fallbackText={stock.name}
             />
           )}
           {showMembershipIcon && stock.itemId && stock.itemId in membershipMap && (
