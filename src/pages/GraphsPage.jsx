@@ -8,6 +8,7 @@ import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
 import ModalContainer from '../components/modals/ModalContainer';
 import NotesModal from '../components/modals/NotesModal';
+import { searchGEItems } from '../utils/geItemSearch';
 import '../styles/graphs-page.css';
 
 const TIMEFRAMES = [
@@ -90,9 +91,7 @@ export default function GraphsPage({
   const { chartContainerRef, volumeContainerRef } = useChart({ chartData, candlestickData, chartMode, timeframe, selectedItem });
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return mapping.filter(item => item.name.toLowerCase().includes(q)).slice(0, 50);
+    return searchGEItems(mapping, searchQuery, 50);
   }, [searchQuery, mapping]);
 
   // Build dropdown sections

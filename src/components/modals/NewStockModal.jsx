@@ -3,6 +3,7 @@ import StepInput from '../StepInput';
 import { handleMKInput } from '../../utils/formatters';
 import { useGEData } from '../../contexts/GEDataContext';
 import { useTrade } from '../../contexts/TradeContext';
+import { searchGEItems } from '../../utils/geItemSearch';
 
 export default function NewStockModal({ defaultCategory = '', defaultIsInvestment = false, defaultItem = null, archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
   const { geMapping: mapping } = useGEData();
@@ -23,9 +24,7 @@ export default function NewStockModal({ defaultCategory = '', defaultIsInvestmen
   const filteredCategories = categories.filter(c => c.isInvestment === isInvestment).map(c => c.name);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return mapping.filter(item => item.name.toLowerCase().includes(q)).slice(0, 50);
+    return searchGEItems(mapping, searchQuery, 50);
   }, [searchQuery, mapping]);
 
   useEffect(() => {
