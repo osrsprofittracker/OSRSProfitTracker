@@ -1,6 +1,22 @@
-export const CURRENT_VERSION = "2.7.0";
+export const CURRENT_VERSION = "3.0.0";
 
 export const changelog = [
+  {
+    version: "3.0.0",
+    date: "2026-05-06",
+    changes: [
+      { type: "new", text: "Analytics page with Profit, Items, Categories, and Goals tabs for deeper portfolio analysis" },
+      { type: "new", text: "Profit analytics now include KPI comparisons, profit source breakdowns, heatmaps, streaks, and best-day tables" },
+      { type: "new", text: "Item analytics now include item performance tables, movers, drilldowns, and inventory value views" },
+      { type: "new", text: "Category analytics now include turnover, margin, contribution, stacked area charts, heatmaps, and drilldown drawers" },
+      { type: "new", text: "Goals analytics now show milestone history, goal hit rate, average versus goal KPIs, and time-to-goal estimates" },
+      { type: "new", text: "Watchlist page for tracking non-owned items with target buy/sell prices, notes, alerts, and quick conversion into active trades" },
+      { type: "new", text: "Local GE item icon mirror so linked OSRS item icons load from the app instead of relying on external icon URLs" },
+      { type: "improved", text: "GE item search ranking is smarter for exact matches and OSRS-related terms" },
+      { type: "fix", text: "OSRS News and Jmod comment fetching now retry and fail more gracefully during transient 502 errors" },
+      { type: "fix", text: "Archived stocks are now included in portfolio and category stats where they still affect historical totals" },
+    ],
+  },
   {
     version: "2.7.0",
     date: "2026-04-08",
