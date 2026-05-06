@@ -1,22 +1,25 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { LogOut } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { BarChart3, Eye, LogOut } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import WatchlistPage from './pages/WatchlistPage';
 import { supabase } from './lib/supabase';
-import { useStocks } from './hooks/useStocks';
-import { useCategories } from './hooks/useCategories';
-import { useTransactions } from './hooks/useTransactions';
 import { useGPTradedStats } from './hooks/useGPTradedStats';
 import { useStockNotes } from './hooks/useStockNotes.js';
 import { useSettings } from './hooks/useSettings';
 import { useNotificationSettings } from './hooks/useNotificationSettings';
-import { useProfits } from './hooks/useProfits';
-import { useMilestones } from './hooks/useMilestones';
-import { useProfitHistory } from './hooks/useProfitHistory';
 import { useGEData } from './contexts/GEDataContext';
 import { TradeProvider } from './contexts/TradeContext';
 import { ModalProvider, useModal } from './contexts/ModalContext';
+import { UIStateProvider, useUIState, useHighlight } from './contexts/UIStateContext';
+import { StocksProvider, useStocksContext } from './contexts/StocksContext';
+import { TransactionsProvider, useTransactionsContext } from './contexts/TransactionsContext';
+import { CategoriesProvider, useCategoriesContext } from './contexts/CategoriesContext';
+import { ProfitsProvider, useProfitsContext } from './contexts/ProfitsContext';
+import { MilestonesProvider, useMilestonesContext } from './contexts/MilestonesContext';
+import { ProfitHistoryProvider, useProfitHistoryContext } from './contexts/ProfitHistoryContext';
 import { useNotifications } from './hooks/useNotifications';
 import { useOSRSNews } from './hooks/useOSRSNews';
 import { useJmodComments } from './hooks/useJmodComments';
@@ -26,12 +29,14 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import NotificationCenter from './components/NotificationCenter';
 import PortfolioSummary from './components/PortfolioSummary';
-import ChartButtons from './components/ChartButtons';
+import AltAccountTimer from './components/AltAccountTimer';
 import CategorySection from './components/CategorySection';
 import ModalManager from './components/ModalManager';
 import { CURRENT_VERSION } from './data/changelog';
 import { usePriceAlerts } from './hooks/usePriceAlerts';
 import { usePriceAlertChecker } from './hooks/usePriceAlertChecker';
+import { useWatchlist } from './hooks/useWatchlist';
+import { useWatchlistAlertChecker } from './hooks/useWatchlistAlertChecker';
 import GlobalSearch from './components/GlobalSearch';
 
 import {
@@ -43,28 +48,27 @@ import {
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
 import { useModalHandlers } from './hooks/useModalHandlers';
-
-const PAGE_PATHS = { home: '/', trade: '/trade', history: '/history', graphs: '/graphs' };
-
-const HISTORY_EMPTY_FILTERS = {
-  type: 'all', mode: 'all', stockName: '', category: '',
-  dateFrom: '', dateTo: '', gpMin: '', gpMax: '',
-  priceMin: '', priceMax: '', profitMin: '', profitMax: '',
-  qtyMin: '', qtyMax: '', marginMin: '', marginMax: ''
-};
-
-function getPageFromURL() {
-  const path = window.location.pathname;
-  if (path === '/trade') return 'trade';
-  if (path === '/history') return 'history';
-  if (path === '/graphs') return 'graphs';
-  return 'home';
-}
+import { useNavigation } from './hooks/useNavigation';
 
 export default function MainApp(props) {
+  const userId = props.session.user.id;
   return (
     <ModalProvider>
-      <MainAppInner {...props} />
+      <StocksProvider userId={userId}>
+        <TransactionsProvider userId={userId}>
+          <CategoriesProvider userId={userId}>
+            <ProfitsProvider userId={userId}>
+              <MilestonesProvider userId={userId}>
+                <ProfitHistoryProvider userId={userId}>
+                  <UIStateProvider userId={userId}>
+                    <MainAppInner {...props} />
+                  </UIStateProvider>
+                </ProfitHistoryProvider>
+              </MilestonesProvider>
+            </ProfitsProvider>
+          </CategoriesProvider>
+        </TransactionsProvider>
+      </StocksProvider>
     </ModalProvider>
   );
 }
@@ -72,8 +76,18 @@ export default function MainApp(props) {
 function MainAppInner({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
-  // Custom hooks for Supabase
-  const [tradeMode, setTradeMode] = useState('trade');
+  const {
+    tradeMode,
+    setTradeMode,
+    collapsedCategories,
+    setCollapsedCategories,
+    milestoneProgress,
+    setMilestoneProgress,
+    calculateMilestoneProgress,
+    firedTimerNotifs,
+    saveFiredTimers,
+  } = useUIState();
+  const { highlightedRows, highlightRow } = useHighlight();
   const { gePrices, geMapping, geIconMap, membershipMap, mappingLoading } = useGEData();
 
   const switchTradeMode = (mode) => {
@@ -81,22 +95,30 @@ function MainAppInner({ session, onLogout }) {
     fetchCategories();
     setTradeMode(mode);
   };
-  const { stocks, loading: stocksLoading, addStock: addStockToDB, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocks(userId);
-  const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategories(userId);
+  const { stocks, allStocks, loading: stocksLoading, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
+  const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategoriesContext();
   const {
     transactions, loading: transactionsLoading, addTransaction,
     pagedTransactions, pagedLoading, totalCount, totalPages,
     page, pageSize, filters, goToPage, changePageSize, applyFilters, initPaged,
     sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
-  } = useTransactions(userId);
+  } = useTransactionsContext();
  const { stats: gpTradedStats, loading: gpStatsLoading, refetch: refetchGPStats } = useGPTradedStats(userId);
   const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { notificationPreferences, updateNotificationPreference, loading: notificationSettingsLoading } = useNotificationSettings(userId);
-  const { profits, loading: profitsLoading, updateProfit } = useProfits(userId);
-  const { profitHistory, loading: profitHistoryLoading, addProfitEntry, refetch: refetchProfitHistory } = useProfitHistory(userId);
-  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestones(userId);
+  const { profits, loading: profitsLoading, updateProfit } = useProfitsContext();
+  const { profitHistory, loading: profitHistoryLoading, refetch: refetchProfitHistory } = useProfitHistoryContext();
+  const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestonesContext();
   const { alerts: priceAlerts, allAlerts: allPriceAlerts, loading: priceAlertsLoading, saveAlert: savePriceAlert, dismissAlert: dismissPriceAlert, deactivateAlert: deactivatePriceAlert, updateLastChecked: updatePriceAlertLastChecked, refetch: refetchPriceAlerts } = usePriceAlerts(userId);
+  const {
+    watchlistItems,
+    loading: watchlistLoading,
+    addWatchlistItem,
+    updateWatchlistItem,
+    deleteWatchlistItem,
+    refetch: refetchWatchlist
+  } = useWatchlist(userId);
 
   // Destructure profits
   const { dumpProfit, referralProfit, bondsProfit } = profits;
@@ -105,93 +127,40 @@ function MainAppInner({ session, onLogout }) {
   const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats,
           showUnrealisedProfitStats, showCategoryUnrealisedProfit, notificationVolume } = settings;
   // Local UI state
-  const [collapsedCategories, setCollapsedCategories] = useState(() => {
-    // Load collapsed state from localStorage on initial render
-    const saved = localStorage.getItem('collapsedCategories');
-    return saved ? JSON.parse(saved) : {};
-  });
-  const [currentPage, setCurrentPage] = useState(getPageFromURL);
-  const [graphItemId, setGraphItemId] = useState(() => new URLSearchParams(window.location.search).get('item'));
-
-  const navigateToPage = useCallback((page, options = {}) => {
-    if (page === 'trade') {
-      refetch();
-      fetchCategories();
-    }
-    if (page === 'home') {
-      refetch();
-      refetchGPStats();
-      refetchProfitHistory();
-    }
-    setCurrentPage(page);
-    let url = PAGE_PATHS[page] || '/';
-    if (options.query) {
-      const params = new URLSearchParams(options.query);
-      url += '?' + params.toString();
-      if (page === 'graphs' && params.has('item')) {
-        setGraphItemId(params.get('item'));
-      }
-      if (page === 'history' && params.has('search')) {
-        applyFilters({ ...HISTORY_EMPTY_FILTERS, stockName: params.get('search') });
-      }
-    } else if (page === 'graphs') {
-      setGraphItemId(null);
-    } else if (page === 'history') {
-      applyFilters({ ...HISTORY_EMPTY_FILTERS });
-    }
-    window.history.pushState({ page }, '', url);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
-
-  // Replace initial history entry so back button works correctly
-  useEffect(() => {
-    const page = getPageFromURL();
-    window.history.replaceState({ page }, '', window.location.pathname + window.location.search);
-  }, []);
-
-  // Handle browser back/forward
-  useEffect(() => {
-    const handlePopState = () => {
-      const page = getPageFromURL();
-      if (page === 'trade') {
-        refetch();
-        fetchCategories();
-      }
-      if (page === 'home') {
-        refetch();
-        refetchGPStats();
-        refetchProfitHistory();
-      }
-      setCurrentPage(page);
-      const searchParams = new URLSearchParams(window.location.search);
-      setGraphItemId(searchParams.get('item'));
-      if (page === 'history') {
-        const searchName = searchParams.get('search');
-        applyFilters(searchName
-          ? { ...HISTORY_EMPTY_FILTERS, stockName: searchName }
-          : { ...HISTORY_EMPTY_FILTERS }
-        );
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
+  const {
+    currentPage,
+    graphItemId,
+    navigateToPage,
+    toggleCategory,
+    expandCategory,
+    handleQuickNavNavigate,
+    handleNotificationNavigate,
+  } = useNavigation({ refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters, stocks, categories });
+  const initialTabParam = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab');
+  }, [currentPage]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [highlightedRows, setHighlightedRows] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
   const dataLoaded = !stocksLoading && !categoriesLoading && !transactionsLoading && !notesLoading && !settingsLoading && !profitsLoading && !milestonesLoading && !profitHistoryLoading && !gpStatsLoading;
 
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userDropdownRef = useRef(null);
+  const userMenuOpenRef = useRef(false);
+  const ignoreNextUserMenuClickRef = useRef(false);
 
   // Modal context
   const { openModal, closeModal, selectedStock, setSelectedStock, selectedCategory, setSelectedCategory, newStockCategory, setNewStockCategory, setSelectedAlertItem } = useModal();
 
   // Price alert handlers
   const handleOpenPriceAlert = (stockOrItem) => {
-    const itemId = stockOrItem.itemId ?? stockOrItem.itemId;
+    const itemId = stockOrItem.itemId ?? null;
     const itemName = stockOrItem.itemName ?? stockOrItem.name;
+    const defaultHighThreshold = stockOrItem.defaultHighThreshold ?? null;
+    const defaultLowThreshold = stockOrItem.defaultLowThreshold ?? null;
     if (!itemId) return;
-    openModal('priceAlert', { alertItem: { itemId, itemName } });
+    openModal('priceAlert', { alertItem: { itemId, itemName, defaultHighThreshold, defaultLowThreshold } });
   };
 
   const handleSavePriceAlert = async (itemId, itemName, highThreshold, lowThreshold) => {
@@ -202,6 +171,88 @@ function MainAppInner({ session, onLogout }) {
   const handleDeletePriceAlert = async (alertId) => {
     await dismissPriceAlert(alertId);
     closeModal('priceAlert');
+  };
+
+  const handleAddWatchlistItem = async (item) => {
+    const success = await addWatchlistItem(item);
+    if (success) {
+      await refetchWatchlist();
+    }
+    return success;
+  };
+
+  const handleUpdateWatchlistItem = async (id, updates) => {
+    const success = await updateWatchlistItem(id, updates);
+    if (success) {
+      await refetchWatchlist();
+    }
+    return success;
+  };
+
+  const handleDeleteWatchlistItem = async (id) => {
+    const success = await deleteWatchlistItem(id);
+    if (success) {
+      await refetchWatchlist();
+    }
+    return success;
+  };
+
+  const handleQuickAddWatchlistFromGraphs = async (item) => {
+    if (!item?.itemId || !item?.itemName) return false;
+
+    const alreadyTracked = watchlistItems.some(w => w.itemId === item.itemId);
+    if (alreadyTracked) return true;
+
+    let targetBuyPrice = item.targetBuyPrice ?? null;
+    let targetSellPrice = item.targetSellPrice ?? null;
+
+    // Only auto-generate defaults when caller doesn't provide any target.
+    if (!targetBuyPrice && !targetSellPrice) {
+      const livePrice = gePrices[item.itemId];
+      const fallbackBuy = livePrice?.low != null ? Math.max(1, Math.floor(livePrice.low * 0.98)) : null;
+      const fallbackSell = livePrice?.high != null ? Math.max(1, Math.ceil(livePrice.high * 1.02)) : null;
+      targetBuyPrice = fallbackBuy;
+      targetSellPrice = fallbackSell;
+    }
+
+
+    const success = await addWatchlistItem({
+      itemId: item.itemId,
+      itemName: item.itemName,
+      targetBuyPrice,
+      targetSellPrice,
+      notes: item.notes ?? '',
+    });
+
+    if (success) {
+      await refetchWatchlist();
+    }
+
+    return success;
+  };
+
+  const handleConvertWatchlistToStock = async (watchlistItem) => {
+    const targetStock = allStocks.find(stock => stock.itemId === watchlistItem.itemId && !stock.archived);
+    const mappedItem = geMapping.find(item => item.id === watchlistItem.itemId);
+    const defaultLimit4h = mappedItem?.limit || 0;
+
+    if (!targetStock) {
+      navigateToPage('trade');
+      openModal('newStock', {
+        newStockCategory: 'Uncategorized',
+        newStockPreset: {
+          itemId: watchlistItem.itemId,
+          itemName: watchlistItem.itemName,
+          limit4h: defaultLimit4h,
+          openBuyAfterCreate: true,
+        }
+      });
+      return true;
+    }
+
+    navigateToPage('trade');
+    openModal('buy', { stock: targetStock });
+    return true;
   };
 
   // Notifications
@@ -226,8 +277,13 @@ function MainAppInner({ session, onLogout }) {
     updateLastChecked: updatePriceAlertLastChecked,
   });
 
+  useWatchlistAlertChecker({
+    watchlistItems,
+    gePrices,
+    addNotification,
+  });
+
   // Track which timer notifications have already fired to avoid duplicates
-  const firedTimerNotifs = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_fired_limit_timers_${userId}`) || '[]')));
   const firedAltTimerNotif = useRef(false);
   const firedMilestoneNotifs = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_fired_milestones_${userId}`) || '[]')));
   const seenNewsGuids = useRef(new Set(JSON.parse(localStorage.getItem(`osrs_seen_news_${userId}`) || '[]')));
@@ -238,11 +294,6 @@ function MainAppInner({ session, onLogout }) {
   const newsNotifsInitialized = useRef(localStorage.getItem(`osrs_news_initialized_${userId}`) === 'true');
   const jmodNotifsInitialized = useRef(localStorage.getItem(`osrs_jmod_initialized_${userId}`) === 'true');
   const timerTimeoutsRef = useRef(new Map());
-
-  // Helper to persist firedTimerNotifs to localStorage
-  const saveFiredTimers = useCallback(() => {
-    localStorage.setItem(`osrs_fired_limit_timers_${userId}`, JSON.stringify(Array.from(firedTimerNotifs.current)));
-  }, [userId]);
 
   // Save when app closes
   useEffect(() => {
@@ -260,6 +311,22 @@ function MainAppInner({ session, onLogout }) {
       setCurrentTime(Date.now());
     }, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    userMenuOpenRef.current = userMenuOpen;
+  }, [userMenuOpen]);
+
+  useEffect(() => {
+    function handleMouseDownOutside(event) {
+      if (!userMenuOpenRef.current) return;
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleMouseDownOutside, true);
+    return () => document.removeEventListener('mousedown', handleMouseDownOutside, true);
   }, []);
 
   // Detect timer expirations for notifications
@@ -428,13 +495,6 @@ function MainAppInner({ session, onLogout }) {
     }
   }, [userId]); // Remove categoriesLoading and categories from dependencies
   // Helper functions
-  const highlightRow = (stockId) => {
-    setHighlightedRows({ ...highlightedRows, [stockId]: true });
-    setTimeout(() => {
-      setHighlightedRows({ ...highlightedRows, [stockId]: false });
-    }, 1000);
-  };
-
   const handleSort = (key) => {
     setSortConfig({
       key,
@@ -449,101 +509,10 @@ function MainAppInner({ session, onLogout }) {
     }
   };
 
-  const calculateMilestoneProgress = () => {
-    if (!dataLoaded || !profitHistory) return { day: 0, week: 0, month: 0, year: 0 };
-
-    const getStartOfPeriod = (period) => {
-      const date = new Date();
-      switch (period) {
-        case 'day':
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'week':
-          const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-          date.setDate(diff);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'month':
-          date.setDate(1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'year':
-          date.setMonth(0, 1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        default:
-          return date;
-      }
-    };
-
-    const calculatePeriodProfit = (period) => {
-      const startDate = getStartOfPeriod(period);
-      const periodProfits = profitHistory.filter(entry => {
-        const entryDate = new Date(entry.created_at);
-        return entryDate >= startDate && entry.profit_type !== 'bonds';
-      });
-      const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
-      return totalProfit;
-    };
-
-    return {
-      day: calculatePeriodProfit('day'),
-      week: calculatePeriodProfit('week'),
-      month: calculatePeriodProfit('month'),
-      year: calculatePeriodProfit('year')
-    };
-  };
-
   useEffect(() => {
     if (!profitHistory || profitHistoryLoading) return;
 
-    const getStartOfPeriod = (period) => {
-      const date = new Date();
-      switch (period) {
-        case 'day':
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'week':
-          const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-          date.setDate(diff);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'month':
-          date.setDate(1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        case 'year':
-          date.setMonth(0, 1);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        default:
-          return date;
-      }
-    };
-
-    const calculatePeriodProfit = (period) => {
-      const startDate = getStartOfPeriod(period);
-
-      const periodProfits = profitHistory.filter(entry => {
-        const entryDate = new Date(entry.created_at);
-        const isInPeriod = entryDate >= startDate;
-        const isNotBonds = entry.profit_type !== 'bonds';
-
-        return isInPeriod && isNotBonds;
-      });
-
-      const totalProfit = periodProfits.reduce((sum, entry) => sum + entry.amount, 0);
-
-      return Math.max(0, totalProfit);
-    };
-
-    const newProgress = {
-      day: calculatePeriodProfit('day'),
-      week: calculatePeriodProfit('week'),
-      month: calculatePeriodProfit('month'),
-      year: calculatePeriodProfit('year')
-    };
-
+    const newProgress = calculateMilestoneProgress();
     setMilestoneProgress(newProgress);
 
     // Check for milestone achievements and fire notifications
@@ -590,7 +559,7 @@ function MainAppInner({ session, onLogout }) {
     if (!milestonesLoading) {
       recordCompletedPeriods(profitHistory, milestones);
     }
-  }, [dataLoaded, profitHistory, milestones]);
+  }, [profitHistory, milestones, calculateMilestoneProgress, setMilestoneProgress]);
 
   // OSRS News notification effect
   useEffect(() => {
@@ -659,19 +628,6 @@ function MainAppInner({ session, onLogout }) {
     closeModal('changelog');
   };
 
-  const toggleCategory = (category) => {
-    setCollapsedCategories(prev => {
-      const newState = {
-        ...prev,
-        [category]: !prev[category]
-      };
-      // Save to localStorage whenever state changes
-      localStorage.setItem('collapsedCategories', JSON.stringify(newState));
-      return newState;
-    });
-  };
-
-  const [milestoneProgress, setMilestoneProgress] = useState({ day: 0, week: 0, month: 0, year: 0 });
 
   const {
     isSubmitting,
@@ -703,97 +659,13 @@ function MainAppInner({ session, onLogout }) {
     handleConfirmArchive,
     handleRestore,
     refreshArchivedStocks,
-  } = useModalHandlers({
-    updateStock,
-    addTransaction,
-    deleteStock,
-    addStockToDB: addStockToDB,
-    refetch,
-    addCategory,
-    deleteCategory,
-    updateCategory,
-    fetchCategories,
-    updateProfit,
-    addProfitEntry,
-    updateMilestone,
-    undoTransaction,
-    selectedStock,
-    selectedCategory,
-    categories,
-    tradeMode,
-    closeModal,
-    highlightRow,
-    firedTimerNotifs,
-    saveFiredTimers,
-    setCollapsedCategories,
-    setNewStockCategory,
-    calculateMilestoneProgress,
-    setMilestoneProgress,
-    archiveStock,
-    restoreStock,
-    fetchArchivedStocks,
-  });
+  } = useModalHandlers();
 
   const handleInvestmentDateChange = async (stock, date) => {
     await updateStock(stock.id, { investmentStartDate: date });
     await refetch();
   };
 
-  const handleQuickNavNavigate = (category) => {
-    const scrollToCategory = () => {
-      const el = document.querySelector(`[data-category="${category}"]`);
-      if (el) {
-        const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
-        const offset = topbarHeight + 16;
-        const top = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top, behavior: 'smooth' });
-      }
-    };
-
-    if (collapsedCategories[category]) {
-      setCollapsedCategories(prev => ({ ...prev, [category]: false }));
-      setTimeout(scrollToCategory, 100);
-    } else {
-      scrollToCategory();
-    }
-  };
-
-  const handleNotificationNavigate = useCallback((target) => {
-    if (!target) return;
-    if (target.externalUrl) {
-      window.open(target.externalUrl, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    navigateToPage(target.page);
-    if (target.stockId) {
-      // Find the stock's category and expand it if collapsed
-      const stock = stocks.find(s => s.id === target.stockId);
-      if (stock && stock.categoryId) {
-        const category = categories.find(c => c.id === stock.categoryId);
-        if (category && collapsedCategories[category.name]) {
-          setCollapsedCategories(prev => ({ ...prev, [category.name]: false }));
-        }
-      }
-
-      const maxWait = 500;
-      const interval = 50;
-      let elapsed = 0;
-      const tryScroll = () => {
-        const el = document.querySelector(`[data-stock-id="${target.stockId}"]`);
-        if (el) {
-          const topbarHeight = document.querySelector('.topbar')?.offsetHeight || 60;
-          const top = el.getBoundingClientRect().top + window.scrollY - topbarHeight - 16;
-          window.scrollTo({ top, behavior: 'smooth' });
-          el.classList.add('stock-row-highlight');
-          setTimeout(() => el.classList.remove('stock-row-highlight'), 1500);
-        } else if (elapsed < maxWait) {
-          elapsed += interval;
-          setTimeout(tryScroll, interval);
-        }
-      };
-      setTimeout(tryScroll, interval);
-    }
-  }, [navigateToPage, stocks, categories, collapsedCategories]);
 
   const handleSetAltTimer = async (days) => {
     const timerEndTime = Date.now() + (days * 24 * 60 * 60 * 1000);
@@ -810,6 +682,10 @@ function MainAppInner({ session, onLogout }) {
   const handleSaveNotes = async (noteText) => {
     await saveNote(selectedStock.id, noteText);
     closeModal('notes');
+  };
+
+  const handleBuyWithWatchlistCleanup = async (data) => {
+    await handleBuy(data);
   };
 
   // Drag and drop operations
@@ -891,7 +767,7 @@ function MainAppInner({ session, onLogout }) {
           }
         } catch (error) {
           console.error('Error moving stock to category:', error);
-          alert('Failed to move stock');
+          alert('Failed to move item');
         }
       }
       return;
@@ -953,7 +829,7 @@ function MainAppInner({ session, onLogout }) {
       }
     } catch (error) {
       console.error('Error handling stock drop:', error);
-      alert('Failed to move stock');
+      alert('Failed to move item');
     }
   };
 
@@ -966,6 +842,9 @@ function MainAppInner({ session, onLogout }) {
   const filteredStocks = stocks.filter(s =>
     tradeMode === 'investment' ? s.isInvestment : !s.isInvestment
   );
+  const filteredAllStocks = allStocks.filter(s =>
+    tradeMode === 'investment' ? s.isInvestment : !s.isInvestment
+  );
   const filteredCategories = categories.filter(c =>
     tradeMode === 'investment' ? c.isInvestment : !c.isInvestment
   );
@@ -976,6 +855,10 @@ function MainAppInner({ session, onLogout }) {
     acc[cat.name] = filteredStocks.filter(s => s.category === cat.name);
     return acc;
   }, {});
+  const groupedStatsStocks = filteredCategories.reduce((acc, cat) => {
+    acc[cat.name] = filteredAllStocks.filter(s => s.category === cat.name);
+    return acc;
+  }, {});
 
   // Add uncategorized investment/trade stocks that have no matching category
   const uncategorizedFiltered = filteredStocks.filter(s =>
@@ -984,11 +867,17 @@ function MainAppInner({ session, onLogout }) {
   if (uncategorizedFiltered.length > 0 && !filteredCategories.some(c => c.name === 'Uncategorized')) {
     groupedStocks['Uncategorized'] = uncategorizedFiltered;
   }
+  const uncategorizedStats = filteredAllStocks.filter(s =>
+    s.category === 'Uncategorized' || !s.category || !categoryNames.includes(s.category)
+  );
+  if (uncategorizedStats.length > 0 && !filteredCategories.some(c => c.name === 'Uncategorized')) {
+    groupedStatsStocks['Uncategorized'] = uncategorizedStats;
+  }
 
 
 
   return (
-    <TradeProvider stocks={stocks} categories={categories} refetchStocks={refetch} refetchCategories={fetchCategories}>
+    <TradeProvider stocks={stocks} allStocks={allStocks} categories={categories} refetchStocks={refetch} refetchCategories={fetchCategories}>
     <div style={{
       minHeight: '100vh',
       background: 'rgb(15, 23, 42)',
@@ -1101,6 +990,39 @@ function MainAppInner({ session, onLogout }) {
             >
               📊 Graphs
             </button>
+            <button
+              onClick={() => navigateToPage('analytics')}
+              className={`topbar-nav-btn${currentPage === 'analytics' ? ' is-active' : ''}`}
+            >
+              <BarChart3 size={14} />
+              Analytics
+            </button>
+            <button
+              onClick={() => navigateToPage('watchlist')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: currentPage === 'watchlist' ? 'rgb(168, 85, 247)' : 'transparent',
+                border: 'none',
+                borderRadius: '0.5rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: '600',
+                transition: 'background 0.2s',
+                fontSize: '0.875rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+              onMouseOver={(e) => {
+                if (currentPage !== 'watchlist') e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                if (currentPage !== 'watchlist') e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <Eye size={14} />
+              Watchlist
+            </button>
           </div>
 
           {/* Center - Title */}
@@ -1114,7 +1036,7 @@ function MainAppInner({ session, onLogout }) {
               backgroundClip: 'text',
               margin: 0
             }}>
-              Stock Portfolio Tracker
+              OSRS Portfolio Tracker
             </h1>
             <a
               href="https://github.com/osrsprofittracker/OSRSProfitTracker/releases"
@@ -1131,14 +1053,7 @@ function MainAppInner({ session, onLogout }) {
           <GlobalSearch
             transactions={transactions}
             navigateToPage={navigateToPage}
-            onExpandCategory={(cat) => {
-              setCollapsedCategories(prev => {
-                if (!prev[cat]) return prev;
-                const next = { ...prev, [cat]: false };
-                localStorage.setItem('collapsedCategories', JSON.stringify(next));
-                return next;
-              });
-            }}
+            onExpandCategory={expandCategory}
           />
           <NotificationCenter
             notifications={notifications}
@@ -1158,10 +1073,22 @@ function MainAppInner({ session, onLogout }) {
             onDismissAlert={dismissPriceAlert}
             onNewAlert={() => navigateToPage('graphs')}
           />
-          <div className="user-dropdown-wrapper">
+          <div className="user-dropdown-wrapper" ref={userDropdownRef}>
             <button
               className="user-dropdown-trigger"
-              onClick={() => setUserMenuOpen(prev => !prev)}
+              onPointerDown={() => {
+                if (!userMenuOpen) {
+                  setUserMenuOpen(true);
+                  ignoreNextUserMenuClickRef.current = true;
+                }
+              }}
+              onClick={() => {
+                if (ignoreNextUserMenuClickRef.current) {
+                  ignoreNextUserMenuClickRef.current = false;
+                  return;
+                }
+                setUserMenuOpen(prev => !prev);
+              }}
             >
               <span className="user-dropdown-name">
                 {session?.user?.user_metadata?.username || userEmail}
@@ -1207,10 +1134,13 @@ function MainAppInner({ session, onLogout }) {
             profitHistory={profitHistory}
             gpTradedStats={gpTradedStats}
             profits={profits}
+            statsStocks={allStocks}
+            watchlistItems={watchlistItems}
             numberFormat={numberFormat}
             milestones={milestones}
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => navigateToPage('trade')}
+            onNavigateToWatchlist={() => navigateToPage('watchlist')}
             onOpenMilestoneModal={() => openModal('milestone', { milestoneView: 'main' })}
             onOpenMilestoneHistory={() => openModal('milestone', { milestoneView: 'history' })}
           />
@@ -1240,10 +1170,35 @@ function MainAppInner({ session, onLogout }) {
             userId={userId}
             initialItemId={graphItemId}
             navigateToPage={navigateToPage}
+            watchlistItems={watchlistItems}
+            onQuickAddWatchlist={handleQuickAddWatchlistFromGraphs}
             priceAlerts={priceAlerts}
             onPriceAlert={handleOpenPriceAlert}
             stockNotes={stockNotes}
             onSaveNote={saveNote}
+          />
+        ) : currentPage === 'analytics' ? (
+          <AnalyticsPage
+            userId={userId}
+            transactions={transactions}
+            profitHistory={profitHistory}
+            profits={profits}
+            numberFormat={numberFormat}
+            initialTab={initialTabParam}
+            navigateToPage={navigateToPage}
+            milestones={milestones}
+            milestoneHistory={milestoneHistory}
+            milestoneProgress={milestoneProgress}
+          />
+        ) : currentPage === 'watchlist' ? (
+          <WatchlistPage
+            watchlistItems={watchlistItems}
+            loading={watchlistLoading}
+            onAddWatchlistItem={handleAddWatchlistItem}
+            onUpdateWatchlistItem={handleUpdateWatchlistItem}
+            onDeleteWatchlistItem={handleDeleteWatchlistItem}
+            onConvertToStock={handleConvertWatchlistToStock}
+            onOpenPriceAlert={handleOpenPriceAlert}
           />
         ) : (
           <>
@@ -1257,6 +1212,7 @@ function MainAppInner({ session, onLogout }) {
               dumpProfit={dumpProfit}
               referralProfit={referralProfit}
               bondsProfit={bondsProfit}
+              statsStocks={allStocks}
               visibleProfits={visibleProfits}
               onAddDumpProfit={() => openModal('dumpProfit')}
               onAddReferralProfit={() => openModal('referralProfit')}
@@ -1265,7 +1221,7 @@ function MainAppInner({ session, onLogout }) {
               showUnrealisedProfitStats={showUnrealisedProfitStats}
             />
 
-            {/* Milestone Progress Bar and Chart Buttons Row */}
+            {/* Milestone Progress Bar and Alt Account Timer Row */}
             <div style={{
               display: 'flex',
               gap: '1rem',
@@ -1283,9 +1239,7 @@ function MainAppInner({ session, onLogout }) {
                 numberFormat={numberFormat}
               />
 
-              <ChartButtons
-                onShowProfitChart={() => openModal('profitChart')}
-                onShowCategoryChart={() => openModal('categoryChart')}
+              <AltAccountTimer
                 altAccountTimer={altAccountTimer}
                 onSetAltTimer={() => openModal('altTimer')}
                 onResetAltTimer={handleResetAltTimer}
@@ -1325,7 +1279,7 @@ function MainAppInner({ session, onLogout }) {
                 }}
                 className="btn btn-success"
               >
-                + Add Stock
+                + Add Item
               </button>
               <button
                 onClick={() => openModal('bulkBuy')}
@@ -1356,6 +1310,7 @@ function MainAppInner({ session, onLogout }) {
                 key={category}
                 category={category}
                 stocks={categoryStocks}
+                statsStocks={groupedStatsStocks[category] || []}
                 isCollapsed={collapsedCategories[category]}
                 onToggleCollapse={toggleCategory}
                 onAddStock={(cat) => openModal('newStock', { newStockCategory: cat })}
@@ -1404,7 +1359,7 @@ function MainAppInner({ session, onLogout }) {
           bulkSummaryData={bulkSummaryData}
           isUndoing={isUndoing}
           undoResult={undoResult}
-          handleBuy={handleBuy}
+          handleBuy={handleBuyWithWatchlistCleanup}
           handleSell={handleSell}
           handleBulkBuy={handleBulkBuy}
           handleBulkSell={handleBulkSell}
@@ -1438,6 +1393,7 @@ function MainAppInner({ session, onLogout }) {
           bondsProfit={bondsProfit}
           numberFormat={numberFormat}
           groupedStocks={groupedStocks}
+          groupedStatsStocks={groupedStatsStocks}
           categoryNames={categoryNames}
           geIconMap={geIconMap}
           gePrices={gePrices}

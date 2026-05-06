@@ -10,6 +10,7 @@ export default function PortfolioSummary({
   dumpProfit,
   referralProfit,
   bondsProfit,
+  statsStocks = null,
   visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true },
   onAddDumpProfit,
   onAddReferralProfit,
@@ -18,21 +19,22 @@ export default function PortfolioSummary({
   showUnrealisedProfitStats = false
 }) {
   const { gePrices: geData } = useGEData();
-  const { stocks } = useTrade();
-  const stocksProfit = calculateStocksProfit(stocks);
-  const totalProfit = calculateTotalProfit(stocks, dumpProfit, referralProfit, bondsProfit);
+  const { stocks, allStocks } = useTrade();
+  const stocksForStats = statsStocks || (allStocks?.length > 0 ? allStocks : stocks);
+  const stocksProfit = calculateStocksProfit(stocksForStats);
+  const totalProfit = calculateTotalProfit(stocksForStats, dumpProfit, referralProfit, bondsProfit);
 
   const totalUnrealised = showUnrealisedProfitStats
-    ? stocks.reduce((sum, s) => {
+    ? stocksForStats.reduce((sum, s) => {
         const high = s.itemId ? geData[s.itemId]?.high : null;
         const val = calculateUnrealizedProfit(s, high, s.itemId);
         return sum + (val ?? 0);
       }, 0)
     : null;
 
-  const totalPortfolio = stocks.reduce((sum, s) => sum + s.totalCost, 0);
-  const totalShares = stocks.reduce((sum, s) => sum + s.shares, 0);
-  const totalSales = stocks.reduce((sum, s) => sum + s.totalCostSold, 0);
+  const totalPortfolio = stocksForStats.reduce((sum, s) => sum + s.totalCost, 0);
+  const totalShares = stocksForStats.reduce((sum, s) => sum + s.shares, 0);
+  const totalSales = stocksForStats.reduce((sum, s) => sum + s.totalCostSold, 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
@@ -48,7 +50,7 @@ export default function PortfolioSummary({
 
         {/* Total Shares */}
         <SummaryCard
-          label="Total Stock:"
+          label="Total Quantity:"
           value={formatNumber(totalShares)}
           color="rgb(251, 146, 60)"
           tooltip="Total items you currently hold"
@@ -75,7 +77,7 @@ export default function PortfolioSummary({
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         {/* Stock Profit */}
         <SummaryCard
-          label="Stock Profit:"
+          label="Item Profit:"
           value={formatNumber(stocksProfit)}
           color={stocksProfit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
           tooltip="Profit from flipping items"

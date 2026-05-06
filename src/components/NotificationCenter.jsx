@@ -1,63 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Clock, Trophy, User, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, Filter, TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
-import { formatNumber } from '../utils/formatters';
+import { Bell, Check, X, CheckCheck, Trash2, Newspaper, ExternalLink, MessageSquare, TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
+import { formatNumber, getTimeAgo } from '../utils/formatters';
+import { getTypeIcon, getTypeColor } from '../utils/notificationUtils';
 import { useGEData } from '../contexts/GEDataContext';
+import ItemIcon from './ItemIcon';
 import '../styles/notification-center.css';
-
-function getTimeAgo(timestamp) {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return 'just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-function getTypeIcon(type) {
-  switch (type) {
-    case 'limitTimer':
-      return <Clock size={16} />;
-    case 'altAccountTimer':
-      return <User size={16} />;
-    case 'milestone':
-      return <Trophy size={16} />;
-    case 'osrsNews':
-      return <Newspaper size={16} />;
-    case 'jmodReddit':
-      return <MessageSquare size={16} />;
-    case 'priceAlert':
-    case 'priceAlertHigh':
-      return <TrendingUp size={16} />;
-    case 'priceAlertLow':
-      return <TrendingDown size={16} />;
-    default:
-      return <Bell size={16} />;
-  }
-}
-
-function getTypeColor(type) {
-  switch (type) {
-    case 'limitTimer':
-      return 'var(--notification-timer-color, rgb(202, 138, 4))';
-    case 'altAccountTimer':
-      return 'var(--notification-alt-color, rgb(168, 85, 247))';
-    case 'milestone':
-      return 'var(--notification-milestone-color, rgb(34, 197, 94))';
-    case 'osrsNews':
-      return 'var(--notification-news-color, rgb(14, 165, 233))';
-    case 'jmodReddit':
-      return 'var(--notification-jmod-color, rgb(255, 149, 0))';
-    case 'priceAlert':
-    case 'priceAlertLow':
-      return 'rgb(239, 68, 68)';
-    case 'priceAlertHigh':
-      return 'rgb(74, 222, 128)';
-    default:
-      return 'rgb(148, 163, 184)';
-  }
-}
 
 export default function NotificationCenter({
   notifications = [],
@@ -88,6 +35,8 @@ export default function NotificationCenter({
     ? notifications
     : inboxFilter === 'priceAlert'
       ? notifications.filter(n => n.type === 'priceAlert' || n.type === 'priceAlertHigh' || n.type === 'priceAlertLow')
+      : inboxFilter === 'watchlistAlert'
+        ? notifications.filter(n => n.type === 'watchlistAlert' || n.type === 'watchlistAlertHigh' || n.type === 'watchlistAlertLow')
       : notifications.filter(n => n.type === inboxFilter);
 
   const alertsList = allPriceAlerts;
@@ -176,10 +125,13 @@ export default function NotificationCenter({
                     { key: 'osrsNews', label: 'News' },
                     { key: 'jmodReddit', label: 'Jmod' },
                     { key: 'priceAlert', label: 'Alerts' },
+                    { key: 'watchlistAlert', label: 'Watchlist' },
                   ].map(f => {
                     const count = f.count ?? (
                       f.key === 'priceAlert'
                         ? notifications.filter(n => n.type === 'priceAlert' || n.type === 'priceAlertHigh' || n.type === 'priceAlertLow').length
+                        : f.key === 'watchlistAlert'
+                          ? notifications.filter(n => n.type === 'watchlistAlert' || n.type === 'watchlistAlertHigh' || n.type === 'watchlistAlertLow').length
                         : notifications.filter(n => n.type === f.key).length
                     );
                     return (
@@ -344,13 +296,12 @@ export default function NotificationCenter({
                       const livePrice = gePrices[alert.itemId];
                       return (
                         <div key={alert.id} className="notification-alert-item">
-                          {geIconMap[alert.itemId] && (
-                            <img
-                              src={geIconMap[alert.itemId]}
-                              alt=""
-                              className="notification-alert-icon"
-                            />
-                          )}
+                          <ItemIcon
+                            src={geIconMap[alert.itemId]}
+                            alt=""
+                            className="notification-alert-icon"
+                            fallbackText={alert.itemName}
+                          />
                           <div className="notification-alert-info">
                             <div className="notification-alert-name">{alert.itemName}</div>
                             <div className="notification-alert-thresholds">

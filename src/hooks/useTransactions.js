@@ -14,27 +14,40 @@ export function useTransactions(userId) {
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
 
+  const fetchTransactions = useCallback(async () => {
+    const allData = [];
+    const batchSize = 1000;
+    let from = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false })
+        .range(from, from + batchSize - 1);
+
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        setTransactions([]);
+        setLoading(false);
+        return;
+      }
+
+      allData.push(...(data || []));
+      hasMore = (data || []).length === batchSize;
+      from += batchSize;
+    }
+
+    setTransactions(allData.map(formatRow));
+    setLoading(false);
+  }, [userId]);
+
   useEffect(() => {
     if (!userId) return;
     fetchTransactions();
-  }, [userId]);
-
-  const fetchTransactions = async () => {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false })
-      .limit(1000);
-
-    if (error) {
-      console.error('Error fetching transactions:', error);
-      setTransactions([]);
-    } else {
-      setTransactions((data || []).map(formatRow));
-    }
-    setLoading(false);
-  };
+  }, [userId, fetchTransactions]);
 
   // Paginated fetch - used by HistoryPage
   const fetchPage = useCallback(async (targetPage, size, activeFilters, activeSort = sortConfig) => {
@@ -116,41 +129,41 @@ export function useTransactions(userId) {
     setPagedLoading(false);
   }, [userId]);
 
-  const goToPage = (targetPage) => {
+  const goToPage = useCallback((targetPage) => {
     setPage(targetPage);
     fetchPage(targetPage, pageSize, filters);
-  };
+  }, [fetchPage, pageSize, filters]);
 
-  const changePageSize = (size) => {
+  const changePageSize = useCallback((size) => {
     setPageSize(size);
     setPage(1);
     fetchPage(1, size, filters);
-  };
+  }, [fetchPage, filters]);
 
-  const applyFilters = (newFilters) => {
+  const applyFilters = useCallback((newFilters) => {
     setFilters(newFilters);
     setPage(1);
     fetchPage(1, pageSize, newFilters);
-  };
+  }, [fetchPage, pageSize]);
 
-  const initPaged = () => fetchPage(1, pageSize, filters);
+  const initPaged = useCallback(() => fetchPage(1, pageSize, filters), [fetchPage, pageSize, filters]);
 
-  const applySort = (newSort) => {
+  const applySort = useCallback((newSort) => {
     setSortConfig(newSort);
     setPage(1);
     fetchPage(1, pageSize, filters, newSort);
-  };
+  }, [fetchPage, pageSize, filters]);
 
-  const resetPaged = () => {
+  const resetPaged = useCallback(() => {
     const defaultSort = { key: 'date', dir: 'desc' };
     const defaultFilters = { type: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' };
     setSortConfig(defaultSort);
     setFilters(defaultFilters);
     setPage(1);
     fetchPage(1, pageSize, defaultFilters, defaultSort);
-  };
+  }, [fetchPage, pageSize]);
 
-  const addTransaction = async (transaction) => {
+  const addTransaction = useCallback(async (transaction) => {
     const dbTransaction = {
       user_id: userId,
       stock_id: transaction.stockId,
@@ -175,11 +188,11 @@ export function useTransactions(userId) {
       setTransactions(prev => [formatted, ...prev]);
       return formatted;
     }
-  };
+  }, [userId]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  const undoTransaction = async (transaction) => {
+  const undoTransaction = useCallback(async (transaction) => {
     if (transaction.type === 'buy') {
       const { data: laterSells } = await supabase
         .from('transactions')
@@ -267,7 +280,7 @@ export function useTransactions(userId) {
       console.error('Error undoing transaction:', err);
       return { success: false, error: err.message };
     }
-  };
+  }, [userId, fetchTransactions, fetchPage, pageSize, filters]);
 
   return {
     // Original API - unchanged

@@ -1,11 +1,12 @@
 {
   "name": "OSRSbulk",
-  "version": "2.7.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "mirror-icons": "node scripts/mirror-ge-icons.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^10.7.4",
@@ -13,7 +14,8 @@
     "lightweight-charts": "^5.1.0",
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.0",

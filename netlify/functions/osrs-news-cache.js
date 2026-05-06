@@ -1,24 +1,6 @@
-const { readFileSync } = require('fs');
-const { resolve } = require('path');
 const { getStore } = require('@netlify/blobs');
 
-function loadEnvToken() {
-  try {
-    const envPath = resolve(process.cwd(), '.env');
-    const content = readFileSync(envPath, 'utf8');
-    const match = content.match(/^NETLIFY_AUTH_TOKEN=(.+)$/m);
-    return match?.[1]?.trim() || null;
-  } catch {
-    return null;
-  }
-}
-
 function getNewsStore() {
-  const siteID = process.env.SITE_ID || process.env.NETLIFY_SITE_ID;
-  const token = process.env.NETLIFY_AUTH_TOKEN || loadEnvToken();
-  if (siteID && token) {
-    return getStore({ name: 'osrs-news', siteID, token });
-  }
   return getStore('osrs-news');
 }
 
@@ -68,6 +50,12 @@ exports.handler = async () => {
 
     const html = await response.text();
     const items = parseArticles(html);
+    if (items.length === 0) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ success: false, count: 0, skipped: true }),
+      };
+    }
 
     const store = getNewsStore();
     await store.setJSON('cache', items);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Search, Package, FolderOpen, ArrowLeftRight, BarChart3, X } from 'lucide-react';
 import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
+import { searchGEItems } from '../utils/geItemSearch';
 import '../styles/global-search.css';
 
 export default function GlobalSearch({
@@ -104,9 +105,7 @@ export default function GlobalSearch({
         };
       });
 
-    const matchedItems = (geMapping || [])
-      .filter(item => item.name.toLowerCase().includes(q))
-      .slice(0, 5)
+    const matchedItems = searchGEItems(geMapping, q, 5)
       .map(item => ({
         type: 'ge-item',
         id: `ge-${item.id}`,
@@ -127,7 +126,7 @@ export default function GlobalSearch({
   const sections = useMemo(() => {
     const groups = [];
     const types = [
-      { key: 'stock', label: 'Stocks', icon: Package },
+      { key: 'stock', label: 'Items', icon: Package },
       { key: 'category', label: 'Categories', icon: FolderOpen },
       { key: 'transaction', label: 'Transactions', icon: ArrowLeftRight },
       { key: 'ge-item', label: 'GE Items', icon: BarChart3 }

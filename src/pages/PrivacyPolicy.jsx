@@ -63,7 +63,7 @@ export default function PrivacyPolicy() {
                         We automatically collect:
                     </p>
                     <ul style={{ marginLeft: '2rem', marginBottom: '1rem', color: 'rgb(203, 213, 225)' }}>
-                        <li>Stock tracking data (item names, quantities, prices, profits)</li>
+                        <li>Item tracking data (item names, quantities, prices, profits)</li>
                         <li>Categories and portfolio organization</li>
                         <li>Transaction history</li>
                         <li>User preferences and settings</li>

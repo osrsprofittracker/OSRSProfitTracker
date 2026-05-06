@@ -1,4 +1,5 @@
 import React from 'react';
+import ItemIcon from '../ItemIcon';
 import '../../styles/archive-modal.css';
 
 export default function ArchiveModal({ archivedStocks, loading, geIconMap, onRestore, onClose }) {
@@ -17,8 +18,13 @@ export default function ArchiveModal({ archivedStocks, loading, geIconMap, onRes
           {archivedStocks.map(stock => (
             <div key={stock.id} className="archive-modal-item">
               <div className="archive-modal-item-info">
-                {stock.itemId && geIconMap[stock.itemId] && (
-                  <img src={geIconMap[stock.itemId]} alt="" className="archive-modal-item-icon" />
+                {stock.itemId && (
+                  <ItemIcon
+                    src={geIconMap[stock.itemId]}
+                    alt=""
+                    className="archive-modal-item-icon"
+                    fallbackText={stock.name}
+                  />
                 )}
                 <div>
                   <div className="archive-modal-item-name">{stock.name}</div>

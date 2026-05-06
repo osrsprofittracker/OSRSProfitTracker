@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { mapRow } from '../utils/mapRow';
 
@@ -19,37 +19,41 @@ const STOCK_KEY_MAP = {
   isInvestment: ['is_investment', false],
   itemId: ['item_id', null],
   investmentStartDate: ['investment_start_date', null],
+  archived: ['archived', false],
 };
 
 const formatStock = (row) => mapRow(row, STOCK_KEY_MAP);
 
 export function useStocks(userId) {
   const [stocks, setStocks] = useState([]);
+  const [allStocks, setAllStocks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!userId) return;
-    fetchStocks();
-  }, [userId]);
-
-  const fetchStocks = async () => {
+  const fetchStocks = useCallback(async () => {
     const { data, error } = await supabase
       .from('stocks')
       .select('*')
       .eq('user_id', userId)
-      .eq('archived', false)
       .order('position', { ascending: true });
 
     if (error) {
       console.error('Error fetching stocks:', error);
       setStocks([]);
+      setAllStocks([]);
     } else {
-      setStocks((data || []).map(formatStock));
+      const formattedStocks = (data || []).map(formatStock);
+      setAllStocks(formattedStocks);
+      setStocks(formattedStocks.filter(stock => !stock.archived));
     }
     setLoading(false);
-  };
+  }, [userId]);
 
-  const reorderStocks = async (stockId, targetStockId, category) => {
+  useEffect(() => {
+    if (!userId) return;
+    fetchStocks();
+  }, [userId, fetchStocks]);
+
+  const reorderStocks = useCallback(async (stockId, targetStockId, category) => {
     try {
       // Optimistically update UI first
       const categoryStocks = stocks.filter(s => s.category === category);
@@ -93,9 +97,9 @@ export function useStocks(userId) {
       console.error('Error reordering stocks:', error);
       throw error;
     }
-  };
+  }, [userId, stocks]);
 
-  const addStock = async (stock) => {
+  const addStock = useCallback(async (stock) => {
     // Convert camelCase to snake_case for database
     const dbStock = {
       user_id: userId,
@@ -126,9 +130,9 @@ export function useStocks(userId) {
       // Don't update local state - let caller refetch
       return data[0];
     }
-  };
+  }, [userId]);
 
-  const updateStock = async (id, updates) => {
+  const updateStock = useCallback(async (id, updates) => {
     // Convert camelCase to snake_case for database
     const dbUpdates = {};
     if (updates.totalCost !== undefined) dbUpdates.total_cost = updates.totalCost;
@@ -159,9 +163,9 @@ export function useStocks(userId) {
       // Don't update local state - let caller refetch
       return true;
     }
-  };
+  }, [userId]);
 
-  const deleteStock = async (id) => {
+  const deleteStock = useCallback(async (id) => {
     try {
       // First, delete all related transactions
       const { error: transError } = await supabase
@@ -202,9 +206,9 @@ export function useStocks(userId) {
       console.error('Error in deleteStock:', error);
       return false;
     }
-  };
+  }, [userId]);
 
-  const archiveStock = async (id) => {
+  const archiveStock = useCallback(async (id) => {
     const { error } = await supabase
       .from('stocks')
       .update({ archived: true })
@@ -212,9 +216,9 @@ export function useStocks(userId) {
       .eq('user_id', userId);
     if (error) { console.error('Error archiving stock:', error); return false; }
     return true;
-  };
+  }, [userId]);
 
-  const restoreStock = async (id) => {
+  const restoreStock = useCallback(async (id) => {
     const { error } = await supabase
       .from('stocks')
       .update({ archived: false })
@@ -222,9 +226,9 @@ export function useStocks(userId) {
       .eq('user_id', userId);
     if (error) { console.error('Error restoring stock:', error); return false; }
     return true;
-  };
+  }, [userId]);
 
-  const fetchArchivedStocks = async () => {
+  const fetchArchivedStocks = useCallback(async () => {
     const { data, error } = await supabase
       .from('stocks')
       .select('*')
@@ -233,7 +237,7 @@ export function useStocks(userId) {
       .order('name', { ascending: true });
     if (error) { console.error('Error fetching archived stocks:', error); return []; }
     return (data || []).map(formatStock);
-  };
+  }, [userId]);
 
-    return { stocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
+  return { stocks, allStocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
 }

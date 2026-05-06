@@ -29,25 +29,27 @@ export const formatNumber = (num, numberFormat = 'compact') => {
 
   // Round to nearest integer first
   const rounded = Math.round(num);
+  const sign = rounded < 0 ? '-' : '';
+  const absolute = Math.abs(rounded);
 
   if (numberFormat === 'full') {
     return rounded.toLocaleString();
   }
 
   // Compact format
-   if (rounded < 100_000) {
+   if (absolute < 100_000) {
     return rounded.toLocaleString();
   }
 
-  if (rounded < 10_000_000) {
-    return (rounded / 1_000).toFixed(0) + ' K';
+  if (absolute < 10_000_000) {
+    return sign + (absolute / 1_000).toFixed(0) + ' K';
   }
 
-  if (rounded < 1_000_000_000) {
-    return (rounded / 1_000_000).toFixed(2) + ' M';
+  if (absolute < 1_000_000_000) {
+    return sign + (absolute / 1_000_000).toFixed(2) + ' M';
   }
 
-  return (rounded / 1_000_000_000).toFixed(2) + ' B';
+  return sign + (absolute / 1_000_000_000).toFixed(2) + ' B';
 };
 
 export function formatAvgPrice(value, numberFormat) {
@@ -58,6 +60,17 @@ export function formatAvgPrice(value, numberFormat) {
     // Above 100K: use formatNumber
     return `$${formatNumber(value, numberFormat)}`;
   }
+}
+
+export function getTimeAgo(timestamp) {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 export const formatTimer = (endTime) => {

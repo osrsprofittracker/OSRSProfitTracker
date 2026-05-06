@@ -1,12 +1,18 @@
 import { createContext, useContext, useMemo } from 'react';
 
-const TRADE_DEFAULT = { stocks: [], categories: [], refetchStocks: () => {}, refetchCategories: () => {} };
+const TRADE_DEFAULT = {
+  stocks: [],
+  allStocks: [],
+  categories: [],
+  refetchStocks: () => {},
+  refetchCategories: () => {},
+};
 const TradeContext = createContext(TRADE_DEFAULT);
 
-export function TradeProvider({ stocks, categories, refetchStocks, refetchCategories, children }) {
+export function TradeProvider({ stocks, allStocks = [], categories, refetchStocks, refetchCategories, children }) {
   const value = useMemo(
-    () => ({ stocks, categories, refetchStocks, refetchCategories }),
-    [stocks, categories, refetchStocks, refetchCategories]
+    () => ({ stocks, allStocks, categories, refetchStocks, refetchCategories }),
+    [stocks, allStocks, categories, refetchStocks, refetchCategories]
   );
 
   return (

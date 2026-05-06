@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { mapRow } from '../utils/mapRow';
 
-const NOTIFICATION_TYPES = ['limitTimer', 'altAccountTimer', 'milestones', 'osrsNews', 'jmodReddit', 'priceAlert'];
+const NOTIFICATION_TYPES = ['limitTimer', 'altAccountTimer', 'milestones', 'osrsNews', 'jmodReddit', 'priceAlert', 'watchlistAlert'];
 
 const DEFAULT_TYPE_SETTINGS = {
   limitTimer: { enabled: false, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
@@ -11,6 +11,7 @@ const DEFAULT_TYPE_SETTINGS = {
   osrsNews: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
   jmodReddit: { enabled: true, browserPush: false, sound: false, soundChoice: 'chime', customSoundUri: null },
   priceAlert: { enabled: true, browserPush: false, sound: false, soundChoice: 'alert', customSoundUri: null },
+  watchlistAlert: { enabled: true, browserPush: false, sound: false, soundChoice: 'alert', customSoundUri: null },
 };
 
 const PREFS_KEY_MAP = {

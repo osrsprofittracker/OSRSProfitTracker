@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { formatNumber } from '../utils/formatters';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { useGEData } from '../contexts/GEDataContext';
@@ -8,9 +8,9 @@ import '../styles/home-page.css';
 const SORT_OPTIONS = [
   { value: 'profit',     label: 'Profit' },
   { value: 'margin',     label: 'Margin' },
-  { value: 'stock',      label: 'Stock' },
+  { value: 'stock',      label: 'Quantity' },
   { value: 'totalCost',  label: 'Total Cost' },
-  { value: 'soldStock',  label: 'Total Sold Stock' },
+  { value: 'soldStock',  label: 'Total Sold Quantity' },
   { value: 'soldCost',   label: 'Total Sold Cost' },
   { value: 'unrealized', label: 'Unrealized Profit' },
 ];
@@ -19,16 +19,20 @@ export default function HomePage({
   transactions,
   gpTradedStats,
   profits,
+  statsStocks = null,
+  watchlistItems = [],
   numberFormat,
   milestones,
   milestoneProgress,
   onNavigateToTrade,
+  onNavigateToWatchlist = () => {},
   onOpenMilestoneModal,
   onOpenMilestoneHistory,
   profitHistory,
 }) {
   const { gePrices: geData } = useGEData();
-  const { stocks } = useTrade();
+  const { stocks, allStocks } = useTrade();
+  const stocksForStats = statsStocks || (allStocks?.length > 0 ? allStocks : stocks);
   const [topItemsSortBy, setTopItemsSortBy] = useState('profit');
   // Use milestoneProgress for period profits (already calculated in MainApp)
   const dayProfit = milestoneProgress?.day || 0;
@@ -37,7 +41,7 @@ export default function HomePage({
   const yearProfit = milestoneProgress?.year || 0;
 
   // Calculate total realized profit (from sells) FIRST
-  const totalRealizedProfit = stocks?.reduce((sum, stock) => {
+  const totalRealizedProfit = stocksForStats?.reduce((sum, stock) => {
     return sum + (stock.totalCostSold - (stock.totalCostBasisSold || 0));
   }, 0) || 0;
 
@@ -54,20 +58,20 @@ export default function HomePage({
   const totalGPTraded = gpTradedStats?.total || 0;
 
   // Calculate inventory metrics
-  const inventoryValue = stocks?.reduce((sum, stock) =>
+  const inventoryValue = stocksForStats?.reduce((sum, stock) =>
     sum + stock.totalCost, 0
   ) || 0;
 
-  const itemsInStock = stocks?.reduce((sum, stock) => sum + stock.shares, 0) || 0;
+  const itemsInStock = stocksForStats?.reduce((sum, stock) => sum + stock.shares, 0) || 0;
 
-  const uniqueItems = stocks?.filter(s => s.shares > 0).length || 0;
+  const uniqueItems = stocksForStats?.filter(s => s.shares > 0).length || 0;
 
   const averageValuePerItem = itemsInStock > 0 ? inventoryValue / itemsInStock : 0;
 
   // Recent activity (last 10 transactions)
   const recentActivity = transactions?.slice(0, 10) || [];
 
-  const topItems = stocks
+  const topItems = stocksForStats
     ?.map(stock => {
       const realizedProfit = stock.totalCostSold - (stock.totalCostBasisSold || 0);
       const margin = stock.totalCostBasisSold > 0
@@ -97,6 +101,55 @@ export default function HomePage({
     })
     .slice(0, 10) || [];
 
+  const watchlistOpportunities = useMemo(() => {
+    if (!watchlistItems.length) return [];
+
+    const items = watchlistItems
+      .map((item) => {
+        const livePrice = geData?.[item.itemId];
+        const currentLow = livePrice?.low ?? null;
+        const currentHigh = livePrice?.high ?? null;
+        const hasBuyTarget = item.targetBuyPrice != null;
+        const hasSellTarget = item.targetSellPrice != null;
+        const buyDeltaPct = hasBuyTarget && currentLow != null
+          ? ((currentLow - item.targetBuyPrice) / item.targetBuyPrice) * 100
+          : null;
+        const sellDeltaPct = hasSellTarget && currentHigh != null
+          ? ((item.targetSellPrice - currentHigh) / item.targetSellPrice) * 100
+          : null;
+
+        if (buyDeltaPct == null && sellDeltaPct == null) return null;
+
+        const buyHit = buyDeltaPct != null && buyDeltaPct <= 0;
+        const sellHit = sellDeltaPct != null && sellDeltaPct <= 0;
+        const buyDistance = buyDeltaPct == null ? Infinity : Math.max(buyDeltaPct, 0);
+        const sellDistance = sellDeltaPct == null ? Infinity : Math.max(sellDeltaPct, 0);
+        const focus = buyDistance <= sellDistance ? 'buy' : 'sell';
+        const distancePct = Math.min(buyDistance, sellDistance);
+
+        return {
+          ...item,
+          currentLow,
+          currentHigh,
+          buyHit,
+          sellHit,
+          focus,
+          distancePct,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        const aHit = a.buyHit || a.sellHit;
+        const bHit = b.buyHit || b.sellHit;
+
+        if (aHit !== bHit) return aHit ? -1 : 1;
+        if (a.distancePct !== b.distancePct) return a.distancePct - b.distancePct;
+        return a.itemName.localeCompare(b.itemName);
+      });
+
+    return items.slice(0, 5);
+  }, [watchlistItems, geData]);
+
   return (
     <div className="home-container">
       <div className="home-page-header">
@@ -107,6 +160,9 @@ export default function HomePage({
         <div className="home-page-header-right">
           <button onClick={onNavigateToTrade} className="btn btn-purple btn-large">
             Go to Trade
+          </button>
+          <button onClick={onNavigateToWatchlist} className="btn btn-secondary btn-large">
+            Open Watchlist
           </button>
         </div>
       </div>
@@ -351,6 +407,58 @@ export default function HomePage({
         </div>
       </div>
 
+      <div className="activity-section watchlist-summary-section">
+        <div className="watchlist-summary-header">
+          <h3 className="activity-section-title">
+            <span>👁️</span> Watchlist Opportunities
+          </h3>
+          <button
+            className="btn btn-secondary watchlist-summary-open-btn"
+            onClick={onNavigateToWatchlist}
+          >
+            Open Watchlist
+          </button>
+        </div>
+
+        {watchlistOpportunities.length === 0 ? (
+          <p className="activity-empty">
+            No watchlist opportunities yet. Add tracked items from Graphs or Watchlist.
+          </p>
+        ) : (
+          <div className="watchlist-summary-list">
+            {watchlistOpportunities.map((item) => {
+              const isHit = item.buyHit || item.sellHit;
+              const isBuyFocus = item.focus === 'buy';
+              const targetValue = isBuyFocus ? item.targetBuyPrice : item.targetSellPrice;
+              const currentValue = isBuyFocus ? item.currentLow : item.currentHigh;
+              const statusText = isHit
+                ? `${isBuyFocus ? 'Buy' : 'Sell'} target hit`
+                : `${item.distancePct.toFixed(2)}% away`;
+
+              return (
+                <button
+                  key={item.id}
+                  className="watchlist-summary-item"
+                  onClick={onNavigateToWatchlist}
+                >
+                  <div className="watchlist-summary-item-main">
+                    <div className="watchlist-summary-item-name">{item.itemName}</div>
+                    <div className="watchlist-summary-item-subtitle">
+                      {isBuyFocus ? 'GE Low' : 'GE High'} {formatNumber(currentValue || 0, numberFormat)}
+                      {' · '}
+                      Target {formatNumber(targetValue || 0, numberFormat)}
+                    </div>
+                  </div>
+                  <div className={`watchlist-summary-item-status ${isHit ? 'watchlist-summary-item-status-hit' : 'watchlist-summary-item-status-track'}`}>
+                    {statusText}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Top Items */}
       <div className="activity-section">
         <h3 className="activity-section-title">
@@ -389,7 +497,7 @@ export default function HomePage({
                   } else if (topItemsSortBy === 'totalCost') {
                     displayValue = formatNumber(item.totalCost, numberFormat);
                     displayValueClass = 'activity-item-value-neutral';
-                    subtitle = `Shares held: ${item.shares?.toLocaleString()}`;
+                    subtitle = `Quantity held: ${item.shares?.toLocaleString()}`;
                   } else if (topItemsSortBy === 'soldStock') {
                     displayValue = item.sharesSold?.toLocaleString();
                     displayValueClass = 'activity-item-value-neutral';

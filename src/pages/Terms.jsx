@@ -47,7 +47,7 @@ export default function Terms() {
             investments, profits, and portfolio performance. The Service includes:
           </p>
           <ul style={{ marginLeft: '2rem', marginBottom: '1rem', color: 'rgb(203, 213, 225)' }}>
-            <li>Stock/item tracking functionality</li>
+            <li>Item tracking functionality</li>
             <li>Buy/sell transaction recording</li>
             <li>Profit calculation and visualization</li>
             <li>Portfolio organization and management</li>

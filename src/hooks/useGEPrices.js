@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 const BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
 const USER_AGENT = 'OSRSProfitTracker - osrsprofittracker@gmail.com';
 const REFRESH_INTERVAL = 60_000;
+const ICON_BASE_PATH = '/icons/ge';
+const ICON_MANIFEST_URL = `${ICON_BASE_PATH}/manifest.json`;
 
 export function useGEPrices() {
   const [prices, setPrices] = useState({});   // { [itemId]: { high, low, highTime, lowTime } }
@@ -19,11 +21,23 @@ export function useGEPrices() {
       if (!res.ok) return;
       const data = await res.json();
       setMapping(data);
+
+      let iconManifest = null;
+      try {
+        const manifestRes = await fetch(ICON_MANIFEST_URL);
+        if (manifestRes.ok) {
+          iconManifest = await manifestRes.json();
+        }
+      } catch (manifestError) {
+        console.warn('GE icon manifest fetch failed:', manifestError);
+      }
+
       // Build iconMap: { [id]: iconUrl }
       const map = {};
       data.forEach(item => {
-        if (item.icon) {
-          map[item.id] = `https://oldschool.runescape.wiki/images/${item.icon.replace(/ /g, '_')}`;
+        const mirroredIcon = iconManifest?.[item.id]?.path;
+        if (mirroredIcon) {
+          map[item.id] = mirroredIcon;
         }
       });
       setIconMap(map);

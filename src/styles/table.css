@@ -96,6 +96,14 @@
   border: 1px solid rgb(51, 65, 85);
 }
 
+.stock-table-item-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 /* Table Row */
 .tr-base {
   cursor: move;

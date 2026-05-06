@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useCategories(userId) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       if (!userId) return;
 
@@ -30,9 +30,13 @@ export function useCategories(userId) {
       console.error('Error fetching categories:', error);
     }
     setLoading(false);
-  };
+  }, [userId]);
 
-  const reorderCategories = async (categoryName, newPosition, isInvestment = false) => {
+  useEffect(() => {
+    fetchCategories();
+  }, [userId, fetchCategories]);
+
+  const reorderCategories = useCallback(async (categoryName, newPosition, isInvestment = false) => {
     try {
       const { data: allCategories, error: fetchError } = await supabase
         .from('categories')
@@ -79,9 +83,9 @@ export function useCategories(userId) {
       console.error('Error reordering categories:', error);
       throw error;
     }
-  };
+  }, [userId]);
 
-  const addCategory = async (name, isInvestment = false) => {
+  const addCategory = useCallback(async (name, isInvestment = false) => {
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -101,13 +105,9 @@ export function useCategories(userId) {
       console.error('Error adding category:', error);
       throw error;
     }
-  };
-
-  useEffect(() => {
-    fetchCategories();
   }, [userId]);
 
-  const updateCategory = async (oldName, newName, isInvestment = false) => {
+  const updateCategory = useCallback(async (oldName, newName, isInvestment = false) => {
     try {
       const { error: categoryError } = await supabase
         .from('categories')
@@ -134,9 +134,9 @@ export function useCategories(userId) {
       console.error('Error updating category:', error);
       throw error;
     }
-  };
+  }, [userId]);
 
-  const deleteCategory = async (name, isInvestment = false) => {
+  const deleteCategory = useCallback(async (name, isInvestment = false) => {
     if (name === 'Uncategorized') {
       throw new Error('Cannot delete Uncategorized category');
     }
@@ -172,7 +172,7 @@ export function useCategories(userId) {
       console.error('Error in deleteCategory:', error);
       throw error;
     }
-  };
+  }, [userId]);
 
   return {
     categories,

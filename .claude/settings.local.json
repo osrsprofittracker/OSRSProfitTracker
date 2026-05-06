@@ -39,7 +39,13 @@
       "Bash(gh release:*)",
       "Bash(netlify:*)",
       "Bash(find /c/Users/daan_/source/repos/OSRS-Bulk -name .env* -o -name *.env)",
-      "Bash(find /c/Users/daan_/source/repos/OSRS-Bulk -name *.sql -o -name *schema* -o -name *migration*)"
+      "Bash(find /c/Users/daan_/source/repos/OSRS-Bulk -name *.sql -o -name *schema* -o -name *migration*)",
+      "WebFetch(domain:poignanttech.com)",
+      "WebFetch(domain:top.gg)",
+      "WebFetch(domain:ge-tracker.com)",
+      "WebFetch(domain:osrsmoneymaking.guide)",
+      "Bash(xargs wc:*)",
+      "Bash(C:/Users/daan_/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh *)"
     ]
   }
 }

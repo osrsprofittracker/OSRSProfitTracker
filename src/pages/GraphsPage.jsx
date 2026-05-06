@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { createChart, LineSeries, HistogramSeries, CandlestickSeries } from 'lightweight-charts';
-import { Star, Clock, Search, ChevronDown, Bell, BellRing, StickyNote } from 'lucide-react';
+import { useChart } from '../hooks/useChart';
+import { Star, Clock, Search, ChevronDown, Bell, BellRing, StickyNote, Eye, Check } from 'lucide-react';
 import { useTimeseries } from '../hooks/useTimeseries';
 import { useGraphPreferences } from '../hooks/useGraphPreferences';
 import { calculateGETax } from '../utils/taxUtils';
@@ -8,6 +8,8 @@ import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
 import ModalContainer from '../components/modals/ModalContainer';
 import NotesModal from '../components/modals/NotesModal';
+import ItemIcon from '../components/ItemIcon';
+import { searchGEItems } from '../utils/geItemSearch';
 import '../styles/graphs-page.css';
 
 const TIMEFRAMES = [
@@ -19,7 +21,17 @@ const TIMEFRAMES = [
   { label: '1Y', timestep: '24h', filterDays: 365 },
 ];
 
-export default function GraphsPage({ userId, initialItemId, navigateToPage, priceAlerts = {}, onPriceAlert, stockNotes = {}, onSaveNote }) {
+export default function GraphsPage({
+  userId,
+  initialItemId,
+  navigateToPage,
+  watchlistItems = [],
+  onQuickAddWatchlist,
+  priceAlerts = {},
+  onPriceAlert,
+  stockNotes = {},
+  onSaveNote,
+}) {
   const { geMapping: mapping, gePrices: prices, geIconMap: iconMap, mappingLoading } = useGEData();
   const { stocks } = useTrade();
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,21 +41,15 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
   const [chartMode, setChartMode] = useState('line');
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [notesStock, setNotesStock] = useState(null);
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
+  const [watchlistTargetLow, setWatchlistTargetLow] = useState('');
+  const [watchlistTargetHigh, setWatchlistTargetHigh] = useState('');
+  const [watchlistModalError, setWatchlistModalError] = useState('');
+  const [watchlistActionState, setWatchlistActionState] = useState(null);
+  const [watchlistSubmitting, setWatchlistSubmitting] = useState(false);
 
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
-  const chartContainerRef = useRef(null);
-  const volumeContainerRef = useRef(null);
-  const chartRef = useRef(null);
-  const volumeChartRef = useRef(null);
-  const highSeriesRef = useRef(null);
-  const lowSeriesRef = useRef(null);
-  const buyVolSeriesRef = useRef(null);
-  const sellVolSeriesRef = useRef(null);
-  const selectedItemRef = useRef(null);
-  const chartDataRef = useRef([]);
-  const candleSeriesRef = useRef(null);
-  const chartModeRef = useRef('line');
 
   const { favorites, recents, addRecent, toggleFavorite, isFavorite, reorderFavorites } = useGraphPreferences(userId);
 
@@ -51,9 +57,6 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
     () => localStorage.getItem(`graphsFavoritesCollapsed_${userId}`) === 'true'
   );
   const draggedFavRef = useRef(null);
-
-  selectedItemRef.current = selectedItem;
-  chartModeRef.current = chartMode;
 
   const tf = TIMEFRAMES.find(t => t.label === timeframe);
   const { data: rawData, loading, error } = useTimeseries(
@@ -86,12 +89,10 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
       });
   }, [chartData]);
 
-  chartDataRef.current = chartData;
+  const { chartContainerRef, volumeContainerRef } = useChart({ chartData, candlestickData, chartMode, timeframe, selectedItem });
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return mapping.filter(item => item.name.toLowerCase().includes(q)).slice(0, 50);
+    return searchGEItems(mapping, searchQuery, 50);
   }, [searchQuery, mapping]);
 
   // Build dropdown sections
@@ -157,307 +158,6 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Create chart
-  useEffect(() => {
-    if (!chartContainerRef.current) return;
-
-    const priceFormat = { type: 'custom', formatter: (p) => Math.round(p).toLocaleString() };
-
-    const chart = createChart(chartContainerRef.current, {
-      layout: {
-        background: { color: 'rgb(15, 23, 42)' },
-        textColor: 'rgb(148, 163, 184)',
-        attributionLogo: false,
-      },
-      grid: {
-        vertLines: { color: 'rgba(51, 65, 85, 0.5)' },
-        horzLines: { color: 'rgba(51, 65, 85, 0.5)' },
-      },
-      crosshair: { mode: 0 },
-      handleScroll: false,
-      handleScale: false,
-      timeScale: {
-        timeVisible: true,
-        borderColor: 'rgb(51, 65, 85)',
-      },
-      rightPriceScale: {
-        borderColor: 'rgb(51, 65, 85)',
-        minimumWidth: 60,
-      },
-    });
-
-    const highSeries = chart.addSeries(LineSeries, {
-      color: 'rgb(34, 197, 94)',
-      lineWidth: 2,
-      title: '',
-      priceFormat,
-      priceScaleId: 'right',
-      lastValueVisible: false,
-      priceLineVisible: false,
-    });
-
-    const lowSeries = chart.addSeries(LineSeries, {
-      color: 'rgb(239, 68, 68)',
-      lineWidth: 2,
-      title: '',
-      priceFormat,
-      priceScaleId: 'right',
-      lastValueVisible: false,
-      priceLineVisible: false,
-    });
-
-    const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: 'rgb(34, 197, 94)',
-      downColor: 'rgb(239, 68, 68)',
-      borderUpColor: 'rgb(34, 197, 94)',
-      borderDownColor: 'rgb(239, 68, 68)',
-      wickUpColor: 'rgb(34, 197, 94)',
-      wickDownColor: 'rgb(239, 68, 68)',
-      priceFormat,
-      priceScaleId: 'right',
-      lastValueVisible: false,
-      priceLineVisible: false,
-    });
-
-    chartRef.current = chart;
-    highSeriesRef.current = highSeries;
-    lowSeriesRef.current = lowSeries;
-    candleSeriesRef.current = candleSeries;
-
-    const ro = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        chart.applyOptions({ width: entry.contentRect.width });
-      }
-    });
-    ro.observe(chartContainerRef.current);
-
-    // Crosshair tooltip
-    const toolEl = document.createElement('div');
-    toolEl.className = 'graphs-crosshair-tooltip';
-    chartContainerRef.current.appendChild(toolEl);
-
-    chart.subscribeCrosshairMove((param) => {
-      if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
-        toolEl.style.display = 'none';
-        return;
-      }
-      const time = param.time;
-      const data = chartDataRef.current;
-      let nearest = null;
-      let minDiff = Infinity;
-      for (let i = 0; i < data.length; i++) {
-        const diff = Math.abs(data[i].timestamp - time);
-        if (diff < minDiff) { minDiff = diff; nearest = data[i]; }
-        if (data[i].timestamp > time) break;
-      }
-      if (!nearest) {
-        toolEl.style.display = 'none';
-        return;
-      }
-      const highNum = nearest.avgHighPrice != null ? Math.round(nearest.avgHighPrice) : null;
-      const lowNum = nearest.avgLowPrice != null ? Math.round(nearest.avgLowPrice) : null;
-      if (highNum == null && lowNum == null) {
-        toolEl.style.display = 'none';
-        return;
-      }
-      if (chartModeRef.current === 'candle' && highNum != null && lowNum != null) {
-        const close = Math.round((nearest.avgHighPrice + nearest.avgLowPrice) / 2);
-        const idx = data.indexOf(nearest);
-        const open = idx <= 0
-          ? Math.round(nearest.avgLowPrice)
-          : Math.round((data[idx - 1].avgHighPrice + data[idx - 1].avgLowPrice) / 2);
-        toolEl.innerHTML = `<span style="color:rgb(148,163,184)">O: ${open.toLocaleString()}</span><br/><span style="color:rgb(34,197,94)">H: ${highNum.toLocaleString()}</span><br/><span style="color:rgb(239,68,68)">L: ${lowNum.toLocaleString()}</span><br/><span style="color:rgb(148,163,184)">C: ${close.toLocaleString()}</span>`;
-      } else {
-        const highStr = highNum != null ? highNum.toLocaleString() : '—';
-        const lowStr = lowNum != null ? lowNum.toLocaleString() : '—';
-        toolEl.innerHTML = `<span style="color:rgb(34,197,94)">High: ${highStr}</span><br/><span style="color:rgb(239,68,68)">Low: ${lowStr}</span>`;
-      }
-      toolEl.style.display = 'block';
-      const containerWidth = chartContainerRef.current.clientWidth;
-      const tooltipWidth = 180;
-      let left = param.point.x + 12;
-      if (left + tooltipWidth > containerWidth) left = param.point.x - tooltipWidth - 12;
-      toolEl.style.left = left + 'px';
-      toolEl.style.top = param.point.y + 'px';
-    });
-
-    // Volume chart
-    if (!volumeContainerRef.current) {
-      return () => {
-        ro.disconnect();
-        chart.remove();
-        chartRef.current = null;
-        if (toolEl.parentNode) toolEl.parentNode.removeChild(toolEl);
-      };
-    }
-
-    const volFormat = { type: 'custom', formatter: (v) => Math.round(Math.abs(v)).toLocaleString() };
-
-    const volumeChart = createChart(volumeContainerRef.current, {
-      layout: {
-        background: { color: 'rgb(15, 23, 42)' },
-        textColor: 'rgb(148, 163, 184)',
-        attributionLogo: false,
-      },
-      grid: {
-        vertLines: { color: 'rgba(51, 65, 85, 0.5)' },
-        horzLines: { color: 'rgba(51, 65, 85, 0.5)' },
-      },
-      crosshair: { mode: 0 },
-      handleScroll: false,
-      handleScale: false,
-      timeScale: {
-        timeVisible: true,
-        borderColor: 'rgb(51, 65, 85)',
-      },
-      rightPriceScale: {
-        borderColor: 'rgb(51, 65, 85)',
-        minimumWidth: 60,
-      },
-    });
-
-    const buyVolSeries = volumeChart.addSeries(HistogramSeries, {
-      color: 'rgb(34, 197, 94)',
-      priceFormat: volFormat,
-      priceScaleId: 'right',
-      lastValueVisible: false,
-      priceLineVisible: false,
-    });
-
-    const sellVolSeries = volumeChart.addSeries(HistogramSeries, {
-      color: 'rgb(239, 68, 68)',
-      priceFormat: volFormat,
-      priceScaleId: 'right',
-      lastValueVisible: false,
-      priceLineVisible: false,
-    });
-
-    volumeChartRef.current = volumeChart;
-    buyVolSeriesRef.current = buyVolSeries;
-    sellVolSeriesRef.current = sellVolSeries;
-
-    const volRo = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        volumeChart.applyOptions({ width: entry.contentRect.width });
-      }
-    });
-    volRo.observe(volumeContainerRef.current);
-
-    // Volume crosshair tooltip
-    const volToolEl = document.createElement('div');
-    volToolEl.className = 'graphs-crosshair-tooltip';
-    volumeContainerRef.current.appendChild(volToolEl);
-
-    volumeChart.subscribeCrosshairMove((param) => {
-      if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
-        volToolEl.style.display = 'none';
-        return;
-      }
-      const time = param.time;
-      const data = chartDataRef.current;
-      let nearest = null;
-      let minDiff = Infinity;
-      for (let i = 0; i < data.length; i++) {
-        const diff = Math.abs(data[i].timestamp - time);
-        if (diff < minDiff) { minDiff = diff; nearest = data[i]; }
-        if (data[i].timestamp > time) break;
-      }
-      if (!nearest) {
-        volToolEl.style.display = 'none';
-        return;
-      }
-      const buyVol = (nearest.highPriceVolume || 0).toLocaleString();
-      const sellVol = (nearest.lowPriceVolume || 0).toLocaleString();
-      volToolEl.innerHTML = `<span style="color:rgb(34,197,94)">Buy: ${buyVol}</span><br/><span style="color:rgb(239,68,68)">Sell: ${sellVol}</span>`;
-      volToolEl.style.display = 'block';
-      const containerWidth = volumeContainerRef.current.clientWidth;
-      const tooltipWidth = 180;
-      let left = param.point.x + 12;
-      if (left + tooltipWidth > containerWidth) left = param.point.x - tooltipWidth - 12;
-      volToolEl.style.left = left + 'px';
-      volToolEl.style.top = param.point.y + 'px';
-    });
-
-    // Sync time scales between price and volume charts
-    chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-      if (range) volumeChart.timeScale().setVisibleLogicalRange(range);
-    });
-    volumeChart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-      if (range) chart.timeScale().setVisibleLogicalRange(range);
-    });
-
-    return () => {
-      ro.disconnect();
-      volRo.disconnect();
-      chart.remove();
-      volumeChart.remove();
-      chartRef.current = null;
-      volumeChartRef.current = null;
-      candleSeriesRef.current = null;
-      if (toolEl.parentNode) toolEl.parentNode.removeChild(toolEl);
-      if (volToolEl.parentNode) volToolEl.parentNode.removeChild(volToolEl);
-    };
-  }, []);
-
-  // Update chart data and time axis format based on timeframe
-  useEffect(() => {
-    if (!highSeriesRef.current || !lowSeriesRef.current || !candleSeriesRef.current) return;
-
-    // Clear charts when no item is selected
-    if (!selectedItem) {
-      highSeriesRef.current.setData([]);
-      lowSeriesRef.current.setData([]);
-      candleSeriesRef.current.setData([]);
-      if (buyVolSeriesRef.current) buyVolSeriesRef.current.setData([]);
-      if (sellVolSeriesRef.current) sellVolSeriesRef.current.setData([]);
-      return;
-    }
-
-    if (chartMode === 'candle') {
-      highSeriesRef.current.setData([]);
-      lowSeriesRef.current.setData([]);
-      candleSeriesRef.current.setData(candlestickData);
-    } else {
-      candleSeriesRef.current.setData([]);
-      const highData = chartData
-        .filter(d => d.avgHighPrice != null)
-        .map(d => ({ time: d.timestamp, value: d.avgHighPrice }));
-      const lowData = chartData
-        .filter(d => d.avgLowPrice != null)
-        .map(d => ({ time: d.timestamp, value: d.avgLowPrice }));
-      highSeriesRef.current.setData(highData);
-      lowSeriesRef.current.setData(lowData);
-    }
-
-    // Volume data: buy (positive/green), sell (negative/red)
-    if (buyVolSeriesRef.current && sellVolSeriesRef.current) {
-      const buyVolData = chartData.map(d => ({
-        time: d.timestamp,
-        value: d.highPriceVolume || 0,
-      }));
-      const sellVolData = chartData.map(d => ({
-        time: d.timestamp,
-        value: -(d.lowPriceVolume || 0),
-      }));
-      buyVolSeriesRef.current.setData(buyVolData);
-      sellVolSeriesRef.current.setData(sellVolData);
-    }
-
-    const showTime = ['1D', '1W', '1M'].includes(timeframe);
-    if (chartRef.current) {
-      chartRef.current.applyOptions({
-        timeScale: { timeVisible: showTime },
-      });
-      chartRef.current.timeScale().fitContent();
-    }
-    if (volumeChartRef.current) {
-      volumeChartRef.current.applyOptions({
-        timeScale: { timeVisible: showTime },
-      });
-      volumeChartRef.current.timeScale().fitContent();
-    }
-  }, [chartData, timeframe, selectedItem, chartMode, candlestickData]);
 
   const toggleFavoritesCollapsed = () => {
     setFavoritesCollapsed(prev => {
@@ -550,6 +250,74 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
     return stocks.filter(s => s.itemId === selectedItem.id);
   }, [selectedItem, stocks]);
 
+  const selectedWatchlistItem = useMemo(() => {
+    if (!selectedItem) return null;
+    return watchlistItems.find(item => item.itemId === selectedItem.id) || null;
+  }, [selectedItem, watchlistItems]);
+
+  useEffect(() => {
+    setWatchlistActionState(null);
+    setWatchlistSubmitting(false);
+    setShowWatchlistModal(false);
+    setWatchlistTargetLow('');
+    setWatchlistTargetHigh('');
+    setWatchlistModalError('');
+  }, [selectedItem?.id]);
+
+  const handleWatchlistClick = async () => {
+    if (!selectedItem) return;
+
+    if (selectedWatchlistItem) {
+      navigateToPage('watchlist');
+      return;
+    }
+
+    if (!onQuickAddWatchlist) return;
+
+    const linkedAlert = priceAlerts[selectedItem.id];
+    const defaultLow = linkedAlert?.lowThreshold ?? (currentPrice?.low != null ? Math.max(1, Math.floor(currentPrice.low * 0.98)) : null);
+    const defaultHigh = linkedAlert?.highThreshold ?? (currentPrice?.high != null ? Math.max(1, Math.ceil(currentPrice.high * 1.02)) : null);
+    setWatchlistTargetLow(defaultLow ? String(defaultLow) : '');
+    setWatchlistTargetHigh(defaultHigh ? String(defaultHigh) : '');
+    setWatchlistModalError('');
+    setShowWatchlistModal(true);
+  };
+
+  const handleWatchlistModalConfirm = async () => {
+    if (!selectedItem || !onQuickAddWatchlist || watchlistSubmitting) return;
+
+    const parsedLow = watchlistTargetLow.trim() ? Number(watchlistTargetLow) : null;
+    const parsedHigh = watchlistTargetHigh.trim() ? Number(watchlistTargetHigh) : null;
+
+    if (!parsedLow && !parsedHigh) {
+      setWatchlistModalError('Set at least one target price.');
+      return;
+    }
+
+    if ((parsedLow != null && (!Number.isFinite(parsedLow) || parsedLow <= 0)) ||
+        (parsedHigh != null && (!Number.isFinite(parsedHigh) || parsedHigh <= 0))) {
+      setWatchlistModalError('Target prices must be positive numbers.');
+      return;
+    }
+
+    setWatchlistSubmitting(true);
+    const success = await onQuickAddWatchlist({
+      itemId: selectedItem.id,
+      itemName: selectedItem.name,
+      targetBuyPrice: parsedLow != null ? Math.floor(parsedLow) : null,
+      targetSellPrice: parsedHigh != null ? Math.floor(parsedHigh) : null,
+    });
+    setWatchlistSubmitting(false);
+
+    if (success) {
+      setShowWatchlistModal(false);
+      setWatchlistActionState({ tone: 'ok', text: `${selectedItem.name} added to watchlist.` });
+      return;
+    }
+
+    setWatchlistActionState({ tone: 'error', text: 'Could not add item to watchlist. Try again.' });
+  };
+
   const handleOpenNotes = (stock) => {
     setNotesStock(stock);
     setShowNotesModal(true);
@@ -585,13 +353,12 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
       className="graphs-dropdown-item"
       onClick={() => handleSelectItem(item)}
     >
-      {iconMap[item.id] && (
-        <img
-          src={iconMap[item.id]}
-          alt=""
-          className="graphs-dropdown-icon"
-        />
-      )}
+      <ItemIcon
+        src={iconMap[item.id]}
+        alt=""
+        className="graphs-dropdown-icon"
+        fallbackText={item.name}
+      />
       <span className="graphs-dropdown-name">{item.name}</span>
       {item.limit && (
         <span className="graphs-dropdown-limit">Limit: {item.limit.toLocaleString()}</span>
@@ -670,15 +437,12 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
                     onDragOver={handleFavDragOver}
                     onDrop={(e) => handleFavDrop(e, fav.itemId)}
                   >
-                    {iconMap[fav.itemId] ? (
-                      <img
-                        src={iconMap[fav.itemId]}
-                        alt={fav.itemName}
-                        className="graphs-quick-access-icon"
-                      />
-                    ) : (
-                      <span className="graphs-quick-access-fallback">{fav.itemName.charAt(0)}</span>
-                    )}
+                    <ItemIcon
+                      src={iconMap[fav.itemId]}
+                      alt={fav.itemName}
+                      className="graphs-quick-access-icon"
+                      fallbackText={fav.itemName}
+                    />
                   </button>
                 );
               })}
@@ -690,13 +454,12 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
       {selectedItem && (
         <div className="graphs-info-panel">
           <div className="graphs-info-header">
-            {iconMap[selectedItem.id] && (
-              <img
-                src={iconMap[selectedItem.id]}
-                alt=""
-                style={{ width: 32, height: 32, imageRendering: 'pixelated' }}
-              />
-            )}
+            <ItemIcon
+              src={iconMap[selectedItem.id]}
+              alt=""
+              className="graphs-info-icon"
+              fallbackText={selectedItem.name}
+            />
             <h3 className="graphs-info-name">{selectedItem.name}</h3>
             <button
               className={`graphs-favorite-star graphs-favorite-star--header ${isFavorite(selectedItem.id) ? 'graphs-favorite-star--active' : ''}`}
@@ -721,10 +484,25 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
             {onPriceAlert && (
               <button
                 className={`graph-alert-btn ${priceAlerts[selectedItem.id]?.isActive ? 'graph-alert-btn-active' : ''}`}
-                onClick={() => onPriceAlert({ itemId: selectedItem.id, itemName: selectedItem.name })}
+                onClick={() => onPriceAlert({
+                  itemId: selectedItem.id,
+                  itemName: selectedItem.name,
+                  defaultHighThreshold: selectedWatchlistItem?.targetSellPrice ?? null,
+                  defaultLowThreshold: selectedWatchlistItem?.targetBuyPrice ?? null,
+                })}
               >
                 {priceAlerts[selectedItem.id]?.isActive ? <BellRing size={14} /> : <Bell size={14} />}
                 {priceAlerts[selectedItem.id]?.isActive ? 'Edit Alert' : 'Set Alert'}
+              </button>
+            )}
+            {onQuickAddWatchlist && (
+              <button
+                className={`graph-alert-btn graph-watchlist-btn ${selectedWatchlistItem ? 'graph-watchlist-btn-active' : ''}`}
+                onClick={handleWatchlistClick}
+                disabled={watchlistSubmitting}
+              >
+                {selectedWatchlistItem ? <Check size={14} /> : <Eye size={14} />}
+                {selectedWatchlistItem ? 'In Watchlist' : watchlistSubmitting ? 'Adding...' : 'Watchlist'}
               </button>
             )}
             {matchingStocks.length === 1 && (
@@ -748,6 +526,11 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
               </div>
             )}
           </div>
+          {watchlistActionState && (
+            <div className={`graphs-watchlist-feedback graphs-watchlist-feedback--${watchlistActionState.tone}`}>
+              {watchlistActionState.text}
+            </div>
+          )}
           <div className="graphs-info-stats">
             {currentPrice && (
               <>
@@ -867,13 +650,12 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
                             className="graphs-empty-card"
                             onClick={() => handleSelectItem(item)}
                           >
-                            {iconMap[rec.itemId] && (
-                              <img
-                                src={iconMap[rec.itemId]}
-                                alt=""
-                                className="graphs-empty-card-icon"
-                              />
-                            )}
+                            <ItemIcon
+                              src={iconMap[rec.itemId]}
+                              alt=""
+                              className="graphs-empty-card-icon"
+                              fallbackText={rec.itemName}
+                            />
                             <span className="graphs-empty-card-name">{rec.itemName}</span>
                           </button>
                         );
@@ -897,13 +679,12 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
                             className="graphs-empty-card"
                             onClick={() => handleSelectItem(item)}
                           >
-                            {iconMap[fav.itemId] && (
-                              <img
-                                src={iconMap[fav.itemId]}
-                                alt=""
-                                className="graphs-empty-card-icon"
-                              />
-                            )}
+                            <ItemIcon
+                              src={iconMap[fav.itemId]}
+                              alt=""
+                              className="graphs-empty-card-icon"
+                              fallbackText={fav.itemName}
+                            />
                             <span className="graphs-empty-card-name">{fav.itemName}</span>
                           </button>
                         );
@@ -941,8 +722,8 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
 
       <ModalContainer isOpen={showNotesModal && notesStock == null && matchingStocks.length > 1}>
         <div className="graph-notes-picker">
-          <h2 className="graph-notes-picker-title">Select Stock</h2>
-          <p className="graph-notes-picker-subtitle">This item is linked to multiple stocks. Which one?</p>
+          <h2 className="graph-notes-picker-title">Select Item Entry</h2>
+          <p className="graph-notes-picker-subtitle">This item is linked to multiple item entries. Which one?</p>
           <div className="graph-notes-picker-list">
             {matchingStocks.map(stock => (
               <button
@@ -962,6 +743,62 @@ export default function GraphsPage({ userId, initialItemId, navigateToPage, pric
           >
             Cancel
           </button>
+        </div>
+      </ModalContainer>
+
+      <ModalContainer isOpen={showWatchlistModal}>
+        <div className="graph-watchlist-modal">
+          <h2 className="graph-watchlist-modal-title">Quick Add to Watchlist</h2>
+          <p className="graph-watchlist-modal-subtitle">{selectedItem?.name}</p>
+
+          <div className="graph-watchlist-modal-fields">
+            <label className="graph-watchlist-modal-label">Target Buy (Low)</label>
+            <input
+              type="number"
+              min="1"
+              className="graph-watchlist-modal-input"
+              value={watchlistTargetLow}
+              onChange={(event) => {
+                setWatchlistTargetLow(event.target.value);
+                setWatchlistModalError('');
+              }}
+              placeholder="e.g. 2500000"
+            />
+
+            <label className="graph-watchlist-modal-label">Target Sell (High)</label>
+            <input
+              type="number"
+              min="1"
+              className="graph-watchlist-modal-input"
+              value={watchlistTargetHigh}
+              onChange={(event) => {
+                setWatchlistTargetHigh(event.target.value);
+                setWatchlistModalError('');
+              }}
+              placeholder="e.g. 2700000"
+            />
+          </div>
+
+          {watchlistModalError && (
+            <div className="graph-watchlist-modal-error">{watchlistModalError}</div>
+          )}
+
+          <div className="graph-watchlist-modal-actions">
+            <button
+              className="btn-modal-cancel"
+              onClick={() => setShowWatchlistModal(false)}
+              disabled={watchlistSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn-modal-confirm"
+              onClick={handleWatchlistModalConfirm}
+              disabled={watchlistSubmitting}
+            >
+              {watchlistSubmitting ? 'Adding...' : 'Add to Watchlist'}
+            </button>
+          </div>
         </div>
       </ModalContainer>
     </div>

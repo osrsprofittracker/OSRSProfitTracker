@@ -1,21 +1,22 @@
-import StepInput from '../StepInput';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import StepInput from '../StepInput';
 import { handleMKInput } from '../../utils/formatters';
 import { useGEData } from '../../contexts/GEDataContext';
 import { useTrade } from '../../contexts/TradeContext';
+import { searchGEItems } from '../../utils/geItemSearch';
 
-export default function NewStockModal({ defaultCategory = '', defaultIsInvestment = false, archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
+export default function NewStockModal({ defaultCategory = '', defaultIsInvestment = false, defaultItem = null, archivedStocks = [], onConfirm, onCancel, onRestoreFromArchive }) {
   const { geMapping: mapping } = useGEData();
   const { categories } = useTrade();
   const [stockType, setStockType] = useState('osrs'); // 'osrs' | 'custom'
-  const [name, setName] = useState('');
+  const [name, setName] = useState(defaultItem?.itemName || '');
   const [category, setCategory] = useState(defaultCategory);
-  const [limit4h, setLimit4h] = useState('');
+  const [limit4h, setLimit4h] = useState(defaultItem?.limit4h ? String(defaultItem.limit4h) : '');
   const [needed, setNeeded] = useState('');
   const [isInvestment, setIsInvestment] = useState(defaultIsInvestment || false);
   const [investmentStartDate, setInvestmentStartDate] = useState('');
-  const [itemId, setItemId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [itemId, setItemId] = useState(defaultItem?.itemId ?? null);
+  const [searchQuery, setSearchQuery] = useState(defaultItem?.itemName || '');
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -23,9 +24,7 @@ export default function NewStockModal({ defaultCategory = '', defaultIsInvestmen
   const filteredCategories = categories.filter(c => c.isInvestment === isInvestment).map(c => c.name);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return mapping.filter(item => item.name.toLowerCase().includes(q)).slice(0, 50);
+    return searchGEItems(mapping, searchQuery, 50);
   }, [searchQuery, mapping]);
 
   useEffect(() => {
@@ -38,6 +37,16 @@ export default function NewStockModal({ defaultCategory = '', defaultIsInvestmen
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!defaultItem) return;
+    setStockType('osrs');
+    setName(defaultItem.itemName || '');
+    setSearchQuery(defaultItem.itemName || '');
+    setItemId(defaultItem.itemId ?? null);
+    setLimit4h(defaultItem.limit4h ? String(defaultItem.limit4h) : '');
+    setShowDropdown(false);
+  }, [defaultItem]);
 
   const handleSelectItem = (item) => {
     setItemId(item.id);
@@ -186,7 +195,7 @@ export default function NewStockModal({ defaultCategory = '', defaultIsInvestmen
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Stock name"
+            placeholder="Item name"
             style={inputStyle}
             onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
             onBlur={(e) => e.target.style.borderColor = 'transparent'}
@@ -228,13 +237,13 @@ export default function NewStockModal({ defaultCategory = '', defaultIsInvestmen
           onBlur={(e) => e.target.style.borderColor = 'transparent'}
         />
 
-        {/* Desired Stock */}
+        {/* Target Quantity */}
         <StepInput
           type="text"
           value={needed}
           onChange={(e) => handleMKInput(e.target.value, setNeeded)}
           onStep={(d) => setNeeded(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
-          placeholder="Desired stock (e.g. 100k)"
+          placeholder="Target quantity (e.g. 100k)"
           style={inputStyle}
           onFocus={(e) => e.target.style.borderColor = 'rgb(37, 99, 235)'}
           onBlur={(e) => e.target.style.borderColor = 'transparent'}

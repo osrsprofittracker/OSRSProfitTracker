@@ -3,6 +3,7 @@ import { Star } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
 import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
+import ItemIcon from '../components/ItemIcon';
 import '../styles/table.css';
 import '../styles/history-page.css';
 import '../styles/filter-panel.css';
@@ -350,11 +351,12 @@ export default function HistoryPage({
                 </td>
                 <td className="history-cell history-cell--name">
                   <span className="history-item-name">
-                    {stockItemIdMap[t.stockId] && geIconMap[stockItemIdMap[t.stockId]] && (
-                      <img
+                    {stockItemIdMap[t.stockId] && (
+                      <ItemIcon
                         src={geIconMap[stockItemIdMap[t.stockId]]}
                         alt=""
                         className="history-item-icon"
+                        fallbackText={t.stockName}
                       />
                     )}
                     {showMembershipIcon && stockItemIdMap[t.stockId] && stockItemIdMap[t.stockId] in membershipMap && (
@@ -445,7 +447,7 @@ export default function HistoryPage({
             <p>⚠️ <strong>Cannot undo this buy</strong></p>
             <p className="history-modal-sub">
               {undoWarning.reason === 'stock_not_found'
-                ? <>The stock for <strong>{undoWarning.stockName}</strong> no longer exists and cannot be reverted.</>
+                ? <>The item entry for <strong>{undoWarning.stockName}</strong> no longer exists and cannot be reverted.</>
                 : <>There are sells recorded after this buy for <strong>{undoWarning.stockName}</strong>. Undo those sells first before undoing this buy.</>
               }
             </p>

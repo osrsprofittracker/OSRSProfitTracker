@@ -1,28 +1,22 @@
 import React from 'react';
 import { useModal } from '../contexts/ModalContext';
 import ModalContainer from './modals/ModalContainer';
-import BuyModal from './modals/BuyModal';
-import BulkBuyModal from './modals/BulkBuyModal';
-import BulkSellModal from './modals/BulkSellModal';
+import TradeModal from './modals/TradeModal';
+import BulkTradeModal from './modals/BulkTradeModal';
 import BulkSummaryModal from './modals/BulkSummaryModal';
-import SellModal from './modals/SellModal';
 import RemoveStockModal from './modals/RemoveStockModal';
 import AdjustModal from './modals/AdjustModal';
-import DeleteModal from './modals/DeleteModal';
+import ConfirmModal from './modals/ConfirmModal';
 import NewStockModal from './modals/NewStockModal';
 import CategoryModal from './modals/CategoryModal';
-import DeleteCategoryModal from './modals/DeleteCategoryModal';
 import EditCategoryModal from './modals/EditCategoryModal';
 import ProfitModal from './modals/ProfitModal';
 import NotesModal from './modals/NotesModal';
-import ProfitChartModal from './modals/ProfitChartModal';
-import CategoryChartModal from './modals/CategoryChartModal';
 import SettingsModal from './modals/SettingsModal';
 import ChangelogModal from './modals/ChangelogModal';
 import ChangePasswordModal from './modals/ChangePasswordModal';
 import PriceAlertModal from './modals/PriceAlertModal';
 import ArchiveModal from './modals/ArchiveModal';
-import ArchiveConfirmModal from './modals/ArchiveConfirmModal';
 import MilestoneTrackerModal from './modals/MilestoneTrackerModal';
 import AltTimerModal from './modals/AltTimerModal';
 import TimeCalculatorModal from './modals/TimeCalculatorModal';
@@ -64,11 +58,7 @@ export default function ModalManager({
   // Data
   tradeMode,
   stockNotes,
-  dumpProfit,
-  referralProfit,
-  bondsProfit,
   numberFormat,
-  groupedStocks,
   categoryNames,
   geIconMap,
   gePrices,
@@ -95,6 +85,7 @@ export default function ModalManager({
     selectedStock,
     selectedCategory,
     newStockCategory,
+    newStockPreset,
     selectedAlertItem,
     milestoneInitialView,
     openModal,
@@ -103,7 +94,8 @@ export default function ModalManager({
   return (
     <>
       <ModalContainer isOpen={modals.buy}>
-        <BuyModal
+        <TradeModal
+          mode="buy"
           stock={selectedStock}
           onConfirm={handleBuy}
           onCancel={() => closeModal('buy')}
@@ -112,7 +104,8 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.bulkBuy}>
-        <BulkBuyModal
+        <BulkTradeModal
+          mode="buy"
           tradeMode={tradeMode}
           onConfirm={handleBulkBuy}
           onCancel={() => closeModal('bulkBuy')}
@@ -121,7 +114,8 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.bulkSell}>
-        <BulkSellModal
+        <BulkTradeModal
+          mode="sell"
           tradeMode={tradeMode}
           onConfirm={handleBulkSell}
           onCancel={() => closeModal('bulkSell')}
@@ -141,7 +135,8 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.sell}>
-        <SellModal
+        <TradeModal
+          mode="sell"
           stock={selectedStock}
           onConfirm={handleSell}
           onCancel={() => closeModal('sell')}
@@ -167,8 +162,11 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.delete}>
-        <DeleteModal
-          stock={selectedStock}
+        <ConfirmModal
+          title="Delete Item"
+          message={<>Are you sure you want to delete <strong>{selectedStock?.name}</strong>? This action cannot be undone.</>}
+          confirmLabel="Delete"
+          confirmVariant="danger"
           onConfirm={handleDelete}
           onCancel={() => closeModal('delete')}
         />
@@ -178,6 +176,7 @@ export default function ModalManager({
         <NewStockModal
           defaultCategory={newStockCategory}
           defaultIsInvestment={tradeMode === 'investment'}
+          defaultItem={newStockPreset}
           onConfirm={handleAddStock}
           archivedStocks={archivedStocks}
           onRestoreFromArchive={async (stock) => {
@@ -197,9 +196,12 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.deleteCategory}>
-        <DeleteCategoryModal
-          category={selectedCategory}
-          onConfirm={handleDeleteCategory}
+        <ConfirmModal
+          title="Delete Category"
+          message={<>Are you sure you want to delete the <strong>{selectedCategory}</strong> category? All items in this category will be moved to "Uncategorized".</>}
+          confirmLabel="Delete Category"
+          confirmVariant="danger"
+          onConfirm={() => handleDeleteCategory(selectedCategory)}
           onCancel={() => closeModal('deleteCategory')}
         />
       </ModalContainer>
@@ -237,24 +239,6 @@ export default function ModalManager({
         />
       </ModalContainer>
 
-      <ModalContainer isOpen={modals.profitChart}>
-        <ProfitChartModal
-          dumpProfit={dumpProfit}
-          referralProfit={referralProfit}
-          bondsProfit={bondsProfit}
-          onCancel={() => closeModal('profitChart')}
-          numberFormat={numberFormat}
-        />
-      </ModalContainer>
-
-      <ModalContainer isOpen={modals.categoryChart}>
-        <CategoryChartModal
-          groupedStocks={groupedStocks}
-          onCancel={() => closeModal('categoryChart')}
-          numberFormat={numberFormat}
-        />
-      </ModalContainer>
-
       <ModalContainer isOpen={modals.editCategory}>
         <EditCategoryModal
           category={selectedCategory}
@@ -288,6 +272,8 @@ export default function ModalManager({
         <PriceAlertModal
           itemId={selectedAlertItem?.itemId}
           itemName={selectedAlertItem?.itemName}
+          defaultHighThreshold={selectedAlertItem?.defaultHighThreshold}
+          defaultLowThreshold={selectedAlertItem?.defaultLowThreshold}
           currentAlert={selectedAlertItem ? priceAlerts[selectedAlertItem.itemId] : null}
           gePrice={selectedAlertItem ? gePrices[selectedAlertItem.itemId] : null}
           onSave={handleSavePriceAlert}
@@ -337,8 +323,11 @@ export default function ModalManager({
       </ModalContainer>
 
       <ModalContainer isOpen={modals.archiveConfirm}>
-        <ArchiveConfirmModal
-          stock={stockToArchive}
+        <ConfirmModal
+          title="Archive Item"
+          message={<>Are you sure you want to archive <strong>{stockToArchive?.name}</strong>? It will be removed from your trade screen but can be restored anytime.</>}
+          confirmLabel="Archive"
+          confirmVariant="warning"
           onConfirm={handleConfirmArchive}
           onCancel={() => closeModal('archiveConfirm')}
         />

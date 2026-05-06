@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useProfits(userId) {
@@ -9,12 +9,7 @@ export function useProfits(userId) {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!userId) return;
-    fetchProfits();
-  }, [userId]);
-
-  const fetchProfits = async () => {
+  const fetchProfits = useCallback(async () => {
     const { data, error } = await supabase
       .from('profits')
       .select('*')
@@ -60,9 +55,14 @@ export function useProfits(userId) {
       }
     }
     setLoading(false);
-  };
+  }, [userId]);
 
-  const updateProfit = async (profitType, amount) => {
+  useEffect(() => {
+    if (!userId) return;
+    fetchProfits();
+  }, [userId, fetchProfits]);
+
+  const updateProfit = useCallback(async (profitType, amount) => {
     // Convert camelCase to snake_case
     const dbColumnMap = {
       dumpProfit: 'dump_profit',
@@ -89,7 +89,7 @@ export function useProfits(userId) {
       setProfits({ ...profits, [profitType]: newValue });
       return true;
     }
-  };
+  }, [userId, profits]);
 
   return { profits, loading, updateProfit, refetch: fetchProfits };
 }

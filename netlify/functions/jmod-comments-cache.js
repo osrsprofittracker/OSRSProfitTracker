@@ -1,5 +1,3 @@
-const { readFileSync } = require('fs');
-const { resolve } = require('path');
 const { getStore } = require('@netlify/blobs');
 
 const JMOD_USERNAMES = [
@@ -13,23 +11,7 @@ const HEADERS = {
   'User-Agent': 'OSRSProfitTracker/1.0 (osrsprofittracker@gmail.com)',
 };
 
-function loadEnvToken() {
-  try {
-    const envPath = resolve(process.cwd(), '.env');
-    const content = readFileSync(envPath, 'utf8');
-    const match = content.match(/^NETLIFY_AUTH_TOKEN=(.+)$/m);
-    return match?.[1]?.trim() || null;
-  } catch {
-    return null;
-  }
-}
-
 function getJmodStore() {
-  const siteID = process.env.SITE_ID || process.env.NETLIFY_SITE_ID;
-  const token = process.env.NETLIFY_AUTH_TOKEN || loadEnvToken();
-  if (siteID && token) {
-    return getStore({ name: 'jmod-comments', siteID, token });
-  }
   return getStore('jmod-comments');
 }
 

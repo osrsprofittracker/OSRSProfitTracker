@@ -3,6 +3,7 @@ import { handleMKInput } from '../../utils/formatters';
 import { useGEData } from '../../contexts/GEDataContext';
 import { useTrade } from '../../contexts/TradeContext';
 import StepInput from '../StepInput';
+import { searchGEItems } from '../../utils/geItemSearch';
 
 export default function AdjustModal({ stock, onConfirm, onCancel }) {
   const { geMapping: mapping } = useGEData();
@@ -32,9 +33,7 @@ export default function AdjustModal({ stock, onConfirm, onCancel }) {
   const currentCategories = categories.filter(c => c.isInvestment === (stock.isInvestment || false)).map(c => c.name);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return mapping.filter(item => item.name.toLowerCase().includes(q)).slice(0, 50);
+    return searchGEItems(mapping, searchQuery, 50);
   }, [searchQuery, mapping]);
 
   useEffect(() => {
@@ -211,13 +210,13 @@ export default function AdjustModal({ stock, onConfirm, onCancel }) {
         {stockType === 'custom' && (
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
-              Stock Name
+              Item Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter stock name"
+              placeholder="Enter item name"
               style={inputStyle}
               onFocus={(e) => e.target.style.borderColor = focusColor}
               onBlur={(e) => e.target.style.borderColor = 'transparent'}
@@ -242,17 +241,17 @@ export default function AdjustModal({ stock, onConfirm, onCancel }) {
           />
         </div>
 
-        {/* Desired Stock */}
+        {/* Target Quantity */}
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: 'rgb(209, 213, 219)', marginBottom: '0.5rem' }}>
-            Desired Stock
+            Target Quantity
           </label>
           <StepInput
             type="text"
             value={needed}
             onChange={(e) => handleMKInput(e.target.value, setNeeded)}
             onStep={(d) => setNeeded(prev => Math.max(0, (parseFloat(prev) || 0) + d).toString())}
-            placeholder="Enter desired stock (e.g. 100k)"
+            placeholder="Enter target quantity (e.g. 100k)"
             style={inputStyle}
             onFocus={(e) => e.target.style.borderColor = focusColor}
             onBlur={(e) => e.target.style.borderColor = 'transparent'}

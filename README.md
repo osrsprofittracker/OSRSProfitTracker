@@ -1,24 +1,30 @@
-# 💰 OSRS Profit Tracker
+# OSRS Profit Tracker
 
-A web-based tool for Old School RuneScape players to track investments, monitor profits, and manage their portfolio — no downloads required.
+A web-based tool for Old School RuneScape players to track investments, monitor profits, inspect GE prices, and manage their portfolio - no downloads required.
 
-🌐 **Live App:** [https://osrs-portfolio.fun/](https://osrs-portfolio.fun/)
+**Live App:** [https://osrs-portfolio.fun/](https://osrs-portfolio.fun/)
 
-> ⚠️ **Status: Beta** — The app is functional but still in active development. Bugs and breaking changes may occur.
+**Current Version:** v3.0.0
+
+> **Status: Beta** - The app is functional but still in active development. Bugs and breaking changes may occur.
 
 ---
 
 ## Features
 
-- **Profit Tracking** — Track items with buy/sell prices and automatic profit & ROI calculations
-- **Buy Limit Timers** — Automatic 4-hour GE limit timers so you never miss a buy window
-- **Transaction History** — Full trade log with timestamps and profit tracking
-- **Item Notes** — Add custom notes for strategies, price targets, or reminders
-- **Categories** — Organise investments into custom categories
-- **Multiple Income Streams** — Track dump profits, referral earnings, bond purchases and more
-- **Analytics & Insights** — Visual charts and breakdowns to understand your portfolio performance
-- **Alt Account Timer** — Dedicated timer for each alt characters
-- **Cloud Sync** — Data stored securely and accessible from any device
+- **Profit Tracking** - Track items with buy/sell prices and automatic profit, ROI, cost basis, and tax-aware unrealized profit calculations
+- **Live GE Data** - Link stocks to OSRS Grand Exchange items with live high/low prices, buy limits, member status, and local item icons
+- **Analytics** - Explore profit, item, category, and goal dashboards with timeframe filters, heatmaps, comparisons, drilldowns, and milestone views
+- **Watchlist** - Track non-owned items with target buy/sell prices, notes, price alerts, and quick conversion into active trades
+- **Price Graphs** - Search OSRS items and inspect interactive price history, volume, margins, favorites, and recent items
+- **Buy Limit Timers** - Automatic 4-hour GE limit timers and notifications so you never miss a buy window
+- **Transaction History** - Full trade log with timestamps, filters, sorting, profit tracking, and undo support
+- **Item Notes** - Add custom notes for strategies, price targets, or reminders
+- **Categories** - Organise investments into custom categories with category-level stats and navigation
+- **Multiple Income Streams** - Track dump profits, referral earnings, bond purchases, and more
+- **Notifications** - Notification center for GE timers, milestones, price alerts, Jmod Reddit comments, and OSRS news
+- **Alt Account Timer** - Dedicated timer for alt-character sessions
+- **Cloud Sync** - Data stored securely in Supabase and accessible from any device
 
 ---
 
@@ -26,6 +32,7 @@ A web-based tool for Old School RuneScape players to track investments, monitor 
 
 - **Frontend:** React, Vite
 - **Backend/Database:** Supabase
+- **Serverless:** Netlify Functions and Netlify Blobs
 - **Hosting:** Netlify
 
 ---
@@ -34,10 +41,12 @@ A web-based tool for Old School RuneScape players to track investments, monitor 
 
 Planned and in-progress features. Have an idea? [Open a feature request](../../issues/new/choose).
 
-- [ ] GE price API integration
-- [ ] Investment Page
-- [ ] Analytics Page
-- [ ] Mobile improvements
+- [x] GE price API integration
+- [x] Analytics Page
+- [x] Watchlist
+- [ ] Mobile refinements
+- [ ] More export and reporting options
+- [ ] Additional notification controls
 
 ---
 
@@ -46,6 +55,7 @@ Planned and in-progress features. Have an idea? [Open a feature request](../../i
 Use the [Issues](../../issues) tab to report bugs or suggest features. Please use the provided templates so nothing important gets missed.
 
 When reporting a bug, include:
+
 - Steps to reproduce
 - Your browser and device
 - Screenshots if applicable
@@ -54,7 +64,7 @@ When reporting a bug, include:
 
 ## Contributing
 
-This is a solo project but feedback and suggestions are very welcome. Feel free to open an issue or reach out directly.
+This is a solo project but feedback and suggestions are welcome. Feel free to open an issue or reach out directly.
 
 ---
 
@@ -62,7 +72,7 @@ This is a solo project but feedback and suggestions are very welcome. Feel free 
 
 - **Email:** osrsprofittracker@gmail.com
 - **Discord:** eldiab
-- **Developer:** Daan Bom — Netherlands
+- **Developer:** Daan Bom - Netherlands
 
 ---
 

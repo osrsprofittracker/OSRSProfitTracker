@@ -4,6 +4,7 @@ import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { useGEData } from '../contexts/GEDataContext';
+import ItemIcon from './ItemIcon';
 import '../styles/table.css';
 import { sortStocks } from '../utils/calculations';
 
@@ -110,14 +111,14 @@ function TableHeader({ sortConfig, onSort, visibleColumns, showInvestmentDate })
   const columns = [
     { label: 'Name', key: 'name', visible: true, tooltip: 'Item name' },
     { label: 'Status', key: null, visible: visibleColumns.status, tooltip: 'Shows if the 4h GE buy limit has reset' },
-    { label: 'In Stock', key: 'shares', visible: true, tooltip: 'How many you currently hold' },
+    { label: 'Held Qty', key: 'shares', visible: true, tooltip: 'How many you currently hold' },
     { label: 'Total Cost', key: 'totalCost', visible: true, tooltip: 'Total GP spent buying this item' },
     { label: 'Avg Buy', key: 'avgBuy', visible: visibleColumns.avgBuy, tooltip: 'Average price paid per item' },
-    { label: 'Stock Sold', key: 'sharesSold', visible: true, tooltip: 'How many you have sold' },
+    { label: 'Qty Sold', key: 'sharesSold', visible: true, tooltip: 'How many you have sold' },
     { label: 'Total Sold Price', key: 'totalCostSold', visible: true, tooltip: 'Total GP received from sales' },
     { label: 'Avg Sell', key: 'avgSell', visible: visibleColumns.avgSell, tooltip: 'Average sell price per item' },
     { label: 'Profit', key: 'profit', visible: visibleColumns.profit, tooltip: 'Realized profit from sold items' },
-    { label: 'Desired Stock', key: 'needed', visible: visibleColumns.desiredStock, tooltip: 'How many you want to hold' },
+    { label: 'Target Qty', key: 'needed', visible: visibleColumns.desiredStock, tooltip: 'How many you want to hold' },
     { label: '4H Limit', key: 'limit4h', visible: visibleColumns.limit4h, tooltip: 'GE 4-hour buy limit' },
     { label: 'GE High', key: null, visible: visibleColumns.geHigh, tooltip: 'Live GE highest buy price' },
     { label: 'GE Low', key: null, visible: visibleColumns.geLow, tooltip: 'Live GE lowest sell price' },
@@ -204,11 +205,12 @@ function StockRow({
       </td>
       <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600', color: 'white', border: '1px solid rgb(51, 65, 85)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          {stock.itemId && geIconMap[stock.itemId] && (
-            <img
+          {stock.itemId && (
+            <ItemIcon
               src={geIconMap[stock.itemId]}
               alt=""
-              style={{ width: '20px', height: '20px', objectFit: 'contain', imageRendering: 'pixelated' }}
+              className="stock-table-item-icon"
+              fallbackText={stock.name}
             />
           )}
           {showMembershipIcon && stock.itemId && stock.itemId in membershipMap && (
