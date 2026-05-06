@@ -5,6 +5,7 @@ import { useGEData } from '../../contexts/GEDataContext';
 import { useTrade } from '../../contexts/TradeContext';
 import '../../styles/bulk-trade-modal.css';
 import StepInput from '../StepInput';
+import ItemIcon from '../ItemIcon';
 
 export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, onCancel, isSubmitting = false }) {
   const isBuy = mode === 'buy';
@@ -265,7 +266,12 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
                       className={`bulk-trade-item-row ${isSelected ? 'selected' : ''}`}
                       onClick={() => toggleItem(stock)}
                     >
-                      {iconUrl && <img className="item-icon" src={iconUrl} alt="" />}
+                      <ItemIcon
+                        className="item-icon"
+                        src={iconUrl}
+                        alt=""
+                        fallbackText={stock.name}
+                      />
                       <div className="item-info">
                         <div className="item-name">{stock.name}</div>
                         <div className="item-meta">
@@ -329,7 +335,12 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
                 return (
                   <div key={id} className="bulk-trade-selected-item">
                     <div className="item-header">
-                      {iconUrl && <img className="item-icon" src={iconUrl} alt="" />}
+                      <ItemIcon
+                        className="item-icon"
+                        src={iconUrl}
+                        alt=""
+                        fallbackText={stock.name}
+                      />
                       <span className="item-name">{stock.name}</span>
                       {!isBuy && (
                         <span className="item-held">{formatNumber(stock.shares)} held</span>

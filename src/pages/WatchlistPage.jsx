@@ -3,6 +3,7 @@ import { Bell, Eye, Plus, RefreshCw, ShoppingCart, Trash2 } from 'lucide-react';
 import { useGEData } from '../contexts/GEDataContext';
 import { formatNumber } from '../utils/formatters';
 import { searchGEItems } from '../utils/geItemSearch';
+import ItemIcon from '../components/ItemIcon';
 import '../styles/watchlist-page.css';
 
 function parseTargetValue(value) {
@@ -301,13 +302,12 @@ export default function WatchlistPage({
                 return (
                   <tr key={item.id} className={index % 2 === 0 ? 'tr-even' : 'tr-odd'}>
                     <td className="td-base watchlist-item-cell">
-                      {geIconMap[item.itemId] && (
-                        <img
-                          src={geIconMap[item.itemId]}
-                          alt=""
-                          className="watchlist-item-icon"
-                        />
-                      )}
+                      <ItemIcon
+                        src={geIconMap[item.itemId]}
+                        alt=""
+                        className="watchlist-item-icon"
+                        fallbackText={item.itemName}
+                      />
                       <span>{item.itemName}</span>
                     </td>
                     <td className="td-base td-right">
