@@ -48,6 +48,7 @@ const mergeGpTraded = (buckets, gpTotals) => {
       profit_referral: 0,
       profit_bonds: 0,
       gp_traded: 0,
+      sell_basis: 0,
       by_category: {},
       sells_count: 0,
       wins_count: 0,
@@ -68,7 +69,7 @@ const signatureFor = (rows = []) => (
 
 export function aggregateBucketsLocally({ transactions, stocks, profitHistory, start, end, bucket }) {
   const stockMap = new Map((stocks || []).map((stock) => [stock.id, stock]));
-  const txMap = new Map((transactions || []).map((tx) => [tx.id, tx]));
+  const txMap = new Map((transactions || []).map((tx) => [String(tx.id), tx]));
   const inWindow = (iso) => iso >= start && iso <= end;
   const buckets = new Map();
 
@@ -81,6 +82,7 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
         profit_referral: 0,
         profit_bonds: 0,
         gp_traded: 0,
+        sell_basis: 0,
         by_category: {},
         sells_count: 0,
         wins_count: 0,
@@ -100,7 +102,7 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
   }
 
   for (const profit of profitHistory || []) {
-    const tx = txMap.get(profit.transaction_id);
+    const tx = txMap.get(String(profit.transaction_id ?? profit.transactionId ?? ''));
     const isoSource = profit.profit_type === 'stock' && tx?.date ? tx.date : profit.created_at;
     const iso = String(isoSource || '').slice(0, 10);
     if (!inWindow(iso)) continue;
@@ -112,8 +114,10 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
     if (profit.profit_type === 'stock') {
       const stockId = profit.stock_id ?? tx?.stock_id ?? tx?.stockId;
       const category = stockMap.get(stockId)?.category || 'Uncategorized';
+      const sellTotal = Number(tx?.total) || 0;
 
       row.profit_items += amount;
+      row.sell_basis += Math.max(0, sellTotal - amount);
       row.sells_count += 1;
       if (amount > 0) row.wins_count += 1;
       row.by_category[category] = (row.by_category[category] || 0) + amount;
