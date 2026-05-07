@@ -1,7 +1,7 @@
 // Goal-tab aggregation helpers. Operates on milestone_history rows
 // shaped like { period, period_start, achieved_at, goal_amount, actual_amount }.
 
-import { addDays, daysBetween } from './analyticsHelpers';
+import { addDays, inclusiveDayCount } from './analyticsHelpers';
 
 const HIT_RATE_WINDOW = 7;
 
@@ -25,7 +25,7 @@ export function computePeriodEnd(periodStartIso, period) {
 export function proratedRowGoal(row, firstActivityDate) {
   const periodStart = periodDate(row);
   const periodEnd = computePeriodEnd(periodStart, row.period);
-  const totalDays = daysBetween(periodStart, periodEnd) + 1;
+  const totalDays = inclusiveDayCount(periodStart, periodEnd);
   const goal = row.goal_amount || 0;
 
   if (!firstActivityDate || periodStart >= firstActivityDate) {
@@ -36,7 +36,7 @@ export function proratedRowGoal(row, firstActivityDate) {
     return { proratedGoal: goal, isPartial: true, totalDays, activeDays: 0 };
   }
 
-  const activeDays = daysBetween(firstActivityDate, periodEnd) + 1;
+  const activeDays = inclusiveDayCount(firstActivityDate, periodEnd);
   const proratedGoal = totalDays > 0 ? (goal * activeDays) / totalDays : goal;
   return { proratedGoal, isPartial: true, totalDays, activeDays };
 }
