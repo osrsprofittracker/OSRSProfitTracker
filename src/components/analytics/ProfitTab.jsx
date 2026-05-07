@@ -11,7 +11,7 @@ import ProfitKpiStrip from './widgets/ProfitKpiStrip';
 import ProfitHeatmap from './widgets/ProfitHeatmap';
 import {
   addDays,
-  daysBetween,
+  inclusiveDayCount,
   subtractDays,
   subtractYears,
   totalProfit,
@@ -48,7 +48,7 @@ export default function ProfitTab({
   totalProfitValue,
   fallbackData,
 }) {
-  const span = daysBetween(timeframe.start, timeframe.end);
+  const span = inclusiveDayCount(timeframe.start, timeframe.end);
   const lastPeriodStart = subtractDays(timeframe.start, span);
   const lastPeriodEnd = addDays(timeframe.start, -1);
   const samePeriodLastYearStart = subtractYears(timeframe.start, 1);

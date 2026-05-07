@@ -9,7 +9,7 @@ import ItemsTab from '../components/analytics/ItemsTab';
 import CategoriesTab from '../components/analytics/CategoriesTab';
 import GoalsTab from '../components/analytics/GoalsTab';
 import { useTrade } from '../contexts/TradeContext';
-import { addDays, daysBetween, subtractDays, sumProfit } from '../utils/analyticsHelpers';
+import { addDays, inclusiveDayCount, subtractDays, sumProfit } from '../utils/analyticsHelpers';
 import '../styles/analytics-page.css';
 import '../styles/analytics-widgets.css';
 
@@ -48,7 +48,7 @@ export default function AnalyticsPage({
 
   const timeframe = useAnalyticsTimeframe(userId, allTimeStart);
   const priorStart = useMemo(
-    () => subtractDays(timeframe.start, daysBetween(timeframe.start, timeframe.end)),
+    () => subtractDays(timeframe.start, inclusiveDayCount(timeframe.start, timeframe.end)),
     [timeframe.start, timeframe.end]
   );
   const priorEnd = useMemo(() => addDays(timeframe.start, -1), [timeframe.start]);

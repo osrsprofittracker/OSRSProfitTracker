@@ -22,14 +22,18 @@ export const subtractYears = (iso, years) => {
   return toIsoDate(date);
 };
 
-export const daysBetween = (startIso, endIso) => {
+export const dayDifference = (startIso, endIso) => {
   const ms = parseIsoDateUtc(endIso) - parseIsoDateUtc(startIso);
-  return Math.max(1, Math.round(ms / MS_PER_DAY));
+  return Math.max(0, Math.round(ms / MS_PER_DAY));
+};
+
+export const inclusiveDayCount = (startIso, endIso) => {
+  if (!startIso || !endIso) return 0;
+  return dayDifference(startIso, endIso) + 1;
 };
 
 export const periodSpanDays = (startIso, endIso) => {
-  if (!startIso || !endIso) return 0;
-  return daysBetween(startIso, endIso) + 1;
+  return inclusiveDayCount(startIso, endIso);
 };
 
 export const totalProfit = (bucket) => (
