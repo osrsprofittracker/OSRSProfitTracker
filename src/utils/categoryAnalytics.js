@@ -1,4 +1,5 @@
 import { calculateUnrealizedProfit } from './taxUtils';
+import { applyAverageCostExit } from './positionAnalytics';
 
 const DEFAULT_CATEGORY = 'Uncategorized';
 
@@ -229,13 +230,21 @@ const addTransactionWindowMetrics = ({
       continue;
     }
 
+    if (transaction.type === 'remove') {
+      const nextPosition = applyAverageCostExit(position, shares);
+      position.shares = nextPosition.shares;
+      position.cost = nextPosition.cost;
+      positions.set(positionKey, position);
+      continue;
+    }
+
     if (transaction.type !== 'sell') {
       positions.set(positionKey, position);
       continue;
     }
 
-    const avgCost = position.shares > 0 ? position.cost / position.shares : 0;
-    const estimatedBasis = avgCost * shares;
+    const nextPosition = applyAverageCostExit(position, shares);
+    const estimatedBasis = nextPosition.estimatedBasis;
     const transactionProfit = profitByTransaction.has(String(transaction.id))
       ? profitByTransaction.get(String(transaction.id))
       : total - estimatedBasis;
@@ -243,8 +252,8 @@ const addTransactionWindowMetrics = ({
 
     if (inWindow) row.windowBasis += basis;
 
-    position.shares = Math.max(0, position.shares - shares);
-    position.cost = Math.max(0, position.cost - estimatedBasis);
+    position.shares = nextPosition.shares;
+    position.cost = nextPosition.cost;
     positions.set(positionKey, position);
   }
 };
@@ -305,10 +314,9 @@ export function computeCategoryAverageInventory({
       }
 
       if (transaction.type === 'sell' || transaction.type === 'remove') {
-        const avgCost = position.shares > 0 ? position.cost / position.shares : 0;
-        const estimatedBasis = avgCost * shares;
-        position.shares = Math.max(0, position.shares - shares);
-        position.cost = Math.max(0, position.cost - estimatedBasis);
+        const nextPosition = applyAverageCostExit(position, shares);
+        position.shares = nextPosition.shares;
+        position.cost = nextPosition.cost;
       }
 
       positions.set(key, position);
@@ -556,17 +564,16 @@ export function buildCategoryDrilldownData({
 
     if (transaction.type !== 'sell') {
       if (transaction.type === 'remove') {
-        const removeAvgCost = position.shares > 0 ? position.cost / position.shares : 0;
-        const removeBasis = removeAvgCost * shares;
-        position.shares = Math.max(0, position.shares - shares);
-        position.cost = Math.max(0, position.cost - removeBasis);
+        const nextPosition = applyAverageCostExit(position, shares);
+        position.shares = nextPosition.shares;
+        position.cost = nextPosition.cost;
       }
       positions.set(stockId, position);
       continue;
     }
 
-    const avgCost = position.shares > 0 ? position.cost / position.shares : 0;
-    const estimatedBasis = avgCost * shares;
+    const nextPosition = applyAverageCostExit(position, shares);
+    const estimatedBasis = nextPosition.estimatedBasis;
     const iso = isoOf(transaction.date);
 
     if (!start || !end || (iso >= start && iso <= end)) {
@@ -576,8 +583,8 @@ export function buildCategoryDrilldownData({
       windowProfitByStock.set(stockId, (windowProfitByStock.get(stockId) || 0) + transactionProfit);
     }
 
-    position.shares = Math.max(0, position.shares - shares);
-    position.cost = Math.max(0, position.cost - estimatedBasis);
+    position.shares = nextPosition.shares;
+    position.cost = nextPosition.cost;
     positions.set(stockId, position);
   }
 
