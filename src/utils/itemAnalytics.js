@@ -163,7 +163,7 @@ export function buildDailyItemProfit({ itemId, transactions = [], profitHistory 
     byDay.set(iso, (byDay.get(iso) || 0) + profit);
   }
 
-  if (!dates.length && (!start || !end)) return [];
+  if (!dates.length) return [];
 
   const startDateIso = start || dates.sort()[0];
   const endDateIso = end || dates[dates.length - 1];
