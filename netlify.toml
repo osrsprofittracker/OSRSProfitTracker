@@ -17,11 +17,5 @@
      to = "/index.html"
      status = 200
 
-   [functions."osrs-news-cache"]
-   schedule = "*/10 * * * *"
-
-   [functions."jmod-comments-cache"]
-   schedule = "*/10 * * * *"
-
    [functions."ge-prices-cache"]
    schedule = "*/1 * * * *"

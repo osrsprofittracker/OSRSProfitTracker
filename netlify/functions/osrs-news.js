@@ -1,12 +1,8 @@
-const { getStore } = require('@netlify/blobs');
-
-function getNewsStore() {
-  return getStore({ name: 'osrs-news', consistency: 'strong' });
-}
-
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
+  'Cache-Control': 'public, max-age=300, stale-while-revalidate=300',
+  'Netlify-CDN-Cache-Control': 'public, max-age=600, stale-while-revalidate=600',
 };
 
 function json(statusCode, body) {
@@ -17,15 +13,8 @@ function json(statusCode, body) {
   };
 }
 
-async function fetchNewsFromOrigin() {
-  const response = await fetch('https://secure.runescape.com/m=news/a=13/archive?oldschool=1');
-  if (!response.ok) {
-    throw new Error(`News page returned ${response.status}`);
-  }
-
-  const html = await response.text();
+function parseArticles(html) {
   const items = [];
-
   const articleRegex = /<article class='news-list-article'>([\s\S]*?)<\/article>/g;
   let match;
 
@@ -54,42 +43,21 @@ async function fetchNewsFromOrigin() {
     items.push({ guid, title, link, pubDate });
   }
 
-  if (items.length === 0) {
-    throw new Error('No articles parsed from OSRS news page');
-  }
-
   return items;
 }
 
 exports.handler = async () => {
-  const store = getNewsStore();
-  let cached = [];
-
   try {
-    const fromCache = await store.get('cache', { type: 'json' });
-    if (Array.isArray(fromCache)) {
-      cached = fromCache;
-    }
-  } catch (cacheReadError) {
-    console.error('OSRS news cache read error:', cacheReadError.message);
-  }
-
-  if (cached.length > 0) {
-    return json(200, cached);
-  }
-
-  try {
-    const items = await fetchNewsFromOrigin();
-
-    try {
-      await store.setJSON('cache', items);
-    } catch (cacheWriteError) {
-      console.error('OSRS news cache write error:', cacheWriteError.message);
+    const response = await fetch('https://secure.runescape.com/m=news/a=13/archive?oldschool=1');
+    if (!response.ok) {
+      throw new Error(`News page returned ${response.status}`);
     }
 
+    const html = await response.text();
+    const items = parseArticles(html);
     return json(200, items);
-  } catch (originError) {
-    console.error('OSRS news origin error:', originError.message);
+  } catch (error) {
+    console.error('OSRS news fetch error:', error.message);
     return json(200, []);
   }
 };
