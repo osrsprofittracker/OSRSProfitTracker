@@ -93,9 +93,19 @@ export function computeItemMetrics({
 }
 
 export function computeMovers(items = [], count = 5) {
+  const normalizedItems = [...items].map((item) => ({
+    ...item,
+    totalProfit: Number(item.totalProfit) || 0,
+  }));
+
   return {
-    gainers: [...items]
-      .sort((a, b) => (Number(b.totalProfit) || 0) - (Number(a.totalProfit) || 0))
+    gainers: normalizedItems
+      .filter((item) => item.totalProfit > 0)
+      .sort((a, b) => b.totalProfit - a.totalProfit)
+      .slice(0, count),
+    losers: normalizedItems
+      .filter((item) => item.totalProfit < 0)
+      .sort((a, b) => a.totalProfit - b.totalProfit)
       .slice(0, count),
   };
 }
