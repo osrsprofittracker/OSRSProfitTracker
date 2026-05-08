@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 const RECENT_TRANSACTION_WINDOW_DAYS = 90;
@@ -26,6 +26,7 @@ export function useTransactions(userId) {
   const [sortConfig, setSortConfig] = useState({ key: 'date', dir: 'desc' });
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
+  const pagedRequestId = useRef(0);
 
   const fetchTransactions = useCallback(async (options = {}) => {
     if (!userId) {
@@ -94,6 +95,8 @@ export function useTransactions(userId) {
   // Paginated fetch - used by HistoryPage
   const fetchPage = useCallback(async (targetPage, size, activeFilters, activeSort = sortConfig) => {
     if (!userId) return;
+    const requestId = pagedRequestId.current + 1;
+    pagedRequestId.current = requestId;
     setPagedLoading(true);
 
     const from = (targetPage - 1) * size;
@@ -130,24 +133,12 @@ export function useTransactions(userId) {
       query = query.eq('category', activeFilters.category);
     }
     if (activeFilters.mode && activeFilters.mode !== 'all') {
-      const isInvestment = activeFilters.mode === 'investment';
-      const { data: modeStocks } = await supabase
-        .from('stocks')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('is_investment', isInvestment);
-      const modeStockIds = (modeStocks || []).map(s => s.id);
-      if (modeStockIds.length > 0) {
-        query = query.in('stock_id', modeStockIds);
-      } else {
-        setPagedTransactions([]);
-        setTotalCount(0);
-        setPagedLoading(false);
-        return;
-      }
+      query = query.eq('is_investment', activeFilters.mode === 'investment');
     }
 
     const { data, error, count } = await query;
+
+    if (requestId !== pagedRequestId.current) return;
 
     if (error) {
       console.error('Error fetching paged transactions:', error.message, error.details, error.hint);
@@ -185,7 +176,7 @@ export function useTransactions(userId) {
 
   const resetPaged = useCallback(() => {
     const defaultSort = { key: 'date', dir: 'desc' };
-    const defaultFilters = { type: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' };
+    const defaultFilters = { type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' };
     setSortConfig(defaultSort);
     setFilters(defaultFilters);
     setPage(1);
