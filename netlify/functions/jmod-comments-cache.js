@@ -12,7 +12,7 @@ const HEADERS = {
 };
 
 function getJmodStore() {
-  return getStore('jmod-comments');
+  return getStore({ name: 'jmod-comments', consistency: 'strong' });
 }
 
 function parseRssEntries(xml, username) {
@@ -116,5 +116,5 @@ exports.handler = async () => {
 };
 
 exports.config = {
-  schedule: '*/1 * * * *',
+  schedule: '*/10 * * * *',
 };

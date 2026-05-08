@@ -7,12 +7,14 @@ export const ENDPOINTS = {
   latest: {
     path: '/latest',
     key: 'latest',
-    cdnCacheControl: 'public, max-age=60, stale-while-revalidate=120',
-    browserCacheControl: 'public, max-age=30, stale-while-revalidate=60',
+    maxBlobAgeMs: 55_000,
+    cdnCacheControl: 'public, max-age=15, stale-while-revalidate=45',
+    browserCacheControl: 'public, max-age=15, stale-while-revalidate=45',
   },
   mapping: {
     path: '/mapping',
     key: 'mapping',
+    maxBlobAgeMs: 24 * 60 * 60 * 1000,
     cdnCacheControl: 'public, max-age=3600, stale-while-revalidate=86400',
     browserCacheControl: 'public, max-age=3600, stale-while-revalidate=86400',
   },
@@ -24,6 +26,16 @@ function getGEStore() {
 
 export function getEndpointConfig(endpoint) {
   return ENDPOINTS[endpoint] || null;
+}
+
+export function isCachedEndpointFresh(endpoint, cached) {
+  const config = getEndpointConfig(endpoint);
+  if (!config || !cached?.fetchedAt) return false;
+
+  const fetchedAt = new Date(cached.fetchedAt).getTime();
+  if (!Number.isFinite(fetchedAt)) return false;
+
+  return Date.now() - fetchedAt < config.maxBlobAgeMs;
 }
 
 export async function fetchFromOrigin(endpoint) {
