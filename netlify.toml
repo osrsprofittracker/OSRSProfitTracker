@@ -22,3 +22,6 @@
 
    [functions."jmod-comments-cache"]
    schedule = "*/1 * * * *"
+
+   [functions."ge-prices-cache"]
+   schedule = "*/1 * * * *"
