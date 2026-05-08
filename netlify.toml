@@ -18,10 +18,10 @@
      status = 200
 
    [functions."osrs-news-cache"]
-   schedule = "*/1 * * * *"
+   schedule = "*/10 * * * *"
 
    [functions."jmod-comments-cache"]
-   schedule = "*/1 * * * *"
+   schedule = "*/10 * * * *"
 
    [functions."ge-prices-cache"]
    schedule = "*/1 * * * *"

@@ -75,11 +75,40 @@ export function useGEPrices() {
   };
 
   useEffect(() => {
-    fetchMapping();
-    fetchPrices();
+    const clearPriceInterval = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
 
-    intervalRef.current = setInterval(fetchPrices, REFRESH_INTERVAL);
-    return () => clearInterval(intervalRef.current);
+    const startPriceInterval = () => {
+      clearPriceInterval();
+      if (document.visibilityState === 'visible') {
+        intervalRef.current = setInterval(fetchPrices, REFRESH_INTERVAL);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchPrices();
+        startPriceInterval();
+      } else {
+        clearPriceInterval();
+      }
+    };
+
+    fetchMapping();
+    if (document.visibilityState === 'visible') {
+      fetchPrices();
+    }
+    startPriceInterval();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearPriceInterval();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return { prices, mapping, mappingLoading, iconMap };

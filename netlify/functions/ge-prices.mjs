@@ -1,5 +1,6 @@
 import {
   getEndpointConfig,
+  isCachedEndpointFresh,
   readCachedEndpoint,
   refreshEndpoint,
 } from './_shared/ge-cache.mjs';
@@ -23,6 +24,14 @@ function responseHeaders(config, cached, source) {
   };
 }
 
+function staleResponseHeaders(config, cached) {
+  return {
+    ...responseHeaders(config, cached, 'stale-blob'),
+    'Cache-Control': 'no-store',
+    'Netlify-CDN-Cache-Control': 'no-store',
+  };
+}
+
 export default async function handler(request) {
   if (request.method !== 'GET') {
     return json(405, { error: 'Method not allowed' });
@@ -39,8 +48,18 @@ export default async function handler(request) {
   try {
     const cached = await readCachedEndpoint(endpoint);
 
-    if (cached) {
+    if (cached && isCachedEndpointFresh(endpoint, cached)) {
       return json(200, cached.payload, responseHeaders(config, cached, 'blob'));
+    }
+
+    if (cached) {
+      try {
+        const refreshed = await refreshEndpoint(endpoint);
+        return json(200, refreshed.payload, responseHeaders(config, refreshed, 'origin-refresh'));
+      } catch (refreshError) {
+        console.error(`GE ${endpoint} stale refresh error:`, refreshError.message);
+        return json(200, cached.payload, staleResponseHeaders(config, cached));
+      }
     }
   } catch (cacheReadError) {
     console.error(`GE ${endpoint} cache read error:`, cacheReadError.message);
