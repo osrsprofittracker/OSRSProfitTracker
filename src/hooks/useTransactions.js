@@ -85,20 +85,7 @@ export function useTransactions(userId) {
     if (activeFilters.marginMin) query = query.gte('margin', Number(activeFilters.marginMin));
     if (activeFilters.marginMax) query = query.lte('margin', Number(activeFilters.marginMax));
     if (activeFilters.category) {
-      const { data: categoryStocks } = await supabase
-        .from('stocks')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('category', activeFilters.category);
-      const stockIds = (categoryStocks || []).map(s => s.id);
-      if (stockIds.length > 0) {
-        query = query.in('stock_id', stockIds);
-      } else {
-        setPagedTransactions([]);
-        setTotalCount(0);
-        setPagedLoading(false);
-        return;
-      }
+      query = query.eq('category', activeFilters.category);
     }
     if (activeFilters.mode && activeFilters.mode !== 'all') {
       const isInvestment = activeFilters.mode === 'investment';
