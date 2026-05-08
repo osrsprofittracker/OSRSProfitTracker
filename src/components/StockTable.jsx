@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Edit3, Trash2, GripVertical, Star, Bell, BellRing } from 'lucide-react';
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
@@ -56,7 +56,10 @@ export default function StockTable({
   onViewGraph,
 }) {
   const { gePrices: geData, geIconMap, membershipMap } = useGEData();
-  const sortedStocks = sortStocks(stocks, sortConfig);
+  const sortedStocks = useMemo(
+    () => sortStocks(stocks, sortConfig),
+    [stocks, sortConfig]
+  );
 
   return (
     <div className="table-container">
