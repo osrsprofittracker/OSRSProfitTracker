@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAnalyticsTimeframe } from '../hooks/useAnalyticsTimeframe';
 import { useAnalytics } from '../hooks/useAnalytics';
 import TimeframeSelector from '../components/analytics/TimeframeSelector';
@@ -14,6 +14,7 @@ import '../styles/analytics-page.css';
 import '../styles/analytics-widgets.css';
 
 const sumGpTraded = (buckets) => buckets.reduce((sum, bucket) => sum + (bucket.gp_traded || 0), 0);
+const DEFAULT_ALL_TIME_START = '2020-01-01';
 
 export default function AnalyticsPage({
   userId,
@@ -26,6 +27,12 @@ export default function AnalyticsPage({
   milestones,
   milestoneHistory,
   milestoneProgress,
+  transactionHistoryScope,
+  profitHistoryScope,
+  loadFullTransactions,
+  loadFullProfitHistory,
+  fullTransactionsLoading = false,
+  fullProfitHistoryLoading = false,
 }) {
   const { allStocks, stocks } = useTrade();
   const stocksForStats = allStocks?.length > 0 ? allStocks : stocks;
@@ -37,7 +44,13 @@ export default function AnalyticsPage({
     ANALYTICS_TABS.includes(initialTab) ? initialTab : 'profit'
   ));
 
-  const allTimeStart = useMemo(() => {
+  const scopeCoversStart = (scope, start) => {
+    if (scope?.full) return true;
+    if (!scope?.since || !start) return false;
+    return start >= String(scope.since).slice(0, 10);
+  };
+
+  const localAllTimeStart = useMemo(() => {
     const dates = [
       ...safeTransactions.map((transaction) => String(transaction.date || '').slice(0, 10)),
       ...safeProfitHistory.map((profit) => String(profit.created_at || '').slice(0, 10)),
@@ -46,7 +59,36 @@ export default function AnalyticsPage({
     return dates.length > 0 ? dates.sort()[0] : null;
   }, [safeTransactions, safeProfitHistory]);
 
+  const hasFullLocalHistory = transactionHistoryScope?.full && profitHistoryScope?.full;
+  const allTimeStart = hasFullLocalHistory ? localAllTimeStart : DEFAULT_ALL_TIME_START;
   const timeframe = useAnalyticsTimeframe(userId, allTimeStart);
+  const transactionScopeCoversTimeframe = scopeCoversStart(transactionHistoryScope, timeframe.start);
+  const profitScopeCoversTimeframe = scopeCoversStart(profitHistoryScope, timeframe.start);
+
+  useEffect(() => {
+    if (timeframe.window === 'All' || !transactionScopeCoversTimeframe) {
+      if (!transactionHistoryScope?.full && !fullTransactionsLoading) {
+        loadFullTransactions?.();
+      }
+    }
+
+    if (timeframe.window === 'All' || !profitScopeCoversTimeframe) {
+      if (!profitHistoryScope?.full && !fullProfitHistoryLoading) {
+        loadFullProfitHistory?.();
+      }
+    }
+  }, [
+    timeframe.window,
+    transactionScopeCoversTimeframe,
+    profitScopeCoversTimeframe,
+    transactionHistoryScope?.full,
+    profitHistoryScope?.full,
+    fullTransactionsLoading,
+    fullProfitHistoryLoading,
+    loadFullTransactions,
+    loadFullProfitHistory
+  ]);
+
   const priorStart = useMemo(
     () => subtractDays(timeframe.start, inclusiveDayCount(timeframe.start, timeframe.end)),
     [timeframe.start, timeframe.end]
@@ -75,7 +117,7 @@ export default function AnalyticsPage({
   });
   const allTime = useAnalytics({
     userId,
-    start: allTimeStart || '2020-01-01',
+    start: allTimeStart || DEFAULT_ALL_TIME_START,
     end: timeframe.end,
     bucket: 'day',
     fallbackData,
@@ -129,6 +171,12 @@ export default function AnalyticsPage({
       {current.fromFallback && (
         <div className="analytics-fallback-banner">
           Showing locally-computed data. Live aggregation is temporarily unavailable.
+        </div>
+      )}
+
+      {(fullTransactionsLoading || fullProfitHistoryLoading) && (
+        <div className="analytics-fallback-banner">
+          Loading older history for detailed analytics.
         </div>
       )}
 
@@ -194,7 +242,7 @@ export default function AnalyticsPage({
             milestoneHistory={milestoneHistory}
             milestoneProgress={milestoneProgress}
             numberFormat={numberFormat}
-            firstActivityDate={allTimeStart}
+            firstActivityDate={localAllTimeStart}
           />
         )}
       </div>

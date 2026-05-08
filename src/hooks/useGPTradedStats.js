@@ -1,5 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+
+const GP_TRADED_FALLBACK_ROW_CAP = 10000;
+
+function toIsoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
 
 export function useGPTradedStats(userId) {
   const [stats, setStats] = useState({
@@ -11,99 +17,103 @@ export function useGPTradedStats(userId) {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!userId) return;
-    fetchGPTradedStats();
-  }, [userId]);
+  const fetchGPTradedStats = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-  const fetchGPTradedStats = async () => {
     const getStartOfPeriod = (period) => {
       const date = new Date();
       switch (period) {
         case 'day':
           date.setHours(0, 0, 0, 0);
-          return date.toISOString();
+          return toIsoDate(date);
         case 'week':
           const day = date.getDay();
           const diff = date.getDate() - day + (day === 0 ? -6 : 1);
           date.setDate(diff);
           date.setHours(0, 0, 0, 0);
-          return date.toISOString();
+          return toIsoDate(date);
         case 'month':
           date.setDate(1);
           date.setHours(0, 0, 0, 0);
-          return date.toISOString();
+          return toIsoDate(date);
         case 'year':
           date.setMonth(0, 1);
           date.setHours(0, 0, 0, 0);
-          return date.toISOString();
+          return toIsoDate(date);
         default:
           return null;
       }
     };
 
+    const dailyStart = getStartOfPeriod('day');
+    const weeklyStart = getStartOfPeriod('week');
+    const monthlyStart = getStartOfPeriod('month');
+    const yearlyStart = getStartOfPeriod('year');
+
+    const buildStatsFromRows = (rows, totalOverride = null) => {
+      const nextStats = {
+        daily: 0,
+        weekly: 0,
+        monthly: 0,
+        yearly: 0,
+        total: 0
+      };
+
+      for (const row of rows || []) {
+        const rowDate = String(row.bucket_date || row.date || '').slice(0, 10);
+        const gpTraded = Number(row.gp_traded ?? row.total) || 0;
+
+        nextStats.total += gpTraded;
+        if (rowDate >= yearlyStart) nextStats.yearly += gpTraded;
+        if (rowDate >= monthlyStart) nextStats.monthly += gpTraded;
+        if (rowDate >= weeklyStart) nextStats.weekly += gpTraded;
+        if (rowDate >= dailyStart) nextStats.daily += gpTraded;
+      }
+
+      if (totalOverride !== null) {
+        nextStats.total = totalOverride;
+      }
+
+      return nextStats;
+    };
+
+    const fetchBoundedStats = async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('date,total')
+        .eq('user_id', userId)
+        .gte('date', yearlyStart)
+        .order('date', { ascending: false })
+        .limit(GP_TRADED_FALLBACK_ROW_CAP);
+
+      if (error) {
+        console.error('Error fetching bounded GP traded fallback:', error);
+        return null;
+      }
+
+      const yearlyStats = buildStatsFromRows(data || []);
+      return { ...yearlyStats, total: yearlyStats.yearly };
+    };
+
     try {
-      // Helper function to fetch ALL transactions with pagination
-      const fetchAllTransactions = async (startDate = null) => {
-        let allData = [];
-        let from = 0;
-        const batchSize = 1000;
-        let hasMore = true;
-
-        while (hasMore) {
-          let query = supabase
-            .from('transactions')
-            .select('total')
-            .eq('user_id', userId)
-            .range(from, from + batchSize - 1);
-
-          if (startDate) {
-            query = query.gte('date', startDate);
-          }
-
-          const { data, error } = await query;
-
-          if (error) {
-            console.error('Error fetching transactions batch:', error);
-            break;
-          }
-
-          if (data && data.length > 0) {
-            allData = allData.concat(data);
-            from += batchSize;
-            hasMore = data.length === batchSize; // Continue if we got a full batch
-          } else {
-            hasMore = false;
-          }
-        }
-
-        return allData;
-      };
-
-      // Fetch all data for each period with pagination
-      const [dailyData, weeklyData, monthlyData, yearlyData, totalData] = await Promise.all([
-        fetchAllTransactions(getStartOfPeriod('day')),
-        fetchAllTransactions(getStartOfPeriod('week')),
-        fetchAllTransactions(getStartOfPeriod('month')),
-        fetchAllTransactions(getStartOfPeriod('year')),
-        fetchAllTransactions(null) // null = all time
-      ]);
-
-      const stats = {
-        daily: dailyData.reduce((sum, t) => sum + (t.total || 0), 0),
-        weekly: weeklyData.reduce((sum, t) => sum + (t.total || 0), 0),
-        monthly: monthlyData.reduce((sum, t) => sum + (t.total || 0), 0),
-        yearly: yearlyData.reduce((sum, t) => sum + (t.total || 0), 0),
-        total: totalData.reduce((sum, t) => sum + (t.total || 0), 0)
-      };
-
-      setStats(stats);
+      setLoading(true);
+      const boundedStats = await fetchBoundedStats();
+      if (boundedStats) {
+        setStats(boundedStats);
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching GP traded stats:', error);
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchGPTradedStats();
+  }, [fetchGPTradedStats]);
 
   return { stats, loading, refetch: fetchGPTradedStats };
 }

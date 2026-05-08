@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState, useEffect } from 'react';
 
 const MAX_CACHE_ENTRIES = 50;
 const cache = new Map();
@@ -201,10 +200,7 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
     error: null,
     fromFallback: false,
   });
-  const requestIdRef = useRef(0);
-  const fallbackDataRef = useRef(fallbackData);
   const fallbackSignature = signatureForFallbackData(fallbackData);
-  fallbackDataRef.current = fallbackData;
 
   useEffect(() => {
     if (!userId) {
@@ -212,14 +208,13 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
       return;
     }
 
-    const currentFallbackData = fallbackDataRef.current;
-    const hasFallbackData = Boolean(currentFallbackData);
+    const hasFallbackData = Boolean(fallbackData);
     const cacheKey = [
       userId,
       start,
       end,
       bucket,
-      hasFallbackData ? 'local' : 'remote',
+      'local',
       fallbackSignature,
     ].join('-');
     if (cache.has(cacheKey)) {
@@ -227,47 +222,14 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
       return;
     }
 
-    const requestId = ++requestIdRef.current;
     setState((current) => ({ ...current, loading: true, error: null }));
 
-    if (hasFallbackData) {
-      const local = aggregateBucketsLocally({ ...currentFallbackData, start, end, bucket });
-      setCachedBuckets(cacheKey, local);
-      setState({ buckets: local, loading: false, error: null, fromFallback: false });
-      return;
-    }
-
-    supabase.rpc('get_analytics_buckets', {
-      p_user_id: userId,
-      p_start: start,
-      p_end: end,
-      p_bucket: bucket,
-    }).then(({ data, error }) => {
-      if (requestId !== requestIdRef.current) return;
-
-      if (error) {
-        const latestFallbackData = fallbackDataRef.current;
-        const local = latestFallbackData
-          ? aggregateBucketsLocally({ ...latestFallbackData, start, end, bucket })
-          : [];
-        setState({ buckets: local, loading: false, error: error.message, fromFallback: true });
-        return;
-      }
-
-      const latestFallbackData = fallbackDataRef.current;
-      const localGpTraded = latestFallbackData?.transactions
-        ? aggregateGpTradedLocally({
-            transactions: latestFallbackData.transactions,
-            start,
-            end,
-            bucket,
-          })
-        : null;
-      const buckets = mergeGpTraded(data || [], localGpTraded);
-      setCachedBuckets(cacheKey, buckets);
-      setState({ buckets, loading: false, error: null, fromFallback: false });
-    });
-  }, [userId, start, end, bucket, fallbackSignature]);
+    const local = hasFallbackData
+      ? aggregateBucketsLocally({ ...fallbackData, start, end, bucket })
+      : [];
+    setCachedBuckets(cacheKey, local);
+    setState({ buckets: local, loading: false, error: null, fromFallback: false });
+  }, [userId, start, end, bucket, fallbackData, fallbackSignature]);
 
   return state;
 }
