@@ -1,7 +1,7 @@
 // Goal-tab aggregation helpers. Operates on milestone_history rows
 // shaped like { period, period_start, achieved_at, goal_amount, actual_amount }.
 
-import { addDays, daysBetween } from './analyticsHelpers';
+import { addDays, inclusiveDayCount } from './analyticsHelpers';
 
 const HIT_RATE_WINDOW = 7;
 
@@ -25,7 +25,7 @@ export function computePeriodEnd(periodStartIso, period) {
 export function proratedRowGoal(row, firstActivityDate) {
   const periodStart = periodDate(row);
   const periodEnd = computePeriodEnd(periodStart, row.period);
-  const totalDays = daysBetween(periodStart, periodEnd) + 1;
+  const totalDays = inclusiveDayCount(periodStart, periodEnd);
   const goal = row.goal_amount || 0;
 
   if (!firstActivityDate || periodStart >= firstActivityDate) {
@@ -36,7 +36,7 @@ export function proratedRowGoal(row, firstActivityDate) {
     return { proratedGoal: goal, isPartial: true, totalDays, activeDays: 0 };
   }
 
-  const activeDays = daysBetween(firstActivityDate, periodEnd) + 1;
+  const activeDays = inclusiveDayCount(firstActivityDate, periodEnd);
   const proratedGoal = totalDays > 0 ? (goal * activeDays) / totalDays : goal;
   return { proratedGoal, isPartial: true, totalDays, activeDays };
 }
@@ -146,16 +146,35 @@ export function estimateTimeToGoal({ currentProgress, goal, elapsedDays, totalDa
   return { daysRemaining, onTrack, pacePerDay, projected };
 }
 
-// Calendar helpers used by the estimator widget. All times in local zone.
+const utcPeriodStart = (now, period) => {
+  if (period === 'day') {
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  }
+  if (period === 'week') {
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const dayOfWeek = (start.getUTCDay() + 6) % 7; // Monday = 0
+    start.setUTCDate(start.getUTCDate() - dayOfWeek);
+    return start;
+  }
+  if (period === 'month') {
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  }
+  if (period === 'year') {
+    return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  }
+  return now;
+};
+
+// Calendar helpers used by the estimator widget. All period boundaries are UTC.
 export const periodTotalDays = (period) => {
   if (period === 'day') return 1;
   if (period === 'week') return 7;
   if (period === 'month') {
     const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
   }
   if (period === 'year') {
-    const year = new Date().getFullYear();
+    const year = new Date().getUTCFullYear();
     const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
     return isLeap ? 366 : 365;
   }
@@ -164,22 +183,8 @@ export const periodTotalDays = (period) => {
 
 export const periodElapsedDays = (period) => {
   const now = new Date();
-  if (period === 'day') {
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return Math.max(1 / 1440, (now - startOfDay) / 86400000);
-  }
-  if (period === 'week') {
-    const dayOfWeek = (now.getDay() + 6) % 7; // Monday = 0
-    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
-    return Math.max(1 / 1440, (now - startOfWeek) / 86400000);
-  }
-  if (period === 'month') {
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    return Math.max(1 / 1440, (now - startOfMonth) / 86400000);
-  }
-  if (period === 'year') {
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    return Math.max(1 / 1440, (now - startOfYear) / 86400000);
+  if (period === 'day' || period === 'week' || period === 'month' || period === 'year') {
+    return Math.max(1 / 1440, (now - utcPeriodStart(now, period)) / 86400000);
   }
   return 1;
 };

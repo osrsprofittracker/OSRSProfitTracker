@@ -99,6 +99,9 @@ function MainAppInner({ session, onLogout }) {
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategoriesContext();
   const {
     transactions, loading: transactionsLoading, addTransaction,
+    loadFullHistory: loadFullTransactions,
+    fullHistoryLoading: fullTransactionsLoading,
+    historyScope: transactionHistoryScope,
     pagedTransactions, pagedLoading, totalCount, totalPages,
     page, pageSize, filters, goToPage, changePageSize, applyFilters, initPaged,
     sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
@@ -108,7 +111,14 @@ function MainAppInner({ session, onLogout }) {
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { notificationPreferences, updateNotificationPreference, loading: notificationSettingsLoading } = useNotificationSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfitsContext();
-  const { profitHistory, loading: profitHistoryLoading, refetch: refetchProfitHistory } = useProfitHistoryContext();
+  const {
+    profitHistory,
+    loading: profitHistoryLoading,
+    refetch: refetchProfitHistory,
+    loadFullHistory: loadFullProfitHistory,
+    fullHistoryLoading: fullProfitHistoryLoading,
+    historyScope: profitHistoryScope
+  } = useProfitHistoryContext();
   const { milestones, milestoneHistory, loading: milestonesLoading, updateMilestone, recordMilestoneAchievement, recordCompletedPeriods, PRESET_GOALS } = useMilestonesContext();
   const { alerts: priceAlerts, allAlerts: allPriceAlerts, loading: priceAlertsLoading, saveAlert: savePriceAlert, dismissAlert: dismissPriceAlert, deactivateAlert: deactivatePriceAlert, updateLastChecked: updatePriceAlertLastChecked, refetch: refetchPriceAlerts } = usePriceAlerts(userId);
   const {
@@ -1189,6 +1199,12 @@ function MainAppInner({ session, onLogout }) {
             milestones={milestones}
             milestoneHistory={milestoneHistory}
             milestoneProgress={milestoneProgress}
+            transactionHistoryScope={transactionHistoryScope}
+            profitHistoryScope={profitHistoryScope}
+            loadFullTransactions={loadFullTransactions}
+            loadFullProfitHistory={loadFullProfitHistory}
+            fullTransactionsLoading={fullTransactionsLoading}
+            fullProfitHistoryLoading={fullProfitHistoryLoading}
           />
         ) : currentPage === 'watchlist' ? (
           <WatchlistPage

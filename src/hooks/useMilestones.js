@@ -9,23 +9,18 @@ const getPeriodStart = (date, period) => {
   const d = new Date(date);
   switch (period) {
     case 'day':
-      d.setHours(0, 0, 0, 0);
-      return d;
+      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
     case 'week': {
-      const day = d.getDay();
+      const day = d.getUTCDay();
       const diff = day === 0 ? -6 : 1 - day; // Monday = start
-      d.setDate(d.getDate() + diff);
-      d.setHours(0, 0, 0, 0);
-      return d;
+      const start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+      start.setUTCDate(start.getUTCDate() + diff);
+      return start;
     }
     case 'month':
-      d.setDate(1);
-      d.setHours(0, 0, 0, 0);
-      return d;
+      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
     case 'year':
-      d.setMonth(0, 1);
-      d.setHours(0, 0, 0, 0);
-      return d;
+      return new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     default:
       return d;
   }
@@ -35,16 +30,16 @@ const getPeriodEnd = (periodStart, period) => {
   const d = new Date(periodStart);
   switch (period) {
     case 'day':
-      d.setDate(d.getDate() + 1);
+      d.setUTCDate(d.getUTCDate() + 1);
       return d;
     case 'week':
-      d.setDate(d.getDate() + 7);
+      d.setUTCDate(d.getUTCDate() + 7);
       return d;
     case 'month':
-      d.setMonth(d.getMonth() + 1);
+      d.setUTCMonth(d.getUTCMonth() + 1);
       return d;
     case 'year':
-      d.setFullYear(d.getFullYear() + 1);
+      d.setUTCFullYear(d.getUTCFullYear() + 1);
       return d;
     default:
       return d;
@@ -66,13 +61,7 @@ const generatePastPeriods = (period, minDate) => {
   return periods;
 };
 
-// Convert a Date to a YYYY-MM-DD string (local time)
-const toDateString = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
+const toDateString = (date) => date.toISOString().slice(0, 10);
 
 // ---
 
@@ -196,7 +185,7 @@ export function useMilestones(userId) {
     const entryDates = profitHistory.map(e => new Date(e.created_at).getTime());
     const minDate = new Date(Math.min(...entryDates));
     const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    oneYearAgo.setUTCFullYear(oneYearAgo.getUTCFullYear() - 1);
     const effectiveMinDate = minDate < oneYearAgo ? oneYearAgo : minDate;
 
     const periodTypes = ['day', 'week', 'month', 'year'];

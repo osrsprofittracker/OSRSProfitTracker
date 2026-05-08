@@ -31,16 +31,16 @@ export function UIStateProvider({ userId, children }) {
     if (!profitHistory) return { day: 0, week: 0, month: 0, year: 0 };
 
     const getStartOfPeriod = (period) => {
-      const date = new Date();
-      if (period === 'day') { date.setHours(0, 0, 0, 0); return date; }
+      const now = new Date();
+      const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      if (period === 'day') return date;
       if (period === 'week') {
-        const diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-        date.setDate(diff);
-        date.setHours(0, 0, 0, 0);
+        const dayOfWeek = (date.getUTCDay() + 6) % 7;
+        date.setUTCDate(date.getUTCDate() - dayOfWeek);
         return date;
       }
-      if (period === 'month') { date.setDate(1); date.setHours(0, 0, 0, 0); return date; }
-      if (period === 'year') { date.setMonth(0, 1); date.setHours(0, 0, 0, 0); return date; }
+      if (period === 'month') return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      if (period === 'year') return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
       return date;
     };
 

@@ -17,7 +17,7 @@ export default function MoversList({
         </h3>
       </div>
       <ul className="items-movers-list">
-        {gainers.length === 0 && <li className="items-muted">No sold items to rank.</li>}
+        {gainers.length === 0 && <li className="items-muted">No items have realized a gain in this view yet.</li>}
         {gainers.map((item) => {
           const value = Number(item.totalProfit) || 0;
           const valueClassName = value < 0 ? 'items-profit-negative' : 'items-profit-positive';

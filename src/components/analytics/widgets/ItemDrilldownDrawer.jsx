@@ -179,7 +179,7 @@ export default function ItemDrilldownDrawer({
             Realized profit per day
           </h3>
           {profitSeries.length === 0 ? (
-            <div className="analytics-widget-empty">No linked profit rows for this item.</div>
+            <div className="analytics-widget-empty">No linked profit rows for this item in the selected timeframe.</div>
           ) : (
             <div className="items-chart is-drawer">
               <ResponsiveContainer width="100%" height="100%">

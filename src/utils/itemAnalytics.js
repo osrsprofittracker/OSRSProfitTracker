@@ -1,4 +1,5 @@
 import { calculateUnrealizedProfit } from './taxUtils';
+import { applyAverageCostExit } from './positionAnalytics';
 
 export const isoOf = (value) => String(value || '').slice(0, 10);
 export const stockIdOf = (row) => row?.stockId ?? row?.stock_id;
@@ -92,9 +93,19 @@ export function computeItemMetrics({
 }
 
 export function computeMovers(items = [], count = 5) {
+  const normalizedItems = [...items].map((item) => ({
+    ...item,
+    totalProfit: Number(item.totalProfit) || 0,
+  }));
+
   return {
-    gainers: [...items]
-      .sort((a, b) => (Number(b.totalProfit) || 0) - (Number(a.totalProfit) || 0))
+    gainers: normalizedItems
+      .filter((item) => item.totalProfit > 0)
+      .sort((a, b) => b.totalProfit - a.totalProfit)
+      .slice(0, count),
+    losers: normalizedItems
+      .filter((item) => item.totalProfit < 0)
+      .sort((a, b) => a.totalProfit - b.totalProfit)
       .slice(0, count),
   };
 }
@@ -121,8 +132,7 @@ export function buildDailyItemProfit({ itemId, transactions = [], profitHistory 
   const profitByTx = buildStockProfitByTransaction(profitHistory);
   const byDay = new Map();
   const dates = [];
-  let heldShares = 0;
-  let heldCost = 0;
+  const position = { shares: 0, cost: 0 };
 
   const itemTransactions = (transactions || [])
     .filter((tx) => String(stockIdOf(tx)) === String(itemId))
@@ -133,18 +143,24 @@ export function buildDailyItemProfit({ itemId, transactions = [], profitHistory 
     const total = Number(tx.total) || 0;
 
     if (tx.type === 'buy') {
-      heldShares += shares;
-      heldCost += total;
+      position.shares += shares;
+      position.cost += total;
       continue;
     }
 
     const iso = isoOf(tx.date);
+    if (tx.type === 'remove') {
+      const nextPosition = applyAverageCostExit(position, shares);
+      position.shares = nextPosition.shares;
+      position.cost = nextPosition.cost;
+      continue;
+    }
+
     if (tx.type !== 'sell') continue;
 
-    const averageCost = heldShares > 0 ? heldCost / heldShares : 0;
-    const estimatedBasis = averageCost * shares;
-    heldShares = Math.max(0, heldShares - shares);
-    heldCost = Math.max(0, heldCost - estimatedBasis);
+    const nextPosition = applyAverageCostExit(position, shares);
+    position.shares = nextPosition.shares;
+    position.cost = nextPosition.cost;
 
     if (start && end && !inWindow(iso, start, end)) continue;
     dates.push(iso);
@@ -152,12 +168,12 @@ export function buildDailyItemProfit({ itemId, transactions = [], profitHistory 
     const txKey = String(tx.id);
     const profit = profitByTx.has(txKey)
       ? profitByTx.get(txKey)
-      : total - estimatedBasis;
+      : total - nextPosition.estimatedBasis;
 
     byDay.set(iso, (byDay.get(iso) || 0) + profit);
   }
 
-  if (!dates.length && (!start || !end)) return [];
+  if (!dates.length) return [];
 
   const startDateIso = start || dates.sort()[0];
   const endDateIso = end || dates[dates.length - 1];

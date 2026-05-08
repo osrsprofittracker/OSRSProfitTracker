@@ -4,7 +4,7 @@ import { formatNumber } from '../../../utils/formatters';
 const sumSells = (buckets = []) => buckets.reduce((sum, bucket) => sum + Number(bucket.sells_count || 0), 0);
 const sumWins = (buckets = []) => buckets.reduce((sum, bucket) => sum + Number(bucket.wins_count || 0), 0);
 const sumProfitItems = (buckets = []) => buckets.reduce((sum, bucket) => sum + Number(bucket.profit_items || 0), 0);
-const sumGp = (buckets = []) => buckets.reduce((sum, bucket) => sum + Number(bucket.gp_traded || 0), 0);
+const sumSellBasis = (buckets = []) => buckets.reduce((sum, bucket) => sum + Number(bucket.sell_basis || 0), 0);
 
 const fmtPct = (value) => (Number.isFinite(value) ? `${value.toFixed(1)}%` : '-');
 const pctDelta = (current, prior) => (prior > 0 ? ((current - prior) / Math.abs(prior)) * 100 : null);
@@ -29,17 +29,17 @@ export default function ProfitKpiStrip({ currentBuckets = [], priorBuckets = [],
   const sells = sumSells(currentBuckets);
   const wins = sumWins(currentBuckets);
   const itemProfit = sumProfitItems(currentBuckets);
-  const gp = sumGp(currentBuckets);
+  const sellBasis = sumSellBasis(currentBuckets);
 
   const priorSells = sumSells(priorBuckets);
   const priorWins = sumWins(priorBuckets);
   const priorItemProfit = sumProfitItems(priorBuckets);
-  const priorGp = sumGp(priorBuckets);
+  const priorSellBasis = sumSellBasis(priorBuckets);
 
   const avgPerSell = sells > 0 ? itemProfit / sells : 0;
   const priorAvgPerSell = priorSells > 0 ? priorItemProfit / priorSells : 0;
-  const avgMargin = gp > 0 ? (itemProfit / gp) * 100 : 0;
-  const priorAvgMargin = priorGp > 0 ? (priorItemProfit / priorGp) * 100 : 0;
+  const avgMargin = sellBasis > 0 ? (itemProfit / sellBasis) * 100 : 0;
+  const priorAvgMargin = priorSellBasis > 0 ? (priorItemProfit / priorSellBasis) * 100 : 0;
   const winRate = sells > 0 ? (wins / sells) * 100 : 0;
   const priorWinRate = priorSells > 0 ? (priorWins / priorSells) * 100 : 0;
 
@@ -64,7 +64,7 @@ export default function ProfitKpiStrip({ currentBuckets = [], priorBuckets = [],
           label="Avg margin"
           value={fmtPct(avgMargin)}
           delta={pctDelta(avgMargin, priorAvgMargin)}
-          tooltip="Item profit divided by GP traded in the selected timeframe. Delta compares against the immediately previous timeframe of the same length."
+          tooltip="Item profit divided by the sold cost basis in the selected timeframe. Delta compares against the immediately previous timeframe of the same length."
         />
         <Mini
           label="Win rate"

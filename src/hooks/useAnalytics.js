@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState, useEffect } from 'react';
 
+const MAX_CACHE_ENTRIES = 50;
 const cache = new Map();
 
 const truncDay = (dateStr) => dateStr.slice(0, 10);
@@ -48,6 +48,7 @@ const mergeGpTraded = (buckets, gpTotals) => {
       profit_referral: 0,
       profit_bonds: 0,
       gp_traded: 0,
+      sell_basis: 0,
       by_category: {},
       sells_count: 0,
       wins_count: 0,
@@ -60,15 +61,76 @@ const mergeGpTraded = (buckets, gpTotals) => {
   return [...byDate.values()].sort((a, b) => a.bucket_date.localeCompare(b.bucket_date));
 };
 
-const signatureFor = (rows = []) => (
-  rows.length > 0
-    ? `${rows.length}-${rows[0]?.id || ''}-${rows[rows.length - 1]?.id || ''}`
-    : '0'
-);
+const addHashPart = (hash, value) => {
+  const text = value == null ? '' : String(value);
+  let next = hash;
+
+  for (let index = 0; index < text.length; index += 1) {
+    next ^= text.charCodeAt(index);
+    next = Math.imul(next, 16777619);
+  }
+
+  next ^= 31;
+  return Math.imul(next, 16777619);
+};
+
+const signatureFor = (rows = [], fields = []) => {
+  if (!rows.length) return '0';
+
+  let hash = 2166136261;
+
+  for (const row of rows) {
+    for (const field of fields) {
+      hash = addHashPart(hash, field(row));
+    }
+  }
+
+  return `${rows.length}-${(hash >>> 0).toString(36)}`;
+};
+
+const transactionSignatureFields = [
+  (row) => row.id,
+  (row) => row.stockId ?? row.stock_id,
+  (row) => row.date,
+  (row) => row.type,
+  (row) => row.shares,
+  (row) => row.price,
+  (row) => row.total,
+];
+
+const stockSignatureFields = [
+  (row) => row.id,
+  (row) => row.category,
+];
+
+const profitHistorySignatureFields = [
+  (row) => row.id,
+  (row) => row.transactionId ?? row.transaction_id,
+  (row) => row.stockId ?? row.stock_id,
+  (row) => row.profitType ?? row.profit_type,
+  (row) => row.amount,
+  (row) => row.createdAt ?? row.created_at,
+];
+
+const signatureForFallbackData = (fallbackData) => [
+  signatureFor(fallbackData?.transactions, transactionSignatureFields),
+  signatureFor(fallbackData?.stocks, stockSignatureFields),
+  signatureFor(fallbackData?.profitHistory, profitHistorySignatureFields),
+].join('-');
+
+const setCachedBuckets = (key, buckets) => {
+  if (cache.has(key)) cache.delete(key);
+  cache.set(key, buckets);
+
+  while (cache.size > MAX_CACHE_ENTRIES) {
+    const oldestKey = cache.keys().next().value;
+    cache.delete(oldestKey);
+  }
+};
 
 export function aggregateBucketsLocally({ transactions, stocks, profitHistory, start, end, bucket }) {
   const stockMap = new Map((stocks || []).map((stock) => [stock.id, stock]));
-  const txMap = new Map((transactions || []).map((tx) => [tx.id, tx]));
+  const txMap = new Map((transactions || []).map((tx) => [String(tx.id), tx]));
   const inWindow = (iso) => iso >= start && iso <= end;
   const buckets = new Map();
 
@@ -81,6 +143,7 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
         profit_referral: 0,
         profit_bonds: 0,
         gp_traded: 0,
+        sell_basis: 0,
         by_category: {},
         sells_count: 0,
         wins_count: 0,
@@ -100,7 +163,7 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
   }
 
   for (const profit of profitHistory || []) {
-    const tx = txMap.get(profit.transaction_id);
+    const tx = txMap.get(String(profit.transaction_id ?? profit.transactionId ?? ''));
     const isoSource = profit.profit_type === 'stock' && tx?.date ? tx.date : profit.created_at;
     const iso = String(isoSource || '').slice(0, 10);
     if (!inWindow(iso)) continue;
@@ -112,8 +175,10 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
     if (profit.profit_type === 'stock') {
       const stockId = profit.stock_id ?? tx?.stock_id ?? tx?.stockId;
       const category = stockMap.get(stockId)?.category || 'Uncategorized';
+      const sellTotal = Number(tx?.total) || 0;
 
       row.profit_items += amount;
+      row.sell_basis += Math.max(0, sellTotal - amount);
       row.sells_count += 1;
       if (amount > 0) row.wins_count += 1;
       row.by_category[category] = (row.by_category[category] || 0) + amount;
@@ -135,7 +200,7 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
     error: null,
     fromFallback: false,
   });
-  const requestIdRef = useRef(0);
+  const fallbackSignature = signatureForFallbackData(fallbackData);
 
   useEffect(() => {
     if (!userId) {
@@ -149,54 +214,22 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
       start,
       end,
       bucket,
-      signatureFor(fallbackData?.transactions),
-      signatureFor(fallbackData?.stocks),
-      signatureFor(fallbackData?.profitHistory),
+      'local',
+      fallbackSignature,
     ].join('-');
     if (cache.has(cacheKey)) {
       setState({ buckets: cache.get(cacheKey), loading: false, error: null, fromFallback: false });
       return;
     }
 
-    const requestId = ++requestIdRef.current;
     setState((current) => ({ ...current, loading: true, error: null }));
 
-    if (hasFallbackData) {
-      const local = aggregateBucketsLocally({ ...fallbackData, start, end, bucket });
-      cache.set(cacheKey, local);
-      setState({ buckets: local, loading: false, error: null, fromFallback: false });
-      return;
-    }
-
-    supabase.rpc('get_analytics_buckets', {
-      p_user_id: userId,
-      p_start: start,
-      p_end: end,
-      p_bucket: bucket,
-    }).then(({ data, error }) => {
-      if (requestId !== requestIdRef.current) return;
-
-      if (error) {
-        const local = fallbackData
-          ? aggregateBucketsLocally({ ...fallbackData, start, end, bucket })
-          : [];
-        setState({ buckets: local, loading: false, error: error.message, fromFallback: true });
-        return;
-      }
-
-      const localGpTraded = fallbackData?.transactions
-        ? aggregateGpTradedLocally({
-            transactions: fallbackData.transactions,
-            start,
-            end,
-            bucket,
-          })
-        : null;
-      const buckets = mergeGpTraded(data || [], localGpTraded);
-      cache.set(cacheKey, buckets);
-      setState({ buckets, loading: false, error: null, fromFallback: false });
-    });
-  }, [userId, start, end, bucket, fallbackData]);
+    const local = hasFallbackData
+      ? aggregateBucketsLocally({ ...fallbackData, start, end, bucket })
+      : [];
+    setCachedBuckets(cacheKey, local);
+    setState({ buckets: local, loading: false, error: null, fromFallback: false });
+  }, [userId, start, end, bucket, fallbackData, fallbackSignature]);
 
   return state;
 }

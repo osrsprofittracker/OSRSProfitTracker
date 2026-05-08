@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { subtractDays, toIsoDate } from '../utils/analyticsHelpers';
 
 const WINDOW_OPTIONS = ['1W', '1M', '3M', '6M', '1Y', 'All'];
 
@@ -27,8 +28,6 @@ const daysForWindow = (window) => {
   }
 };
 
-const toIsoDate = (date) => date.toISOString().slice(0, 10);
-
 export function useAnalyticsTimeframe(userId, allTimeStart = null) {
   const storageKey = `analyticsTimeframe_${userId}`;
 
@@ -44,8 +43,7 @@ export function useAnalyticsTimeframe(userId, allTimeStart = null) {
   }, [storageKey]);
 
   const { start, end, bucket } = useMemo(() => {
-    const today = new Date();
-    const endIso = toIsoDate(today);
+    const endIso = toIsoDate(new Date());
     const days = daysForWindow(window);
 
     if (days == null) {
@@ -56,11 +54,8 @@ export function useAnalyticsTimeframe(userId, allTimeStart = null) {
       };
     }
 
-    const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - days);
-
     return {
-      start: toIsoDate(startDate),
+      start: subtractDays(endIso, days - 1),
       end: endIso,
       bucket: bucketForWindow(window),
     };

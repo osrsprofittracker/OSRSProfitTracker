@@ -80,10 +80,10 @@ export default function CategoriesTab({
 
   useEffect(() => {
     if (!drillCategory) return;
-    if (!visibleCategories.includes(drillCategory.category)) {
+    if (selectedCategories.length > 0 && !selectedCategories.includes(drillCategory.category)) {
       setDrillCategory(null);
     }
-  }, [drillCategory, visibleCategories]);
+  }, [drillCategory, selectedCategories]);
 
   const toggleCategory = (category) => {
     setSelectedCategories((current) => (
