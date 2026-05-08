@@ -1,9 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
+const RECENT_TRANSACTION_WINDOW_DAYS = 90;
+const RECENT_TRANSACTION_ROW_CAP = 10000;
+const FULL_TRANSACTION_ROW_CAP = 50000;
+const TRANSACTION_BATCH_SIZE = 1000;
+const DAY_MS = 86400_000;
+
 export function useTransactions(userId) {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fullHistoryLoading, setFullHistoryLoading] = useState(false);
+  const [historyScope, setHistoryScope] = useState({
+    full: false,
+    since: null,
+    rowCap: RECENT_TRANSACTION_ROW_CAP,
+    capped: false
+  });
 
   // Paginated state
   const [page, setPage] = useState(1);
@@ -14,40 +27,69 @@ export function useTransactions(userId) {
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
 
-  const fetchTransactions = useCallback(async () => {
+  const fetchTransactions = useCallback(async (options = {}) => {
+    if (!userId) {
+      setTransactions([]);
+      setLoading(false);
+      return;
+    }
+
+    const { full = false } = options;
+    const rowCap = full ? FULL_TRANSACTION_ROW_CAP : RECENT_TRANSACTION_ROW_CAP;
+    const since = full
+      ? null
+      : new Date(Date.now() - RECENT_TRANSACTION_WINDOW_DAYS * DAY_MS).toISOString();
     const allData = [];
-    const batchSize = 1000;
     let from = 0;
     let hasMore = true;
 
+    setLoading(true);
+    if (full) setFullHistoryLoading(true);
+
     while (hasMore) {
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
         .eq('user_id', userId)
-        .order('date', { ascending: false })
-        .range(from, from + batchSize - 1);
+        .order('date', { ascending: false });
+
+      if (since) {
+        query = query.gte('date', since);
+      }
+
+      const remaining = rowCap - allData.length;
+      const batchSize = Math.min(TRANSACTION_BATCH_SIZE, remaining);
+      const { data, error } = await query.range(from, from + batchSize - 1);
 
       if (error) {
         console.error('Error fetching transactions:', error);
         setTransactions([]);
         setLoading(false);
+        setFullHistoryLoading(false);
         return;
       }
 
       allData.push(...(data || []));
-      hasMore = (data || []).length === batchSize;
+      hasMore = (data || []).length === batchSize && allData.length < rowCap;
       from += batchSize;
     }
 
     setTransactions(allData.map(formatRow));
+    setHistoryScope({
+      full,
+      since,
+      rowCap,
+      capped: allData.length >= rowCap
+    });
     setLoading(false);
+    setFullHistoryLoading(false);
   }, [userId]);
 
   useEffect(() => {
-    if (!userId) return;
     fetchTransactions();
   }, [userId, fetchTransactions]);
+
+  const loadFullHistory = useCallback(() => fetchTransactions({ full: true }), [fetchTransactions]);
 
   // Paginated fetch - used by HistoryPage
   const fetchPage = useCallback(async (targetPage, size, activeFilters, activeSort = sortConfig) => {
@@ -272,6 +314,7 @@ export function useTransactions(userId) {
   return {
     // Original API - unchanged
     transactions, loading, addTransaction, refetch: fetchTransactions,
+    loadFullHistory, fullHistoryLoading, historyScope,
     // Paginated API - for HistoryPage
     pagedTransactions, pagedLoading, totalCount, totalPages,
     page, pageSize, filters,
