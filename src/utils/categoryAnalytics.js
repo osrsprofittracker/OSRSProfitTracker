@@ -193,14 +193,12 @@ const addTransactionWindowMetrics = ({
   byCategory,
   stocks,
   transactions,
-  profitHistory,
   start,
   end,
 }) => {
   if (!start || !end) return;
 
   const stocksById = new Map((stocks || []).map((stock) => [String(stock.id), stock]));
-  const profitByTransaction = buildProfitByTransaction(profitHistory);
   const positions = new Map();
   const sortedTransactions = [...(transactions || [])]
     .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
@@ -245,12 +243,8 @@ const addTransactionWindowMetrics = ({
 
     const nextPosition = applyAverageCostExit(position, shares);
     const estimatedBasis = nextPosition.estimatedBasis;
-    const transactionProfit = profitByTransaction.has(String(transaction.id))
-      ? profitByTransaction.get(String(transaction.id))
-      : total - estimatedBasis;
-    const basis = Math.max(0, total - transactionProfit);
 
-    if (inWindow) row.windowBasis += basis;
+    if (inWindow) row.windowBasis += estimatedBasis;
 
     position.shares = nextPosition.shares;
     position.cost = nextPosition.cost;
@@ -377,7 +371,6 @@ export function computeCategoryBreakdown({
     byCategory,
     stocks,
     transactions,
-    profitHistory,
     start,
     end,
   });
