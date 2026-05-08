@@ -18,6 +18,7 @@ function json(statusCode, body, headers = {}) {
 function responseHeaders(config, cached, source) {
   return {
     'Cache-Control': config.browserCacheControl,
+    'CDN-Cache-Control': config.cdnCacheControl,
     'Netlify-CDN-Cache-Control': config.cdnCacheControl,
     'X-GE-Cache-Source': source,
     'X-GE-Cache-Fetched-At': cached.fetchedAt || '',
@@ -28,8 +29,20 @@ function staleResponseHeaders(config, cached) {
   return {
     ...responseHeaders(config, cached, 'stale-blob'),
     'Cache-Control': 'no-store',
+    'CDN-Cache-Control': 'no-store',
     'Netlify-CDN-Cache-Control': 'no-store',
   };
+}
+
+function getRequestedEndpoint(request) {
+  const url = new URL(request.url);
+  const endpoint = url.searchParams.get('endpoint');
+  if (endpoint) return endpoint;
+
+  const pathEndpoint = url.pathname.split('/').filter(Boolean).pop();
+  if (pathEndpoint && pathEndpoint !== 'ge-prices') return pathEndpoint;
+
+  return 'latest';
 }
 
 export default async function handler(request) {
@@ -37,8 +50,7 @@ export default async function handler(request) {
     return json(405, { error: 'Method not allowed' });
   }
 
-  const url = new URL(request.url);
-  const endpoint = url.searchParams.get('endpoint') || 'latest';
+  const endpoint = getRequestedEndpoint(request);
   const config = getEndpointConfig(endpoint);
 
   if (!config) {
