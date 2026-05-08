@@ -19,7 +19,7 @@ export function useGEPrices() {
 
   const fetchGEEndpoint = async (endpoint) => {
     try {
-      const res = await fetch(`${PROXY_URL}?endpoint=${endpoint}`);
+      const res = await fetch(`${PROXY_URL}/${endpoint}`);
       const contentType = res.headers.get('content-type') || '';
       if (res.ok && contentType.includes('application/json')) return res;
     } catch (proxyError) {

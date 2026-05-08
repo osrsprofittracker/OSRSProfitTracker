@@ -7,9 +7,9 @@ export const ENDPOINTS = {
   latest: {
     path: '/latest',
     key: 'latest',
-    maxBlobAgeMs: 55_000,
-    cdnCacheControl: 'public, max-age=15, stale-while-revalidate=45',
-    browserCacheControl: 'public, max-age=15, stale-while-revalidate=45',
+    maxBlobAgeMs: 70_000,
+    cdnCacheControl: 'public, max-age=60, stale-while-revalidate=30',
+    browserCacheControl: 'public, max-age=30, stale-while-revalidate=30',
   },
   mapping: {
     path: '/mapping',
