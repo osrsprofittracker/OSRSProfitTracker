@@ -1,7 +1,7 @@
 const { getStore } = require('@netlify/blobs');
 
 function getJmodStore() {
-  return getStore('jmod-comments');
+  return getStore({ name: 'jmod-comments', consistency: 'strong' });
 }
 
 const JSON_HEADERS = {

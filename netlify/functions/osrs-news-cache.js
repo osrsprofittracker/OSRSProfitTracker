@@ -1,7 +1,7 @@
 const { getStore } = require('@netlify/blobs');
 
 function getNewsStore() {
-  return getStore('osrs-news');
+  return getStore({ name: 'osrs-news', consistency: 'strong' });
 }
 
 function parseArticles(html) {
@@ -73,5 +73,5 @@ exports.handler = async () => {
 };
 
 exports.config = {
-  schedule: '*/1 * * * *',
+  schedule: '*/10 * * * *',
 };

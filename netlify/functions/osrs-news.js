@@ -1,7 +1,7 @@
 const { getStore } = require('@netlify/blobs');
 
 function getNewsStore() {
-  return getStore('osrs-news');
+  return getStore({ name: 'osrs-news', consistency: 'strong' });
 }
 
 const JSON_HEADERS = {
