@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
+const MAX_CACHE_ENTRIES = 50;
 const cache = new Map();
 
 const truncDay = (dateStr) => dateStr.slice(0, 10);
@@ -61,11 +62,72 @@ const mergeGpTraded = (buckets, gpTotals) => {
   return [...byDate.values()].sort((a, b) => a.bucket_date.localeCompare(b.bucket_date));
 };
 
-const signatureFor = (rows = []) => (
-  rows.length > 0
-    ? `${rows.length}-${rows[0]?.id || ''}-${rows[rows.length - 1]?.id || ''}`
-    : '0'
-);
+const addHashPart = (hash, value) => {
+  const text = value == null ? '' : String(value);
+  let next = hash;
+
+  for (let index = 0; index < text.length; index += 1) {
+    next ^= text.charCodeAt(index);
+    next = Math.imul(next, 16777619);
+  }
+
+  next ^= 31;
+  return Math.imul(next, 16777619);
+};
+
+const signatureFor = (rows = [], fields = []) => {
+  if (!rows.length) return '0';
+
+  let hash = 2166136261;
+
+  for (const row of rows) {
+    for (const field of fields) {
+      hash = addHashPart(hash, field(row));
+    }
+  }
+
+  return `${rows.length}-${(hash >>> 0).toString(36)}`;
+};
+
+const transactionSignatureFields = [
+  (row) => row.id,
+  (row) => row.stockId ?? row.stock_id,
+  (row) => row.date,
+  (row) => row.type,
+  (row) => row.shares,
+  (row) => row.price,
+  (row) => row.total,
+];
+
+const stockSignatureFields = [
+  (row) => row.id,
+  (row) => row.category,
+];
+
+const profitHistorySignatureFields = [
+  (row) => row.id,
+  (row) => row.transactionId ?? row.transaction_id,
+  (row) => row.stockId ?? row.stock_id,
+  (row) => row.profitType ?? row.profit_type,
+  (row) => row.amount,
+  (row) => row.createdAt ?? row.created_at,
+];
+
+const signatureForFallbackData = (fallbackData) => [
+  signatureFor(fallbackData?.transactions, transactionSignatureFields),
+  signatureFor(fallbackData?.stocks, stockSignatureFields),
+  signatureFor(fallbackData?.profitHistory, profitHistorySignatureFields),
+].join('-');
+
+const setCachedBuckets = (key, buckets) => {
+  if (cache.has(key)) cache.delete(key);
+  cache.set(key, buckets);
+
+  while (cache.size > MAX_CACHE_ENTRIES) {
+    const oldestKey = cache.keys().next().value;
+    cache.delete(oldestKey);
+  }
+};
 
 export function aggregateBucketsLocally({ transactions, stocks, profitHistory, start, end, bucket }) {
   const stockMap = new Map((stocks || []).map((stock) => [stock.id, stock]));
@@ -140,6 +202,9 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
     fromFallback: false,
   });
   const requestIdRef = useRef(0);
+  const fallbackDataRef = useRef(fallbackData);
+  const fallbackSignature = signatureForFallbackData(fallbackData);
+  fallbackDataRef.current = fallbackData;
 
   useEffect(() => {
     if (!userId) {
@@ -147,15 +212,15 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
       return;
     }
 
-    const hasFallbackData = Boolean(fallbackData);
+    const currentFallbackData = fallbackDataRef.current;
+    const hasFallbackData = Boolean(currentFallbackData);
     const cacheKey = [
       userId,
       start,
       end,
       bucket,
-      signatureFor(fallbackData?.transactions),
-      signatureFor(fallbackData?.stocks),
-      signatureFor(fallbackData?.profitHistory),
+      hasFallbackData ? 'local' : 'remote',
+      fallbackSignature,
     ].join('-');
     if (cache.has(cacheKey)) {
       setState({ buckets: cache.get(cacheKey), loading: false, error: null, fromFallback: false });
@@ -166,8 +231,8 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
     setState((current) => ({ ...current, loading: true, error: null }));
 
     if (hasFallbackData) {
-      const local = aggregateBucketsLocally({ ...fallbackData, start, end, bucket });
-      cache.set(cacheKey, local);
+      const local = aggregateBucketsLocally({ ...currentFallbackData, start, end, bucket });
+      setCachedBuckets(cacheKey, local);
       setState({ buckets: local, loading: false, error: null, fromFallback: false });
       return;
     }
@@ -181,26 +246,28 @@ export function useAnalytics({ userId, start, end, bucket, fallbackData }) {
       if (requestId !== requestIdRef.current) return;
 
       if (error) {
-        const local = fallbackData
-          ? aggregateBucketsLocally({ ...fallbackData, start, end, bucket })
+        const latestFallbackData = fallbackDataRef.current;
+        const local = latestFallbackData
+          ? aggregateBucketsLocally({ ...latestFallbackData, start, end, bucket })
           : [];
         setState({ buckets: local, loading: false, error: error.message, fromFallback: true });
         return;
       }
 
-      const localGpTraded = fallbackData?.transactions
+      const latestFallbackData = fallbackDataRef.current;
+      const localGpTraded = latestFallbackData?.transactions
         ? aggregateGpTradedLocally({
-            transactions: fallbackData.transactions,
+            transactions: latestFallbackData.transactions,
             start,
             end,
             bucket,
           })
         : null;
       const buckets = mergeGpTraded(data || [], localGpTraded);
-      cache.set(cacheKey, buckets);
+      setCachedBuckets(cacheKey, buckets);
       setState({ buckets, loading: false, error: null, fromFallback: false });
     });
-  }, [userId, start, end, bucket, fallbackData]);
+  }, [userId, start, end, bucket, fallbackSignature]);
 
   return state;
 }
