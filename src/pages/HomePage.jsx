@@ -3,6 +3,7 @@ import { formatNumber } from '../utils/formatters';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
+import PriceMoversWidget from '../components/PriceMoversWidget';
 import '../styles/home-page.css';
 
 const SORT_OPTIONS = [
@@ -14,6 +15,9 @@ const SORT_OPTIONS = [
   { value: 'soldCost',   label: 'Total Sold Cost' },
   { value: 'unrealized', label: 'Unrealized Profit' },
 ];
+
+const TOP_ITEMS_LIMIT = 14;
+const TOP_ITEMS_COLUMN_SIZE = 7;
 
 export default function HomePage({
   transactions,
@@ -99,7 +103,7 @@ export default function HomePage({
       };
       return sortMap[topItemsSortBy] ?? 0;
     })
-    .slice(0, 10) || [];
+    .slice(0, TOP_ITEMS_LIMIT) || [];
 
   const watchlistOpportunities = useMemo(() => {
     if (!watchlistItems.length) return [];
@@ -256,9 +260,9 @@ export default function HomePage({
         </div>
       </div>
 
-      <div className="activity-grid">
+      <div className="home-dashboard-grid">
         {/* Recent Activity */}
-        <div className="activity-section">
+        <div className="activity-section home-dashboard-main">
           <h3 className="activity-section-title">
             <span>📜</span> Recent Activity
           </h3>
@@ -319,8 +323,90 @@ export default function HomePage({
           )}
         </div>
 
+        {/* Top Items */}
+        <div className="activity-section home-dashboard-top-items">
+          <h3 className="activity-section-title">
+            <span>🏆</span> Top Items
+            <select
+              className="top-items-sort-select"
+              value={topItemsSortBy}
+              onChange={e => setTopItemsSortBy(e.target.value)}
+            >
+              {SORT_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </h3>
+          <div className="top-items-grid">
+            {topItems.length === 0 ? (
+              <p className="activity-empty">No items to display</p>
+            ) : (
+              [
+                topItems.slice(0, TOP_ITEMS_COLUMN_SIZE),
+                topItems.slice(TOP_ITEMS_COLUMN_SIZE, TOP_ITEMS_LIMIT)
+              ].map((col, colIdx) => (
+                <div key={colIdx} className="top-items-column">
+                  {col.map((item, idx) => {
+                    let displayValue, displayValueClass, subtitle;
+
+                    if (topItemsSortBy === 'profit') {
+                      displayValue = formatNumber(item.profit, numberFormat);
+                      displayValueClass = item.profit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
+                      subtitle = `Sold: ${item.sharesSold?.toLocaleString()} | Margin: ${item.margin.toFixed(2)}%`;
+                    } else if (topItemsSortBy === 'margin') {
+                      displayValue = `${item.margin.toFixed(2)}%`;
+                      displayValueClass = item.margin >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
+                      subtitle = `Profit: ${formatNumber(item.profit, numberFormat)} | Sold: ${item.sharesSold?.toLocaleString()}`;
+                    } else if (topItemsSortBy === 'stock') {
+                      displayValue = item.shares?.toLocaleString();
+                      displayValueClass = 'activity-item-value-neutral';
+                      subtitle = `Total Cost: ${formatNumber(item.totalCost, numberFormat)}`;
+                    } else if (topItemsSortBy === 'totalCost') {
+                      displayValue = formatNumber(item.totalCost, numberFormat);
+                      displayValueClass = 'activity-item-value-neutral';
+                      subtitle = `Quantity held: ${item.shares?.toLocaleString()}`;
+                    } else if (topItemsSortBy === 'soldStock') {
+                      displayValue = item.sharesSold?.toLocaleString();
+                      displayValueClass = 'activity-item-value-neutral';
+                      subtitle = `Total Sold Cost: ${formatNumber(item.totalCostSold, numberFormat)}`;
+                    } else if (topItemsSortBy === 'soldCost') {
+                      displayValue = formatNumber(item.totalCostSold, numberFormat);
+                      displayValueClass = 'activity-item-value-neutral';
+                      subtitle = `Sold: ${item.sharesSold?.toLocaleString()}`;
+                    } else if (topItemsSortBy === 'unrealized') {
+                      displayValue = formatNumber(item.unrealizedProfit, numberFormat);
+                      displayValueClass = item.unrealizedProfit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
+                      subtitle = `Held: ${item.shares?.toLocaleString()} | GE High: ${item.latestHigh?.toLocaleString()}`;
+                    }
+
+                    return (
+                      <div key={idx} className="activity-item">
+                        <div className="activity-item-left">
+                          <div className="activity-item-title">{item.name}</div>
+                          <div className="activity-item-subtitle">{subtitle}</div>
+                        </div>
+                        <div className="activity-item-right">
+                          <div className={`activity-item-value ${displayValueClass}`}>
+                            {displayValue}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <PriceMoversWidget
+          stocks={stocksForStats}
+          gePrices={geData}
+          numberFormat={numberFormat}
+        />
+
         {/* Goals Section */}
-        <div className="activity-section">
+        <div className="activity-section home-dashboard-goals">
           <h3 className="activity-section-title">
             <span>🎯</span> Goals
           </h3>
@@ -459,78 +545,6 @@ export default function HomePage({
         )}
       </div>
 
-      {/* Top Items */}
-      <div className="activity-section">
-        <h3 className="activity-section-title">
-          <span>🏆</span> Top Items
-          <select
-            className="top-items-sort-select"
-            value={topItemsSortBy}
-            onChange={e => setTopItemsSortBy(e.target.value)}
-          >
-            {SORT_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </h3>
-        <div className="top-items-grid">
-          {topItems.length === 0 ? (
-            <p className="activity-empty">No items to display</p>
-          ) : (
-            [topItems.slice(0, 5), topItems.slice(5, 10)].map((col, colIdx) => (
-              <div key={colIdx} className="top-items-column">
-                {col.map((item, idx) => {
-                  let displayValue, displayValueClass, subtitle;
-
-                  if (topItemsSortBy === 'profit') {
-                    displayValue = formatNumber(item.profit, numberFormat);
-                    displayValueClass = item.profit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
-                    subtitle = `Sold: ${item.sharesSold?.toLocaleString()} | Margin: ${item.margin.toFixed(2)}%`;
-                  } else if (topItemsSortBy === 'margin') {
-                    displayValue = `${item.margin.toFixed(2)}%`;
-                    displayValueClass = item.margin >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
-                    subtitle = `Profit: ${formatNumber(item.profit, numberFormat)} | Sold: ${item.sharesSold?.toLocaleString()}`;
-                  } else if (topItemsSortBy === 'stock') {
-                    displayValue = item.shares?.toLocaleString();
-                    displayValueClass = 'activity-item-value-neutral';
-                    subtitle = `Total Cost: ${formatNumber(item.totalCost, numberFormat)}`;
-                  } else if (topItemsSortBy === 'totalCost') {
-                    displayValue = formatNumber(item.totalCost, numberFormat);
-                    displayValueClass = 'activity-item-value-neutral';
-                    subtitle = `Quantity held: ${item.shares?.toLocaleString()}`;
-                  } else if (topItemsSortBy === 'soldStock') {
-                    displayValue = item.sharesSold?.toLocaleString();
-                    displayValueClass = 'activity-item-value-neutral';
-                    subtitle = `Total Sold Cost: ${formatNumber(item.totalCostSold, numberFormat)}`;
-                  } else if (topItemsSortBy === 'soldCost') {
-                    displayValue = formatNumber(item.totalCostSold, numberFormat);
-                    displayValueClass = 'activity-item-value-neutral';
-                    subtitle = `Sold: ${item.sharesSold?.toLocaleString()}`;
-                  } else if (topItemsSortBy === 'unrealized') {
-                    displayValue = formatNumber(item.unrealizedProfit, numberFormat);
-                    displayValueClass = item.unrealizedProfit >= 0 ? 'activity-item-value-positive' : 'activity-item-value-negative';
-                    subtitle = `Held: ${item.shares?.toLocaleString()} | GE High: ${item.latestHigh?.toLocaleString()}`;
-                  }
-
-                  return (
-                    <div key={idx} className="activity-item">
-                      <div className="activity-item-left">
-                        <div className="activity-item-title">{item.name}</div>
-                        <div className="activity-item-subtitle">{subtitle}</div>
-                      </div>
-                      <div className="activity-item-right">
-                        <div className={`activity-item-value ${displayValueClass}`}>
-                          {displayValue}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-        </div>
-      </div>
     </div>
   );
 }
