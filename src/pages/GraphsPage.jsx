@@ -227,17 +227,19 @@ export default function GraphsPage({
     if (!selectedItem || !currentPrice) return null;
     const high = currentPrice.high;
     const low = currentPrice.low;
-    const margin = high != null && low != null ? high - low : null;
+    const grossMargin = high != null && low != null ? high - low : null;
     const tax = high != null ? calculateGETax(selectedItem.id, high) : 0;
-    const marginAfterTax = margin != null ? margin - tax : null;
+    const margin = grossMargin != null ? grossMargin - tax : null;
     const buyLimit = selectedItem.limit || 0;
-    const potentialProfit = marginAfterTax != null && buyLimit ? marginAfterTax * buyLimit : null;
+    const potentialProfit = margin != null && buyLimit ? margin * buyLimit : null;
     const cutoff = Date.now() / 1000 - (tf?.filterDays || 365) * 86400;
     const volume = rawData
       .filter(d => d.timestamp >= cutoff)
       .reduce((sum, d) => sum + (d.highPriceVolume || 0) + (d.lowPriceVolume || 0), 0);
     return {
       margin,
+      grossMargin,
+      tax,
       potentialProfit,
       volume,
       highAlch: selectedItem.highalch,
@@ -555,7 +557,9 @@ export default function GraphsPage({
             {itemStats?.margin != null && (
               <div className="graphs-info-stat">
                 <span className="graphs-info-label">Margin</span>
-                <span className="graphs-info-value">{itemStats.margin.toLocaleString()}</span>
+                <span className={`graphs-info-value ${itemStats.margin >= 0 ? 'graphs-info-value--high' : 'graphs-info-value--negative'}`}>
+                  {itemStats.margin.toLocaleString()}
+                </span>
               </div>
             )}
             {itemStats?.potentialProfit != null && (
@@ -565,7 +569,7 @@ export default function GraphsPage({
                   {itemStats.potentialProfit.toLocaleString()}
                 </span>
                 <div className="graphs-info-stat-tooltip">
-                  (Margin - Tax) × Buy Limit = ({itemStats.margin?.toLocaleString()} - {currentPrice?.high != null ? calculateGETax(selectedItem.id, currentPrice.high).toLocaleString() : '0'}) × {(selectedItem.limit || 0).toLocaleString()}
+                  (Gross Margin - Tax) x Buy Limit = ({itemStats.grossMargin?.toLocaleString()} - {itemStats.tax.toLocaleString()}) x {(selectedItem.limit || 0).toLocaleString()}
                 </div>
               </div>
             )}
