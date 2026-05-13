@@ -572,7 +572,7 @@ export default function GraphsPage({
                   {itemStats.potentialProfit.toLocaleString()}
                 </span>
                 <div className="graphs-info-stat-tooltip">
-                  (Gross Margin - Tax) x Buy Limit = ({itemStats.grossMargin?.toLocaleString()} - {itemStats.tax.toLocaleString()}) x {(selectedItem.limit || 0).toLocaleString()}
+                  Margin x Buy Limit = {itemStats.margin.toLocaleString()} x {(selectedItem.limit || 0).toLocaleString()}
                 </div>
               </div>
             )}
