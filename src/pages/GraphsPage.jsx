@@ -555,11 +555,14 @@ export default function GraphsPage({
               </>
             )}
             {itemStats?.margin != null && (
-              <div className="graphs-info-stat">
+              <div className="graphs-info-stat graphs-info-stat--tooltip">
                 <span className="graphs-info-label">Margin</span>
                 <span className={`graphs-info-value ${itemStats.margin >= 0 ? 'graphs-info-value--high' : 'graphs-info-value--negative'}`}>
                   {itemStats.margin.toLocaleString()}
                 </span>
+                <div className="graphs-info-stat-tooltip">
+                  High - Low - Tax = {currentPrice.high.toLocaleString()} - {currentPrice.low.toLocaleString()} - {itemStats.tax.toLocaleString()}
+                </div>
               </div>
             )}
             {itemStats?.potentialProfit != null && (
