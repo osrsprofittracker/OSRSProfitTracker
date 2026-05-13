@@ -36,6 +36,31 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 - `stocks` has an `archived` boolean; default queries exclude archived rows.
 - After mutations, hooks generally return a success boolean and let the caller call `refetch()` rather than updating local state directly.
 
+### Supabase Data API grants
+
+- This app uses `supabase-js` from the browser, so public tables accessed by `.from(...)` must be reachable through the Supabase Data API.
+- When proposing or adding a new Supabase table that the frontend will access, include explicit SQL for Data API grants, RLS, and policies. Do not rely on Supabase automatically exposing new `public` tables.
+- Follow the repo rule below: do not add migration files. Provide the SQL for manual application in the Supabase SQL Editor.
+- For normal user-owned app tables, use this default pattern and adapt table/column names as needed:
+
+```sql
+grant select, insert, update, delete
+on table public.your_new_table
+to authenticated;
+
+alter table public.your_new_table enable row level security;
+
+create policy "Users can manage their own rows"
+on public.your_new_table
+for all
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+```
+
+- For read-only views, grant only `select` to `authenticated`.
+- Only grant `anon` access when unauthenticated browser behavior explicitly needs it, and pair it with narrow RLS policies.
+
 ### Key domain concepts
 
 - **Stock** — a tracked OSRS GE item. Holds `shares` (quantity held), `totalCost` (total GP spent buying), `sharesSold`, `totalCostSold`, `totalCostBasisSold` (cost basis of sold shares), `limit4h` (GE 4-hour buy limit), `timerEndTime`, and optional `itemId` linking to the GE API.
