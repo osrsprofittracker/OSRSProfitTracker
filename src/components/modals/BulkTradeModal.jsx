@@ -75,6 +75,12 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
     }));
   };
 
+  const updateAllStartTimers = (startTimer) => {
+    setSelectedItems(prev => Object.fromEntries(
+      Object.entries(prev).map(([id, item]) => [id, { ...item, startTimer }])
+    ));
+  };
+
   const handleSharesInput = (stockId, value) => {
     handleMKInput(value, (v) => updateItem(stockId, 'shares', v));
   };
@@ -85,6 +91,11 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
 
   const selectedEntries = Object.entries(selectedItems);
   const selectedCount = selectedEntries.length;
+  const enabledTimerCount = isBuy
+    ? selectedEntries.filter(([, item]) => item.startTimer).length
+    : 0;
+  const allStartTimersEnabled = selectedCount > 0 && enabledTimerCount === selectedCount;
+  const noStartTimersEnabled = selectedCount > 0 && enabledTimerCount === 0;
 
   // Buy: per-item totals
   const perItemTotals = useMemo(() => {
@@ -301,7 +312,25 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
         {/* Right: Config */}
         <div className="bulk-trade-config">
           <div className="bulk-trade-config-header">
-            {selectedCount} item{selectedCount !== 1 ? 's' : ''} selected
+            <span>{selectedCount} item{selectedCount !== 1 ? 's' : ''} selected</span>
+            {isBuy && selectedCount > 0 && (
+              <div className="bulk-trade-limit-actions" aria-label="Bulk timer controls">
+                <button
+                  type="button"
+                  className={`bulk-trade-limit-btn ${allStartTimersEnabled ? 'active' : ''}`}
+                  onClick={() => updateAllStartTimers(true)}
+                >
+                  Timers On
+                </button>
+                <button
+                  type="button"
+                  className={`bulk-trade-limit-btn ${noStartTimersEnabled ? 'active' : ''}`}
+                  onClick={() => updateAllStartTimers(false)}
+                >
+                  Timers Off
+                </button>
+              </div>
+            )}
           </div>
 
           {isBuy && buyMode === 'budgetSplit' && (
