@@ -29,6 +29,30 @@ const EMPTY_FILTERS = {
   hourOfDay: ''
 };
 
+const TRANSACTION_TYPES = ['all', 'buy', 'sell', 'remove'];
+const PROFIT_TYPES = ['all', 'dump', 'referral', 'bonds'];
+
+function visibleProfitTypes(visibleProfits = {}) {
+  return [
+    visibleProfits.dumpProfit !== false ? 'dump' : null,
+    visibleProfits.referralProfit !== false ? 'referral' : null,
+    visibleProfits.bondsProfit !== false ? 'bonds' : null
+  ].filter(Boolean);
+}
+
+function typeLabel(type) {
+  const labels = {
+    all: 'All',
+    buy: 'Buys',
+    sell: 'Sales',
+    remove: 'Removes',
+    dump: 'Dumps',
+    referral: 'Referrals',
+    bonds: 'Bonds'
+  };
+  return labels[type] || type;
+}
+
 function hasAnyFilter(filters = EMPTY_FILTERS) {
   return Boolean(
     filters.stockName || filters.category ||
@@ -62,6 +86,9 @@ function hasVisibleFilter(filters = EMPTY_FILTERS) {
 export default function HistoryPage({
   pagedTransactions = [], pagedLoading = false, totalCount = 0, totalPages = 0,
   page = 1, pageSize = 25, filters = EMPTY_FILTERS,
+  historySource = 'transactions', onChangeHistorySource,
+  historyProfitTypes = ['dump', 'referral', 'bonds'], onChangeHistoryProfitTypes,
+  visibleProfits = {},
   onGoToPage, onChangePageSize, onApplyFilters, onInit, numberFormat,
   sortConfig = { key: 'date', dir: 'desc' },
   onApplySort, onReset, onUndo, showMembershipIcon = true
@@ -74,6 +101,10 @@ export default function HistoryPage({
     () => Object.fromEntries(stocks.map(s => [s.id, s.itemId])),
     [stocks]
   );
+  const enabledProfitTypes = useMemo(
+    () => visibleProfitTypes(visibleProfits),
+    [visibleProfits]
+  );
 
   const [localFilters, setLocalFilters] = useState({ ...EMPTY_FILTERS, ...filters });
   const [appliedFilters, setAppliedFilters] = useState({ ...EMPTY_FILTERS, ...filters });
@@ -84,6 +115,15 @@ export default function HistoryPage({
     setAppliedFilters({ ...EMPTY_FILTERS, ...filters });
     if (hasAnyFilter(filters)) setShowFilters(true);
   }, [filters]);
+
+  useEffect(() => {
+    const sameTypes = enabledProfitTypes.length === historyProfitTypes.length
+      && enabledProfitTypes.every(type => historyProfitTypes.includes(type));
+
+    if (!sameTypes) {
+      onChangeHistoryProfitTypes(enabledProfitTypes);
+    }
+  }, [enabledProfitTypes, historyProfitTypes, onChangeHistoryProfitTypes]);
 
   const [confirmUndo, setConfirmUndo] = useState(null); // holds transaction to undo
   const [undoWarning, setUndoWarning] = useState(null); // holds warning type
@@ -116,10 +156,17 @@ export default function HistoryPage({
   };
 
   const handleSort = (key) => {
+    if (historySource === 'profits' && ['shares', 'price', 'margin'].includes(key)) return;
+
     onApplySort({
       key,
       dir: sortConfig.key === key && sortConfig.dir === 'asc' ? 'desc' : 'asc'
     });
+  };
+
+  const handleSourceChange = (source) => {
+    if (source === historySource) return;
+    onChangeHistorySource(source);
   };
 
   const SortIcon = ({ col }) => {
@@ -143,6 +190,11 @@ export default function HistoryPage({
   const hasActiveFilters = hasVisibleFilter(appliedFilters);
   // Derive categories from existing transactions for the filter dropdown
   const categories = [...new Set(stocks.map(s => s.category).filter(Boolean))].sort();
+  const typeFilters = historySource === 'profits'
+    ? ['all', ...PROFIT_TYPES.filter(type => type !== 'all' && enabledProfitTypes.includes(type))]
+    : TRANSACTION_TYPES;
+  const subtitleLabel = historySource === 'profits' ? 'extra profit entries' : 'transactions';
+  const isExtraProfits = historySource === 'profits';
 
   return (
     <div className="history-page">
@@ -150,9 +202,23 @@ export default function HistoryPage({
       <div className="history-header">
         <div className="history-header-left">
           <h1 className="history-title">📜 Transaction History</h1>
-          <p className="history-subtitle">{totalCount.toLocaleString()} total transactions</p>
+          <p className="history-subtitle">{totalCount.toLocaleString()} total {subtitleLabel}</p>
         </div>
         <div className="history-controls">
+          <div className="history-source-toggle" aria-label="History source">
+            <button
+              className={`history-source-btn ${historySource === 'transactions' ? 'history-source-btn--active' : ''}`}
+              onClick={() => handleSourceChange('transactions')}
+            >
+              GE Items
+            </button>
+            <button
+              className={`history-source-btn ${historySource === 'profits' ? 'history-source-btn--active' : ''}`}
+              onClick={() => handleSourceChange('profits')}
+            >
+              Extra Profits
+            </button>
+          </div>
           <button
             className={`history-filter-toggle ${showFilters ? 'history-filter-toggle--active' : ''} ${hasActiveFilters ? 'history-filter-toggle--has-filters' : ''}`}
             onClick={() => setShowFilters(prev => !prev)}
@@ -179,32 +245,35 @@ export default function HistoryPage({
         <div className="history-filter-panel">
           <div className="history-filter-row">
 
-            <div className="history-filter-field">
-              <label className="history-filter-label">Item Name</label>
-              <input
-                className="history-search"
-                placeholder="Search item..."
-                value={localFilters.stockName}
-                onChange={e => setLocalFilters(prev => ({ ...prev, stockName: e.target.value }))}
-              />
-            </div>
+            {historySource === 'transactions' && (
+              <div className="history-filter-field">
+                <label className="history-filter-label">Item Name</label>
+                <input
+                  className="history-search"
+                  placeholder="Search item..."
+                  value={localFilters.stockName}
+                  onChange={e => setLocalFilters(prev => ({ ...prev, stockName: e.target.value }))}
+                />
+              </div>
+            )}
 
             <div className="history-filter-field">
               <label className="history-filter-label">Type</label>
               <div className="history-filter-group">
-                {['all', 'buy', 'sell', 'remove'].map(f => (
+                {typeFilters.map(f => (
                   <button
                     key={f}
                     className={`history-filter-btn history-filter-btn--${f} ${localFilters.type === f ? 'history-filter-btn--active' : ''}`}
                     onClick={() => setLocalFilters(prev => ({ ...prev, type: f }))}
                   >
-                    {f === 'all' ? 'All' : f === 'buy' ? 'Buys' : f === 'sell' ? 'Sales' : 'Removes'}
+                    {typeLabel(f)}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="history-filter-field">
+            {historySource === 'transactions' && (
+              <div className="history-filter-field">
               <label className="history-filter-label">Mode</label>
               <div className="history-filter-group">
                 {['all', 'trade', 'investment'].map(m => (
@@ -217,9 +286,11 @@ export default function HistoryPage({
                   </button>
                 ))}
               </div>
-            </div>
+              </div>
+            )}
 
-            <div className="history-filter-field">
+            {historySource === 'transactions' && (
+              <div className="history-filter-field">
               <label className="history-filter-label">Category</label>
               <select
                 className="history-page-size"
@@ -231,7 +302,8 @@ export default function HistoryPage({
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
-            </div>
+              </div>
+            )}
 
             <div className="history-filter-field">
               <label className="history-filter-label">Date From</label>
@@ -254,17 +326,19 @@ export default function HistoryPage({
             </div>
 
             <div className="history-filter-field">
-              <label className="history-filter-label">Total GP Min</label>
+              <label className="history-filter-label">{historySource === 'profits' ? 'Amount Min' : 'Total GP Min'}</label>
               <input type="number" className="history-search" placeholder="0"
                 value={localFilters.gpMin}
                 onChange={e => setLocalFilters(prev => ({ ...prev, gpMin: e.target.value }))} />
             </div>
             <div className="history-filter-field">
-              <label className="history-filter-label">Total GP Max</label>
+              <label className="history-filter-label">{historySource === 'profits' ? 'Amount Max' : 'Total GP Max'}</label>
               <input type="number" className="history-search" placeholder="Any"
                 value={localFilters.gpMax}
                 onChange={e => setLocalFilters(prev => ({ ...prev, gpMax: e.target.value }))} />
             </div>
+            {historySource === 'transactions' && (
+              <>
             <div className="history-filter-field">
               <label className="history-filter-label">Price Min</label>
               <input type="number" className="history-search" placeholder="0"
@@ -313,6 +387,8 @@ export default function HistoryPage({
                 value={localFilters.marginMax}
                 onChange={e => setLocalFilters(prev => ({ ...prev, marginMax: e.target.value }))} />
             </div>
+              </>
+            )}
 
           </div>
 
@@ -335,95 +411,125 @@ export default function HistoryPage({
               <th className="history-th--sortable" onClick={() => handleSort('date')} title="When this trade happened">
                 Date <SortIcon col="date" />
               </th>
-              <th className="history-th--sortable" onClick={() => handleSort('stockName')} title="Item that was traded">
-                Item <SortIcon col="stockName" />
-              </th>
+              {!isExtraProfits && (
+                <>
+                  <th className="history-th--sortable" onClick={() => handleSort('stockName')} title="Item that was traded">
+                    Item <SortIcon col="stockName" />
+                  </th>
+                </>
+              )}
               <th className="history-th--sortable" onClick={() => handleSort('type')} title="Buy, sell, or adjust">
                 Type <SortIcon col="type" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('shares')} title="Number of items traded">
-                Qty <SortIcon col="shares" />
+              {!isExtraProfits && (
+                <>
+                  <th className="history-th--right history-th--sortable" onClick={() => handleSort('shares')} title="Number of items traded">
+                    Qty <SortIcon col="shares" />
+                  </th>
+                  <th className="history-th--right history-th--sortable" onClick={() => handleSort('price')} title="Price per item">
+                    Price Each <SortIcon col="price" />
+                  </th>
+                </>
+              )}
+              <th className="history-th--right history-th--sortable" onClick={() => handleSort('total')} title={isExtraProfits ? 'Extra profit amount' : 'Total GP for this trade'}>
+                {isExtraProfits ? 'Amount' : 'Total'} <SortIcon col="total" />
               </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('price')} title="Price per item">
-                Price Each <SortIcon col="price" />
-              </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('total')} title="Total GP for this trade">
-                Total <SortIcon col="total" />
-              </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('profit')} title="Profit made on this sale">
-                Profit <SortIcon col="profit" />
-              </th>
-              <th className="history-th--right history-th--sortable" onClick={() => handleSort('margin')} title="Profit margin %">
-                Margin <SortIcon col="margin" />
-              </th>
-              <th className="history-th--sortable" onClick={() => handleSort('category')} title="Category this item is in">
-                Category <SortIcon col="category" />
-              </th>
-              <th title="Undo this trade">Undo</th>
+              {!isExtraProfits && (
+                <>
+                  <th className="history-th--right history-th--sortable" onClick={() => handleSort('profit')} title="Profit made on this sale">
+                    Profit <SortIcon col="profit" />
+                  </th>
+                  <th className="history-th--right history-th--sortable" onClick={() => handleSort('margin')} title="Profit margin %">
+                    Margin <SortIcon col="margin" />
+                  </th>
+                  <th className="history-th--sortable" onClick={() => handleSort('category')} title="Category this item is in">
+                    Category <SortIcon col="category" />
+                  </th>
+                  <th title="Undo this trade">Undo</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
             {pagedLoading ? (
-              <tr><td colSpan={10} className="history-empty">Loading...</td></tr>
+              <tr><td colSpan={isExtraProfits ? 3 : 10} className="history-empty">Loading...</td></tr>
             ) : displayRows.length === 0 ? (
-              <tr><td colSpan={10} className="history-empty">No transactions found</td></tr>
+              <tr><td colSpan={isExtraProfits ? 3 : 10} className="history-empty">No history found</td></tr>
             ) : displayRows.map(t => (
-              <tr key={t.id} className={`history-row history-row--${t.type}`}>
+              <tr key={`${t.activityKind || 'transaction'}-${t.id}`} className={`history-row history-row--${t.type}`}>
                 <td className="history-cell history-cell--date">
                   {new Date(t.date).toLocaleDateString()}
                   <span className="history-time"> {new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </td>
-                <td className="history-cell history-cell--name">
-                  <span className="history-item-name">
-                    {stockItemIdMap[t.stockId] && (
-                      <ItemIcon
-                        src={geIconMap[stockItemIdMap[t.stockId]]}
-                        alt=""
-                        className="history-item-icon"
-                        fallbackText={t.stockName}
-                      />
-                    )}
-                    {showMembershipIcon && stockItemIdMap[t.stockId] && stockItemIdMap[t.stockId] in membershipMap && (
-                      <Star
-                        className={`members-star ${membershipMap[stockItemIdMap[t.stockId]] ? 'members-star--p2p' : 'members-star--f2p'}`}
-                        size={12}
-                        fill="currentColor"
-                        title={membershipMap[stockItemIdMap[t.stockId]] ? 'Members item' : 'Free-to-play item'}
-                      />
-                    )}
-                    {t.stockName}
-                  </span>
-                </td>
+                {!isExtraProfits && (
+                  <td className="history-cell history-cell--name">
+                    <span className="history-item-name">
+                      {stockItemIdMap[t.stockId] && (
+                        <ItemIcon
+                          src={geIconMap[stockItemIdMap[t.stockId]]}
+                          alt=""
+                          className="history-item-icon"
+                          fallbackText={t.stockName}
+                        />
+                      )}
+                      {showMembershipIcon && stockItemIdMap[t.stockId] && stockItemIdMap[t.stockId] in membershipMap && (
+                        <Star
+                          className={`members-star ${membershipMap[stockItemIdMap[t.stockId]] ? 'members-star--p2p' : 'members-star--f2p'}`}
+                          size={12}
+                          fill="currentColor"
+                          title={membershipMap[stockItemIdMap[t.stockId]] ? 'Members item' : 'Free-to-play item'}
+                        />
+                      )}
+                      {t.stockName}
+                    </span>
+                  </td>
+                )}
                 <td className="history-cell">
                   <span className={`history-type-badge history-type-badge--${t.type}`}>
-                    {t.type.toUpperCase()}
+                    {typeLabel(t.type).toUpperCase()}
                   </span>
                 </td>
-                <td className="history-cell history-cell--right" title={formatNumber(t.shares, 'full')}>{t.shares.toLocaleString()}</td>
-                <td className="history-cell history-cell--right" title={formatNumber(t.price, 'full')}>{t.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="history-cell history-cell--right" title={formatNumber(t.total, 'full')}>{formatNumber(t.total, numberFormat)}</td>
-                <td className="history-cell history-cell--right" title={t.type === 'sell' && t.profit != null ? formatNumber(t.profit, 'full') : undefined}>
-                  {t.type === 'sell' && t.profit != null
-                    ? <span className={t.profit >= 0 ? 'history-total--buy' : 'history-total--sell'}>{formatNumber(t.profit, numberFormat)}</span>
-                    : <span className="history-cell--muted">—</span>
-                  }
+                {!isExtraProfits && (
+                  <>
+                    <td className="history-cell history-cell--right" title={formatNumber(t.shares, 'full')}>{t.shares.toLocaleString()}</td>
+                    <td className="history-cell history-cell--right" title={formatNumber(t.price, 'full')}>{t.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </>
+                )}
+                <td className="history-cell history-cell--right" title={formatNumber(t.total, 'full')}>
+                  {isExtraProfits ? (
+                    <span className={t.total >= 0 ? 'history-total--buy' : 'history-total--sell'}>
+                      {formatNumber(t.total, numberFormat)}
+                    </span>
+                  ) : (
+                    formatNumber(t.total, numberFormat)
+                  )}
                 </td>
-                <td className="history-cell history-cell--right">
-                  {t.type === 'sell' && t.margin != null
-                    ? <span className={t.margin >= 0 ? 'history-total--buy' : 'history-total--sell'}>{t.margin.toFixed(1)}%</span>
-                    : <span className="history-cell--muted">—</span>
-                  }
-                </td>
-                <td className="history-cell">{t.category}</td>
-                <td className="history-cell">
-                  <button
-                    className="history-undo-btn"
-                    onClick={() => handleUndo(t)}
-                    title="Undo transaction"
-                  >
-                    ↩
-                  </button>
-                </td>
+                {!isExtraProfits && (
+                  <>
+                    <td className="history-cell history-cell--right" title={t.type === 'sell' && t.profit != null ? formatNumber(t.profit, 'full') : undefined}>
+                      {t.type === 'sell' && t.profit != null
+                        ? <span className={t.profit >= 0 ? 'history-total--buy' : 'history-total--sell'}>{formatNumber(t.profit, numberFormat)}</span>
+                        : <span className="history-cell--muted">—</span>
+                      }
+                    </td>
+                    <td className="history-cell history-cell--right">
+                      {t.type === 'sell' && t.margin != null
+                        ? <span className={t.margin >= 0 ? 'history-total--buy' : 'history-total--sell'}>{t.margin.toFixed(1)}%</span>
+                        : <span className="history-cell--muted">—</span>
+                      }
+                    </td>
+                    <td className="history-cell">{t.category}</td>
+                    <td className="history-cell">
+                      <button
+                        className="history-undo-btn"
+                        onClick={() => handleUndo(t)}
+                        title="Undo transaction"
+                      >
+                        ↩
+                      </button>
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
