@@ -22,10 +22,12 @@ export function useTransactions(userId) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState({ type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' });
+  const [filters, setFilters] = useState({ type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '', dayOfWeek: '', hourOfDay: '' });
   const [sortConfig, setSortConfig] = useState({ key: 'date', dir: 'desc' });
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
+  const [historySource, setHistorySource] = useState('transactions');
+  const [historyProfitTypes, setHistoryProfitTypes] = useState(['dump', 'referral', 'bonds']);
   const pagedRequestId = useRef(0);
 
   const fetchTransactions = useCallback(async (options = {}) => {
@@ -93,7 +95,14 @@ export function useTransactions(userId) {
   const loadFullHistory = useCallback(() => fetchTransactions({ full: true }), [fetchTransactions]);
 
   // Paginated fetch - used by HistoryPage
-  const fetchPage = useCallback(async (targetPage, size, activeFilters, activeSort = sortConfig) => {
+  const fetchPage = useCallback(async (
+    targetPage,
+    size,
+    activeFilters,
+    activeSort = sortConfig,
+    activeSource = historySource,
+    activeProfitTypes = historyProfitTypes
+  ) => {
     if (!userId) return;
     const requestId = pagedRequestId.current + 1;
     pagedRequestId.current = requestId;
@@ -101,12 +110,102 @@ export function useTransactions(userId) {
 
     const from = (targetPage - 1) * size;
     const to = from + size - 1;
+    const hasLocalTimeFilters = (activeFilters.dayOfWeek ?? '') !== '' || (activeFilters.hourOfDay ?? '') !== '';
+
+    if (activeSource === 'profits') {
+      const visibleProfitTypes = activeProfitTypes.filter(Boolean);
+
+      if (visibleProfitTypes.length === 0) {
+        setPagedTransactions([]);
+        setTotalCount(0);
+        setPagedLoading(false);
+        return;
+      }
+
+      let query = supabase
+        .from('profit_history')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .in('profit_type', visibleProfitTypes);
+
+      const sortKey = activeSort.key || 'date';
+      const ascending = activeSort.dir === 'asc';
+
+      query = query.order(profitHistoryColumn(sortKey), { ascending, nullsFirst: ascending });
+
+      if (visibleProfitTypes.includes(activeFilters.type)) {
+        query = query.eq('profit_type', activeFilters.type);
+      }
+      if (activeFilters.dateFrom) query = query.gte('created_at', activeFilters.dateFrom);
+      if (activeFilters.dateTo) query = query.lte('created_at', activeFilters.dateTo + 'T23:59:59');
+      if (activeFilters.gpMin) query = query.gte('amount', Number(activeFilters.gpMin));
+      if (activeFilters.gpMax) query = query.lte('amount', Number(activeFilters.gpMax));
+      if (activeFilters.profitMin) query = query.gte('amount', Number(activeFilters.profitMin));
+      if (activeFilters.profitMax) query = query.lte('amount', Number(activeFilters.profitMax));
+
+      if (!hasLocalTimeFilters) {
+        query = query.range(from, to);
+      }
+
+      if (hasLocalTimeFilters) {
+        const matchedRows = [];
+        let matchedCount = 0;
+        let scanFrom = 0;
+        let candidateCount = null;
+        let scanComplete = false;
+        const batchSize = 1000;
+
+        while (!scanComplete) {
+          const scanTo = scanFrom + batchSize - 1;
+          const { data, error, count } = await query.range(scanFrom, scanTo);
+
+          if (requestId !== pagedRequestId.current) return;
+
+          if (error) {
+            console.error('Error fetching paged profit history:', error.message, error.details, error.hint);
+            setPagedLoading(false);
+            return;
+          }
+
+          if (candidateCount == null) candidateCount = count || 0;
+
+          for (const row of (data || []).map(formatProfitRow)) {
+            if (!matchesLocalTimeFilters(row, activeFilters)) continue;
+
+            if (matchedCount >= from && matchedRows.length < size) {
+              matchedRows.push(row);
+            }
+            matchedCount += 1;
+          }
+
+          scanFrom += batchSize;
+          scanComplete = (data || []).length < batchSize || scanFrom >= candidateCount;
+        }
+
+        setPagedTransactions(matchedRows);
+        setTotalCount(matchedCount);
+        setPagedLoading(false);
+        return;
+      }
+
+      const { data, error, count } = await query;
+
+      if (requestId !== pagedRequestId.current) return;
+
+      if (error) {
+        console.error('Error fetching paged profit history:', error.message, error.details, error.hint);
+      } else {
+        setPagedTransactions((data || []).map(formatProfitRow));
+        setTotalCount(count || 0);
+      }
+      setPagedLoading(false);
+      return;
+    }
 
     let query = supabase
       .from('transactions_view')
       .select('*', { count: 'exact' })
-      .eq('user_id', userId)
-      .range(from, to);
+      .eq('user_id', userId);
 
     // Apply sort
     const sortKey = activeSort.key || 'date';
@@ -136,6 +235,51 @@ export function useTransactions(userId) {
       query = query.eq('is_investment', activeFilters.mode === 'investment');
     }
 
+    if (!hasLocalTimeFilters) {
+      query = query.range(from, to);
+    }
+
+    if (hasLocalTimeFilters) {
+      const matchedRows = [];
+      let matchedCount = 0;
+      let scanFrom = 0;
+      let candidateCount = null;
+      let scanComplete = false;
+      const batchSize = 1000;
+
+      while (!scanComplete) {
+        const scanTo = scanFrom + batchSize - 1;
+        const { data, error, count } = await query.range(scanFrom, scanTo);
+
+        if (requestId !== pagedRequestId.current) return;
+
+        if (error) {
+          console.error('Error fetching paged transactions:', error.message, error.details, error.hint);
+          setPagedLoading(false);
+          return;
+        }
+
+        if (candidateCount == null) candidateCount = count || 0;
+
+        for (const row of (data || []).map(formatRow)) {
+          if (!matchesLocalTimeFilters(row, activeFilters)) continue;
+
+          if (matchedCount >= from && matchedRows.length < size) {
+            matchedRows.push(row);
+          }
+          matchedCount += 1;
+        }
+
+        scanFrom += batchSize;
+        scanComplete = (data || []).length < batchSize || scanFrom >= candidateCount;
+      }
+
+      setPagedTransactions(matchedRows);
+      setTotalCount(matchedCount);
+      setPagedLoading(false);
+      return;
+    }
+
     const { data, error, count } = await query;
 
     if (requestId !== pagedRequestId.current) return;
@@ -147,41 +291,78 @@ export function useTransactions(userId) {
       setTotalCount(count || 0);
     }
     setPagedLoading(false);
-  }, [userId]);
+  }, [userId, historySource, historyProfitTypes, sortConfig]);
 
   const goToPage = useCallback((targetPage) => {
     setPage(targetPage);
-    fetchPage(targetPage, pageSize, filters);
-  }, [fetchPage, pageSize, filters]);
+    fetchPage(targetPage, pageSize, filters, sortConfig, historySource, historyProfitTypes);
+  }, [fetchPage, pageSize, filters, sortConfig, historySource, historyProfitTypes]);
 
   const changePageSize = useCallback((size) => {
     setPageSize(size);
     setPage(1);
-    fetchPage(1, size, filters);
-  }, [fetchPage, filters]);
+    fetchPage(1, size, filters, sortConfig, historySource, historyProfitTypes);
+  }, [fetchPage, filters, sortConfig, historySource, historyProfitTypes]);
 
   const applyFilters = useCallback((newFilters) => {
     setFilters(newFilters);
     setPage(1);
-    fetchPage(1, pageSize, newFilters);
-  }, [fetchPage, pageSize]);
+    fetchPage(1, pageSize, newFilters, sortConfig, historySource, historyProfitTypes);
+  }, [fetchPage, pageSize, sortConfig, historySource, historyProfitTypes]);
 
-  const initPaged = useCallback(() => fetchPage(1, pageSize, filters), [fetchPage, pageSize, filters]);
+  const initPaged = useCallback(() => fetchPage(1, pageSize, filters, sortConfig, historySource, historyProfitTypes), [fetchPage, pageSize, filters, sortConfig, historySource, historyProfitTypes]);
 
   const applySort = useCallback((newSort) => {
     setSortConfig(newSort);
     setPage(1);
-    fetchPage(1, pageSize, filters, newSort);
-  }, [fetchPage, pageSize, filters]);
+    fetchPage(1, pageSize, filters, newSort, historySource, historyProfitTypes);
+  }, [fetchPage, pageSize, filters, historySource, historyProfitTypes]);
 
   const resetPaged = useCallback(() => {
     const defaultSort = { key: 'date', dir: 'desc' };
-    const defaultFilters = { type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' };
+    const defaultFilters = { type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '', dayOfWeek: '', hourOfDay: '' };
     setSortConfig(defaultSort);
     setFilters(defaultFilters);
     setPage(1);
-    fetchPage(1, pageSize, defaultFilters, defaultSort);
-  }, [fetchPage, pageSize]);
+    fetchPage(1, pageSize, defaultFilters, defaultSort, historySource, historyProfitTypes);
+  }, [fetchPage, pageSize, historySource, historyProfitTypes]);
+
+  const changeHistorySource = useCallback((source) => {
+    const defaultSort = { key: 'date', dir: 'desc' };
+    const sourceFilters = {
+      type: 'all',
+      mode: 'all',
+      stockName: '',
+      category: '',
+      priceMin: '',
+      priceMax: '',
+      qtyMin: '',
+      qtyMax: '',
+      marginMin: '',
+      marginMax: ''
+    };
+    const nextFilters = { ...filters, ...sourceFilters };
+    setHistorySource(source);
+    setSortConfig(defaultSort);
+    setFilters(nextFilters);
+    setPage(1);
+    fetchPage(1, pageSize, nextFilters, defaultSort, source, historyProfitTypes);
+  }, [fetchPage, pageSize, filters, historyProfitTypes]);
+
+  const changeHistoryProfitTypes = useCallback((types) => {
+    const nextTypes = types.length > 0 ? types : [];
+    const nextFilters = nextTypes.includes(filters.type)
+      ? filters
+      : { ...filters, type: 'all' };
+
+    setHistoryProfitTypes(nextTypes);
+
+    if (historySource === 'profits') {
+      if (nextFilters !== filters) setFilters(nextFilters);
+      setPage(1);
+      fetchPage(1, pageSize, nextFilters, sortConfig, historySource, nextTypes);
+    }
+  }, [fetchPage, filters, historySource, pageSize, sortConfig]);
 
   const addTransaction = useCallback(async (transaction) => {
     const dbTransaction = {
@@ -293,14 +474,14 @@ export function useTransactions(userId) {
 
       // 4. Refresh local state
       await fetchTransactions();
-      await fetchPage(1, pageSize, filters);
+      await fetchPage(1, pageSize, filters, sortConfig, historySource, historyProfitTypes);
 
       return { success: true };
     } catch (err) {
       console.error('Error undoing transaction:', err);
       return { success: false, error: err.message };
     }
-  }, [userId, fetchTransactions, fetchPage, pageSize, filters]);
+  }, [userId, fetchTransactions, fetchPage, pageSize, filters, sortConfig, historySource, historyProfitTypes]);
 
   return {
     // Original API - unchanged
@@ -308,7 +489,8 @@ export function useTransactions(userId) {
     loadFullHistory, fullHistoryLoading, historyScope,
     // Paginated API - for HistoryPage
     pagedTransactions, pagedLoading, totalCount, totalPages,
-    page, pageSize, filters,
+    page, pageSize, filters, historySource, changeHistorySource,
+    historyProfitTypes, changeHistoryProfitTypes,
     goToPage, changePageSize, applyFilters, initPaged,
     sortConfig, applySort, resetPaged, undoTransaction
   };
@@ -317,6 +499,7 @@ export function useTransactions(userId) {
 function formatRow(t) {
   return {
     id: Number(t.id),
+    activityKind: 'transaction',
     stockId: t.stock_id,
     stockName: t.stock_name,
     type: t.type,
@@ -329,6 +512,35 @@ function formatRow(t) {
     profit: t.profit ?? null,
     margin: t.margin ?? null
   };
+}
+
+function formatProfitRow(row) {
+  const amount = Number(row.amount || 0);
+
+  return {
+    id: Number(row.id),
+    activityKind: 'profit',
+    stockId: row.stock_id ?? null,
+    stockName: profitTypeLabel(row.profit_type),
+    type: row.profit_type,
+    shares: null,
+    price: null,
+    total: amount,
+    date: row.created_at,
+    category: 'Extra Profit',
+    profitHistoryId: null,
+    profit: amount,
+    margin: null
+  };
+}
+
+function profitTypeLabel(type) {
+  const labels = {
+    dump: 'Dump profit',
+    referral: 'Referral profit',
+    bonds: 'Bond profit'
+  };
+  return labels[type] || 'Extra profit';
 }
 
 function dbColumn(key) {
@@ -344,4 +556,36 @@ function dbColumn(key) {
     margin: 'margin'
   };
   return map[key] || 'date';
+}
+
+function profitHistoryColumn(key) {
+  const map = {
+    stockName: 'profit_type',
+    total: 'amount',
+    date: 'created_at',
+    type: 'profit_type',
+    category: 'profit_type',
+    profit: 'amount'
+  };
+  return map[key] || 'created_at';
+}
+
+function matchesLocalTimeFilters(row, filters) {
+  const dayOfWeek = filters.dayOfWeek ?? '';
+  const hourOfDay = filters.hourOfDay ?? '';
+
+  if (dayOfWeek === '' && hourOfDay === '') return true;
+
+  const date = new Date(row.date);
+  if (Number.isNaN(date.getTime())) return false;
+
+  if (dayOfWeek !== '' && date.getDay() !== Number(dayOfWeek)) {
+    return false;
+  }
+
+  if (hourOfDay !== '' && date.getHours() !== Number(hourOfDay)) {
+    return false;
+  }
+
+  return true;
 }

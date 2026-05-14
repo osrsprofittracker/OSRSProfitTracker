@@ -14,7 +14,8 @@ const HISTORY_EMPTY_FILTERS = {
   type: 'all', mode: 'all', stockName: '', category: '',
   dateFrom: '', dateTo: '', gpMin: '', gpMax: '',
   priceMin: '', priceMax: '', profitMin: '', profitMax: '',
-  qtyMin: '', qtyMax: '', marginMin: '', marginMax: ''
+  qtyMin: '', qtyMax: '', marginMin: '', marginMax: '',
+  dayOfWeek: '', hourOfDay: ''
 };
 
 function getPageFromURL() {
@@ -28,19 +29,22 @@ function getPageFromURL() {
 }
 
 function filtersFromHistoryParams(params) {
+  const filters = { ...HISTORY_EMPTY_FILTERS };
+
   if (params.has('search')) {
-    return { ...HISTORY_EMPTY_FILTERS, stockName: params.get('search') };
+    filters.stockName = params.get('search') || '';
   }
 
   if (params.has('dateFrom') || params.has('dateTo')) {
-    return {
-      ...HISTORY_EMPTY_FILTERS,
-      dateFrom: params.get('dateFrom') || '',
-      dateTo: params.get('dateTo') || '',
-    };
+    filters.dateFrom = params.get('dateFrom') || '';
+    filters.dateTo = params.get('dateTo') || '';
   }
 
-  return { ...HISTORY_EMPTY_FILTERS };
+  if (params.has('type')) filters.type = params.get('type') || 'all';
+  if (params.has('dayOfWeek')) filters.dayOfWeek = params.get('dayOfWeek') || '';
+  if (params.has('hourOfDay')) filters.hourOfDay = params.get('hourOfDay') || '';
+
+  return filters;
 }
 
 export function useNavigation({

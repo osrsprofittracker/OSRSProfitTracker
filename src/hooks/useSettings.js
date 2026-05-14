@@ -68,7 +68,10 @@ export function useSettings(userId) {
           investmentStartDate: data.visible_columns?.investmentStartDate ?? true,
           membershipIcon: data.visible_columns?.membershipIcon ?? true,
         },
-        visibleProfits: data.visible_profits || DEFAULT_VISIBLE_PROFITS.bondsProfit,
+        visibleProfits: {
+          ...DEFAULT_VISIBLE_PROFITS,
+          ...(data.visible_profits || {})
+        },
         altAccountTimer: data.alt_account_timer,
         showCategoryStats: data.show_category_stats || false,
         showUnrealisedProfitStats: data.show_unrealised_profit_stats ?? false,

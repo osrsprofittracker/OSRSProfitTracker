@@ -103,7 +103,9 @@ function MainAppInner({ session, onLogout }) {
     fullHistoryLoading: fullTransactionsLoading,
     historyScope: transactionHistoryScope,
     pagedTransactions, pagedLoading, totalCount, totalPages,
-    page, pageSize, filters, goToPage, changePageSize, applyFilters, initPaged,
+    page, pageSize, filters, historySource, changeHistorySource,
+    historyProfitTypes, changeHistoryProfitTypes,
+    goToPage, changePageSize, applyFilters, initPaged,
     sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
   } = useTransactionsContext();
  const { stats: gpTradedStats, loading: gpStatsLoading, refetch: refetchGPStats } = useGPTradedStats(userId);
@@ -1164,6 +1166,11 @@ function MainAppInner({ session, onLogout }) {
             page={page}
             pageSize={pageSize}
             filters={filters}
+            historySource={historySource}
+            onChangeHistorySource={changeHistorySource}
+            historyProfitTypes={historyProfitTypes}
+            onChangeHistoryProfitTypes={changeHistoryProfitTypes}
+            visibleProfits={visibleProfits}
             onGoToPage={goToPage}
             onChangePageSize={changePageSize}
             onApplyFilters={applyFilters}

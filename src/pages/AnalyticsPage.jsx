@@ -204,8 +204,8 @@ export default function AnalyticsPage({
             stocks={safeStocksForStats}
             profitHistory={safeProfitHistory}
             numberFormat={numberFormat}
-            onNavigateToHistory={(dateFrom, dateTo = dateFrom) => navigateToPage?.('history', {
-              query: { dateFrom, dateTo },
+            onNavigateToHistory={(dateFrom, dateTo = dateFrom, extraFilters = {}) => navigateToPage?.('history', {
+              query: { dateFrom, dateTo, ...extraFilters },
             })}
             allTimeBuckets={allTime.buckets}
             totalProfitValue={derivedTotalProfit}

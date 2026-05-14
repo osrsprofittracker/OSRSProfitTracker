@@ -832,6 +832,80 @@
   fill: rgb(248, 113, 113);
 }
 
+.hourly-profit-heatmap-wrap {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.hourly-profit-heatmap-svg {
+  display: block;
+  width: auto;
+  max-width: none;
+  height: auto;
+}
+
+.hourly-profit-heatmap-hour,
+.hourly-profit-heatmap-day {
+  fill: rgb(148, 163, 184);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.hourly-profit-heatmap-day {
+  fill: rgb(226, 232, 240);
+}
+
+.hourly-profit-heatmap-active {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.hourly-profit-heatmap-cell {
+  cursor: pointer;
+  stroke: rgba(15, 23, 42, 0.85);
+  stroke-width: 1;
+  outline: none;
+}
+
+.hourly-profit-heatmap-cell:focus {
+  stroke: white;
+  stroke-width: 2;
+}
+
+.hourly-profit-heatmap-tooltip {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hourly-profit-heatmap-tooltip.is-visible {
+  opacity: 1;
+}
+
+.hourly-profit-heatmap-tooltip rect {
+  fill: rgb(15, 23, 42);
+  stroke: rgba(148, 163, 184, 0.65);
+  stroke-width: 1;
+}
+
+.hourly-profit-heatmap-tooltip text {
+  fill: rgb(226, 232, 240);
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.hourly-profit-heatmap-tooltip text.is-positive {
+  fill: rgb(74, 222, 128);
+}
+
+.hourly-profit-heatmap-tooltip text.is-negative {
+  fill: rgb(248, 113, 113);
+}
+
+.hourly-profit-heatmap-tooltip text.is-muted {
+  fill: rgb(148, 163, 184);
+  font-weight: 600;
+}
+
 .goal-streak-strip,
 .goal-avg-strip {
   grid-template-columns: repeat(4, minmax(0, 1fr));
