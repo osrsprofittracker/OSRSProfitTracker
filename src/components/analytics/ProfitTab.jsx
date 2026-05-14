@@ -9,6 +9,7 @@ import PeriodComparisonCards from './widgets/PeriodComparisonCards';
 import BestDaysTable from './widgets/BestDaysTable';
 import ProfitKpiStrip from './widgets/ProfitKpiStrip';
 import ProfitHeatmap from './widgets/ProfitHeatmap';
+import HourlyProfitHeatmap from './widgets/HourlyProfitHeatmap';
 import {
   addDays,
   inclusiveDayCount,
@@ -132,6 +133,17 @@ export default function ProfitTab({
         endDate={timeframe.end}
         numberFormat={numberFormat}
         onCellClick={(date) => onNavigateToHistory?.(date, date)}
+      />
+      <HourlyProfitHeatmap
+        transactions={transactions}
+        profitHistory={profitHistory}
+        timeframe={timeframe}
+        numberFormat={numberFormat}
+        onCellClick={(cell) => onNavigateToHistory?.(timeframe.start, timeframe.end, {
+          type: 'sell',
+          dayOfWeek: String(cell.dayIndex),
+          hourOfDay: String(cell.hour),
+        })}
       />
     </div>
   );

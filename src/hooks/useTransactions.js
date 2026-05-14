@@ -22,7 +22,7 @@ export function useTransactions(userId) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState({ type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' });
+  const [filters, setFilters] = useState({ type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '', dayOfWeek: '', hourOfDay: '' });
   const [sortConfig, setSortConfig] = useState({ key: 'date', dir: 'desc' });
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
@@ -101,12 +101,12 @@ export function useTransactions(userId) {
 
     const from = (targetPage - 1) * size;
     const to = from + size - 1;
+    const hasLocalTimeFilters = (activeFilters.dayOfWeek ?? '') !== '' || (activeFilters.hourOfDay ?? '') !== '';
 
     let query = supabase
       .from('transactions_view')
       .select('*', { count: 'exact' })
-      .eq('user_id', userId)
-      .range(from, to);
+      .eq('user_id', userId);
 
     // Apply sort
     const sortKey = activeSort.key || 'date';
@@ -134,6 +134,51 @@ export function useTransactions(userId) {
     }
     if (activeFilters.mode && activeFilters.mode !== 'all') {
       query = query.eq('is_investment', activeFilters.mode === 'investment');
+    }
+
+    if (!hasLocalTimeFilters) {
+      query = query.range(from, to);
+    }
+
+    if (hasLocalTimeFilters) {
+      const matchedRows = [];
+      let matchedCount = 0;
+      let scanFrom = 0;
+      let candidateCount = null;
+      let scanComplete = false;
+      const batchSize = 1000;
+
+      while (!scanComplete) {
+        const scanTo = scanFrom + batchSize - 1;
+        const { data, error, count } = await query.range(scanFrom, scanTo);
+
+        if (requestId !== pagedRequestId.current) return;
+
+        if (error) {
+          console.error('Error fetching paged transactions:', error.message, error.details, error.hint);
+          setPagedLoading(false);
+          return;
+        }
+
+        if (candidateCount == null) candidateCount = count || 0;
+
+        for (const row of (data || []).map(formatRow)) {
+          if (!matchesLocalTimeFilters(row, activeFilters)) continue;
+
+          if (matchedCount >= from && matchedRows.length < size) {
+            matchedRows.push(row);
+          }
+          matchedCount += 1;
+        }
+
+        scanFrom += batchSize;
+        scanComplete = (data || []).length < batchSize || scanFrom >= candidateCount;
+      }
+
+      setPagedTransactions(matchedRows);
+      setTotalCount(matchedCount);
+      setPagedLoading(false);
+      return;
     }
 
     const { data, error, count } = await query;
@@ -176,7 +221,7 @@ export function useTransactions(userId) {
 
   const resetPaged = useCallback(() => {
     const defaultSort = { key: 'date', dir: 'desc' };
-    const defaultFilters = { type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' };
+    const defaultFilters = { type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '', dayOfWeek: '', hourOfDay: '' };
     setSortConfig(defaultSort);
     setFilters(defaultFilters);
     setPage(1);
@@ -344,4 +389,24 @@ function dbColumn(key) {
     margin: 'margin'
   };
   return map[key] || 'date';
+}
+
+function matchesLocalTimeFilters(row, filters) {
+  const dayOfWeek = filters.dayOfWeek ?? '';
+  const hourOfDay = filters.hourOfDay ?? '';
+
+  if (dayOfWeek === '' && hourOfDay === '') return true;
+
+  const date = new Date(row.date);
+  if (Number.isNaN(date.getTime())) return false;
+
+  if (dayOfWeek !== '' && date.getDay() !== Number(dayOfWeek)) {
+    return false;
+  }
+
+  if (hourOfDay !== '' && date.getHours() !== Number(hourOfDay)) {
+    return false;
+  }
+
+  return true;
 }

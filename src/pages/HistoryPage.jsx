@@ -24,8 +24,40 @@ const EMPTY_FILTERS = {
   qtyMin: '',
   qtyMax: '',
   marginMin: '',
-  marginMax: ''
+  marginMax: '',
+  dayOfWeek: '',
+  hourOfDay: ''
 };
+
+function hasAnyFilter(filters = EMPTY_FILTERS) {
+  return Boolean(
+    filters.stockName || filters.category ||
+    filters.dateFrom || filters.dateTo ||
+    filters.gpMin || filters.gpMax ||
+    filters.priceMin || filters.priceMax ||
+    filters.profitMin || filters.profitMax ||
+    filters.qtyMin || filters.qtyMax ||
+    filters.marginMin || filters.marginMax ||
+    (filters.dayOfWeek ?? '') !== '' ||
+    (filters.hourOfDay ?? '') !== '' ||
+    (filters.type || 'all') !== 'all' ||
+    (filters.mode || 'all') !== 'all'
+  );
+}
+
+function hasVisibleFilter(filters = EMPTY_FILTERS) {
+  return Boolean(
+    filters.stockName || filters.category ||
+    filters.dateFrom || filters.dateTo ||
+    filters.gpMin || filters.gpMax ||
+    filters.priceMin || filters.priceMax ||
+    filters.profitMin || filters.profitMax ||
+    filters.qtyMin || filters.qtyMax ||
+    filters.marginMin || filters.marginMax ||
+    (filters.type || 'all') !== 'all' ||
+    (filters.mode || 'all') !== 'all'
+  );
+}
 
 export default function HistoryPage({
   pagedTransactions = [], pagedLoading = false, totalCount = 0, totalPages = 0,
@@ -50,8 +82,8 @@ export default function HistoryPage({
   useEffect(() => {
     setLocalFilters({ ...EMPTY_FILTERS, ...filters });
     setAppliedFilters({ ...EMPTY_FILTERS, ...filters });
-    if (filters.stockName) setShowFilters(true);
-  }, [filters.stockName]);
+    if (hasAnyFilter(filters)) setShowFilters(true);
+  }, [filters]);
 
   const [confirmUndo, setConfirmUndo] = useState(null); // holds transaction to undo
   const [undoWarning, setUndoWarning] = useState(null); // holds warning type
@@ -108,15 +140,7 @@ export default function HistoryPage({
     return pages;
   };
 
-  const hasActiveFilters = appliedFilters.stockName || appliedFilters.category ||
-    appliedFilters.dateFrom || appliedFilters.dateTo ||
-    appliedFilters.gpMin || appliedFilters.gpMax ||
-    appliedFilters.priceMin || appliedFilters.priceMax ||
-    appliedFilters.profitMin || appliedFilters.profitMax ||
-    appliedFilters.qtyMin || appliedFilters.qtyMax ||
-    appliedFilters.marginMin || appliedFilters.marginMax ||
-    appliedFilters.type !== 'all' ||
-    appliedFilters.mode !== 'all';
+  const hasActiveFilters = hasVisibleFilter(appliedFilters);
   // Derive categories from existing transactions for the filter dropdown
   const categories = [...new Set(stocks.map(s => s.category).filter(Boolean))].sort();
 
