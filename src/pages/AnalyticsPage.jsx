@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Check, Copy } from 'lucide-react';
 import { useAnalyticsTimeframe } from '../hooks/useAnalyticsTimeframe';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useUrlState } from '../hooks/useUrlState';
 import TimeframeSelector from '../components/analytics/TimeframeSelector';
 import TabNav, { ANALYTICS_TABS } from '../components/analytics/TabNav';
 import KpiBand from '../components/analytics/KpiBand';
@@ -15,6 +17,31 @@ import '../styles/analytics-widgets.css';
 
 const sumGpTraded = (buckets) => buckets.reduce((sum, bucket) => sum + (bucket.gp_traded || 0), 0);
 const DEFAULT_ALL_TIME_START = '2020-01-01';
+
+const parseTabParam = (value) => (
+  ANALYTICS_TABS.includes(value) ? value : null
+);
+
+const serializeTabParam = (value) => (
+  ANALYTICS_TABS.includes(value) ? value : null
+);
+
+const copyText = async (text) => {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.className = 'analytics-copy-fallback';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  return copied;
+};
 
 export default function AnalyticsPage({
   userId,
@@ -40,9 +67,14 @@ export default function AnalyticsPage({
   const safeProfitHistory = profitHistory || [];
   const safeStocksForStats = stocksForStats || [];
 
-  const [activeTab, setActiveTab] = useState(() => (
-    ANALYTICS_TABS.includes(initialTab) ? initialTab : 'profit'
-  ));
+  const [activeTab, setActiveTab] = useUrlState(
+    'tab',
+    ANALYTICS_TABS.includes(initialTab) ? initialTab : 'profit',
+    parseTabParam,
+    serializeTabParam,
+    { history: 'push' }
+  );
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const scopeCoversStart = (scope, start) => {
     if (scope?.full) return true;
@@ -144,13 +176,15 @@ export default function AnalyticsPage({
     [safeStocksForStats]
   );
 
-  const handleTabChange = (next) => {
-    setActiveTab(next);
+  const handleTabChange = useCallback((next) => {
+    setActiveTab(next, { history: 'push' });
+  }, [setActiveTab]);
 
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', next);
-    window.history.replaceState({}, '', url);
-  };
+  const handleCopyLink = useCallback(async () => {
+    const copied = await copyText(window.location.href).catch(() => false);
+    setLinkCopied(copied);
+    window.setTimeout(() => setLinkCopied(false), 1600);
+  }, []);
 
   return (
     <div className="analytics-page">
@@ -161,11 +195,23 @@ export default function AnalyticsPage({
             Deep portfolio insights across profit, items, categories, and goals.
           </p>
         </div>
-        <TimeframeSelector
-          window={timeframe.window}
-          options={timeframe.options}
-          onChange={timeframe.setWindow}
-        />
+        <div className="analytics-header-actions">
+          <TimeframeSelector
+            window={timeframe.window}
+            options={timeframe.options}
+            onChange={timeframe.setWindow}
+          />
+          <button
+            type="button"
+            className={`analytics-copy-link-btn has-tooltip${linkCopied ? ' is-copied' : ''}`}
+            data-tooltip={linkCopied ? 'Link copied.' : 'Copy link to this analytics view.'}
+            aria-label="Copy link to this analytics view"
+            onClick={handleCopyLink}
+          >
+            {linkCopied ? <Check size={16} /> : <Copy size={16} />}
+          </button>
+          {linkCopied && <span className="analytics-copy-toast">Copied</span>}
+        </div>
       </div>
 
       {current.fromFallback && (

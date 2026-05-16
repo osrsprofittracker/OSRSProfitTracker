@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { formatNumber } from '../../../utils/formatters';
 import { periodDate } from '../../../utils/goalAnalytics';
+import { useUrlState } from '../../../hooks/useUrlState';
 
 const PERIODS = [
   { key: 'all', label: 'All' },
@@ -11,9 +12,24 @@ const PERIODS = [
 ];
 
 const DEFAULT_VISIBLE = 25;
+const PERIOD_KEYS = new Set(PERIODS.map((period) => period.key));
+
+const parseHistoryPeriodParam = (value) => (
+  PERIOD_KEYS.has(value) ? value : null
+);
+
+const serializeHistoryPeriodParam = (value) => (
+  PERIOD_KEYS.has(value) && value !== 'all' ? value : null
+);
 
 export default function MilestoneHistoryTable({ milestoneHistory = [], numberFormat }) {
-  const [period, setPeriod] = useState('all');
+  const [period, setPeriod] = useUrlState(
+    'historyPeriod',
+    'all',
+    parseHistoryPeriodParam,
+    serializeHistoryPeriodParam,
+    { history: 'push' }
+  );
   const [expanded, setExpanded] = useState(false);
 
   const sortedAll = useMemo(() => (
@@ -53,7 +69,7 @@ export default function MilestoneHistoryTable({ milestoneHistory = [], numberFor
                     ? 'Show every recorded period.'
                     : `Filter to completed ${option.label.toLowerCase()} periods.`
                 }
-                onClick={() => setPeriod(option.key)}
+                onClick={() => setPeriod(option.key, { history: 'push' })}
               >
                 {option.label}
               </button>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   computeBuyingVsSelling,
   computeItemMetrics,
@@ -10,7 +10,27 @@ import ItemsTable from './widgets/ItemsTable';
 import ItemDrilldownDrawer from './widgets/ItemDrilldownDrawer';
 import MoversList from './widgets/MoversList';
 import BuyingVsSellingChart from './widgets/BuyingVsSellingChart';
+import { useUrlState } from '../../hooks/useUrlState';
 import '../../styles/analytics-items.css';
+
+const parseCategoryParam = (value) => value || 'all';
+const serializeCategoryParam = (value) => (value && value !== 'all' ? value : null);
+
+const parseBooleanParam = (value) => (
+  value === '1' || value === 'true' || value === 'yes'
+);
+const serializeBooleanParam = (value) => (value ? '1' : null);
+
+const parseMinimumSellsParam = (value) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.floor(parsed);
+};
+const serializeMinimumSellsParam = (value) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return String(Math.floor(parsed));
+};
 
 export default function ItemsTab({
   stocks = [],
@@ -22,11 +42,41 @@ export default function ItemsTab({
   onTimeframeChange,
 }) {
   const { gePrices } = useGEData();
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [hasStockOnly, setHasStockOnly] = useState(false);
-  const [soldInWindowOnly, setSoldInWindowOnly] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
-  const [minimumSells, setMinimumSells] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useUrlState(
+    'category',
+    'all',
+    parseCategoryParam,
+    serializeCategoryParam,
+    { history: 'push' }
+  );
+  const [hasStockOnly, setHasStockOnly] = useUrlState(
+    'hasStock',
+    false,
+    parseBooleanParam,
+    serializeBooleanParam,
+    { history: 'push' }
+  );
+  const [soldInWindowOnly, setSoldInWindowOnly] = useUrlState(
+    'soldInWindow',
+    false,
+    parseBooleanParam,
+    serializeBooleanParam,
+    { history: 'push' }
+  );
+  const [showArchived, setShowArchived] = useUrlState(
+    'archived',
+    false,
+    parseBooleanParam,
+    serializeBooleanParam,
+    { history: 'push' }
+  );
+  const [minimumSells, setMinimumSells] = useUrlState(
+    'minSells',
+    0,
+    parseMinimumSellsParam,
+    serializeMinimumSellsParam,
+    { history: 'replace' }
+  );
   const [drillItem, setDrillItem] = useState(null);
 
   const items = useMemo(() => (
@@ -42,6 +92,13 @@ export default function ItemsTab({
   const categories = useMemo(() => (
     [...new Set(items.map((item) => item.category).filter(Boolean))].sort()
   ), [items]);
+
+  useEffect(() => {
+    if (selectedCategory === 'all' || categories.length === 0) return;
+    if (!categories.includes(selectedCategory)) {
+      setSelectedCategory('all', { history: 'replace' });
+    }
+  }, [categories, selectedCategory, setSelectedCategory]);
 
   const filteredItems = useMemo(() => (
     items.filter((item) => {
@@ -66,15 +123,15 @@ export default function ItemsTab({
       <ItemsFilterBar
         categories={categories}
         selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        onCategoryChange={(value) => setSelectedCategory(value, { history: 'push' })}
         hasStockOnly={hasStockOnly}
-        onToggleHasStock={() => setHasStockOnly((value) => !value)}
+        onToggleHasStock={() => setHasStockOnly((value) => !value, { history: 'push' })}
         soldInWindowOnly={soldInWindowOnly}
-        onToggleSoldInWindow={() => setSoldInWindowOnly((value) => !value)}
+        onToggleSoldInWindow={() => setSoldInWindowOnly((value) => !value, { history: 'push' })}
         showArchived={showArchived}
-        onToggleArchived={() => setShowArchived((value) => !value)}
+        onToggleArchived={() => setShowArchived((value) => !value, { history: 'push' })}
         minimumSells={minimumSells}
-        onMinimumSellsChange={setMinimumSells}
+        onMinimumSellsChange={(value) => setMinimumSells(value, { history: 'replace' })}
       />
 
       <ItemsTable

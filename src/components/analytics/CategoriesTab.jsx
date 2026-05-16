@@ -13,11 +13,21 @@ import {
   filterBucketsByCategories,
 } from '../../utils/categoryAnalytics';
 import { useGEData } from '../../contexts/GEDataContext';
+import { useUrlState } from '../../hooks/useUrlState';
 
 const categoryOf = (stock) => stock?.category || 'Uncategorized';
 
 const bucketCategories = (buckets = []) => (
   buckets.flatMap((bucket) => Object.keys(bucket.by_category || {}))
+);
+
+const parseCategoriesParam = (value) => {
+  if (!value) return [];
+  return value.split(',').map((category) => category.trim()).filter(Boolean).sort();
+};
+
+const serializeCategoriesParam = (value) => (
+  value?.length ? value.join(',') : null
 );
 
 export default function CategoriesTab({
@@ -32,7 +42,13 @@ export default function CategoriesTab({
   onTimeframeChange,
 }) {
   const { gePrices } = useGEData();
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useUrlState(
+    'categories',
+    [],
+    parseCategoriesParam,
+    serializeCategoriesParam,
+    { history: 'push' }
+  );
   const [drillCategory, setDrillCategory] = useState(null);
   const timeframeLabel = timeframe?.window || 'selected';
 
@@ -85,12 +101,21 @@ export default function CategoriesTab({
     }
   }, [drillCategory, selectedCategories]);
 
+  useEffect(() => {
+    if (categories.length === 0 || selectedCategories.length === 0) return;
+    const validCategories = new Set(categories);
+    const nextCategories = selectedCategories.filter((category) => validCategories.has(category));
+    if (nextCategories.length !== selectedCategories.length) {
+      setSelectedCategories(nextCategories, { history: 'replace' });
+    }
+  }, [categories, selectedCategories, setSelectedCategories]);
+
   const toggleCategory = (category) => {
     setSelectedCategories((current) => (
       current.includes(category)
         ? current.filter((value) => value !== category)
         : [...current, category].sort()
-    ));
+    ), { history: 'push' });
   };
 
   return (
@@ -107,7 +132,7 @@ export default function CategoriesTab({
             type="button"
             className={`category-filter-pill has-tooltip${selectedCategories.length === 0 ? ' is-on' : ''}`}
             data-tooltip="Show every category."
-            onClick={() => setSelectedCategories([])}
+            onClick={() => setSelectedCategories([], { history: 'push' })}
           >
             All
           </button>
