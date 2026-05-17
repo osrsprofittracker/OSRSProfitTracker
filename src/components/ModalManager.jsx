@@ -23,6 +23,8 @@ import TimeCalculatorModal from './modals/TimeCalculatorModal';
 import NonGEAddItemModal from './modals/NonGEAddItemModal';
 import NonGEBulkAddModal from './modals/NonGEBulkAddModal';
 import NonGEArchiveModal from './modals/NonGEArchiveModal';
+import NonGEAdjustModal from './modals/NonGEAdjustModal';
+import NonGETradeModal from './modals/NonGETradeModal';
 
 export default function ModalManager({
   // Handlers from useModalHandlers
@@ -58,6 +60,12 @@ export default function ModalManager({
   handleRestoreNonGEStock,
   nonGEStockToArchive,
   handleConfirmArchiveNonGEStock,
+  nonGETradeSubmitting,
+  handleNonGEBuy,
+  handleNonGESell,
+  handleNonGERemove,
+  handleNonGEAdjust,
+  handleNonGESaveNotes,
   // Other handlers
   handleSetAltTimer,
   handleSaveNotes,
@@ -374,6 +382,56 @@ export default function ModalManager({
           loading={nonGEArchivedLoading}
           onRestore={handleRestoreNonGEStock}
           onClose={() => closeModal('nonGEArchive')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEBuy}>
+        <NonGETradeModal
+          mode="buy"
+          stock={selectedStock}
+          onConfirm={handleNonGEBuy}
+          onCancel={() => closeModal('nonGEBuy')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGESell}>
+        <NonGETradeModal
+          mode="sell"
+          stock={selectedStock}
+          onConfirm={handleNonGESell}
+          onCancel={() => closeModal('nonGESell')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGERemove}>
+        <RemoveStockModal
+          stock={selectedStock ? { ...selectedStock, name: selectedStock.nameSnapshot } : selectedStock}
+          onConfirm={handleNonGERemove}
+          onCancel={() => closeModal('nonGERemove')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEAdjust}>
+        <NonGEAdjustModal
+          stock={selectedStock}
+          categories={nonGECategories}
+          customItems={nonGECustomItems}
+          existingStocks={nonGEAllStocks}
+          onConfirm={handleNonGEAdjust}
+          onCancel={() => closeModal('nonGEAdjust')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGENotes}>
+        <NotesModal
+          stock={selectedStock ? { ...selectedStock, name: selectedStock.nameSnapshot } : selectedStock}
+          notes={selectedStock?.notes}
+          onConfirm={handleNonGESaveNotes}
+          onCancel={() => closeModal('nonGENotes')}
         />
       </ModalContainer>
 

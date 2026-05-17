@@ -29,6 +29,11 @@ export default function NonGEPage({
   onReorderCategory,
   onReorderStock,
   onMoveStock,
+  onBuy,
+  onSell,
+  onRemove,
+  onAdjust,
+  onNotes,
 }) {
   const [collapsedCategories, setCollapsedCategories] = useState({});
 
@@ -160,6 +165,11 @@ export default function NonGEPage({
             onSort={onSort}
             onAddItem={onAddItem}
             onArchive={onArchiveRequest || onArchive}
+            onBuy={onBuy}
+            onSell={onSell}
+            onRemove={onRemove}
+            onAdjust={onAdjust}
+            onNotes={onNotes}
             isCollapsed={Boolean(collapsedCategories[category.id])}
             onToggleCollapse={() => toggleCategory(category.id)}
             onCategoryDragStart={handleCategoryDragStart}

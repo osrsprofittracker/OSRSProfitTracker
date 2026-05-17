@@ -367,7 +367,9 @@ export function useTransactions(userId) {
   const addTransaction = useCallback(async (transaction) => {
     const dbTransaction = {
       user_id: userId,
-      stock_id: transaction.stockId,
+      market: transaction.market || 'ge',
+      non_ge_stock_id: transaction.nonGeStockId || null,
+      stock_id: transaction.stockId || null,
       stock_name: transaction.stockName,
       type: transaction.type,
       shares: transaction.shares,
@@ -500,7 +502,9 @@ function formatRow(t) {
   return {
     id: Number(t.id),
     activityKind: 'transaction',
+    market: t.market || 'ge',
     stockId: t.stock_id,
+    nonGeStockId: t.non_ge_stock_id ?? null,
     stockName: t.stock_name,
     type: t.type,
     shares: t.shares,
@@ -520,7 +524,9 @@ function formatProfitRow(row) {
   return {
     id: Number(row.id),
     activityKind: 'profit',
+    market: row.market || 'ge',
     stockId: row.stock_id ?? null,
+    nonGeStockId: row.non_ge_stock_id ?? null,
     stockName: profitTypeLabel(row.profit_type),
     type: row.profit_type,
     shares: null,

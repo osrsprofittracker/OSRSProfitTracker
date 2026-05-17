@@ -12,6 +12,11 @@ export default function NonGECategorySection({
   onSort,
   onAddItem,
   onArchive,
+  onBuy,
+  onSell,
+  onRemove,
+  onAdjust,
+  onNotes,
   isCollapsed,
   onToggleCollapse,
   onCategoryDragStart,
@@ -93,6 +98,11 @@ export default function NonGECategorySection({
             sortConfig={sortConfig}
             onSort={onSort}
             onArchive={onArchive}
+            onBuy={onBuy}
+            onSell={onSell}
+            onRemove={onRemove}
+            onAdjust={onAdjust}
+            onNotes={onNotes}
             onDragStart={onStockDragStart}
             onDragOver={onStockDragOver}
             onDrop={onStockDrop}

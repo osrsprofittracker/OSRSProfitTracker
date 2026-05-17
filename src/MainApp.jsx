@@ -42,6 +42,7 @@ import { useWatchlistAlertChecker } from './hooks/useWatchlistAlertChecker';
 import { useNonGECategories } from './hooks/useNonGECategories';
 import { useNonGECustomItems } from './hooks/useNonGECustomItems';
 import { useNonGEStocks } from './hooks/useNonGEStocks';
+import { useNonGETradeHandlers } from './hooks/useNonGETradeHandlers';
 import GlobalSearch from './components/GlobalSearch';
 import { NON_GE_DEFAULT_CATEGORIES } from './data/nonGeCatalog';
 
@@ -122,6 +123,7 @@ function MainAppInner({ session, onLogout }) {
   const {
     profitHistory,
     loading: profitHistoryLoading,
+    addProfitEntry,
     refetch: refetchProfitHistory,
     loadFullHistory: loadFullProfitHistory,
     fullHistoryLoading: fullProfitHistoryLoading,
@@ -724,6 +726,23 @@ function MainAppInner({ session, onLogout }) {
     handleRestore,
     refreshArchivedStocks,
   } = useModalHandlers();
+
+  const {
+    nonGETradeSubmitting,
+    handleNonGEBuy,
+    handleNonGESell,
+    handleNonGERemove,
+    handleNonGEAdjust,
+    handleNonGESaveNotes,
+  } = useNonGETradeHandlers({
+    selectedStock,
+    updateStock: updateNonGEStock,
+    refetchStocks: refetchNonGEStocks,
+    addTransaction,
+    addProfitEntry,
+    closeModal,
+    highlightRow,
+  });
 
   const handleInvestmentDateChange = async (stock, date) => {
     await updateStock(stock.id, { investmentStartDate: date });
@@ -1428,6 +1447,11 @@ function MainAppInner({ session, onLogout }) {
             onReorderCategory={handleReorderNonGECategory}
             onReorderStock={handleReorderNonGEStock}
             onMoveStock={handleMoveNonGEStock}
+            onBuy={(stock) => openModal('nonGEBuy', { stock })}
+            onSell={(stock) => openModal('nonGESell', { stock })}
+            onRemove={(stock) => openModal('nonGERemove', { stock })}
+            onAdjust={(stock) => openModal('nonGEAdjust', { stock })}
+            onNotes={(stock) => openModal('nonGENotes', { stock })}
           />
         ) : currentPage === 'watchlist' ? (
           <WatchlistPage
@@ -1626,6 +1650,12 @@ function MainAppInner({ session, onLogout }) {
           handleRestoreNonGEStock={handleRestoreNonGEStock}
           nonGEStockToArchive={nonGEStockToArchive}
           handleConfirmArchiveNonGEStock={handleConfirmArchiveNonGEStock}
+          nonGETradeSubmitting={nonGETradeSubmitting}
+          handleNonGEBuy={handleNonGEBuy}
+          handleNonGESell={handleNonGESell}
+          handleNonGERemove={handleNonGERemove}
+          handleNonGEAdjust={handleNonGEAdjust}
+          handleNonGESaveNotes={handleNonGESaveNotes}
           handleSetAltTimer={handleSetAltTimer}
           handleSaveNotes={handleSaveNotes}
           handleCloseChangelog={handleCloseChangelog}

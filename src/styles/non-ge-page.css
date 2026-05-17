@@ -123,7 +123,7 @@
 }
 
 .non-ge-table {
-  min-width: 1160px;
+  min-width: 1460px;
 }
 
 .non-ge-table-th {
@@ -201,11 +201,17 @@
 }
 
 .non-ge-actions-cell {
-  min-width: 9rem;
+  min-width: 22rem;
 }
 
 .non-ge-actions-cell .action-buttons {
-  justify-content: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.non-ge-actions-cell .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .non-ge-modal {
@@ -217,6 +223,10 @@
 
 .non-ge-add-modal {
   width: 38rem;
+}
+
+.non-ge-adjust-modal {
+  width: 40rem;
 }
 
 .non-ge-modal-header {
@@ -278,6 +288,10 @@
   margin-top: 0.75rem;
   padding-right: 0.45rem;
   scrollbar-gutter: stable;
+}
+
+.non-ge-adjust-option-list {
+  max-height: 14rem;
 }
 
 .non-ge-option-row,
@@ -474,6 +488,34 @@
   font-weight: 700;
 }
 
+.non-ge-adjust-locked {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.non-ge-adjust-locked div {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgb(51, 65, 85);
+  border-radius: 0.5rem;
+  padding: 0.65rem;
+}
+
+.non-ge-adjust-locked span {
+  display: block;
+  color: rgb(148, 163, 184);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.non-ge-adjust-locked strong {
+  display: block;
+  color: white;
+  font-size: 0.95rem;
+  margin-top: 0.2rem;
+}
+
 .btn-modal-confirm:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -496,7 +538,8 @@
 
   .non-ge-modal-grid,
   .non-ge-bulk-toolbar,
-  .non-ge-custom-panel {
+  .non-ge-custom-panel,
+  .non-ge-adjust-locked {
     grid-template-columns: 1fr;
   }
 }

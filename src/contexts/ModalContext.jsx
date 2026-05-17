@@ -30,6 +30,11 @@ const MODAL_DEFAULTS = {
   nonGEBulkAdd: false,
   nonGEArchive: false,
   nonGEArchiveConfirm: false,
+  nonGEBuy: false,
+  nonGESell: false,
+  nonGERemove: false,
+  nonGEAdjust: false,
+  nonGENotes: false,
   changelog: false,
 };
 

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Archive, GripVertical, Trash2 } from 'lucide-react';
+import { Archive, CircleDollarSign, GripVertical, MinusCircle, Pencil, ShoppingCart, StickyNote, Trash2 } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../../utils/calculations';
 import { formatAvgPrice, formatNumber } from '../../utils/formatters';
@@ -90,6 +90,11 @@ export default function NonGETable({
   onSort,
   onArchive,
   onDelete,
+  onBuy,
+  onSell,
+  onRemove,
+  onAdjust,
+  onNotes,
   onDragStart,
   onDragOver,
   onDrop,
@@ -181,13 +186,43 @@ export default function NonGETable({
                   <button
                     type="button"
                     className={`btn btn-sm ${stock.notes ? 'btn-purple' : 'btn-secondary'} non-ge-notes-btn`}
-                    title={stock.notes || 'Notes editing is added with Non-GE trade actions'}
+                    onClick={() => onNotes(stock)}
+                    title={stock.notes || 'Add notes'}
                   >
+                    <StickyNote size={12} />
                     {stock.notes ? 'Edit' : 'Add'}
                   </button>
                 </td>
                 <td className="td-base non-ge-actions-cell">
                   <div className="action-buttons">
+                    <button type="button" className="btn btn-success btn-sm" onClick={() => onBuy(stock)} title="Buy">
+                      <ShoppingCart size={12} />
+                      Buy
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sell btn-sm"
+                      onClick={() => onSell(stock)}
+                      disabled={(stock.shares || 0) <= 0}
+                      title="Sell"
+                    >
+                      <CircleDollarSign size={12} />
+                      Sell
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-remove btn-sm"
+                      onClick={() => onRemove(stock)}
+                      disabled={(stock.shares || 0) <= 0}
+                      title="Remove"
+                    >
+                      <MinusCircle size={12} />
+                      Remove
+                    </button>
+                    <button type="button" className="btn btn-warning btn-sm" onClick={() => onAdjust(stock)} title="Adjust metadata">
+                      <Pencil size={12} />
+                      Adjust
+                    </button>
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)}>
                       <Archive size={12} />
                       Archive
