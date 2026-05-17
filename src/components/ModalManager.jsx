@@ -20,6 +20,9 @@ import ArchiveModal from './modals/ArchiveModal';
 import MilestoneTrackerModal from './modals/MilestoneTrackerModal';
 import AltTimerModal from './modals/AltTimerModal';
 import TimeCalculatorModal from './modals/TimeCalculatorModal';
+import NonGEAddItemModal from './modals/NonGEAddItemModal';
+import NonGEBulkAddModal from './modals/NonGEBulkAddModal';
+import NonGEArchiveModal from './modals/NonGEArchiveModal';
 
 export default function ModalManager({
   // Handlers from useModalHandlers
@@ -49,6 +52,9 @@ export default function ModalManager({
   stockToArchive,
   handleConfirmArchive,
   handleRestore,
+  handleAddNonGEItem,
+  handleBulkAddNonGEItems,
+  handleRestoreNonGEStock,
   // Other handlers
   handleSetAltTimer,
   handleSaveNotes,
@@ -63,6 +69,11 @@ export default function ModalManager({
   geIconMap,
   gePrices,
   priceAlerts,
+  nonGECategories,
+  nonGECustomItems,
+  nonGEAllStocks,
+  nonGEArchivedStocks,
+  nonGEArchivedLoading,
   // Settings
   visibleColumns,
   visibleProfits,
@@ -330,6 +341,35 @@ export default function ModalManager({
           confirmVariant="warning"
           onConfirm={handleConfirmArchive}
           onCancel={() => closeModal('archiveConfirm')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEAddItem}>
+        <NonGEAddItemModal
+          categories={nonGECategories}
+          customItems={nonGECustomItems}
+          existingStocks={nonGEAllStocks}
+          defaultCategoryId={selectedCategory}
+          onConfirm={handleAddNonGEItem}
+          onCancel={() => closeModal('nonGEAddItem')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEBulkAdd}>
+        <NonGEBulkAddModal
+          categories={nonGECategories}
+          existingStocks={nonGEAllStocks}
+          onConfirm={handleBulkAddNonGEItems}
+          onCancel={() => closeModal('nonGEBulkAdd')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEArchive}>
+        <NonGEArchiveModal
+          archivedStocks={nonGEArchivedStocks}
+          loading={nonGEArchivedLoading}
+          onRestore={handleRestoreNonGEStock}
+          onClose={() => closeModal('nonGEArchive')}
         />
       </ModalContainer>
 

@@ -8,6 +8,7 @@ const PAGE_PATHS = {
   graphs: '/graphs',
   analytics: '/analytics',
   watchlist: '/watchlist',
+  nonge: '/non-ge',
 };
 
 const HISTORY_EMPTY_FILTERS = {
@@ -25,6 +26,7 @@ function getPageFromURL() {
   if (path === '/graphs') return 'graphs';
   if (path === '/analytics') return 'analytics';
   if (path === '/watchlist') return 'watchlist';
+  if (path === '/non-ge') return 'nonge';
   return 'home';
 }
 
@@ -52,6 +54,9 @@ export function useNavigation({
   fetchCategories,
   refetchGPStats,
   refetchProfitHistory,
+  refetchNonGEStocks,
+  fetchNonGECategories,
+  fetchNonGECustomItems,
   applyFilters,
   stocks,
   categories,
@@ -70,6 +75,11 @@ export function useNavigation({
       refetchGPStats();
       refetchProfitHistory();
     }
+    if (page === 'nonge') {
+      refetchNonGEStocks?.();
+      fetchNonGECategories?.();
+      fetchNonGECustomItems?.();
+    }
     setCurrentPage(page);
     let url = PAGE_PATHS[page] || '/';
     if (options.query) {
@@ -87,7 +97,7 @@ export function useNavigation({
       applyFilters({ ...HISTORY_EMPTY_FILTERS });
     }
     window.history.pushState({ page }, '', url);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
+  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, refetchNonGEStocks, fetchNonGECategories, fetchNonGECustomItems, applyFilters]);
 
   // Replace initial history entry so back button works correctly
   useEffect(() => {
@@ -108,6 +118,11 @@ export function useNavigation({
         refetchGPStats();
         refetchProfitHistory();
       }
+      if (page === 'nonge') {
+        refetchNonGEStocks?.();
+        fetchNonGECategories?.();
+        fetchNonGECustomItems?.();
+      }
       setCurrentPage(page);
       const searchParams = new URLSearchParams(window.location.search);
       setGraphItemId(searchParams.get('item'));
@@ -117,7 +132,7 @@ export function useNavigation({
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
+  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, refetchNonGEStocks, fetchNonGECategories, fetchNonGECustomItems, applyFilters]);
 
   const toggleCategory = useCallback((category) => {
     setCollapsedCategories(prev => {

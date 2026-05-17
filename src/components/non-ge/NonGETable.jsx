@@ -1,0 +1,186 @@
+import React, { useMemo } from 'react';
+import { Archive, Trash2 } from 'lucide-react';
+import ItemIcon from '../ItemIcon';
+import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../../utils/calculations';
+import { formatAvgPrice, formatNumber } from '../../utils/formatters';
+import { getNonGECatalogItem, nonGEItemDisplayName, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
+
+function sortNonGEStocks(stocks, sortConfig) {
+  if (!sortConfig?.key) return stocks;
+
+  return [...stocks].sort((a, b) => {
+    let aVal;
+    let bVal;
+
+    switch (sortConfig.key) {
+      case 'name':
+        aVal = nonGEItemDisplayName(a).toLowerCase();
+        bVal = nonGEItemDisplayName(b).toLowerCase();
+        break;
+      case 'shares':
+      case 'totalCost':
+      case 'sharesSold':
+      case 'totalCostSold':
+      case 'targetBuyPrice':
+      case 'targetSellPrice':
+        aVal = a[sortConfig.key] ?? 0;
+        bVal = b[sortConfig.key] ?? 0;
+        break;
+      case 'avgBuy':
+        aVal = calculateAvgBuyPrice(a);
+        bVal = calculateAvgBuyPrice(b);
+        break;
+      case 'avgSell':
+        aVal = calculateAvgSellPrice(a);
+        bVal = calculateAvgSellPrice(b);
+        break;
+      case 'profit':
+        aVal = calculateProfit(a);
+        bVal = calculateProfit(b);
+        break;
+      case 'range':
+        aVal = nonGEItemRangeLabel(getNonGECatalogItem(a.catalogItemKey)).toLowerCase();
+        bVal = nonGEItemRangeLabel(getNonGECatalogItem(b.catalogItemKey)).toLowerCase();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function SortIcon({ columnKey, sortConfig }) {
+  if (sortConfig?.key !== columnKey) return null;
+  return <span className="non-ge-sort-icon">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+}
+
+function HeaderCell({ label, columnKey, sortConfig, onSort, align = 'left' }) {
+  const sortable = Boolean(columnKey && onSort);
+
+  return (
+    <th className={`non-ge-table-th non-ge-table-th--${align}`}>
+      {sortable ? (
+        <button type="button" className="non-ge-sort-btn" onClick={() => onSort(columnKey)}>
+          <span>{label}</span>
+          <SortIcon columnKey={columnKey} sortConfig={sortConfig} />
+        </button>
+      ) : (
+        label
+      )}
+    </th>
+  );
+}
+
+function NumberCell({ value, numberFormat, className = '' }) {
+  return (
+    <td className={`non-ge-table-td non-ge-table-td--right ${className}`} title={formatNumber(value, 'full')}>
+      {formatNumber(value, numberFormat)}
+    </td>
+  );
+}
+
+export default function NonGETable({
+  stocks,
+  numberFormat,
+  sortConfig,
+  onSort,
+  onArchive,
+  onDelete,
+}) {
+  const sortedStocks = useMemo(() => sortNonGEStocks(stocks, sortConfig), [stocks, sortConfig]);
+
+  if (sortedStocks.length === 0) {
+    return (
+      <div className="non-ge-empty-table">
+        No items in this category.
+      </div>
+    );
+  }
+
+  return (
+    <div className="non-ge-table-wrap">
+      <table className="non-ge-table">
+        <thead>
+          <tr>
+            <HeaderCell label="Name" columnKey="name" sortConfig={sortConfig} onSort={onSort} />
+            <HeaderCell label="Held Qty" columnKey="shares" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Total Cost" columnKey="totalCost" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Avg Buy" columnKey="avgBuy" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Qty Sold" columnKey="sharesSold" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Total Sold Price" columnKey="totalCostSold" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Avg Sell" columnKey="avgSell" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Profit" columnKey="profit" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Range" columnKey="range" sortConfig={sortConfig} onSort={onSort} />
+            <HeaderCell label="Target Buy" columnKey="targetBuyPrice" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Target Sell" columnKey="targetSellPrice" sortConfig={sortConfig} onSort={onSort} align="right" />
+            <HeaderCell label="Notes" />
+            <HeaderCell label="Actions" align="right" />
+          </tr>
+        </thead>
+        <tbody>
+          {sortedStocks.map(stock => {
+            const catalogItem = getNonGECatalogItem(stock.catalogItemKey);
+            const name = nonGEItemDisplayName(stock);
+            const avgBuy = calculateAvgBuyPrice(stock);
+            const avgSell = calculateAvgSellPrice(stock);
+            const profit = calculateProfit(stock);
+
+            return (
+              <tr key={stock.id} className="non-ge-table-row" data-stock-id={stock.id}>
+                <td className="non-ge-table-td non-ge-name-cell">
+                  <ItemIcon
+                    src={catalogItem?.imageUrl || stock.imageUrl}
+                    alt=""
+                    className="non-ge-item-icon"
+                    fallbackText={name}
+                  />
+                  <div className="non-ge-name-text">
+                    <span className="non-ge-item-name">{name}</span>
+                    <span className="non-ge-item-source">
+                      {catalogItem?.sourceName || 'Custom'}
+                    </span>
+                  </div>
+                </td>
+                <NumberCell value={stock.shares} numberFormat={numberFormat} />
+                <NumberCell value={stock.totalCost} numberFormat={numberFormat} />
+                <td className="non-ge-table-td non-ge-table-td--right non-ge-table-td--accent" title={formatNumber(avgBuy, 'full')}>
+                  {formatAvgPrice(avgBuy, numberFormat)}
+                </td>
+                <NumberCell value={stock.sharesSold} numberFormat={numberFormat} />
+                <NumberCell value={stock.totalCostSold} numberFormat={numberFormat} />
+                <td className="non-ge-table-td non-ge-table-td--right non-ge-table-td--accent" title={formatNumber(avgSell, 'full')}>
+                  {formatAvgPrice(avgSell, numberFormat)}
+                </td>
+                <td className={`non-ge-table-td non-ge-table-td--right ${profit >= 0 ? 'non-ge-profit-positive' : 'non-ge-profit-negative'}`} title={formatNumber(profit, 'full')}>
+                  {profit >= 0 ? '+' : ''}{formatNumber(profit, numberFormat)}
+                </td>
+                <td className="non-ge-table-td non-ge-range-cell">
+                  {catalogItem ? nonGEItemRangeLabel(catalogItem) : 'Unknown'}
+                </td>
+                <NumberCell value={stock.targetBuyPrice} numberFormat={numberFormat} />
+                <NumberCell value={stock.targetSellPrice} numberFormat={numberFormat} />
+                <td className="non-ge-table-td non-ge-notes-cell" title={stock.notes || ''}>
+                  {stock.notes || '—'}
+                </td>
+                <td className="non-ge-table-td non-ge-actions-cell">
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)}>
+                    <Archive size={12} />
+                    Archive
+                  </button>
+                  {onDelete && (
+                    <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(stock)} title="Delete item">
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
