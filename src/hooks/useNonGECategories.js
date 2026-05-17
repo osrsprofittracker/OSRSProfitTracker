@@ -191,7 +191,7 @@ export function useNonGECategories(userId) {
 
         const { error: insertError } = await supabase
           .from('non_ge_categories')
-          .insert(inserts);
+          .upsert(inserts, { onConflict: 'user_id,name', ignoreDuplicates: true });
 
         if (insertError) throw insertError;
       }

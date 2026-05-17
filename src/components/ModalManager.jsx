@@ -53,6 +53,7 @@ export default function ModalManager({
   handleConfirmArchive,
   handleRestore,
   handleAddNonGEItem,
+  handleCreateNonGECustomItem,
   handleBulkAddNonGEItems,
   handleRestoreNonGEStock,
   // Other handlers
@@ -351,6 +352,7 @@ export default function ModalManager({
           existingStocks={nonGEAllStocks}
           defaultCategoryId={selectedCategory}
           onConfirm={handleAddNonGEItem}
+          onCreateCustomItem={handleCreateNonGECustomItem}
           onCancel={() => closeModal('nonGEAddItem')}
         />
       </ModalContainer>

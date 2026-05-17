@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
+import ItemIcon from '../ItemIcon';
 import { NON_GE_CATALOG } from '../../data/nonGeCatalog';
 import { normalizeNonGESearch, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
 
@@ -106,6 +107,12 @@ export default function NonGEBulkAddModal({
                 checked={checked}
                 disabled={isDuplicate}
                 onChange={() => toggleItem(item.key)}
+              />
+              <ItemIcon
+                src={item.imageUrl}
+                alt=""
+                className="non-ge-option-icon"
+                fallbackText={item.name}
               />
               <span>
                 <strong>{item.name}</strong>

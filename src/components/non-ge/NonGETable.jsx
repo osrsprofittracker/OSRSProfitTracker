@@ -61,7 +61,7 @@ function HeaderCell({ label, columnKey, sortConfig, onSort, align = 'left' }) {
   const sortable = Boolean(columnKey && onSort);
 
   return (
-    <th className={`non-ge-table-th non-ge-table-th--${align}`}>
+    <th className={`th-base ${sortable ? 'th-sortable' : ''} non-ge-table-th non-ge-table-th--${align}`}>
       {sortable ? (
         <button type="button" className="non-ge-sort-btn" onClick={() => onSort(columnKey)}>
           <span>{label}</span>
@@ -76,7 +76,7 @@ function HeaderCell({ label, columnKey, sortConfig, onSort, align = 'left' }) {
 
 function NumberCell({ value, numberFormat, className = '' }) {
   return (
-    <td className={`non-ge-table-td non-ge-table-td--right ${className}`} title={formatNumber(value, 'full')}>
+    <td className={`td-base td-right ${className}`} title={formatNumber(value, 'full')}>
       {formatNumber(value, numberFormat)}
     </td>
   );
@@ -101,9 +101,9 @@ export default function NonGETable({
   }
 
   return (
-    <div className="non-ge-table-wrap">
-      <table className="non-ge-table">
-        <thead>
+    <div className="table-container non-ge-table-wrap">
+      <table className="table-base non-ge-table">
+        <thead className="thead-base">
           <tr>
             <HeaderCell label="Name" columnKey="name" sortConfig={sortConfig} onSort={onSort} />
             <HeaderCell label="Held Qty" columnKey="shares" sortConfig={sortConfig} onSort={onSort} align="right" />
@@ -129,8 +129,8 @@ export default function NonGETable({
             const profit = calculateProfit(stock);
 
             return (
-              <tr key={stock.id} className="non-ge-table-row" data-stock-id={stock.id}>
-                <td className="non-ge-table-td non-ge-name-cell">
+              <tr key={stock.id} className={`tr-base ${index % 2 ? 'tr-even' : 'tr-odd'} non-ge-table-row`} data-stock-id={stock.id}>
+                <td className="td-base non-ge-name-cell">
                   <ItemIcon
                     src={catalogItem?.imageUrl || stock.imageUrl}
                     alt=""
@@ -140,32 +140,32 @@ export default function NonGETable({
                   <div className="non-ge-name-text">
                     <span className="non-ge-item-name">{name}</span>
                     <span className="non-ge-item-source">
-                      {catalogItem?.sourceName || 'Custom'}
+                      {catalogItem?.category || 'Custom'}
                     </span>
                   </div>
                 </td>
                 <NumberCell value={stock.shares} numberFormat={numberFormat} />
                 <NumberCell value={stock.totalCost} numberFormat={numberFormat} />
-                <td className="non-ge-table-td non-ge-table-td--right non-ge-table-td--accent" title={formatNumber(avgBuy, 'full')}>
+                <td className="td-base td-right non-ge-table-td--accent" title={formatNumber(avgBuy, 'full')}>
                   {formatAvgPrice(avgBuy, numberFormat)}
                 </td>
                 <NumberCell value={stock.sharesSold} numberFormat={numberFormat} />
                 <NumberCell value={stock.totalCostSold} numberFormat={numberFormat} />
-                <td className="non-ge-table-td non-ge-table-td--right non-ge-table-td--accent" title={formatNumber(avgSell, 'full')}>
+                <td className="td-base td-right non-ge-table-td--accent" title={formatNumber(avgSell, 'full')}>
                   {formatAvgPrice(avgSell, numberFormat)}
                 </td>
-                <td className={`non-ge-table-td non-ge-table-td--right ${profit >= 0 ? 'non-ge-profit-positive' : 'non-ge-profit-negative'}`} title={formatNumber(profit, 'full')}>
+                <td className={`td-base td-right ${profit >= 0 ? 'td-profit-positive' : 'td-profit-negative'}`} title={formatNumber(profit, 'full')}>
                   {profit >= 0 ? '+' : ''}{formatNumber(profit, numberFormat)}
                 </td>
-                <td className="non-ge-table-td non-ge-range-cell">
+                <td className="td-base non-ge-range-cell">
                   {catalogItem ? nonGEItemRangeLabel(catalogItem) : 'Unknown'}
                 </td>
                 <NumberCell value={stock.targetBuyPrice} numberFormat={numberFormat} />
                 <NumberCell value={stock.targetSellPrice} numberFormat={numberFormat} />
-                <td className="non-ge-table-td non-ge-notes-cell" title={stock.notes || ''}>
+                <td className="td-base non-ge-notes-cell" title={stock.notes || ''}>
                   {stock.notes || '—'}
                 </td>
-                <td className="non-ge-table-td non-ge-actions-cell">
+                <td className="td-base non-ge-actions-cell">
                   <button type="button" className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)}>
                     <Archive size={12} />
                     Archive

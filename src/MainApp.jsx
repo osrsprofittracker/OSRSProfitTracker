@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { BarChart3, Eye, LogOut } from 'lucide-react';
+import { BarChart3, Eye, LogOut, Package } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
@@ -147,6 +147,7 @@ function MainAppInner({ session, onLogout }) {
     customItems: nonGECustomItems,
     loading: nonGECustomItemsLoading,
     fetchCustomItems: fetchNonGECustomItems,
+    addCustomItem: addNonGECustomItem,
   } = useNonGECustomItems(userId);
   const {
     stocks: nonGEStocks,
@@ -775,6 +776,14 @@ function MainAppInner({ session, onLogout }) {
     return created;
   };
 
+  const handleCreateNonGECustomItem = async (item) => {
+    const created = await addNonGECustomItem(item);
+    if (created) {
+      await fetchNonGECustomItems();
+    }
+    return created;
+  };
+
   const handleBulkAddNonGEItems = async ({ items }) => {
     const existingKeys = new Set(nonGEAllStocks.map(getNonGEDuplicateKey).filter(Boolean));
     let added = 0;
@@ -1111,6 +1120,7 @@ function MainAppInner({ session, onLogout }) {
               onClick={() => navigateToPage('nonge')}
               className={`topbar-nav-btn${currentPage === 'nonge' ? ' is-active' : ''}`}
             >
+              <Package size={14} />
               Non-GE
             </button>
             <button
@@ -1576,6 +1586,7 @@ function MainAppInner({ session, onLogout }) {
           handleConfirmArchive={handleConfirmArchive}
           handleRestore={handleRestore}
           handleAddNonGEItem={handleAddNonGEItem}
+          handleCreateNonGECustomItem={handleCreateNonGECustomItem}
           handleBulkAddNonGEItems={handleBulkAddNonGEItems}
           handleRestoreNonGEStock={handleRestoreNonGEStock}
           handleSetAltTimer={handleSetAltTimer}

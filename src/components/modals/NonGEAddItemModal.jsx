@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Image, Plus, Search } from 'lucide-react';
+import ItemIcon from '../ItemIcon';
 import { NON_GE_CATALOG } from '../../data/nonGeCatalog';
 import { normalizeNonGESearch, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
 import { parseMK } from '../../utils/formatters';
@@ -16,6 +17,8 @@ function catalogOption(item) {
     id: item.key,
     name: item.name,
     rangeLabel: nonGEItemRangeLabel(item),
+    category: item.category || 'Uncategorized',
+    imageUrl: item.imageUrl || '',
     sourceName: item.sourceName,
     sourceDate: item.sourceDate,
     catalogItemKey: item.key,
@@ -29,6 +32,8 @@ function customOption(item) {
     id: item.id,
     name: item.name,
     rangeLabel: item.rangeLabel || 'Unknown',
+    category: 'Custom',
+    imageUrl: item.imageUrl || '',
     sourceName: item.sourceName || 'Custom',
     sourceDate: 'Private',
     catalogItemKey: null,
@@ -42,6 +47,7 @@ export default function NonGEAddItemModal({
   existingStocks,
   defaultCategoryId,
   onConfirm,
+  onCreateCustomItem,
   onCancel,
 }) {
   const [query, setQuery] = useState('');
@@ -49,6 +55,11 @@ export default function NonGEAddItemModal({
   const [categoryId, setCategoryId] = useState(defaultCategoryId || categories[0]?.id || '');
   const [targetBuyPrice, setTargetBuyPrice] = useState('');
   const [targetSellPrice, setTargetSellPrice] = useState('');
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customRangeLabel, setCustomRangeLabel] = useState('Unknown');
+  const [customWikiUrl, setCustomWikiUrl] = useState('');
+  const [customImageUrl, setCustomImageUrl] = useState('');
   const [error, setError] = useState('');
 
   const existingKeys = useMemo(() => new Set(
@@ -93,6 +104,36 @@ export default function NonGEAddItemModal({
     });
   };
 
+  const handleCreateCustom = async () => {
+    const name = customName.trim();
+    if (!name) {
+      setError('Custom item name is required.');
+      return;
+    }
+
+    const created = await onCreateCustomItem({
+      name,
+      wikiUrl: customWikiUrl.trim(),
+      imageUrl: customImageUrl.trim(),
+      sourceName: 'Custom',
+      rangeLabel: customRangeLabel.trim() || 'Unknown',
+    });
+
+    if (!created) {
+      setError('Could not create custom item.');
+      return;
+    }
+
+    setSelectedItem(customOption(created));
+    setQuery(created.name);
+    setShowCustomForm(false);
+    setCustomName('');
+    setCustomRangeLabel('Unknown');
+    setCustomWikiUrl('');
+    setCustomImageUrl('');
+    setError('');
+  };
+
   return (
     <div className="modal-container non-ge-modal non-ge-add-modal">
       <div className="non-ge-modal-header">
@@ -113,6 +154,69 @@ export default function NonGEAddItemModal({
         </div>
       </label>
 
+      <button
+        type="button"
+        className="non-ge-custom-toggle"
+        onClick={() => {
+          setShowCustomForm(prev => !prev);
+          setError('');
+        }}
+      >
+        <Plus size={14} />
+        Custom item
+      </button>
+
+      {showCustomForm && (
+        <div className="non-ge-custom-panel">
+          <label className="non-ge-field">
+            <span>Name</span>
+            <input
+              type="text"
+              value={customName}
+              onChange={(event) => setCustomName(event.target.value)}
+              placeholder="Custom item name"
+              className="non-ge-input"
+            />
+          </label>
+          <label className="non-ge-field">
+            <span>Range</span>
+            <input
+              type="text"
+              value={customRangeLabel}
+              onChange={(event) => setCustomRangeLabel(event.target.value)}
+              placeholder="Unknown"
+              className="non-ge-input"
+            />
+          </label>
+          <label className="non-ge-field">
+            <span>Wiki URL</span>
+            <input
+              type="url"
+              value={customWikiUrl}
+              onChange={(event) => setCustomWikiUrl(event.target.value)}
+              placeholder="Optional"
+              className="non-ge-input"
+            />
+          </label>
+          <label className="non-ge-field">
+            <span>Image URL</span>
+            <div className="non-ge-search-input-wrap">
+              <Image size={16} />
+              <input
+                type="url"
+                value={customImageUrl}
+                onChange={(event) => setCustomImageUrl(event.target.value)}
+                placeholder="Optional"
+                className="non-ge-input"
+              />
+            </div>
+          </label>
+          <button type="button" className="btn btn-primary btn-sm" onClick={handleCreateCustom}>
+            Create Custom Item
+          </button>
+        </div>
+      )}
+
       <div className="non-ge-option-list">
         {options.map(item => {
           const itemKey = `${item.type}:${item.id}`;
@@ -129,9 +233,15 @@ export default function NonGEAddItemModal({
                 setError('');
               }}
             >
+              <ItemIcon
+                src={item.imageUrl}
+                alt=""
+                className="non-ge-option-icon"
+                fallbackText={item.name}
+              />
               <span>
                 <strong>{item.name}</strong>
-                <small>{item.sourceName} · {item.rangeLabel}</small>
+                <small>{item.category} · {item.rangeLabel}</small>
               </span>
               {isDuplicate && <em>Already added</em>}
             </button>
