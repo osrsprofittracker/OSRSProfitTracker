@@ -121,7 +121,7 @@ export default function NonGETable({
           </tr>
         </thead>
         <tbody>
-          {sortedStocks.map(stock => {
+          {sortedStocks.map((stock, index) => {
             const catalogItem = getNonGECatalogItem(stock.catalogItemKey);
             const name = nonGEItemDisplayName(stock);
             const avgBuy = calculateAvgBuyPrice(stock);
