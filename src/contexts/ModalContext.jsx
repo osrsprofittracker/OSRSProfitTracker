@@ -29,6 +29,7 @@ const MODAL_DEFAULTS = {
   nonGEAddItem: false,
   nonGEBulkAdd: false,
   nonGEArchive: false,
+  nonGEArchiveConfirm: false,
   changelog: false,
 };
 

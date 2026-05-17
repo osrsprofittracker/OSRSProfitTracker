@@ -141,6 +141,7 @@ function MainAppInner({ session, onLogout }) {
     categories: nonGECategories,
     loading: nonGECategoriesLoading,
     fetchCategories: fetchNonGECategories,
+    reorderCategories: reorderNonGECategories,
     ensureDefaultCategories: ensureNonGEDefaultCategories,
   } = useNonGECategories(userId);
   const {
@@ -154,9 +155,11 @@ function MainAppInner({ session, onLogout }) {
     allStocks: nonGEAllStocks,
     loading: nonGEStocksLoading,
     addStock: addNonGEStock,
+    updateStock: updateNonGEStock,
     archiveStock: archiveNonGEStock,
     restoreStock: restoreNonGEStock,
     fetchArchivedStocks: fetchNonGEArchivedStocks,
+    reorderStocks: reorderNonGEStocks,
     refetch: refetchNonGEStocks,
   } = useNonGEStocks(userId);
 
@@ -199,6 +202,7 @@ function MainAppInner({ session, onLogout }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [nonGEArchivedStocks, setNonGEArchivedStocks] = useState([]);
   const [nonGEArchivedLoading, setNonGEArchivedLoading] = useState(false);
+  const [nonGEStockToArchive, setNonGEStockToArchive] = useState(null);
   const userDropdownRef = useRef(null);
   const userMenuOpenRef = useRef(false);
   const ignoreNextUserMenuClickRef = useRef(false);
@@ -837,6 +841,18 @@ function MainAppInner({ session, onLogout }) {
     }
   };
 
+  const handleRequestArchiveNonGEStock = (stock) => {
+    setNonGEStockToArchive(stock);
+    openModal('nonGEArchiveConfirm');
+  };
+
+  const handleConfirmArchiveNonGEStock = async () => {
+    if (!nonGEStockToArchive) return;
+    await handleArchiveNonGEStock(nonGEStockToArchive);
+    setNonGEStockToArchive(null);
+    closeModal('nonGEArchiveConfirm');
+  };
+
   const handleRestoreNonGEStock = async (stock) => {
     const success = await restoreNonGEStock(stock.id);
     if (success) {
@@ -996,6 +1012,21 @@ function MainAppInner({ session, onLogout }) {
 
   const handleCalculateTime = (stock) => {
     openModal('timeCalculator', { stock });
+  };
+
+  const handleReorderNonGECategory = async (categoryId, newPosition) => {
+    await reorderNonGECategories(categoryId, newPosition);
+    await fetchNonGECategories();
+  };
+
+  const handleReorderNonGEStock = async (stockId, targetStockId, categoryId) => {
+    await reorderNonGEStocks(stockId, targetStockId, categoryId);
+    await refetchNonGEStocks();
+  };
+
+  const handleMoveNonGEStock = async (stockId, categoryId) => {
+    await updateNonGEStock(stockId, { categoryId });
+    await refetchNonGEStocks();
   };
 
 
@@ -1393,6 +1424,10 @@ function MainAppInner({ session, onLogout }) {
               openModal('nonGEArchive');
             }}
             onArchive={handleArchiveNonGEStock}
+            onArchiveRequest={handleRequestArchiveNonGEStock}
+            onReorderCategory={handleReorderNonGECategory}
+            onReorderStock={handleReorderNonGEStock}
+            onMoveStock={handleMoveNonGEStock}
           />
         ) : currentPage === 'watchlist' ? (
           <WatchlistPage
@@ -1589,6 +1624,8 @@ function MainAppInner({ session, onLogout }) {
           handleCreateNonGECustomItem={handleCreateNonGECustomItem}
           handleBulkAddNonGEItems={handleBulkAddNonGEItems}
           handleRestoreNonGEStock={handleRestoreNonGEStock}
+          nonGEStockToArchive={nonGEStockToArchive}
+          handleConfirmArchiveNonGEStock={handleConfirmArchiveNonGEStock}
           handleSetAltTimer={handleSetAltTimer}
           handleSaveNotes={handleSaveNotes}
           handleCloseChangelog={handleCloseChangelog}

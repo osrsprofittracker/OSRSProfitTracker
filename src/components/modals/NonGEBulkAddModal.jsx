@@ -11,9 +11,18 @@ export default function NonGEBulkAddModal({
   onCancel,
 }) {
   const [query, setQuery] = useState('');
-  const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
+  const [categoryId] = useState(categories[0]?.id || '');
   const [selectedKeys, setSelectedKeys] = useState(() => new Set());
   const [resultMessage, setResultMessage] = useState('');
+
+  const categoryIdByName = useMemo(() => {
+    return categories.reduce((acc, category) => {
+      acc[category.name.toLowerCase()] = category.id;
+      return acc;
+    }, {});
+  }, [categories]);
+
+  const uncategorizedId = categoryIdByName.uncategorized || categoryId || categories[0]?.id || '';
 
   const existingKeys = useMemo(() => new Set(
     existingStocks
@@ -45,12 +54,11 @@ export default function NonGEBulkAddModal({
   const handleConfirm = async () => {
     const selectedItems = NON_GE_CATALOG.filter(item => selectedKeys.has(item.key));
     const result = await onConfirm({
-      categoryId,
       items: selectedItems.map(item => ({
         catalogItemKey: item.key,
         customItemId: null,
         nameSnapshot: item.name,
-        categoryId,
+        categoryId: categoryIdByName[item.category.toLowerCase()] || uncategorizedId,
         targetBuyPrice: null,
         targetSellPrice: null,
       })),
@@ -71,17 +79,9 @@ export default function NonGEBulkAddModal({
         <h2 className="modal-title">Bulk Add Non-GE Items</h2>
       </div>
 
-      <div className="non-ge-bulk-toolbar">
+      <div className="non-ge-bulk-toolbar non-ge-bulk-toolbar--single">
         <label className="non-ge-field">
-          <span>Category</span>
-          <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className="non-ge-input">
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="non-ge-field">
-          <span>Search catalog</span>
+          <span>Search</span>
           <div className="non-ge-search-input-wrap">
             <Search size={16} />
             <input
@@ -114,7 +114,7 @@ export default function NonGEBulkAddModal({
                 className="non-ge-option-icon"
                 fallbackText={item.name}
               />
-              <span>
+              <span className="non-ge-option-text">
                 <strong>{item.name}</strong>
                 <small>{item.category} · {nonGEItemRangeLabel(item)}</small>
               </span>
@@ -132,7 +132,7 @@ export default function NonGEBulkAddModal({
           type="button"
           className="btn-modal-confirm"
           onClick={handleConfirm}
-          disabled={selectedKeys.size === 0 || !categoryId}
+          disabled={selectedKeys.size === 0}
         >
           Add Selected ({selectedKeys.size})
         </button>

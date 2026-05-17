@@ -56,6 +56,8 @@ export default function ModalManager({
   handleCreateNonGECustomItem,
   handleBulkAddNonGEItems,
   handleRestoreNonGEStock,
+  nonGEStockToArchive,
+  handleConfirmArchiveNonGEStock,
   // Other handlers
   handleSetAltTimer,
   handleSaveNotes,
@@ -372,6 +374,17 @@ export default function ModalManager({
           loading={nonGEArchivedLoading}
           onRestore={handleRestoreNonGEStock}
           onClose={() => closeModal('nonGEArchive')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEArchiveConfirm}>
+        <ConfirmModal
+          title="Archive Non-GE Item"
+          message={<>Are you sure you want to archive <strong>{nonGEStockToArchive?.nameSnapshot}</strong>? It will be removed from your Non-GE screen but can be restored anytime.</>}
+          confirmLabel="Archive"
+          confirmVariant="warning"
+          onConfirm={handleConfirmArchiveNonGEStock}
+          onCancel={() => closeModal('nonGEArchiveConfirm')}
         />
       </ModalContainer>
 

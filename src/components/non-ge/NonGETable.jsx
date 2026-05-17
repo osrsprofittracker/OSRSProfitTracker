@@ -84,11 +84,15 @@ function NumberCell({ value, numberFormat, className = '' }) {
 
 export default function NonGETable({
   stocks,
+  categoryId,
   numberFormat,
   sortConfig,
   onSort,
   onArchive,
   onDelete,
+  onDragStart,
+  onDragOver,
+  onDrop,
 }) {
   const sortedStocks = useMemo(() => sortNonGEStocks(stocks, sortConfig), [stocks, sortConfig]);
 
@@ -130,7 +134,15 @@ export default function NonGETable({
             const profit = calculateProfit(stock);
 
             return (
-              <tr key={stock.id} className={`tr-base ${index % 2 ? 'tr-even' : 'tr-odd'} non-ge-table-row`} data-stock-id={stock.id}>
+              <tr
+                key={stock.id}
+                className={`tr-base ${index % 2 ? 'tr-even' : 'tr-odd'} non-ge-table-row`}
+                data-stock-id={stock.id}
+                draggable
+                onDragStart={(event) => onDragStart(event, stock, categoryId)}
+                onDragOver={onDragOver}
+                onDrop={(event) => onDrop(event, stock, categoryId)}
+              >
                 <td className="td-base td-center non-ge-grip-cell">
                   <GripVertical size={16} />
                 </td>

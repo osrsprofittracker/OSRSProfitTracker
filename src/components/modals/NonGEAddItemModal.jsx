@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Image, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { NON_GE_CATALOG } from '../../data/nonGeCatalog';
 import { getNonGEWikiImageUrl, normalizeNonGESearch, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
@@ -59,8 +59,16 @@ export default function NonGEAddItemModal({
   const [customName, setCustomName] = useState('');
   const [customRangeLabel, setCustomRangeLabel] = useState('Unknown');
   const [customWikiUrl, setCustomWikiUrl] = useState('');
-  const [customImageUrl, setCustomImageUrl] = useState('');
   const [error, setError] = useState('');
+
+  const categoryIdByName = useMemo(() => {
+    return categories.reduce((acc, category) => {
+      acc[category.name.toLowerCase()] = category.id;
+      return acc;
+    }, {});
+  }, [categories]);
+
+  const uncategorizedId = categoryIdByName.uncategorized || categories[0]?.id || '';
 
   const existingKeys = useMemo(() => new Set(
     existingStocks
@@ -114,7 +122,6 @@ export default function NonGEAddItemModal({
     const created = await onCreateCustomItem({
       name,
       wikiUrl: customWikiUrl.trim(),
-      imageUrl: customImageUrl.trim(),
       sourceName: 'Custom',
       rangeLabel: customRangeLabel.trim() || 'Unknown',
     });
@@ -126,11 +133,11 @@ export default function NonGEAddItemModal({
 
     setSelectedItem(customOption(created));
     setQuery(created.name);
+    setCategoryId(uncategorizedId);
     setShowCustomForm(false);
     setCustomName('');
     setCustomRangeLabel('Unknown');
     setCustomWikiUrl('');
-    setCustomImageUrl('');
     setError('');
   };
 
@@ -158,7 +165,15 @@ export default function NonGEAddItemModal({
         type="button"
         className="non-ge-custom-toggle"
         onClick={() => {
-          setShowCustomForm(prev => !prev);
+          setShowCustomForm(prev => {
+            const next = !prev;
+            if (next) {
+              setSelectedItem(null);
+              setQuery('');
+              setCategoryId(uncategorizedId);
+            }
+            return next;
+          });
           setError('');
         }}
       >
@@ -198,26 +213,13 @@ export default function NonGEAddItemModal({
               className="non-ge-input"
             />
           </label>
-          <label className="non-ge-field">
-            <span>Image URL</span>
-            <div className="non-ge-search-input-wrap">
-              <Image size={16} />
-              <input
-                type="url"
-                value={customImageUrl}
-                onChange={(event) => setCustomImageUrl(event.target.value)}
-                placeholder="Optional"
-                className="non-ge-input"
-              />
-            </div>
-          </label>
           <button type="button" className="btn btn-primary btn-sm" onClick={handleCreateCustom}>
             Create Custom Item
           </button>
         </div>
       )}
 
-      <div className="non-ge-option-list">
+      {!showCustomForm && <div className="non-ge-option-list">
         {options.map(item => {
           const itemKey = `${item.type}:${item.id}`;
           const isSelected = selectedKey === itemKey;
@@ -230,6 +232,9 @@ export default function NonGEAddItemModal({
               className={`non-ge-option-row${isSelected ? ' is-selected' : ''}${isDuplicate ? ' is-disabled' : ''}`}
               onClick={() => {
                 setSelectedItem(item);
+                if (item.type === 'catalog') {
+                  setCategoryId(categoryIdByName[item.category.toLowerCase()] || uncategorizedId);
+                }
                 setError('');
               }}
             >
@@ -239,7 +244,7 @@ export default function NonGEAddItemModal({
                 className="non-ge-option-icon"
                 fallbackText={item.name}
               />
-              <span>
+              <span className="non-ge-option-text">
                 <strong>{item.name}</strong>
                 <small>{item.category} · {item.rangeLabel}</small>
               </span>
@@ -247,7 +252,7 @@ export default function NonGEAddItemModal({
             </button>
           );
         })}
-      </div>
+      </div>}
 
       <div className="non-ge-modal-grid">
         <label className="non-ge-field">

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Archive, Boxes, PackagePlus, Plus } from 'lucide-react';
 import NonGECategorySection from '../components/non-ge/NonGECategorySection';
 import { calculateProfit } from '../utils/calculations';
@@ -25,7 +25,13 @@ export default function NonGEPage({
   onBulkAdd,
   onArchiveOpen,
   onArchive,
+  onArchiveRequest,
+  onReorderCategory,
+  onReorderStock,
+  onMoveStock,
 }) {
+  const [collapsedCategories, setCollapsedCategories] = useState({});
+
   const summary = useMemo(() => {
     return stocks.reduce(
       (acc, stock) => ({
@@ -50,6 +56,56 @@ export default function NonGEPage({
 
     return groups;
   }, [stocks, categories]);
+
+  const toggleCategory = (categoryId) => {
+    setCollapsedCategories(prev => ({ ...prev, [categoryId]: !prev[categoryId] }));
+  };
+
+  const handleCategoryDragStart = (event, categoryId) => {
+    event.dataTransfer.setData('nonGECategoryId', categoryId);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCategoryDrop = async (event, targetCategoryId) => {
+    event.preventDefault();
+    const draggedCategoryId = event.dataTransfer.getData('nonGECategoryId');
+    if (!draggedCategoryId || draggedCategoryId === targetCategoryId) return;
+
+    const targetIndex = categories.findIndex(category => category.id === targetCategoryId);
+    if (targetIndex === -1) return;
+
+    await onReorderCategory(draggedCategoryId, targetIndex);
+  };
+
+  const handleStockDragStart = (event, stock, sourceCategoryId) => {
+    event.dataTransfer.setData('nonGEStockId', stock.id);
+    event.dataTransfer.setData('nonGESourceCategoryId', sourceCategoryId || '');
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleStockDrop = async (event, targetStock, targetCategoryId) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const draggedStockId = event.dataTransfer.getData('nonGEStockId');
+    const sourceCategoryId = event.dataTransfer.getData('nonGESourceCategoryId') || null;
+    if (!draggedStockId || draggedStockId === targetStock?.id) return;
+
+    if (sourceCategoryId === targetCategoryId && targetStock?.id) {
+      await onReorderStock(draggedStockId, targetStock.id, targetCategoryId);
+      return;
+    }
+
+    await onMoveStock(draggedStockId, targetCategoryId);
+  };
+
+  const handleCategoryStockDrop = async (event, targetCategoryId) => {
+    event.preventDefault();
+    const draggedStockId = event.dataTransfer.getData('nonGEStockId');
+    if (!draggedStockId) return;
+
+    await onMoveStock(draggedStockId, targetCategoryId);
+  };
 
   return (
     <div className="non-ge-page">
@@ -103,7 +159,16 @@ export default function NonGEPage({
             sortConfig={sortConfig}
             onSort={onSort}
             onAddItem={onAddItem}
-            onArchive={onArchive}
+            onArchive={onArchiveRequest || onArchive}
+            isCollapsed={Boolean(collapsedCategories[category.id])}
+            onToggleCollapse={() => toggleCategory(category.id)}
+            onCategoryDragStart={handleCategoryDragStart}
+            onCategoryDragOver={(event) => event.preventDefault()}
+            onCategoryDrop={handleCategoryDrop}
+            onStockDragStart={handleStockDragStart}
+            onStockDragOver={(event) => event.preventDefault()}
+            onStockDrop={handleStockDrop}
+            onCategoryStockDrop={handleCategoryStockDrop}
           />
         ))
       )}
