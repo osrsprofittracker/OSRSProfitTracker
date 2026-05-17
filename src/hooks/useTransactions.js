@@ -384,7 +384,12 @@ export function useTransactions(userId) {
       .select();
 
     if (error) {
-      console.error('Error adding transaction:', error);
+      console.error('Error adding transaction:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
       return null;
     } else {
       const formatted = formatRow(data[0]);

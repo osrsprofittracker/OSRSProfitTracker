@@ -168,8 +168,8 @@ export default function NonGETradeModal({ stock, mode, onConfirm, onCancel, isSu
               }}
             />
             <div className="input-step-btns">
-              <button type="button" className="input-step-btn" onClick={() => stepShares(1)}>+</button>
-              <button type="button" className="input-step-btn" onClick={() => stepShares(-1)}>-</button>
+              <button type="button" className="input-step-btn" onClick={() => stepShares(1)}>&#9650;</button>
+              <button type="button" className="input-step-btn" onClick={() => stepShares(-1)}>&#9660;</button>
             </div>
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function NonGETradeModal({ stock, mode, onConfirm, onCancel, isSu
               {useTotal ? (isBuy ? 'Total Cost' : 'Total Revenue') : 'Price per Item'}
             </label>
             <button type="button" onClick={handleModeToggle} className="trade-modal-toggle">
-              {useTotal ? 'Use Price' : 'Use Total'}
+              &#8644; {useTotal ? 'Price' : 'Total'}
             </button>
           </div>
           <div className="input-step-wrapper">
@@ -202,8 +202,8 @@ export default function NonGETradeModal({ stock, mode, onConfirm, onCancel, isSu
               }}
             />
             <div className="input-step-btns">
-              <button type="button" className="input-step-btn" onClick={() => stepPrice(1)}>+</button>
-              <button type="button" className="input-step-btn" onClick={() => stepPrice(-1)}>-</button>
+              <button type="button" className="input-step-btn" onClick={() => stepPrice(1)}>&#9650;</button>
+              <button type="button" className="input-step-btn" onClick={() => stepPrice(-1)}>&#9660;</button>
             </div>
           </div>
           {useTotal && price && (

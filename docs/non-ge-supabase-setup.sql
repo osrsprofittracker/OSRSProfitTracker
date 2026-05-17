@@ -67,9 +67,15 @@ alter table public.transactions
   add column if not exists market text not null default 'ge',
   add column if not exists non_ge_stock_id uuid;
 
+alter table public.transactions
+  alter column stock_id drop not null;
+
 alter table public.profit_history
   add column if not exists market text not null default 'ge',
   add column if not exists non_ge_stock_id uuid;
+
+alter table public.profit_history
+  alter column stock_id drop not null;
 
 do $$
 begin

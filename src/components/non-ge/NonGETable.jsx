@@ -194,7 +194,7 @@ export default function NonGETable({
                   </button>
                 </td>
                 <td className="td-base non-ge-actions-cell">
-                  <div className="action-buttons">
+                  <div className="action-buttons non-ge-action-buttons">
                     <button type="button" className="btn btn-success btn-sm" onClick={() => onBuy(stock)} title="Buy">
                       <ShoppingCart size={12} />
                       Buy

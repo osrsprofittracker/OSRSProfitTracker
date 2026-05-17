@@ -123,11 +123,13 @@
 }
 
 .non-ge-table {
-  min-width: 1460px;
+  min-width: 1240px;
 }
 
 .non-ge-table-th {
-  white-space: nowrap;
+  max-width: 6rem;
+  line-height: 1.15;
+  white-space: normal;
 }
 
 .non-ge-table-th--right,
@@ -148,6 +150,7 @@
   cursor: pointer;
   font: inherit;
   text-transform: inherit;
+  white-space: normal;
 }
 
 .non-ge-sort-btn:hover {
@@ -162,7 +165,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-width: 13rem;
+  min-width: 10rem;
   text-align: left;
 }
 
@@ -201,12 +204,13 @@
 }
 
 .non-ge-actions-cell {
-  min-width: 22rem;
+  min-width: 18rem;
 }
 
-.non-ge-actions-cell .action-buttons {
+.non-ge-action-buttons {
   justify-content: flex-end;
   flex-wrap: wrap;
+  max-width: 18rem;
 }
 
 .non-ge-actions-cell .btn:disabled {
