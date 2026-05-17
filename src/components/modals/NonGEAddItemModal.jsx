@@ -119,6 +119,16 @@ export default function NonGEAddItemModal({
       return;
     }
 
+    const duplicateCustomItem = customItems.some(item => item.name.toLowerCase() === name.toLowerCase());
+    const duplicateCustomStock = existingStocks.some(stock =>
+      !stock.catalogItemKey && stock.nameSnapshot?.toLowerCase() === name.toLowerCase()
+    );
+
+    if (duplicateCustomItem || duplicateCustomStock) {
+      setError(`${name} already exists as a custom Non-GE item.`);
+      return;
+    }
+
     const created = await onCreateCustomItem({
       name,
       wikiUrl: customWikiUrl.trim(),

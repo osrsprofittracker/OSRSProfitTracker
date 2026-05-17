@@ -156,9 +156,6 @@ export default function NonGETable({
                     />
                     <div className="non-ge-name-text">
                       <span className="non-ge-item-name">{name}</span>
-                      <span className="non-ge-item-source">
-                        {catalogItem?.category || 'Custom'}
-                      </span>
                     </div>
                   </div>
                 </td>

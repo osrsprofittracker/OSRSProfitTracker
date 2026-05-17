@@ -188,11 +188,6 @@
   font-weight: 700;
 }
 
-.non-ge-item-source {
-  color: rgb(148, 163, 184);
-  font-size: 0.72rem;
-}
-
 .non-ge-table-td--accent {
   color: rgb(134, 239, 172);
 }
@@ -298,11 +293,18 @@
   box-sizing: border-box;
   color: rgb(226, 232, 240);
   padding: 0.65rem 0.75rem;
+  width: calc(100% - 1px);
+  max-width: calc(100% - 1px);
 }
 
 .non-ge-option-row {
   cursor: pointer;
   text-align: left;
+}
+
+.non-ge-option-row:hover,
+.non-ge-bulk-row:hover {
+  transform: none;
 }
 
 .non-ge-option-row:hover,
@@ -384,14 +386,25 @@
 }
 
 .non-ge-option-icon {
+  display: inline-flex;
   width: 24px;
+  min-width: 24px;
+  max-width: 24px;
   height: 24px;
+  min-height: 24px;
+  max-height: 24px;
   flex: 0 0 24px;
+  box-sizing: border-box;
+  padding: 0;
 }
 
 .item-icon-fallback.non-ge-option-icon {
   width: 24px;
+  min-width: 24px;
+  max-width: 24px;
   height: 24px;
+  min-height: 24px;
+  max-height: 24px;
   flex-basis: 24px;
 }
 
