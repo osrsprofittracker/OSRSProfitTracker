@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Archive, Trash2 } from 'lucide-react';
+import { Archive, GripVertical, Trash2 } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../../utils/calculations';
 import { formatAvgPrice, formatNumber } from '../../utils/formatters';
@@ -105,6 +105,7 @@ export default function NonGETable({
       <table className="table-base non-ge-table">
         <thead className="thead-base">
           <tr>
+            <th className="th-icon-empty"></th>
             <HeaderCell label="Name" columnKey="name" sortConfig={sortConfig} onSort={onSort} />
             <HeaderCell label="Held Qty" columnKey="shares" sortConfig={sortConfig} onSort={onSort} align="right" />
             <HeaderCell label="Total Cost" columnKey="totalCost" sortConfig={sortConfig} onSort={onSort} align="right" />
@@ -130,6 +131,9 @@ export default function NonGETable({
 
             return (
               <tr key={stock.id} className={`tr-base ${index % 2 ? 'tr-even' : 'tr-odd'} non-ge-table-row`} data-stock-id={stock.id}>
+                <td className="td-base td-center non-ge-grip-cell">
+                  <GripVertical size={16} />
+                </td>
                 <td className="td-base">
                   <div className="non-ge-name-cell">
                     <ItemIcon

@@ -107,6 +107,10 @@
   font-size: 0.8rem;
 }
 
+.non-ge-category-stats-band {
+  margin-bottom: 0.5rem;
+}
+
 .non-ge-table-wrap {
   overflow-x: auto;
 }
@@ -120,8 +124,10 @@
 }
 
 .non-ge-table-th--right,
-.non-ge-table-th--right {
+.non-ge-table-th--right .non-ge-sort-btn {
   text-align: right;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .non-ge-sort-btn {
@@ -151,6 +157,11 @@
   gap: 0.5rem;
   min-width: 13rem;
   text-align: left;
+}
+
+.non-ge-grip-cell {
+  color: rgb(107, 114, 128);
+  width: 2rem;
 }
 
 .non-ge-item-icon {
@@ -191,9 +202,8 @@
   min-width: 9rem;
 }
 
-.non-ge-actions-cell .btn {
-  display: inline-flex;
-  margin-left: 0.35rem;
+.non-ge-actions-cell .action-buttons {
+  justify-content: center;
 }
 
 .non-ge-modal {
