@@ -150,6 +150,7 @@
   align-items: center;
   gap: 0.5rem;
   min-width: 13rem;
+  text-align: left;
 }
 
 .non-ge-item-icon {
@@ -182,12 +183,8 @@
   white-space: nowrap;
 }
 
-.non-ge-notes-cell {
-  max-width: 12rem;
-  color: rgb(203, 213, 225);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.non-ge-notes-btn {
+  margin: 0 auto;
 }
 
 .non-ge-actions-cell {
@@ -266,7 +263,8 @@
   max-height: 20rem;
   overflow-y: auto;
   margin-top: 0.75rem;
-  padding-right: 0.25rem;
+  padding-right: 0.45rem;
+  scrollbar-gutter: stable;
 }
 
 .non-ge-option-row,
@@ -274,7 +272,7 @@
 .non-ge-archive-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.75rem;
   background: rgba(15, 23, 42, 0.55);
   border: 1px solid rgb(51, 65, 85);
@@ -285,7 +283,6 @@
 }
 
 .non-ge-option-row {
-  width: 100%;
   cursor: pointer;
   text-align: left;
 }
@@ -303,10 +300,12 @@
 
 .non-ge-option-row span,
 .non-ge-bulk-row span {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   min-width: 0;
+  text-align: left;
 }
 
 .non-ge-option-row small,
@@ -318,6 +317,7 @@
 
 .non-ge-option-row em,
 .non-ge-bulk-row em {
+  margin-left: auto;
   color: rgb(251, 191, 36);
   font-size: 0.75rem;
   font-style: normal;

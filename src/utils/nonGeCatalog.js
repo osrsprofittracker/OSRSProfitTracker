@@ -24,3 +24,14 @@ export function nonGEItemDisplayName(stockOrItem) {
 export function nonGEItemRangeLabel(item) {
   return item?.rangeLabel || 'Unknown';
 }
+
+export function getNonGEWikiImageUrl(item) {
+  if (!item) return '';
+  if (item.imageUrl) return item.imageUrl;
+  if (!item.wikiUrl) return '';
+
+  const pageName = decodeURIComponent(String(item.wikiUrl).split('/').pop() || '').replace(/ /g, '_');
+  if (!pageName) return '';
+
+  return `https://oldschool.runescape.wiki/images/${pageName}.png`;
+}

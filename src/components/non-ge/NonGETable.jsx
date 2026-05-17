@@ -3,7 +3,7 @@ import { Archive, Trash2 } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../../utils/calculations';
 import { formatAvgPrice, formatNumber } from '../../utils/formatters';
-import { getNonGECatalogItem, nonGEItemDisplayName, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
+import { getNonGECatalogItem, getNonGEWikiImageUrl, nonGEItemDisplayName, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
 
 function sortNonGEStocks(stocks, sortConfig) {
   if (!sortConfig?.key) return stocks;
@@ -130,18 +130,20 @@ export default function NonGETable({
 
             return (
               <tr key={stock.id} className={`tr-base ${index % 2 ? 'tr-even' : 'tr-odd'} non-ge-table-row`} data-stock-id={stock.id}>
-                <td className="td-base non-ge-name-cell">
-                  <ItemIcon
-                    src={catalogItem?.imageUrl || stock.imageUrl}
-                    alt=""
-                    className="non-ge-item-icon"
-                    fallbackText={name}
-                  />
-                  <div className="non-ge-name-text">
-                    <span className="non-ge-item-name">{name}</span>
-                    <span className="non-ge-item-source">
-                      {catalogItem?.category || 'Custom'}
-                    </span>
+                <td className="td-base">
+                  <div className="non-ge-name-cell">
+                    <ItemIcon
+                      src={getNonGEWikiImageUrl(catalogItem) || stock.imageUrl}
+                      alt=""
+                      className="non-ge-item-icon"
+                      fallbackText={name}
+                    />
+                    <div className="non-ge-name-text">
+                      <span className="non-ge-item-name">{name}</span>
+                      <span className="non-ge-item-source">
+                        {catalogItem?.category || 'Custom'}
+                      </span>
+                    </div>
                   </div>
                 </td>
                 <NumberCell value={stock.shares} numberFormat={numberFormat} />
@@ -162,19 +164,27 @@ export default function NonGETable({
                 </td>
                 <NumberCell value={stock.targetBuyPrice} numberFormat={numberFormat} />
                 <NumberCell value={stock.targetSellPrice} numberFormat={numberFormat} />
-                <td className="td-base non-ge-notes-cell" title={stock.notes || ''}>
-                  {stock.notes || '—'}
+                <td className="td-base td-center">
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${stock.notes ? 'btn-purple' : 'btn-secondary'} non-ge-notes-btn`}
+                    title={stock.notes || 'Notes editing is added with Non-GE trade actions'}
+                  >
+                    {stock.notes ? 'Edit' : 'Add'}
+                  </button>
                 </td>
                 <td className="td-base non-ge-actions-cell">
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)}>
-                    <Archive size={12} />
-                    Archive
-                  </button>
-                  {onDelete && (
-                    <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(stock)} title="Delete item">
-                      <Trash2 size={12} />
+                  <div className="action-buttons">
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)}>
+                      <Archive size={12} />
+                      Archive
                     </button>
-                  )}
+                    {onDelete && (
+                      <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(stock)} title="Delete item">
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             );
