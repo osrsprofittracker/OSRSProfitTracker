@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { Plus } from 'lucide-react';
 import { formatNumber } from '../utils/formatters';
+import { calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
@@ -24,12 +26,17 @@ export default function HomePage({
   gpTradedStats,
   profits,
   statsStocks = null,
+  nonGEStatsStocks = [],
+  visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true },
   watchlistItems = [],
   numberFormat,
   milestones,
   milestoneProgress,
   onNavigateToTrade,
   onNavigateToWatchlist = () => {},
+  onAddDumpProfit = () => {},
+  onAddReferralProfit = () => {},
+  onAddBondsProfit = () => {},
   onOpenMilestoneModal,
   onOpenMilestoneHistory,
   profitHistory,
@@ -44,15 +51,38 @@ export default function HomePage({
   const monthProfit = milestoneProgress?.month || 0;
   const yearProfit = milestoneProgress?.year || 0;
 
-  // Calculate total realized profit (from sells) FIRST
-  const totalRealizedProfit = stocksForStats?.reduce((sum, stock) => {
-    return sum + (stock.totalCostSold - (stock.totalCostBasisSold || 0));
-  }, 0) || 0;
+  const geProfit = stocksForStats?.reduce((sum, stock) => sum + calculateProfit(stock), 0) || 0;
+  const nonGEProfit = nonGEStatsStocks?.reduce((sum, stock) => sum + calculateProfit(stock), 0) || 0;
 
   // Add dump, referral, bonds profit
   const { dumpProfit = 0, referralProfit = 0, bondsProfit = 0 } = profits || {};
-  const totalProfit = totalRealizedProfit + dumpProfit + referralProfit + bondsProfit;
+  const totalProfit = geProfit + nonGEProfit + dumpProfit + referralProfit + bondsProfit;
 
+  const itemProfitSources = [
+    { label: 'GE Items', value: geProfit },
+    { label: 'Non-GE Items', value: nonGEProfit },
+  ];
+
+  const extraProfitSources = [
+    {
+      label: 'Dumps',
+      value: dumpProfit,
+      visible: visibleProfits?.dumpProfit !== false,
+      onAdd: onAddDumpProfit
+    },
+    {
+      label: 'Referrals',
+      value: referralProfit,
+      visible: visibleProfits?.referralProfit !== false,
+      onAdd: onAddReferralProfit
+    },
+    {
+      label: 'Bonds',
+      value: bondsProfit,
+      visible: visibleProfits?.bondsProfit !== false,
+      onAdd: onAddBondsProfit
+    },
+  ].filter(source => source.visible !== false);
 
   // Use GP traded stats from the hook (calculated in database)
   const dailyGPTraded = gpTradedStats?.daily || 0;
@@ -176,12 +206,48 @@ export default function HomePage({
         <div className="summary-card profit-card">
           <div className="summary-card-header">
             <span className="summary-card-icon">💰</span>
-            <span className="summary-card-label">Daily Profit</span>
+            <span className="summary-card-label">Total Profit</span>
           </div>
           <div className="summary-card-value profit-main-value">
-            {formatNumber(dayProfit, numberFormat)}
+            {formatNumber(totalProfit, numberFormat)}
+          </div>
+          <div className="profit-source-list">
+            <div className="profit-source-column">
+              {itemProfitSources.map(source => (
+                <div className="profit-source-row" key={source.label}>
+                  <span className="profit-source-label">{source.label}</span>
+                  <span className={`profit-source-value ${source.value >= 0 ? 'positive' : 'negative'}`}>
+                    {source.value >= 0 ? '+' : ''}{formatNumber(source.value, numberFormat)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="profit-source-column">
+              {extraProfitSources.map(source => (
+                <div className="profit-source-row" key={source.label}>
+                  <span className="profit-source-label">{source.label}</span>
+                  <span className={`profit-source-value ${source.value >= 0 ? 'positive' : 'negative'}`}>
+                    {source.value >= 0 ? '+' : ''}{formatNumber(source.value, numberFormat)}
+                  </span>
+                  <button
+                    type="button"
+                    className="profit-source-add-btn"
+                    onClick={source.onAdd}
+                    aria-label={`Add ${source.label} profit`}
+                    title={`Add ${source.label} profit`}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="profit-periods">
+            <div className="profit-period-item">
+              <span className="profit-period-label">Today</span>
+              <span className="profit-period-value">{formatNumber(dayProfit, numberFormat)}</span>
+            </div>
+            <div className="profit-period-divider"></div>
             <div className="profit-period-item">
               <span className="profit-period-label">Week</span>
               <span className="profit-period-value">{formatNumber(weekProfit, numberFormat)}</span>
@@ -196,10 +262,6 @@ export default function HomePage({
               <span className="profit-period-label">Year</span>
               <span className="profit-period-value">{formatNumber(yearProfit, numberFormat)}</span>
             </div>
-          </div>
-          <div className="profit-total">
-            <span className="profit-total-label">Total Profit</span>
-            <span className="profit-total-value">{formatNumber(totalProfit, numberFormat)}</span>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { BarChart3, Eye, LogOut, Package } from 'lucide-react';
+import { Archive, BarChart3, Eye, FolderPlus, LogOut, Package, PackagePlus, ShoppingCart, TrendingDown } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
@@ -30,9 +30,9 @@ import MilestoneProgressBar from './components/MilestoneProgressBar';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import NotificationCenter from './components/NotificationCenter';
-import PortfolioSummary from './components/PortfolioSummary';
 import AltAccountTimer from './components/AltAccountTimer';
 import CategorySection from './components/CategorySection';
+import TradeStatusStrip from './components/TradeStatusStrip';
 import ModalManager from './components/ModalManager';
 import { CURRENT_VERSION } from './data/changelog';
 import { usePriceAlerts } from './hooks/usePriceAlerts';
@@ -1408,12 +1408,17 @@ function MainAppInner({ session, onLogout }) {
             gpTradedStats={gpTradedStats}
             profits={profits}
             statsStocks={allStocks}
+            nonGEStatsStocks={nonGEAllStocks}
+            visibleProfits={visibleProfits}
             watchlistItems={watchlistItems}
             numberFormat={numberFormat}
             milestones={milestones}
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => navigateToPage('trade')}
             onNavigateToWatchlist={() => navigateToPage('watchlist')}
+            onAddDumpProfit={() => openModal('dumpProfit')}
+            onAddReferralProfit={() => openModal('referralProfit')}
+            onAddBondsProfit={() => openModal('bondsProfit')}
             onOpenMilestoneModal={() => openModal('milestone', { milestoneView: 'main' })}
             onOpenMilestoneHistory={() => openModal('milestone', { milestoneView: 'history' })}
           />
@@ -1517,28 +1522,11 @@ function MainAppInner({ session, onLogout }) {
               onNavigate={handleQuickNavNavigate}
             />
 
-            <PortfolioSummary
-              dumpProfit={dumpProfit}
-              referralProfit={referralProfit}
-              bondsProfit={bondsProfit}
-              statsStocks={allStocks}
-              visibleProfits={visibleProfits}
-              onAddDumpProfit={() => openModal('dumpProfit')}
-              onAddReferralProfit={() => openModal('referralProfit')}
-              onAddBondsProfit={() => openModal('bondsProfit')}
+            <TradeStatusStrip
+              stocks={stocks}
+              gePrices={gePrices}
               numberFormat={numberFormat}
-              showUnrealisedProfitStats={showUnrealisedProfitStats}
-            />
-
-            {/* Milestone Progress Bar and Alt Account Timer Row */}
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              alignItems: 'center',
-              marginBottom: '1.5rem',
-              marginTop: '1rem',
-              flexWrap: 'wrap'
-            }}>
+            >
               <MilestoneProgressBar
                 milestones={milestones}
                 currentProgress={milestoneProgress}
@@ -1548,13 +1536,73 @@ function MainAppInner({ session, onLogout }) {
                 numberFormat={numberFormat}
               />
 
+              <div className="trade-quick-actions" aria-label="Trade quick actions">
+                <div className="trade-quick-actions-header">
+                  <span className="trade-quick-actions-title">Quick Actions</span>
+                </div>
+                <div className="trade-quick-actions-grid">
+                  <div className="trade-quick-action-group">
+                    <button
+                      type="button"
+                      onClick={() => openModal('category')}
+                      className="trade-quick-action-btn is-category"
+                    >
+                      <FolderPlus size={14} />
+                      Add Category
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await refreshArchivedStocks();
+                        openModal('newStock', { newStockCategory: '' });
+                      }}
+                      className="trade-quick-action-btn is-item"
+                    >
+                      <PackagePlus size={14} />
+                      Add Item
+                    </button>
+                  </div>
+                  <div className="trade-quick-action-group">
+                    <button
+                      type="button"
+                      onClick={() => openModal('bulkBuy')}
+                      className="trade-quick-action-btn is-success"
+                    >
+                      <ShoppingCart size={14} />
+                      Bulk Buy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openModal('bulkSell')}
+                      className="trade-quick-action-btn is-danger"
+                    >
+                      <TrendingDown size={14} />
+                      Bulk Sell
+                    </button>
+                  </div>
+                  <div className="trade-quick-action-group trade-quick-action-group-archive">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handleOpenArchive();
+                        openModal('archive');
+                      }}
+                      className="trade-quick-action-btn"
+                    >
+                      <Archive size={14} />
+                      Archive
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <AltAccountTimer
                 altAccountTimer={altAccountTimer}
                 onSetAltTimer={() => openModal('altTimer')}
                 onResetAltTimer={handleResetAltTimer}
                 currentTime={currentTime}
               />
-            </div>
+            </TradeStatusStrip>
             {/* Trade Mode Toggle */}
             <div className="trade-mode-toggle-wrapper">
               <div className="trade-mode-toggle">
@@ -1573,45 +1621,6 @@ function MainAppInner({ session, onLogout }) {
               </div>
             </div>
 
-            {/* Category Actions */}
-            <div className="category-actions-row">
-              <button
-                onClick={() => openModal('category')}
-                className="btn btn-primary"
-              >
-                + Add Category
-              </button>
-              <button
-                onClick={async () => {
-                  await refreshArchivedStocks();
-                  openModal('newStock', { newStockCategory: '' });
-                }}
-                className="btn btn-success"
-              >
-                + Add Item
-              </button>
-              <button
-                onClick={() => openModal('bulkBuy')}
-                className="btn btn-success"
-              >
-                Bulk Buy
-              </button>
-              <button
-                onClick={() => openModal('bulkSell')}
-                className="btn btn-danger"
-              >
-                Bulk Sell
-              </button>
-              <button
-                onClick={async () => {
-                  await handleOpenArchive();
-                  openModal('archive');
-                }}
-                className="btn btn-secondary"
-              >
-                📦 Archive
-              </button>
-            </div>
 
 
             {Object.entries(groupedStocks).map(([category, categoryStocks]) => (
