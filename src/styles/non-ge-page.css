@@ -79,30 +79,11 @@
   margin-bottom: 2rem;
 }
 
-.non-ge-category-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
 .non-ge-category-title {
   margin: 0;
   color: rgb(96, 165, 250);
-  font-size: 1.2rem;
-}
-
-.non-ge-category-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: move;
-}
-
-.non-ge-category-title span {
-  color: rgb(148, 163, 184);
-  font-size: 0.9rem;
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 .non-ge-category-stats {
@@ -634,8 +615,7 @@
 }
 
 @media (max-width: 800px) {
-  .non-ge-page-header,
-  .non-ge-category-header {
+  .non-ge-page-header {
     flex-direction: column;
     align-items: stretch;
   }

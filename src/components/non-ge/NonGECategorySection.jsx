@@ -48,7 +48,7 @@ export default function NonGECategorySection({
             ▼
           </span>
           <h2 className="non-ge-category-title">
-            {category.name} <span>({stocks.length})</span>
+            {category.name} ({stocks.length})
           </h2>
         </div>
         <button type="button" className="btn btn-primary btn-sm" onClick={() => onAddItem(category.id)}>
