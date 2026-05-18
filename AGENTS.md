@@ -28,12 +28,19 @@ All data lives in Supabase. Each hook wraps a Supabase table and is called from 
 | `useGPTradedStats` | `transactions` | Aggregated GP traded stats |
 | `useSettings` | `settings` | Per-user UI preferences |
 | `useGEPrices` | external API | Live GE prices from `prices.runescape.wiki/api/v1/osrs` (refreshes every 60s) |
+| `useNonGEStocks` | `non_ge_stocks` | Non-GE item holdings, archive, reorder, notes |
+| `useNonGECategories` | `non_ge_categories` | Non-GE category management |
+| `useNonGECustomItems` | `non_ge_custom_items` | Private user-created Non-GE items |
+| `useNonGETradeHandlers` | `non_ge_stocks`, `transactions`, `profit_history` | Non-GE buy/sell/remove/adjust/notes actions |
+| `useMoveToNonGE` | `stocks`, `non_ge_stocks`, `transactions`, `profit_history`, cleanup tables | Converts GE stock rows into Non-GE rows |
 
 ### Data model conventions
 
 - Supabase columns use `snake_case`; JS objects use `camelCase`. Every hook manually maps between the two.
 - All queries filter by `user_id` for row-level isolation.
 - `stocks` has an `archived` boolean; default queries exclude archived rows.
+- `non_ge_stocks` also has an `archived` boolean; default Non-GE queries exclude archived rows.
+- `transactions` and `profit_history` use `market` (`ge` or `non_ge`) plus `non_ge_stock_id` for unified history/profit rows.
 - After mutations, hooks generally return a success boolean and let the caller call `refetch()` rather than updating local state directly.
 
 ### Supabase Data API grants
@@ -64,14 +71,20 @@ with check (auth.uid() = user_id);
 ### Key domain concepts
 
 - **Stock** — a tracked OSRS GE item. Holds `shares` (quantity held), `totalCost` (total GP spent buying), `sharesSold`, `totalCostSold`, `totalCostBasisSold` (cost basis of sold shares), `limit4h` (GE 4-hour buy limit), `timerEndTime`, and optional `itemId` linking to the GE API.
+- **Non-GE stock** — a tracked item outside Grand Exchange pricing. Stored separately in `non_ge_stocks`; uses `catalogItemKey` for fixed catalog items or `customItemId` for private user-created items, plus `nameSnapshot`, Non-GE `categoryId`, target buy/sell prices, notes, and the same held/sold cost fields as GE stocks.
+- **Non-GE catalog** — fixed frontend data in `src/data/nonGeCatalog.js`, with helpers in `src/utils/nonGeCatalog.js`. Catalog updates are code/content changes, not user data migrations.
 - **Profit calculation** — realized profit = `totalCostSold - totalCostBasisSold`. See `src/utils/calculations.js`.
 - **GE tax** — 2% capped at 5M GP, with a hardcoded exempt list. See `src/utils/taxUtils.js`. Used for unrealized profit estimates.
 - **Unrealized profit** — estimated profit if current stock sold at live GE high price after tax.
+- **Non-GE profit** — uses the same realized average-cost formula as GE, but does not use GE prices, GE tax, timers, limits, alerts, graphs, or calculators.
+- **GE to Non-GE move** — available from GE stock rows. It creates a Non-GE row, copies notes into `non_ge_stocks.notes`, relinks matching `transactions` and `profit_history` rows to `market = 'non_ge'`, cleans up price alerts/graph preferences/stock notes, then deletes the original GE stock row.
 
 ### UI structure
 
-- `MainApp` renders `Header`, `PortfolioSummary`, `CategoryQuickNav`, `MilestoneProgressBar`, `ChartButtons`, `CategorySection` (per category), and `Footer`.
+- `MainApp` renders `Header`, `PortfolioSummary`, `CategoryQuickNav`, `MilestoneProgressBar`, `ChartButtons`, `CategorySection` (per GE category), `NonGEPage`, and `Footer`.
 - `CategorySection` renders a `StockTable` per category.
+- `NonGEPage` renders Non-GE summary cards and `NonGECategorySection` / `NonGETable` per Non-GE category.
+- Non-GE category headers intentionally reuse the same category header classes and collapse symbol style as the GE trade page.
 - All modals live in `src/components/modals/` and are controlled from `MainApp` via `selectedStock` / modal-open state. `ModalContainer` wraps modal-level concerns.
 - `src/styles/` holds component styles split per-component; `src/index.css` holds global styles. No CSS framework.
 - Icons come from `lucide-react`.
@@ -79,7 +92,10 @@ with check (auth.uid() = user_id);
 ### Pages
 
 - `HomePage` (`/`) — portfolio summary, stats, recent activity, top items
-- `HistoryPage` — transaction history log
+- Trade page (`/trade`) — authenticated GE tracker with categories, GE price columns, timers, alerts, graphs, and calculators
+- `NonGEPage` (`/nonge`) — authenticated Non-GE tracker with fixed catalog/custom items, Non-GE categories, archive, buy/sell/remove/adjust, and notes
+- `HistoryPage` — unified transaction/profit log; defaults to all markets and has Market filters for All, GE, and Non-GE
+- `AnalyticsPage` — analytics from transactions, stocks, and `profit_history`; all-time stock profit currently uses GE `stocks` totals, while timeframe buckets are built from `profit_history` and can include Non-GE rows unless future work adds explicit market filtering
 - Static pages: `About`, `Contact`, `PrivacyPolicy`, `CookiePolicy`, `Terms`
 
 ### MainApp.jsx structure
@@ -100,6 +116,15 @@ Modals use a context-based system:
 3. `ModalManager` (`src/components/ModalManager.jsx`) renders all `<ModalContainer isOpen={...}>` blocks in one place
 4. Individual modal components in `src/components/modals/XModal.jsx` receive `onConfirm` and `onCancel`
 5. `ModalContainer` is a fixed overlay with z-index 200, renders null when closed
+
+Non-GE modals currently include:
+
+- `NonGEAddItemModal`
+- `NonGEBulkAddModal`
+- `NonGEArchiveModal`
+- `NonGETradeModal`
+- `NonGEAdjustModal`
+- `MoveToNonGEModal`
 
 ### CSS conventions
 
@@ -126,6 +151,7 @@ Modals use a context-based system:
 | `home-page.css` | `HomePage` |
 | `history-page.css` | `HistoryPage` |
 | `graphs-page.css` | `GraphsPage` |
+| `non-ge-page.css` | `NonGEPage`, Non-GE table, Non-GE modals |
 | `filter-panel.css` | Filter panel in `HistoryPage` |
 | `bulk-trade-modal.css` | `BulkTradeModal` (shared bulk buy/sell) |
 | `trade-modal.css` | `TradeModal` (shared buy/sell) |
@@ -139,6 +165,7 @@ Modals use a context-based system:
 - `src/utils/formatters.js`: `formatNumber(num, format)`, `parseMK(str)`, `handleMKInput(value)`
 - `src/utils/calculations.js`: profit math
 - `src/utils/taxUtils.js`: GE tax (2%, 5M cap)
+- `src/utils/nonGeCatalog.js`: Non-GE catalog lookup, search normalization, display names, wiki image helpers
 
 ### Design
 
