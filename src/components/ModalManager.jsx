@@ -25,6 +25,7 @@ import NonGEBulkAddModal from './modals/NonGEBulkAddModal';
 import NonGEArchiveModal from './modals/NonGEArchiveModal';
 import NonGEAdjustModal from './modals/NonGEAdjustModal';
 import NonGETradeModal from './modals/NonGETradeModal';
+import MoveToNonGEModal from './modals/MoveToNonGEModal';
 
 export default function ModalManager({
   // Handlers from useModalHandlers
@@ -54,6 +55,7 @@ export default function ModalManager({
   stockToArchive,
   handleConfirmArchive,
   handleRestore,
+  handleMoveToNonGE,
   handleAddNonGEItem,
   handleCreateNonGECustomItem,
   handleBulkAddNonGEItems,
@@ -85,6 +87,10 @@ export default function ModalManager({
   nonGEAllStocks,
   nonGEArchivedStocks,
   nonGEArchivedLoading,
+  moveToNonGESummary,
+  moveToNonGESummaryLoading,
+  moveToNonGEError,
+  moveToNonGESubmitting,
   // Settings
   visibleColumns,
   visibleProfits,
@@ -352,6 +358,22 @@ export default function ModalManager({
           confirmVariant="warning"
           onConfirm={handleConfirmArchive}
           onCancel={() => closeModal('archiveConfirm')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.moveToNonGE}>
+        <MoveToNonGEModal
+          stock={selectedStock}
+          categories={nonGECategories}
+          customItems={nonGECustomItems}
+          existingStocks={nonGEAllStocks}
+          stockNote={stockNotes[selectedStock?.id]}
+          transactionCount={moveToNonGESummary?.transactionCount || 0}
+          summaryLoading={moveToNonGESummaryLoading}
+          moveError={moveToNonGEError}
+          isSubmitting={moveToNonGESubmitting}
+          onConfirm={handleMoveToNonGE}
+          onCancel={() => closeModal('moveToNonGE')}
         />
       </ModalContainer>
 

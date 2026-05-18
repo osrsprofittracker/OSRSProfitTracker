@@ -43,6 +43,7 @@ import { useNonGECategories } from './hooks/useNonGECategories';
 import { useNonGECustomItems } from './hooks/useNonGECustomItems';
 import { useNonGEStocks } from './hooks/useNonGEStocks';
 import { useNonGETradeHandlers } from './hooks/useNonGETradeHandlers';
+import { useMoveToNonGE } from './hooks/useMoveToNonGE';
 import GlobalSearch from './components/GlobalSearch';
 import { NON_GE_DEFAULT_CATEGORIES } from './data/nonGeCatalog';
 
@@ -102,10 +103,10 @@ function MainAppInner({ session, onLogout }) {
     fetchCategories();
     setTradeMode(mode);
   };
-  const { stocks, allStocks, loading: stocksLoading, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
+  const { stocks, allStocks, loading: stocksLoading, updateStock, deleteStock, deleteStockRowOnly, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategoriesContext();
   const {
-    transactions, loading: transactionsLoading, addTransaction,
+    transactions, loading: transactionsLoading, addTransaction, refetch: refetchTransactions,
     loadFullHistory: loadFullTransactions,
     fullHistoryLoading: fullTransactionsLoading,
     historyScope: transactionHistoryScope,
@@ -116,7 +117,7 @@ function MainAppInner({ session, onLogout }) {
     sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
   } = useTransactionsContext();
  const { stats: gpTradedStats, loading: gpStatsLoading, refetch: refetchGPStats } = useGPTradedStats(userId);
-  const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
+  const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote, refetch: refetchStockNotes } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { notificationPreferences, updateNotificationPreference, loading: notificationSettingsLoading } = useNotificationSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfitsContext();
@@ -205,6 +206,8 @@ function MainAppInner({ session, onLogout }) {
   const [nonGEArchivedStocks, setNonGEArchivedStocks] = useState([]);
   const [nonGEArchivedLoading, setNonGEArchivedLoading] = useState(false);
   const [nonGEStockToArchive, setNonGEStockToArchive] = useState(null);
+  const [moveToNonGESummary, setMoveToNonGESummary] = useState({ transactionCount: 0 });
+  const [moveToNonGESummaryLoading, setMoveToNonGESummaryLoading] = useState(false);
   const userDropdownRef = useRef(null);
   const userMenuOpenRef = useRef(false);
   const ignoreNextUserMenuClickRef = useRef(false);
@@ -744,6 +747,25 @@ function MainAppInner({ session, onLogout }) {
     highlightRow,
   });
 
+  const {
+    moveSubmitting: moveToNonGESubmitting,
+    moveError: moveToNonGEError,
+    setMoveError: setMoveToNonGEError,
+    fetchMoveSummary,
+    moveToNonGE,
+  } = useMoveToNonGE({
+    userId,
+    stockNotes,
+    addNonGEStock,
+    deleteStockRowOnly,
+    refetchGEStocks: refetch,
+    refetchNonGEStocks,
+    refetchStockNotes,
+    refetchTransactions,
+    refetchProfitHistory,
+    refetchPriceAlerts,
+  });
+
   const handleInvestmentDateChange = async (stock, date) => {
     await updateStock(stock.id, { investmentStartDate: date });
     await refetch();
@@ -882,6 +904,30 @@ function MainAppInner({ session, onLogout }) {
 
   const handleBuyWithWatchlistCleanup = async (data) => {
     await handleBuy(data);
+  };
+
+  const handleOpenMoveToNonGE = async (stock) => {
+    setMoveToNonGEError('');
+    setMoveToNonGESummary({ transactionCount: 0 });
+    openModal('moveToNonGE', { stock });
+    setMoveToNonGESummaryLoading(true);
+    try {
+      const summary = await fetchMoveSummary(stock.id);
+      setMoveToNonGESummary(summary);
+    } finally {
+      setMoveToNonGESummaryLoading(false);
+    }
+  };
+
+  const handleMoveToNonGE = async (destination) => {
+    const result = await moveToNonGE(selectedStock, destination);
+    if (result.success) {
+      closeModal('moveToNonGE');
+      if (result.stock?.id) {
+        highlightRow(result.stock.id);
+      }
+    }
+    return result;
   };
 
   // Drag and drop operations
@@ -1611,6 +1657,7 @@ function MainAppInner({ session, onLogout }) {
                 onPriceAlert={handleOpenPriceAlert}
                 priceAlerts={priceAlerts}
                 onViewGraph={(stock) => stock.itemId && navigateToPage('graphs', { query: { item: stock.itemId } })}
+                onMoveToNonGE={handleOpenMoveToNonGE}
               />
             ))}
 
@@ -1644,6 +1691,7 @@ function MainAppInner({ session, onLogout }) {
           stockToArchive={stockToArchive}
           handleConfirmArchive={handleConfirmArchive}
           handleRestore={handleRestore}
+          handleMoveToNonGE={handleMoveToNonGE}
           handleAddNonGEItem={handleAddNonGEItem}
           handleCreateNonGECustomItem={handleCreateNonGECustomItem}
           handleBulkAddNonGEItems={handleBulkAddNonGEItems}
@@ -1678,6 +1726,10 @@ function MainAppInner({ session, onLogout }) {
           nonGEAllStocks={nonGEAllStocks}
           nonGEArchivedStocks={nonGEArchivedStocks}
           nonGEArchivedLoading={nonGEArchivedLoading}
+          moveToNonGESummary={moveToNonGESummary}
+          moveToNonGESummaryLoading={moveToNonGESummaryLoading}
+          moveToNonGEError={moveToNonGEError}
+          moveToNonGESubmitting={moveToNonGESubmitting}
           visibleColumns={visibleColumns}
           visibleProfits={visibleProfits}
           showCategoryStats={showCategoryStats}

@@ -26,6 +26,7 @@ const MODAL_DEFAULTS = {
   priceAlert: false,
   archive: false,
   archiveConfirm: false,
+  moveToNonGE: false,
   nonGEAddItem: false,
   nonGEBulkAdd: false,
   nonGEArchive: false,
