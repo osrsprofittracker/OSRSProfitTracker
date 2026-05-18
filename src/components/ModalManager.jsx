@@ -373,6 +373,7 @@ export default function ModalManager({
           moveError={moveToNonGEError}
           isSubmitting={moveToNonGESubmitting}
           onConfirm={handleMoveToNonGE}
+          onCreateCustomItem={handleCreateNonGECustomItem}
           onCancel={() => closeModal('moveToNonGE')}
         />
       </ModalContainer>

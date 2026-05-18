@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AlertTriangle, Search } from 'lucide-react';
+import { AlertTriangle, Plus, Search } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { NON_GE_CATALOG } from '../../data/nonGeCatalog';
 import { calculateProfit } from '../../utils/calculations';
@@ -49,11 +49,17 @@ export default function MoveToNonGEModal({
   moveError = '',
   isSubmitting = false,
   onConfirm,
+  onCreateCustomItem,
   onCancel,
 }) {
   const [query, setQuery] = useState(stock?.name || '');
   const [selectedItem, setSelectedItem] = useState(null);
   const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [customName, setCustomName] = useState(stock?.name || '');
+  const [customRangeLabel, setCustomRangeLabel] = useState('Unknown');
+  const [customWikiUrl, setCustomWikiUrl] = useState('');
+  const [customError, setCustomError] = useState('');
 
   const categoryIdByName = useMemo(() => {
     return categories.reduce((acc, category) => {
@@ -98,6 +104,53 @@ export default function MoveToNonGEModal({
     });
   };
 
+  const selectCustomItem = (item) => {
+    const option = customOption(item);
+    setSelectedItem(option);
+    setQuery(option.name);
+    setShowCustomForm(false);
+    setCustomError('');
+  };
+
+  const handleCreateCustom = async () => {
+    const name = customName.trim();
+    if (!name) {
+      setCustomError('Custom item name is required.');
+      return;
+    }
+
+    const existingCustomItem = customItems.find(item => item.name.toLowerCase() === name.toLowerCase());
+    if (existingCustomItem) {
+      selectCustomItem(existingCustomItem);
+      return;
+    }
+
+    const duplicateTrackedCustom = existingStocks.some(item =>
+      !item.catalogItemKey && item.nameSnapshot?.toLowerCase() === name.toLowerCase()
+    );
+    if (duplicateTrackedCustom) {
+      setCustomError(`${name} is already tracked in Non-GE.`);
+      return;
+    }
+
+    const created = await onCreateCustomItem?.({
+      name,
+      wikiUrl: customWikiUrl.trim(),
+      sourceName: 'Custom',
+      rangeLabel: customRangeLabel.trim() || 'Unknown',
+    });
+
+    if (!created) {
+      setCustomError('Could not create custom item.');
+      return;
+    }
+
+    selectCustomItem(created);
+    setCustomName(created.name);
+    setCustomRangeLabel('Unknown');
+    setCustomWikiUrl('');
+  };
+
   if (!stock) return null;
 
   return (
@@ -112,7 +165,7 @@ export default function MoveToNonGEModal({
       </div>
 
       <label className="non-ge-field">
-        <span>Fixed catalog or custom item</span>
+        <span>Non-GE item</span>
         <div className="non-ge-search-input-wrap">
           <Search size={16} />
           <input
@@ -125,7 +178,61 @@ export default function MoveToNonGEModal({
         </div>
       </label>
 
-      <div className="non-ge-option-list non-ge-adjust-option-list">
+      <button
+        type="button"
+        className="non-ge-custom-toggle"
+        onClick={() => {
+          setShowCustomForm(prev => !prev);
+          setCustomName(stock.name || '');
+          setCustomRangeLabel('Unknown');
+          setCustomWikiUrl('');
+          setCustomError('');
+        }}
+      >
+        <Plus size={14} />
+        Custom item
+      </button>
+
+      {showCustomForm && (
+        <div className="non-ge-custom-panel">
+          <label className="non-ge-field">
+            <span>Name</span>
+            <input
+              type="text"
+              value={customName}
+              onChange={(event) => setCustomName(event.target.value)}
+              placeholder="Custom item name"
+              className="non-ge-input"
+            />
+          </label>
+          <label className="non-ge-field">
+            <span>Range</span>
+            <input
+              type="text"
+              value={customRangeLabel}
+              onChange={(event) => setCustomRangeLabel(event.target.value)}
+              placeholder="Unknown"
+              className="non-ge-input"
+            />
+          </label>
+          <label className="non-ge-field">
+            <span>Wiki URL</span>
+            <input
+              type="url"
+              value={customWikiUrl}
+              onChange={(event) => setCustomWikiUrl(event.target.value)}
+              placeholder="Optional"
+              className="non-ge-input"
+            />
+          </label>
+          <button type="button" className="btn btn-primary btn-sm" onClick={handleCreateCustom}>
+            Create Custom Item
+          </button>
+          {customError && <div className="non-ge-modal-error">{customError}</div>}
+        </div>
+      )}
+
+      {!showCustomForm && <div className="non-ge-option-list non-ge-adjust-option-list">
         {options.map(item => {
           const isSelected = selectedItem?.key === item.key;
           const isDuplicate = existingKeys.has(item.key);
@@ -155,7 +262,7 @@ export default function MoveToNonGEModal({
             </button>
           );
         })}
-      </div>
+      </div>}
 
       <label className="non-ge-field">
         <span>Non-GE category</span>
