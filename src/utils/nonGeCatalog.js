@@ -30,7 +30,8 @@ export function getNonGEWikiImageUrl(item) {
   if (item.imageUrl) return item.imageUrl;
   if (!item.wikiUrl) return '';
 
-  const pageName = decodeURIComponent(String(item.wikiUrl).split('/').pop() || '').replace(/ /g, '_');
+  const pagePath = String(item.wikiUrl).split('#')[0].split('?')[0];
+  const pageName = decodeURIComponent(pagePath.split('/').pop() || '').replace(/ /g, '_');
   if (!pageName) return '';
 
   return `https://oldschool.runescape.wiki/images/${pageName}.png`;

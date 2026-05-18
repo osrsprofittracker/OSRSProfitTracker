@@ -79,14 +79,16 @@ export default function NonGEAddItemModal({
   const options = useMemo(() => {
     const normalized = normalizeNonGESearch(query);
     const catalogOptions = NON_GE_CATALOG.map(catalogOption);
-    const customOptions = customItems.map(customOption);
+    const customOptions = customItems
+      .map(customOption)
+      .filter(item => !existingKeys.has(`custom:${item.id}`));
     const allOptions = [...catalogOptions, ...customOptions];
 
     if (!normalized) return allOptions.slice(0, 80);
     return allOptions
       .filter(item => item.name.toLowerCase().includes(normalized))
       .slice(0, 80);
-  }, [query, customItems]);
+  }, [query, customItems, existingKeys]);
 
   const selectedKey = selectedItem ? `${selectedItem.type}:${selectedItem.id}` : '';
   const duplicateSelected = Boolean(selectedKey && existingKeys.has(selectedKey));
