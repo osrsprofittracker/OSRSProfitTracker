@@ -264,7 +264,7 @@ export default function MoveToNonGEModal({
         })}
       </div>}
 
-      <label className="non-ge-field">
+      <label className="non-ge-field non-ge-move-category-field">
         <span>Non-GE category</span>
         <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className="non-ge-input">
           {categories.map(category => (

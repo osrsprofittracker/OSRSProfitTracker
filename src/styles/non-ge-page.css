@@ -352,6 +352,11 @@
   max-height: 14rem;
 }
 
+.non-ge-move-category-field {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
 .non-ge-option-row,
 .non-ge-bulk-row,
 .non-ge-archive-item {
