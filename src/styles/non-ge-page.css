@@ -118,6 +118,30 @@
   margin-bottom: 0.5rem;
 }
 
+.non-ge-stat-value--cost {
+  color: rgb(96, 165, 250);
+}
+
+.non-ge-stat-value--quantity {
+  color: rgb(251, 146, 60);
+}
+
+.non-ge-stat-value--profit-positive {
+  color: rgb(52, 211, 153);
+}
+
+.non-ge-stat-value--profit-negative {
+  color: rgb(248, 113, 113);
+}
+
+.non-ge-stat-value--sold-quantity {
+  color: rgb(168, 85, 247);
+}
+
+.non-ge-stat-value--sold-cost {
+  color: rgb(192, 132, 252);
+}
+
 .non-ge-table-wrap {
   overflow-x: auto;
 }

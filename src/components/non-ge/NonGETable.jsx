@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Archive, CircleDollarSign, GripVertical, MinusCircle, Pencil, ShoppingCart, StickyNote, Trash2 } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, CircleDollarSign, GripVertical, MinusCircle, Pencil, ShoppingCart, StickyNote, Trash2 } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../../utils/calculations';
 import { formatAvgPrice, formatNumber } from '../../utils/formatters';
@@ -54,7 +54,8 @@ function sortNonGEStocks(stocks, sortConfig) {
 
 function SortIcon({ columnKey, sortConfig }) {
   if (sortConfig?.key !== columnKey) return null;
-  return <span className="non-ge-sort-icon">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+  const Icon = sortConfig.direction === 'asc' ? ArrowUp : ArrowDown;
+  return <Icon size={12} className="non-ge-sort-icon" aria-hidden="true" />;
 }
 
 function HeaderCell({ label, columnKey, sortConfig, onSort, align = 'left' }) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 import { calculateProfit } from '../../utils/calculations';
 import { formatNumber } from '../../utils/formatters';
 import NonGETable from './NonGETable';
@@ -44,9 +44,7 @@ export default function NonGECategorySection({
           onDrop={(event) => onCategoryDrop(event, category.id)}
           onClick={onToggleCollapse}
         >
-          <span className={`collapse-icon ${isCollapsed ? 'collapse-icon-rotated' : ''}`}>
-            ▼
-          </span>
+          <ChevronDown size={16} className={`collapse-icon ${isCollapsed ? 'collapse-icon-rotated' : ''}`} />
           <h2 className="non-ge-category-title">
             {category.name} <span>({stocks.length})</span>
           </h2>
@@ -67,27 +65,27 @@ export default function NonGECategorySection({
             <StatItem
               label="Total Cost"
               value={formatNumber(totalCost, numberFormat)}
-              color="rgb(96, 165, 250)"
+              tone="cost"
             />
             <StatItem
               label="Total Quantity"
               value={formatNumber(heldQty, numberFormat)}
-              color="rgb(251, 146, 60)"
+              tone="quantity"
             />
             <StatItem
               label="Total Profit"
               value={`${realizedProfit >= 0 ? '+' : ''}${formatNumber(realizedProfit, numberFormat)}`}
-              color={realizedProfit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
+              tone={realizedProfit >= 0 ? 'profit-positive' : 'profit-negative'}
             />
             <StatItem
               label="Sold Quantity"
               value={formatNumber(soldQty, numberFormat)}
-              color="rgb(168, 85, 247)"
+              tone="sold-quantity"
             />
             <StatItem
               label="Sold Cost"
               value={formatNumber(soldCost, numberFormat)}
-              color="rgb(192, 132, 252)"
+              tone="sold-cost"
             />
           </div>
 
@@ -113,11 +111,11 @@ export default function NonGECategorySection({
   );
 }
 
-function StatItem({ label, value, color }) {
+function StatItem({ label, value, tone }) {
   return (
     <div className="stat-item">
       <div className="stat-label">{label}</div>
-      <div className="stat-value" style={{ color }}>{value}</div>
+      <div className={`stat-value non-ge-stat-value--${tone}`}>{value}</div>
     </div>
   );
 }
