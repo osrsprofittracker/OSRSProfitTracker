@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { calculateProfit } from '../../utils/calculations';
 import { formatNumber } from '../../utils/formatters';
 import NonGETable from './NonGETable';
@@ -34,17 +34,19 @@ export default function NonGECategorySection({
   const realizedProfit = stocks.reduce((sum, stock) => sum + calculateProfit(stock), 0);
 
   return (
-    <section className="non-ge-category-section" data-category={category.name}>
-      <div className="non-ge-category-header">
+    <section className="category-container non-ge-category-section" data-category={category.name}>
+      <div className="category-header">
         <div
-          className="non-ge-category-title-wrap"
+          className="category-title"
           draggable
           onDragStart={(event) => onCategoryDragStart(event, category.id)}
           onDragOver={onCategoryDragOver}
           onDrop={(event) => onCategoryDrop(event, category.id)}
           onClick={onToggleCollapse}
         >
-          <ChevronDown size={16} className={`collapse-icon ${isCollapsed ? 'collapse-icon-rotated' : ''}`} />
+          <span className={`collapse-icon ${isCollapsed ? 'collapse-icon-rotated' : ''}`}>
+            ▼
+          </span>
           <h2 className="non-ge-category-title">
             {category.name} <span>({stocks.length})</span>
           </h2>
