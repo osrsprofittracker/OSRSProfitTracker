@@ -123,13 +123,66 @@
 }
 
 .non-ge-table {
-  min-width: 1240px;
+  table-layout: fixed;
+  min-width: 1380px;
+}
+
+.non-ge-col-grip {
+  width: 2.5rem;
+}
+
+.non-ge-col-name {
+  width: 11rem;
+}
+
+.non-ge-col-held {
+  width: 5.5rem;
+}
+
+.non-ge-col-total-cost,
+.non-ge-col-sold-price {
+  width: 4.5rem;
+}
+
+.non-ge-col-avg-buy,
+.non-ge-col-avg-sell {
+  width: 5rem;
+}
+
+.non-ge-col-sold-qty {
+  width: 4.25rem;
+}
+
+.non-ge-col-profit {
+  width: 5.5rem;
+}
+
+.non-ge-col-range {
+  width: 4.75rem;
+}
+
+.non-ge-col-target {
+  width: 4.25rem;
+}
+
+.non-ge-col-notes {
+  width: 5.75rem;
+}
+
+.non-ge-col-actions {
+  width: 25.5rem;
 }
 
 .non-ge-table-th {
   max-width: 6rem;
   line-height: 1.15;
   white-space: normal;
+}
+
+.non-ge-table th,
+.non-ge-table td {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 .non-ge-table-th--right,
@@ -165,7 +218,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-width: 10rem;
+  min-width: 0;
   text-align: left;
 }
 
@@ -204,13 +257,14 @@
 }
 
 .non-ge-actions-cell {
-  min-width: 18rem;
+  min-width: 25.5rem;
 }
 
 .non-ge-action-buttons {
   justify-content: flex-end;
-  flex-wrap: wrap;
-  max-width: 18rem;
+  flex-wrap: nowrap;
+  max-width: none;
+  white-space: nowrap;
 }
 
 .non-ge-actions-cell .btn:disabled {

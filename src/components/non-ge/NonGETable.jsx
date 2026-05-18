@@ -112,6 +112,22 @@ export default function NonGETable({
   return (
     <div className="table-container non-ge-table-wrap">
       <table className="table-base non-ge-table">
+        <colgroup>
+          <col className="non-ge-col-grip" />
+          <col className="non-ge-col-name" />
+          <col className="non-ge-col-held" />
+          <col className="non-ge-col-total-cost" />
+          <col className="non-ge-col-avg-buy" />
+          <col className="non-ge-col-sold-qty" />
+          <col className="non-ge-col-sold-price" />
+          <col className="non-ge-col-avg-sell" />
+          <col className="non-ge-col-profit" />
+          <col className="non-ge-col-range" />
+          <col className="non-ge-col-target" />
+          <col className="non-ge-col-target" />
+          <col className="non-ge-col-notes" />
+          <col className="non-ge-col-actions" />
+        </colgroup>
         <thead className="thead-base">
           <tr>
             <th className="th-icon-empty"></th>
