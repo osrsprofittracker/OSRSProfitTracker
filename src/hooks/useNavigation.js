@@ -12,7 +12,7 @@ const PAGE_PATHS = {
 };
 
 const HISTORY_EMPTY_FILTERS = {
-  type: 'all', mode: 'all', stockName: '', category: '',
+  market: 'all', type: 'all', mode: 'all', stockName: '', category: '',
   dateFrom: '', dateTo: '', gpMin: '', gpMax: '',
   priceMin: '', priceMax: '', profitMin: '', profitMax: '',
   qtyMin: '', qtyMax: '', marginMin: '', marginMax: '',
@@ -43,6 +43,7 @@ function filtersFromHistoryParams(params) {
   }
 
   if (params.has('type')) filters.type = params.get('type') || 'all';
+  if (params.has('market')) filters.market = params.get('market') || 'all';
   if (params.has('dayOfWeek')) filters.dayOfWeek = params.get('dayOfWeek') || '';
   if (params.has('hourOfDay')) filters.hourOfDay = params.get('hourOfDay') || '';
 

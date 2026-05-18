@@ -6,6 +6,27 @@ const RECENT_TRANSACTION_ROW_CAP = 10000;
 const FULL_TRANSACTION_ROW_CAP = 50000;
 const TRANSACTION_BATCH_SIZE = 1000;
 const DAY_MS = 86400_000;
+const DEFAULT_HISTORY_FILTERS = {
+  market: 'all',
+  type: 'all',
+  mode: 'all',
+  stockName: '',
+  category: '',
+  dateFrom: '',
+  dateTo: '',
+  gpMin: '',
+  gpMax: '',
+  priceMin: '',
+  priceMax: '',
+  profitMin: '',
+  profitMax: '',
+  qtyMin: '',
+  qtyMax: '',
+  marginMin: '',
+  marginMax: '',
+  dayOfWeek: '',
+  hourOfDay: '',
+};
 
 export function useTransactions(userId) {
   const [transactions, setTransactions] = useState([]);
@@ -22,7 +43,7 @@ export function useTransactions(userId) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState({ type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '', dayOfWeek: '', hourOfDay: '' });
+  const [filters, setFilters] = useState(DEFAULT_HISTORY_FILTERS);
   const [sortConfig, setSortConfig] = useState({ key: 'date', dir: 'desc' });
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
@@ -214,6 +235,9 @@ export function useTransactions(userId) {
     query = query.order(dbColumn(sortKey), { ascending, nullsFirst: ascending });
 
     // Apply filters
+    if (activeFilters.market && activeFilters.market !== 'all') {
+      query = query.eq('market', activeFilters.market);
+    }
     if (activeFilters.type !== 'all') query = query.eq('type', activeFilters.type);
     if (activeFilters.stockName) query = query.ilike('stock_name', `%${activeFilters.stockName}%`);
     if (activeFilters.dateFrom) query = query.gte('date', activeFilters.dateFrom);
@@ -320,7 +344,7 @@ export function useTransactions(userId) {
 
   const resetPaged = useCallback(() => {
     const defaultSort = { key: 'date', dir: 'desc' };
-    const defaultFilters = { type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '', dayOfWeek: '', hourOfDay: '' };
+    const defaultFilters = { ...DEFAULT_HISTORY_FILTERS };
     setSortConfig(defaultSort);
     setFilters(defaultFilters);
     setPage(1);
@@ -330,6 +354,7 @@ export function useTransactions(userId) {
   const changeHistorySource = useCallback((source) => {
     const defaultSort = { key: 'date', dir: 'desc' };
     const sourceFilters = {
+      market: 'all',
       type: 'all',
       mode: 'all',
       stockName: '',
@@ -401,11 +426,24 @@ export function useTransactions(userId) {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const undoTransaction = useCallback(async (transaction) => {
+    const market = transaction.market || 'ge';
+    const isNonGE = market === 'non_ge';
+    const stockId = isNonGE ? transaction.nonGeStockId : transaction.stockId;
+    const stockTable = isNonGE ? 'non_ge_stocks' : 'stocks';
+    const stockIdColumn = isNonGE ? 'non_ge_stock_id' : 'stock_id';
+    const txShares = Number(transaction.shares || 0);
+    const txTotal = Number(transaction.total || 0);
+
+    if (!stockId) {
+      return { success: false, warning: 'stock_not_found' };
+    }
+
     if (transaction.type === 'buy') {
       const { data: laterSells } = await supabase
         .from('transactions')
         .select('id')
-        .eq('stock_id', transaction.stockId)
+        .eq('market', market)
+        .eq(stockIdColumn, stockId)
         .eq('type', 'sell')
         .gt('date', transaction.date)
         .limit(1);
@@ -434,9 +472,10 @@ export function useTransactions(userId) {
 
       // 3. Revert the stock
       const { data: stockData, error: stockFetchError } = await supabase
-        .from('stocks')
+        .from(stockTable)
         .select('*')
-        .eq('id', transaction.stockId)
+        .eq('id', stockId)
+        .eq('user_id', userId)
         .single();
 
       if (stockFetchError || !stockData) {
@@ -444,39 +483,45 @@ export function useTransactions(userId) {
       }
 
       let stockUpdate = {};
+      const heldShares = Number(stockData.shares || 0);
+      const totalCost = Number(stockData.total_cost || 0);
+      const sharesSold = Number(stockData.shares_sold || 0);
+      const totalCostSold = Number(stockData.total_cost_sold || 0);
+      const totalCostBasisSold = Number(stockData.total_cost_basis_sold || 0);
 
       if (transaction.type === 'buy') {
-        const avgBuy = stockData.shares > 0 ? stockData.total_cost / stockData.shares : 0;
-        const costBasisToRemove = avgBuy * transaction.shares;
+        const avgBuy = heldShares > 0 ? totalCost / heldShares : 0;
+        const costBasisToRemove = avgBuy * txShares;
         stockUpdate = {
-          shares: stockData.shares - transaction.shares,
-          total_cost: stockData.total_cost - costBasisToRemove,
+          shares: heldShares - txShares,
+          total_cost: totalCost - costBasisToRemove,
         };
       } else if (transaction.type === 'sell') {
-        const avgBuyAtSell = stockData.shares_sold > 0
-          ? stockData.total_cost_basis_sold / stockData.shares_sold
+        const avgBuyAtSell = sharesSold > 0
+          ? totalCostBasisSold / sharesSold
           : 0;
-        const costBasisToRestore = avgBuyAtSell * transaction.shares;
+        const costBasisToRestore = avgBuyAtSell * txShares;
         stockUpdate = {
-          shares: stockData.shares + transaction.shares,
-          total_cost: stockData.total_cost + costBasisToRestore,
-          shares_sold: stockData.shares_sold - transaction.shares,
-          total_cost_sold: stockData.total_cost_sold - transaction.total,
-          total_cost_basis_sold: stockData.total_cost_basis_sold - costBasisToRestore,
+          shares: heldShares + txShares,
+          total_cost: totalCost + costBasisToRestore,
+          shares_sold: sharesSold - txShares,
+          total_cost_sold: totalCostSold - txTotal,
+          total_cost_basis_sold: totalCostBasisSold - costBasisToRestore,
         };
       } else if (transaction.type === 'remove') {
         const avgPrice = transaction.price || 0;
-        const costToRestore = avgPrice * transaction.shares;
+        const costToRestore = avgPrice * txShares;
         stockUpdate = {
-          shares: stockData.shares + transaction.shares,
-          total_cost: stockData.total_cost + costToRestore,
+          shares: heldShares + txShares,
+          total_cost: totalCost + costToRestore,
         };
       }
 
       const { error: stockUpdateError } = await supabase
-        .from('stocks')
+        .from(stockTable)
         .update(stockUpdate)
-        .eq('id', transaction.stockId);
+        .eq('id', stockId)
+        .eq('user_id', userId);
       if (stockUpdateError) throw stockUpdateError;
 
       // 4. Refresh local state

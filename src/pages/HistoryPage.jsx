@@ -9,6 +9,7 @@ import '../styles/history-page.css';
 import '../styles/filter-panel.css';
 
 const EMPTY_FILTERS = {
+  market: 'all',
   type: 'all',
   mode: 'all',
   stockName: '',
@@ -29,6 +30,7 @@ const EMPTY_FILTERS = {
   hourOfDay: ''
 };
 
+const MARKET_FILTERS = ['all', 'ge', 'non_ge'];
 const TRANSACTION_TYPES = ['all', 'buy', 'sell', 'remove'];
 const PROFIT_TYPES = ['all', 'dump', 'referral', 'bonds'];
 
@@ -53,6 +55,15 @@ function typeLabel(type) {
   return labels[type] || type;
 }
 
+function marketLabel(market) {
+  const labels = {
+    all: 'All',
+    ge: 'GE',
+    non_ge: 'Non-GE'
+  };
+  return labels[market] || 'GE';
+}
+
 function hasAnyFilter(filters = EMPTY_FILTERS) {
   return Boolean(
     filters.stockName || filters.category ||
@@ -64,6 +75,7 @@ function hasAnyFilter(filters = EMPTY_FILTERS) {
     filters.marginMin || filters.marginMax ||
     (filters.dayOfWeek ?? '') !== '' ||
     (filters.hourOfDay ?? '') !== '' ||
+    (filters.market || 'all') !== 'all' ||
     (filters.type || 'all') !== 'all' ||
     (filters.mode || 'all') !== 'all'
   );
@@ -78,6 +90,7 @@ function hasVisibleFilter(filters = EMPTY_FILTERS) {
     filters.profitMin || filters.profitMax ||
     filters.qtyMin || filters.qtyMax ||
     filters.marginMin || filters.marginMax ||
+    (filters.market || 'all') !== 'all' ||
     (filters.type || 'all') !== 'all' ||
     (filters.mode || 'all') !== 'all'
   );
@@ -271,6 +284,23 @@ export default function HistoryPage({
                 ))}
               </div>
             </div>
+
+            {historySource === 'transactions' && (
+              <div className="history-filter-field">
+                <label className="history-filter-label">Market</label>
+                <div className="history-filter-group">
+                  {MARKET_FILTERS.map(market => (
+                    <button
+                      key={market}
+                      className={`history-filter-btn history-market-filter-btn ${localFilters.market === market ? 'history-market-filter-btn--active' : ''}`}
+                      onClick={() => setLocalFilters(prev => ({ ...prev, market }))}
+                    >
+                      {marketLabel(market)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {historySource === 'transactions' && (
               <div className="history-filter-field">
@@ -481,6 +511,9 @@ export default function HistoryPage({
                         />
                       )}
                       {t.stockName}
+                      <span className={`history-market-badge history-market-badge--${t.market || 'ge'}`}>
+                        {marketLabel(t.market)}
+                      </span>
                     </span>
                   </td>
                 )}
