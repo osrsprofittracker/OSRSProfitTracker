@@ -50,6 +50,14 @@ export default function HomePage({
   const weekProfit = milestoneProgress?.week || 0;
   const monthProfit = milestoneProgress?.month || 0;
   const yearProfit = milestoneProgress?.year || 0;
+  const now = new Date();
+  const weekDayIndex = (now.getDay() + 6) % 7;
+  const daysElapsedThisWeek = Math.max(1, weekDayIndex + 1);
+  const daysElapsedThisMonth = Math.max(1, now.getDate());
+  const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const weeklyDailyPace = weekProfit / daysElapsedThisWeek;
+  const monthlyDailyPace = monthProfit / daysElapsedThisMonth;
+  const projectedMonthProfit = monthlyDailyPace * daysInCurrentMonth;
 
   const geProfit = stocksForStats?.reduce((sum, stock) => sum + calculateProfit(stock), 0) || 0;
   const nonGEProfit = nonGEStatsStocks?.reduce((sum, stock) => sum + calculateProfit(stock), 0) || 0;
@@ -202,6 +210,7 @@ export default function HomePage({
       </div>
 
       <div className="summary-grid">
+        <div className="summary-primary-stack">
         {/* Profit Card */}
         <div className="summary-card profit-card">
           <div className="summary-card-header">
@@ -265,58 +274,82 @@ export default function HomePage({
           </div>
         </div>
 
-        {/* GP Traded Card */}
-        <div className="summary-card gp-traded-card">
-          <div className="summary-card-header">
-            <span className="summary-card-icon">📈</span>
-            <span className="summary-card-label">Daily GP Traded</span>
-          </div>
-          <div className="summary-card-value gp-traded-main-value">
-            {formatNumber(dailyGPTraded, numberFormat)}
-          </div>
-          <div className="profit-periods">
-            <div className="profit-period-item">
-              <span className="profit-period-label">Week</span>
-              <span className="profit-period-value gp-traded-value">{formatNumber(weeklyGPTraded, numberFormat)}</span>
+          <div className="summary-card profit-pace-card">
+            <div className="profit-pace-header">
+              <span className="profit-pace-title">Profit Pace</span>
+              <span className="profit-pace-subtitle">Current period average</span>
             </div>
-            <div className="profit-period-divider"></div>
-            <div className="profit-period-item">
-              <span className="profit-period-label">Month</span>
-              <span className="profit-period-value gp-traded-value">{formatNumber(monthlyGPTraded, numberFormat)}</span>
+            <div className="profit-pace-grid">
+              <div className="profit-pace-item">
+                <span className="profit-pace-label">Week Avg / Day</span>
+                <span className="profit-pace-value">{formatNumber(weeklyDailyPace, numberFormat)}</span>
+              </div>
+              <div className="profit-pace-item">
+                <span className="profit-pace-label">Month Avg / Day</span>
+                <span className="profit-pace-value">{formatNumber(monthlyDailyPace, numberFormat)}</span>
+              </div>
+              <div className="profit-pace-item">
+                <span className="profit-pace-label">Projected Month</span>
+                <span className="profit-pace-value">{formatNumber(projectedMonthProfit, numberFormat)}</span>
+              </div>
             </div>
-            <div className="profit-period-divider"></div>
-            <div className="profit-period-item">
-              <span className="profit-period-label">Year</span>
-              <span className="profit-period-value gp-traded-value">{formatNumber(yearlyGPTraded, numberFormat)}</span>
-            </div>
-          </div>
-          <div className="profit-total">
-            <span className="profit-total-label">Total GP Traded</span>
-            <span className="profit-total-value gp-traded-total">{formatNumber(totalGPTraded, numberFormat)}</span>
           </div>
         </div>
 
-        {/* Inventory Card */}
-        <div className="summary-card inventory-card">
-          <div className="summary-card-header">
-            <span className="summary-card-icon">📦</span>
-            <span className="summary-card-label">Total Inventory</span>
-          </div>
-          <div className="summary-card-value inventory-main-value">
-            {formatNumber(inventoryValue, numberFormat)}
-          </div>
-          <div className="inventory-stats-grid">
-            <div className="inventory-stat-item">
-              <span className="inventory-stat-label">Total Items</span>
-              <span className="inventory-stat-value">{itemsInStock.toLocaleString()}</span>
+        <div className="summary-side-stack">
+          {/* GP Traded Card */}
+          <div className="summary-card summary-card-compact gp-traded-card">
+            <div className="summary-card-header">
+              <span className="summary-card-icon">📈</span>
+              <span className="summary-card-label">Daily GP Traded</span>
             </div>
-            <div className="inventory-stat-item">
-              <span className="inventory-stat-label">Unique Items</span>
-              <span className="inventory-stat-value">{uniqueItems}</span>
+            <div className="summary-card-value gp-traded-main-value">
+              {formatNumber(dailyGPTraded, numberFormat)}
             </div>
-            <div className="inventory-stat-item">
-              <span className="inventory-stat-label">Avg per Item</span>
-              <span className="inventory-stat-value">{formatNumber(averageValuePerItem, numberFormat)}</span>
+            <div className="profit-periods compact-periods">
+              <div className="profit-period-item">
+                <span className="profit-period-label">Week</span>
+                <span className="profit-period-value gp-traded-value">{formatNumber(weeklyGPTraded, numberFormat)}</span>
+              </div>
+              <div className="profit-period-divider"></div>
+              <div className="profit-period-item">
+                <span className="profit-period-label">Month</span>
+                <span className="profit-period-value gp-traded-value">{formatNumber(monthlyGPTraded, numberFormat)}</span>
+              </div>
+              <div className="profit-period-divider"></div>
+              <div className="profit-period-item">
+                <span className="profit-period-label">Year</span>
+                <span className="profit-period-value gp-traded-value">{formatNumber(yearlyGPTraded, numberFormat)}</span>
+              </div>
+            </div>
+            <div className="profit-total compact-total">
+              <span className="profit-total-label">Total GP Traded</span>
+              <span className="profit-total-value gp-traded-total">{formatNumber(totalGPTraded, numberFormat)}</span>
+            </div>
+          </div>
+
+          {/* Inventory Card */}
+          <div className="summary-card summary-card-compact inventory-card">
+            <div className="summary-card-header">
+              <span className="summary-card-icon">📦</span>
+              <span className="summary-card-label">Total Inventory</span>
+            </div>
+            <div className="summary-card-value inventory-main-value">
+              {formatNumber(inventoryValue, numberFormat)}
+            </div>
+            <div className="inventory-stats-grid">
+              <div className="inventory-stat-item">
+                <span className="inventory-stat-label">Total Items</span>
+                <span className="inventory-stat-value">{itemsInStock.toLocaleString()}</span>
+              </div>
+              <div className="inventory-stat-item">
+                <span className="inventory-stat-label">Unique Items</span>
+                <span className="inventory-stat-value">{uniqueItems}</span>
+              </div>
+              <div className="inventory-stat-item">
+                <span className="inventory-stat-label">Avg per Item</span>
+                <span className="inventory-stat-value">{formatNumber(averageValuePerItem, numberFormat)}</span>
+              </div>
             </div>
           </div>
         </div>
