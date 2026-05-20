@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Archive, Boxes, PackagePlus, Plus, ShoppingCart, TrendingDown } from 'lucide-react';
+import { Archive, Boxes, FolderPlus, PackagePlus, Plus, ShoppingCart, TrendingDown } from 'lucide-react';
 import NonGECategorySection from '../components/non-ge/NonGECategorySection';
 import { calculateProfit } from '../utils/calculations';
 import { formatNumber } from '../utils/formatters';
@@ -21,7 +21,10 @@ export default function NonGEPage({
   numberFormat,
   sortConfig,
   onSort,
+  onAddCategory,
   onAddItem,
+  onEditCategory,
+  onDeleteCategory,
   onBulkAdd,
   onBulkBuy,
   onBulkSell,
@@ -122,6 +125,10 @@ export default function NonGEPage({
           <p className="non-ge-page-subtitle">Track fixed catalog and private collector items outside Grand Exchange pricing.</p>
         </div>
         <div className="non-ge-page-actions">
+          <button type="button" className="btn btn-primary" onClick={onAddCategory}>
+            <FolderPlus size={16} />
+            Add Category
+          </button>
           <button type="button" className="btn btn-success" onClick={() => onAddItem()}>
             <Plus size={16} />
             Add Item
@@ -174,6 +181,8 @@ export default function NonGEPage({
             sortConfig={sortConfig}
             onSort={onSort}
             onAddItem={onAddItem}
+            onEditCategory={onEditCategory}
+            onDeleteCategory={onDeleteCategory}
             onArchive={onArchiveRequest || onArchive}
             onBuy={onBuy}
             onSell={onSell}

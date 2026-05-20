@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { calculateProfit } from '../../utils/calculations';
 import { formatNumber } from '../../utils/formatters';
 import NonGETable from './NonGETable';
@@ -11,6 +11,8 @@ export default function NonGECategorySection({
   sortConfig,
   onSort,
   onAddItem,
+  onEditCategory,
+  onDeleteCategory,
   onArchive,
   onBuy,
   onSell,
@@ -51,10 +53,38 @@ export default function NonGECategorySection({
             {category.name} ({stocks.length})
           </h2>
         </div>
-        <button type="button" className="btn btn-primary btn-sm" onClick={() => onAddItem(category.id)}>
-          <Plus size={12} />
-          Add Item
-        </button>
+        <div className="non-ge-category-actions">
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => onAddItem(category.id)}>
+            <Plus size={12} />
+            Add Item
+          </button>
+          {category.name !== 'Uncategorized' && (
+            <button
+              type="button"
+              className="btn-edit-category"
+              title="Edit Category"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEditCategory(category);
+              }}
+            >
+              Edit
+            </button>
+          )}
+          {category.name !== 'Uncategorized' && (
+            <button
+              type="button"
+              className="btn-delete-category"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDeleteCategory(category);
+              }}
+            >
+              <Trash2 size={12} />
+              Delete Category
+            </button>
+          )}
+        </div>
       </div>
 
       {!isCollapsed && (

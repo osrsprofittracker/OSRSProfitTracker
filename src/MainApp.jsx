@@ -145,6 +145,9 @@ function MainAppInner({ session, onLogout }) {
     categories: nonGECategories,
     loading: nonGECategoriesLoading,
     fetchCategories: fetchNonGECategories,
+    addCategory: addNonGECategory,
+    updateCategory: updateNonGECategory,
+    deleteCategory: deleteNonGECategory,
     reorderCategories: reorderNonGECategories,
     ensureDefaultCategories: ensureNonGEDefaultCategories,
   } = useNonGECategories(userId);
@@ -830,6 +833,58 @@ function MainAppInner({ session, onLogout }) {
     return created;
   };
 
+  const handleAddNonGECategory = async (name) => {
+    const trimmedName = String(name || '').trim();
+    if (!trimmedName) return null;
+
+    const duplicate = nonGECategories.some(
+      category => category.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicate) {
+      alert('This Non-GE category already exists.');
+      return null;
+    }
+
+    const created = await addNonGECategory(trimmedName);
+    if (created) {
+      await fetchNonGECategories();
+      closeModal('nonGECategory');
+    }
+
+    return created;
+  };
+
+  const handleEditNonGECategory = async (category, newName) => {
+    const trimmedName = String(newName || '').trim();
+    if (!category?.id || !trimmedName || category.name === 'Uncategorized') return null;
+
+    const duplicate = nonGECategories.some(existingCategory =>
+      existingCategory.id !== category.id &&
+      existingCategory.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicate) {
+      alert('This Non-GE category already exists.');
+      return null;
+    }
+
+    await updateNonGECategory(category.id, { name: trimmedName });
+    await fetchNonGECategories();
+    closeModal('nonGEEditCategory');
+    return { success: true };
+  };
+
+  const handleDeleteNonGECategory = async (category) => {
+    if (!category?.id || category.name === 'Uncategorized') return null;
+
+    await deleteNonGECategory(category.id);
+    await fetchNonGECategories();
+    await refetchNonGEStocks();
+    closeModal('nonGEDeleteCategory');
+    return { success: true };
+  };
+
   const handleCreateNonGECustomItem = async (item) => {
     const created = await addNonGECustomItem(item);
     if (created) {
@@ -1512,7 +1567,10 @@ function MainAppInner({ session, onLogout }) {
             numberFormat={numberFormat}
             sortConfig={sortConfig}
             onSort={handleSort}
+            onAddCategory={() => openModal('nonGECategory')}
             onAddItem={(categoryId) => openModal('nonGEAddItem', { category: categoryId || nonGECategories[0]?.id || '' })}
+            onEditCategory={(category) => openModal('nonGEEditCategory', { category })}
+            onDeleteCategory={(category) => openModal('nonGEDeleteCategory', { category })}
             onBulkAdd={() => openModal('nonGEBulkAdd')}
             onBulkBuy={() => openModal('nonGEBulkBuy')}
             onBulkSell={() => openModal('nonGEBulkSell')}
@@ -1729,6 +1787,9 @@ function MainAppInner({ session, onLogout }) {
           handleRestore={handleRestore}
           handleMoveToNonGE={handleMoveToNonGE}
           handleAddNonGEItem={handleAddNonGEItem}
+          handleAddNonGECategory={handleAddNonGECategory}
+          handleEditNonGECategory={handleEditNonGECategory}
+          handleDeleteNonGECategory={handleDeleteNonGECategory}
           handleCreateNonGECustomItem={handleCreateNonGECustomItem}
           handleBulkAddNonGEItems={handleBulkAddNonGEItems}
           handleRestoreNonGEStock={handleRestoreNonGEStock}

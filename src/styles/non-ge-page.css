@@ -99,6 +99,12 @@
   margin-bottom: 0.5rem;
 }
 
+.non-ge-category-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .non-ge-stat-value--cost {
   color: rgb(96, 165, 250);
 }
@@ -290,6 +296,10 @@
 
 .non-ge-adjust-modal {
   width: 40rem;
+}
+
+.non-ge-category-modal {
+  width: 28rem;
 }
 
 .non-ge-modal-header {

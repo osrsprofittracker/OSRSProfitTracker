@@ -22,6 +22,7 @@ import AltTimerModal from './modals/AltTimerModal';
 import TimeCalculatorModal from './modals/TimeCalculatorModal';
 import NonGEAddItemModal from './modals/NonGEAddItemModal';
 import NonGEBulkAddModal from './modals/NonGEBulkAddModal';
+import NonGECategoryModal from './modals/NonGECategoryModal';
 import NonGEBulkTradeModal from './modals/NonGEBulkTradeModal';
 import NonGEArchiveModal from './modals/NonGEArchiveModal';
 import NonGEAdjustModal from './modals/NonGEAdjustModal';
@@ -58,6 +59,9 @@ export default function ModalManager({
   handleRestore,
   handleMoveToNonGE,
   handleAddNonGEItem,
+  handleAddNonGECategory,
+  handleEditNonGECategory,
+  handleDeleteNonGECategory,
   handleCreateNonGECustomItem,
   handleBulkAddNonGEItems,
   handleRestoreNonGEStock,
@@ -405,6 +409,34 @@ export default function ModalManager({
           existingStocks={nonGEAllStocks}
           onConfirm={handleBulkAddNonGEItems}
           onCancel={() => closeModal('nonGEBulkAdd')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGECategory}>
+        <NonGECategoryModal
+          categories={nonGECategories}
+          onConfirm={handleAddNonGECategory}
+          onCancel={() => closeModal('nonGECategory')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEEditCategory}>
+        <EditCategoryModal
+          category={selectedCategory?.name || ''}
+          categories={nonGECategories.map(category => category.name)}
+          onConfirm={(_, newName) => handleEditNonGECategory(selectedCategory, newName)}
+          onCancel={() => closeModal('nonGEEditCategory')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEDeleteCategory}>
+        <ConfirmModal
+          title="Delete Non-GE Category"
+          message={<>Are you sure you want to delete the <strong>{selectedCategory?.name}</strong> category? All Non-GE items in this category will be moved to "Uncategorized".</>}
+          confirmLabel="Delete Category"
+          confirmVariant="danger"
+          onConfirm={() => handleDeleteNonGECategory(selectedCategory)}
+          onCancel={() => closeModal('nonGEDeleteCategory')}
         />
       </ModalContainer>
 
