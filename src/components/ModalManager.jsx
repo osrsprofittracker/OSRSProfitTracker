@@ -22,6 +22,7 @@ import AltTimerModal from './modals/AltTimerModal';
 import TimeCalculatorModal from './modals/TimeCalculatorModal';
 import NonGEAddItemModal from './modals/NonGEAddItemModal';
 import NonGEBulkAddModal from './modals/NonGEBulkAddModal';
+import NonGEBulkTradeModal from './modals/NonGEBulkTradeModal';
 import NonGEArchiveModal from './modals/NonGEArchiveModal';
 import NonGEAdjustModal from './modals/NonGEAdjustModal';
 import NonGETradeModal from './modals/NonGETradeModal';
@@ -63,8 +64,15 @@ export default function ModalManager({
   nonGEStockToArchive,
   handleConfirmArchiveNonGEStock,
   nonGETradeSubmitting,
+  nonGEBulkSummaryData,
+  nonGEBulkUndoing,
+  nonGEBulkUndoResult,
   handleNonGEBuy,
   handleNonGESell,
+  handleNonGEBulkBuy,
+  handleNonGEBulkSell,
+  handleNonGEBulkUndo,
+  handleNonGEBulkSummaryDone,
   handleNonGERemove,
   handleNonGEAdjust,
   handleNonGESaveNotes,
@@ -84,6 +92,7 @@ export default function ModalManager({
   priceAlerts,
   nonGECategories,
   nonGECustomItems,
+  nonGEStocks,
   nonGEAllStocks,
   nonGEArchivedStocks,
   nonGEArchivedLoading,
@@ -396,6 +405,39 @@ export default function ModalManager({
           existingStocks={nonGEAllStocks}
           onConfirm={handleBulkAddNonGEItems}
           onCancel={() => closeModal('nonGEBulkAdd')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEBulkBuy}>
+        <NonGEBulkTradeModal
+          mode="buy"
+          stocks={nonGEStocks}
+          categories={nonGECategories}
+          onConfirm={handleNonGEBulkBuy}
+          onCancel={() => closeModal('nonGEBulkBuy')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEBulkSell}>
+        <NonGEBulkTradeModal
+          mode="sell"
+          stocks={nonGEStocks}
+          categories={nonGECategories}
+          onConfirm={handleNonGEBulkSell}
+          onCancel={() => closeModal('nonGEBulkSell')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={nonGEBulkSummaryData !== null}>
+        <BulkSummaryModal
+          type={nonGEBulkSummaryData?.type}
+          completedItems={nonGEBulkSummaryData?.items || []}
+          onUndo={handleNonGEBulkUndo}
+          onDone={handleNonGEBulkSummaryDone}
+          isUndoing={nonGEBulkUndoing}
+          undoResult={nonGEBulkUndoResult}
         />
       </ModalContainer>
 

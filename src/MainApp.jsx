@@ -733,8 +733,15 @@ function MainAppInner({ session, onLogout }) {
 
   const {
     nonGETradeSubmitting,
+    nonGEBulkSummaryData,
+    nonGEBulkUndoing,
+    nonGEBulkUndoResult,
     handleNonGEBuy,
     handleNonGESell,
+    handleNonGEBulkBuy,
+    handleNonGEBulkSell,
+    handleNonGEBulkUndo,
+    handleNonGEBulkSummaryDone,
     handleNonGERemove,
     handleNonGEAdjust,
     handleNonGESaveNotes,
@@ -743,6 +750,7 @@ function MainAppInner({ session, onLogout }) {
     updateStock: updateNonGEStock,
     refetchStocks: refetchNonGEStocks,
     addTransaction,
+    undoTransaction,
     addProfitEntry,
     closeModal,
     highlightRow,
@@ -1506,6 +1514,8 @@ function MainAppInner({ session, onLogout }) {
             onSort={handleSort}
             onAddItem={(categoryId) => openModal('nonGEAddItem', { category: categoryId || nonGECategories[0]?.id || '' })}
             onBulkAdd={() => openModal('nonGEBulkAdd')}
+            onBulkBuy={() => openModal('nonGEBulkBuy')}
+            onBulkSell={() => openModal('nonGEBulkSell')}
             onArchiveOpen={async () => {
               await handleOpenNonGEArchive();
               openModal('nonGEArchive');
@@ -1725,8 +1735,15 @@ function MainAppInner({ session, onLogout }) {
           nonGEStockToArchive={nonGEStockToArchive}
           handleConfirmArchiveNonGEStock={handleConfirmArchiveNonGEStock}
           nonGETradeSubmitting={nonGETradeSubmitting}
+          nonGEBulkSummaryData={nonGEBulkSummaryData}
+          nonGEBulkUndoing={nonGEBulkUndoing}
+          nonGEBulkUndoResult={nonGEBulkUndoResult}
           handleNonGEBuy={handleNonGEBuy}
           handleNonGESell={handleNonGESell}
+          handleNonGEBulkBuy={handleNonGEBulkBuy}
+          handleNonGEBulkSell={handleNonGEBulkSell}
+          handleNonGEBulkUndo={handleNonGEBulkUndo}
+          handleNonGEBulkSummaryDone={handleNonGEBulkSummaryDone}
           handleNonGERemove={handleNonGERemove}
           handleNonGEAdjust={handleNonGEAdjust}
           handleNonGESaveNotes={handleNonGESaveNotes}
@@ -1749,6 +1766,7 @@ function MainAppInner({ session, onLogout }) {
           priceAlerts={priceAlerts}
           nonGECategories={nonGECategories}
           nonGECustomItems={nonGECustomItems}
+          nonGEStocks={nonGEStocks}
           nonGEAllStocks={nonGEAllStocks}
           nonGEArchivedStocks={nonGEArchivedStocks}
           nonGEArchivedLoading={nonGEArchivedLoading}
