@@ -71,5 +71,6 @@ export function calculateUnrealizedProfit(stock, latestHigh, itemId) {
   const netSellPerItem = latestHigh - taxPerItem;
   const profit = (netSellPerItem - avgBuyPrice) * stock.shares;
 
-  return Math.round(profit);
+  const roundedProfit = Math.round(profit);
+  return Object.is(roundedProfit, -0) ? 0 : roundedProfit;
 }
