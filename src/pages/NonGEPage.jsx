@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Archive, Boxes, PackagePlus, Plus } from 'lucide-react';
+import { Archive, Boxes, PackagePlus, Plus, ShoppingCart, TrendingDown } from 'lucide-react';
 import NonGECategorySection from '../components/non-ge/NonGECategorySection';
 import { calculateProfit } from '../utils/calculations';
 import { formatNumber } from '../utils/formatters';
@@ -23,6 +23,8 @@ export default function NonGEPage({
   onSort,
   onAddItem,
   onBulkAdd,
+  onBulkBuy,
+  onBulkSell,
   onArchiveOpen,
   onArchive,
   onArchiveRequest,
@@ -127,6 +129,14 @@ export default function NonGEPage({
           <button type="button" className="btn btn-primary" onClick={onBulkAdd}>
             <PackagePlus size={16} />
             Bulk Add
+          </button>
+          <button type="button" className="btn btn-success" onClick={onBulkBuy}>
+            <ShoppingCart size={16} />
+            Bulk Buy
+          </button>
+          <button type="button" className="btn btn-sell" onClick={onBulkSell}>
+            <TrendingDown size={16} />
+            Bulk Sell
           </button>
           <button type="button" className="btn btn-secondary" onClick={onArchiveOpen}>
             <Archive size={16} />

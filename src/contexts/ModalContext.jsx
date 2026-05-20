@@ -29,6 +29,8 @@ const MODAL_DEFAULTS = {
   moveToNonGE: false,
   nonGEAddItem: false,
   nonGEBulkAdd: false,
+  nonGEBulkBuy: false,
+  nonGEBulkSell: false,
   nonGEArchive: false,
   nonGEArchiveConfirm: false,
   nonGEBuy: false,
