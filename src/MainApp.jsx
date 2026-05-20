@@ -1387,6 +1387,26 @@ function MainAppInner({ session, onLogout }) {
 
           {/* Right - Search + Notifications + User dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="topbar-bulk-actions" aria-label="GE bulk trade actions">
+            <button
+              type="button"
+              className="topbar-bulk-action-btn is-success"
+              onClick={() => openModal('bulkBuy')}
+              title="Bulk Buy GE items"
+            >
+              <ShoppingCart size={14} />
+              Bulk Buy
+            </button>
+            <button
+              type="button"
+              className="topbar-bulk-action-btn is-danger"
+              onClick={() => openModal('bulkSell')}
+              title="Bulk Sell GE items"
+            >
+              <TrendingDown size={14} />
+              Bulk Sell
+            </button>
+          </div>
           <GlobalSearch
             transactions={transactions}
             navigateToPage={navigateToPage}
