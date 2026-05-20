@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Activity, TrendingDown, TrendingUp } from 'lucide-react';
 import { useGEPriceBaseline } from '../hooks/useGEPriceBaseline';
 import { formatNumber } from '../utils/formatters';
+import ItemIcon from './ItemIcon';
 
 const MAX_MOVERS = 6;
 
@@ -24,6 +25,7 @@ function priceOf(entry) {
 export default function PriceMoversWidget({
   stocks = [],
   gePrices = {},
+  geIconMap = {},
   numberFormat = 'compact',
 }) {
   const [activeView, setActiveView] = useState('impact');
@@ -51,6 +53,7 @@ export default function PriceMoversWidget({
 
         return {
           id: stock.id,
+          itemId: stock.itemId,
           name: stock.name,
           shares: stock.shares,
           currentHigh,
@@ -105,6 +108,12 @@ export default function PriceMoversWidget({
 
           return (
             <div key={mover.id} className="price-mover-row">
+              <ItemIcon
+                src={geIconMap[mover.itemId]}
+                alt=""
+                className="price-mover-item-icon"
+                fallbackText={mover.name}
+              />
               <div className="price-mover-main">
                 <div className="price-mover-title-row">
                   <DirectionIcon size={16} className={valueClass} />

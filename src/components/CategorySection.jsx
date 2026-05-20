@@ -45,6 +45,7 @@ export default function CategorySection({
   onPriceAlert,
   priceAlerts = {},
   onViewGraph,
+  onMoveToNonGE,
 }) {
   const { gePrices: geData, geIconMap, membershipMap } = useGEData();
   const categoryStocks = stocks.filter(s => s.category === category);
@@ -261,6 +262,7 @@ export default function CategorySection({
             onPriceAlert={onPriceAlert}
             priceAlerts={priceAlerts}
             onViewGraph={onViewGraph}
+            onMoveToNonGE={onMoveToNonGE}
           />
         </>
       )}

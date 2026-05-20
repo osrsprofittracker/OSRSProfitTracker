@@ -20,6 +20,14 @@ import ArchiveModal from './modals/ArchiveModal';
 import MilestoneTrackerModal from './modals/MilestoneTrackerModal';
 import AltTimerModal from './modals/AltTimerModal';
 import TimeCalculatorModal from './modals/TimeCalculatorModal';
+import NonGEAddItemModal from './modals/NonGEAddItemModal';
+import NonGEBulkAddModal from './modals/NonGEBulkAddModal';
+import NonGECategoryModal from './modals/NonGECategoryModal';
+import NonGEBulkTradeModal from './modals/NonGEBulkTradeModal';
+import NonGEArchiveModal from './modals/NonGEArchiveModal';
+import NonGEAdjustModal from './modals/NonGEAdjustModal';
+import NonGETradeModal from './modals/NonGETradeModal';
+import MoveToNonGEModal from './modals/MoveToNonGEModal';
 
 export default function ModalManager({
   // Handlers from useModalHandlers
@@ -49,6 +57,29 @@ export default function ModalManager({
   stockToArchive,
   handleConfirmArchive,
   handleRestore,
+  handleMoveToNonGE,
+  handleAddNonGEItem,
+  handleAddNonGECategory,
+  handleEditNonGECategory,
+  handleDeleteNonGECategory,
+  handleCreateNonGECustomItem,
+  handleBulkAddNonGEItems,
+  handleRestoreNonGEStock,
+  nonGEStockToArchive,
+  handleConfirmArchiveNonGEStock,
+  nonGETradeSubmitting,
+  nonGEBulkSummaryData,
+  nonGEBulkUndoing,
+  nonGEBulkUndoResult,
+  handleNonGEBuy,
+  handleNonGESell,
+  handleNonGEBulkBuy,
+  handleNonGEBulkSell,
+  handleNonGEBulkUndo,
+  handleNonGEBulkSummaryDone,
+  handleNonGERemove,
+  handleNonGEAdjust,
+  handleNonGESaveNotes,
   // Other handlers
   handleSetAltTimer,
   handleSaveNotes,
@@ -63,6 +94,16 @@ export default function ModalManager({
   geIconMap,
   gePrices,
   priceAlerts,
+  nonGECategories,
+  nonGECustomItems,
+  nonGEStocks,
+  nonGEAllStocks,
+  nonGEArchivedStocks,
+  nonGEArchivedLoading,
+  moveToNonGESummary,
+  moveToNonGESummaryLoading,
+  moveToNonGEError,
+  moveToNonGESubmitting,
   // Settings
   visibleColumns,
   visibleProfits,
@@ -330,6 +371,175 @@ export default function ModalManager({
           confirmVariant="warning"
           onConfirm={handleConfirmArchive}
           onCancel={() => closeModal('archiveConfirm')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.moveToNonGE}>
+        <MoveToNonGEModal
+          stock={selectedStock}
+          categories={nonGECategories}
+          customItems={nonGECustomItems}
+          existingStocks={nonGEAllStocks}
+          stockNote={stockNotes[selectedStock?.id]}
+          transactionCount={moveToNonGESummary?.transactionCount || 0}
+          summaryLoading={moveToNonGESummaryLoading}
+          moveError={moveToNonGEError}
+          isSubmitting={moveToNonGESubmitting}
+          onConfirm={handleMoveToNonGE}
+          onCreateCustomItem={handleCreateNonGECustomItem}
+          onCancel={() => closeModal('moveToNonGE')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEAddItem}>
+        <NonGEAddItemModal
+          categories={nonGECategories}
+          customItems={nonGECustomItems}
+          existingStocks={nonGEAllStocks}
+          defaultCategoryId={selectedCategory}
+          onConfirm={handleAddNonGEItem}
+          onCreateCustomItem={handleCreateNonGECustomItem}
+          onCancel={() => closeModal('nonGEAddItem')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEBulkAdd}>
+        <NonGEBulkAddModal
+          categories={nonGECategories}
+          existingStocks={nonGEAllStocks}
+          onConfirm={handleBulkAddNonGEItems}
+          onCancel={() => closeModal('nonGEBulkAdd')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGECategory}>
+        <NonGECategoryModal
+          categories={nonGECategories}
+          onConfirm={handleAddNonGECategory}
+          onCancel={() => closeModal('nonGECategory')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEEditCategory}>
+        <EditCategoryModal
+          category={selectedCategory?.name || ''}
+          categories={nonGECategories.map(category => category.name)}
+          onConfirm={(_, newName) => handleEditNonGECategory(selectedCategory, newName)}
+          onCancel={() => closeModal('nonGEEditCategory')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEDeleteCategory}>
+        <ConfirmModal
+          title="Delete Non-GE Category"
+          message={<>Are you sure you want to delete the <strong>{selectedCategory?.name}</strong> category? All Non-GE items in this category will be moved to "Uncategorized".</>}
+          confirmLabel="Delete Category"
+          confirmVariant="danger"
+          onConfirm={() => handleDeleteNonGECategory(selectedCategory)}
+          onCancel={() => closeModal('nonGEDeleteCategory')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEBulkBuy}>
+        <NonGEBulkTradeModal
+          mode="buy"
+          stocks={nonGEStocks}
+          categories={nonGECategories}
+          onConfirm={handleNonGEBulkBuy}
+          onCancel={() => closeModal('nonGEBulkBuy')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEBulkSell}>
+        <NonGEBulkTradeModal
+          mode="sell"
+          stocks={nonGEStocks}
+          categories={nonGECategories}
+          onConfirm={handleNonGEBulkSell}
+          onCancel={() => closeModal('nonGEBulkSell')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={nonGEBulkSummaryData !== null}>
+        <BulkSummaryModal
+          type={nonGEBulkSummaryData?.type}
+          completedItems={nonGEBulkSummaryData?.items || []}
+          onUndo={handleNonGEBulkUndo}
+          onDone={handleNonGEBulkSummaryDone}
+          isUndoing={nonGEBulkUndoing}
+          undoResult={nonGEBulkUndoResult}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEArchive}>
+        <NonGEArchiveModal
+          archivedStocks={nonGEArchivedStocks}
+          loading={nonGEArchivedLoading}
+          onRestore={handleRestoreNonGEStock}
+          onClose={() => closeModal('nonGEArchive')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEBuy}>
+        <NonGETradeModal
+          mode="buy"
+          stock={selectedStock}
+          onConfirm={handleNonGEBuy}
+          onCancel={() => closeModal('nonGEBuy')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGESell}>
+        <NonGETradeModal
+          mode="sell"
+          stock={selectedStock}
+          onConfirm={handleNonGESell}
+          onCancel={() => closeModal('nonGESell')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGERemove}>
+        <RemoveStockModal
+          stock={selectedStock ? { ...selectedStock, name: selectedStock.nameSnapshot } : selectedStock}
+          onConfirm={handleNonGERemove}
+          onCancel={() => closeModal('nonGERemove')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEAdjust}>
+        <NonGEAdjustModal
+          stock={selectedStock}
+          categories={nonGECategories}
+          customItems={nonGECustomItems}
+          existingStocks={nonGEAllStocks}
+          onConfirm={handleNonGEAdjust}
+          onCancel={() => closeModal('nonGEAdjust')}
+          isSubmitting={nonGETradeSubmitting}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGENotes}>
+        <NotesModal
+          stock={selectedStock ? { ...selectedStock, name: selectedStock.nameSnapshot } : selectedStock}
+          notes={selectedStock?.notes}
+          onConfirm={handleNonGESaveNotes}
+          onCancel={() => closeModal('nonGENotes')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.nonGEArchiveConfirm}>
+        <ConfirmModal
+          title="Archive Non-GE Item"
+          message={<>Are you sure you want to archive <strong>{nonGEStockToArchive?.nameSnapshot}</strong>? It will be removed from your Non-GE screen but can be restored anytime.</>}
+          confirmLabel="Archive"
+          confirmVariant="warning"
+          onConfirm={handleConfirmArchiveNonGEStock}
+          onCancel={() => closeModal('nonGEArchiveConfirm')}
         />
       </ModalContainer>
 

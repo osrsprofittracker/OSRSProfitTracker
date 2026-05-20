@@ -208,6 +208,21 @@ export function useStocks(userId) {
     }
   }, [userId]);
 
+  const deleteStockRowOnly = useCallback(async (id) => {
+    const { error } = await supabase
+      .from('stocks')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error deleting stock row:', error);
+      return false;
+    }
+
+    return true;
+  }, [userId]);
+
   const archiveStock = useCallback(async (id) => {
     const { error } = await supabase
       .from('stocks')
@@ -239,5 +254,5 @@ export function useStocks(userId) {
     return (data || []).map(formatStock);
   }, [userId]);
 
-  return { stocks, allStocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
+  return { stocks, allStocks, loading, addStock, updateStock, deleteStock, deleteStockRowOnly, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
 }

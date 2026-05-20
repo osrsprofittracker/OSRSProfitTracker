@@ -3,8 +3,8 @@
     "path": "/icons/ge/2.png",
     "sourceIcon": "Steel cannonball.png",
     "mirrorIcon": "Steel cannonball.png",
-    "bytes": 254,
-    "updatedAt": "2026-05-06T19:12:17.243Z"
+    "bytes": 495,
+    "updatedAt": "2026-05-20T20:18:59.116Z"
   },
   "6": {
     "path": "/icons/ge/6.png",
@@ -27233,6 +27233,13 @@
     "bytes": 723,
     "updatedAt": "2026-05-06T15:46:03.045Z"
   },
+  "31722": {
+    "path": "/icons/ge/31722.png",
+    "sourceIcon": "Rubium_splinters.png",
+    "mirrorIcon": "Rubium_splinters.png",
+    "bytes": 678,
+    "updatedAt": "2026-05-20T20:18:59.521Z"
+  },
   "31726": {
     "path": "/icons/ge/31726.png",
     "sourceIcon": "Strykewyrm bones.png",
@@ -27248,38 +27255,44 @@
   "31906": {
     "path": "/icons/ge/31906.png",
     "sourceIcon": "Bronze cannonball.png",
+    "mirrorIcon": "Bronze cannonball.png",
     "bytes": 318,
-    "updatedAt": "2026-05-06T15:46:04.295Z"
+    "updatedAt": "2026-05-20T20:18:59.948Z"
   },
   "31908": {
     "path": "/icons/ge/31908.png",
     "sourceIcon": "Iron cannonball.png",
+    "mirrorIcon": "Iron cannonball.png",
     "bytes": 387,
-    "updatedAt": "2026-05-06T15:46:04.700Z"
+    "updatedAt": "2026-05-20T20:19:00.366Z"
   },
   "31910": {
     "path": "/icons/ge/31910.png",
     "sourceIcon": "Mithril cannonball.png",
+    "mirrorIcon": "Mithril cannonball.png",
     "bytes": 387,
-    "updatedAt": "2026-05-06T15:46:05.113Z"
+    "updatedAt": "2026-05-20T20:19:00.785Z"
   },
   "31912": {
     "path": "/icons/ge/31912.png",
     "sourceIcon": "Adamant cannonball.png",
+    "mirrorIcon": "Adamant cannonball.png",
     "bytes": 380,
-    "updatedAt": "2026-05-06T15:46:05.530Z"
+    "updatedAt": "2026-05-20T20:19:01.219Z"
   },
   "31914": {
     "path": "/icons/ge/31914.png",
     "sourceIcon": "Rune cannonball.png",
+    "mirrorIcon": "Rune cannonball.png",
     "bytes": 403,
-    "updatedAt": "2026-05-06T15:46:05.974Z"
+    "updatedAt": "2026-05-20T20:19:01.616Z"
   },
   "31916": {
     "path": "/icons/ge/31916.png",
     "sourceIcon": "Dragon cannonball.png",
+    "mirrorIcon": "Dragon cannonball.png",
     "bytes": 297,
-    "updatedAt": "2026-05-06T15:46:06.393Z"
+    "updatedAt": "2026-05-20T20:19:02.044Z"
   },
   "31946": {
     "path": "/icons/ge/31946.png",

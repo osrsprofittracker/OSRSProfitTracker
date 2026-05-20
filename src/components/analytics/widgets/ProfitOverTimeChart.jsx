@@ -30,19 +30,25 @@ function ProfitTooltip({ active, payload, label, numberFormat }) {
   );
 }
 
-export default function ProfitOverTimeChart({ buckets = [], numberFormat }) {
+export default function ProfitOverTimeChart({
+  buckets = [],
+  numberFormat,
+  title = 'Profit over time',
+  tooltip = 'Net realized profit by bucket in the selected timeframe, including item, dump, referral, and bonds profit.',
+  emptyMessage = 'No activity in this window. Try a wider timeframe.',
+}) {
   if (!buckets.length) {
     return (
       <div className="analytics-widget">
         <div className="analytics-widget-header">
           <h3
             className="analytics-widget-title has-tooltip"
-            data-tooltip="Net realized profit by bucket in the selected timeframe, including item, dump, referral, and bonds profit."
+            data-tooltip={tooltip}
           >
-            Profit over time
+            {title}
           </h3>
         </div>
-        <div className="analytics-widget-empty">No activity in this window. Try a wider timeframe.</div>
+        <div className="analytics-widget-empty">{emptyMessage}</div>
       </div>
     );
   }
@@ -59,9 +65,9 @@ export default function ProfitOverTimeChart({ buckets = [], numberFormat }) {
       <div className="analytics-widget-header">
         <h3
           className="analytics-widget-title has-tooltip"
-          data-tooltip="Net realized profit by bucket in the selected timeframe, including item, dump, referral, and bonds profit."
+          data-tooltip={tooltip}
         >
-          Profit over time
+          {title}
         </h3>
       </div>
       <div className="analytics-widget-body analytics-chart-tall">

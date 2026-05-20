@@ -27,8 +27,12 @@ function getArgValue(name, fallback) {
 const force = process.argv.includes('--force');
 const strict = process.argv.includes('--strict');
 const limitArg = getArgValue('--limit', '');
+const idsArg = getArgValue('--ids', '');
 const delayMs = Number(getArgValue('--delay-ms', DEFAULT_DELAY_MS));
 const limit = limitArg ? Number(limitArg) : null;
+const idFilter = idsArg
+  ? new Set(idsArg.split(',').map(value => Number(value.trim())).filter(Number.isFinite))
+  : null;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -135,6 +139,7 @@ async function main() {
   const items = mapping
     .map(item => ({ ...item, mirrorIcon: getMirrorIconName(item) }))
     .filter(item => item.id && isSafeIconName(item.mirrorIcon))
+    .filter(item => !idFilter || idFilter.has(Number(item.id)))
     .sort((a, b) => a.id - b.id);
   const targetItems = limit ? items.slice(0, limit) : items;
   const manifest = await loadExistingManifest();

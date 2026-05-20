@@ -147,6 +147,11 @@
   color: white;
 }
 
+.history-market-filter-btn--active {
+  background: rgb(15, 118, 110);
+  color: white;
+}
+
 .history-page-size {
   background: rgb(30, 41, 59);
   border: 1px solid rgb(71, 85, 105);
@@ -244,6 +249,33 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
+}
+
+.history-market-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.2rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: rgb(203, 213, 225);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.history-market-badge--non_ge {
+  border-color: rgba(45, 212, 191, 0.35);
+  background: rgba(15, 118, 110, 0.22);
+  color: rgb(153, 246, 228);
+}
+
+.history-market-badge--ge {
+  border-color: rgba(96, 165, 250, 0.35);
+  background: rgba(37, 99, 235, 0.18);
+  color: rgb(191, 219, 254);
 }
 
 .history-item-icon {

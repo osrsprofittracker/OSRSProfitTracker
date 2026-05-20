@@ -16,15 +16,6 @@
   flex: 1;
 }
 
-.category-actions-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  padding-right: 0.25rem;
-}
-
 .collapse-icon {
   font-size: 1.25rem;
   transition: transform 0.2s;

@@ -8,12 +8,12 @@ const formatDelta = (current, prior) => {
   return ((current - prior) / Math.abs(prior)) * 100;
 };
 
-function KpiCard({ label, icon, value, deltaPct, numberFormat, valueClass = '' }) {
+function KpiCard({ label, icon, value, deltaPct, numberFormat, valueClass = '', tooltip }) {
   const deltaClass = deltaPct == null
     ? 'is-neutral'
     : deltaPct >= 0 ? 'is-positive' : 'is-negative';
 
-  const tooltip = {
+  const defaultTooltip = {
     'Total Profit': 'All-time realized profit using the same accounting as the Trade and Home screens: item profit plus dump, referral, and bonds profit.',
     'Period Profit': 'Realized profit inside the selected analytics timeframe. On All, this uses the same total as Total Profit.',
     'GP Traded': 'Total GP value of transactions in the selected timeframe, including buys and sells.',
@@ -23,7 +23,7 @@ function KpiCard({ label, icon, value, deltaPct, numberFormat, valueClass = '' }
   return (
     <div
       className="summary-card has-tooltip"
-      data-tooltip={tooltip}
+      data-tooltip={tooltip || defaultTooltip}
     >
       <div className="summary-card-header">
         <span className="summary-card-icon analytics-kpi-icon">{icon}</span>
@@ -50,6 +50,7 @@ export default function KpiBand({
   inventoryValue,
   numberFormat,
   loading,
+  tooltips = {},
 }) {
   if (loading) {
     return (
@@ -74,6 +75,7 @@ export default function KpiBand({
         value={totalProfit}
         numberFormat={numberFormat}
         valueClass="profit-main-value"
+        tooltip={tooltips.totalProfit}
       />
       <KpiCard
         label="Period Profit"
@@ -82,6 +84,7 @@ export default function KpiBand({
         deltaPct={periodDelta}
         numberFormat={numberFormat}
         valueClass="profit-main-value"
+        tooltip={tooltips.periodProfit}
       />
       <KpiCard
         label="GP Traded"
@@ -90,6 +93,7 @@ export default function KpiBand({
         deltaPct={gpDelta}
         numberFormat={numberFormat}
         valueClass="gp-traded-main-value"
+        tooltip={tooltips.gpTraded}
       />
       <KpiCard
         label="Inventory Value"
@@ -97,6 +101,7 @@ export default function KpiBand({
         value={inventoryValue}
         numberFormat={numberFormat}
         valueClass="inventory-main-value"
+        tooltip={tooltips.inventoryValue}
       />
     </div>
   );

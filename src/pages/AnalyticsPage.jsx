@@ -17,6 +17,7 @@ import '../styles/analytics-widgets.css';
 
 const sumGpTraded = (buckets) => buckets.reduce((sum, bucket) => sum + (bucket.gp_traded || 0), 0);
 const DEFAULT_ALL_TIME_START = '2020-01-01';
+const isGEMarketRow = (row) => (row?.market || 'ge') === 'ge';
 
 const parseTabParam = (value) => (
   ANALYTICS_TABS.includes(value) ? value : null
@@ -43,6 +44,27 @@ const copyText = async (text) => {
   return copied;
 };
 
+function MarketSwitch({ activeMarket, navigateToPage }) {
+  return (
+    <div className="analytics-market-switch" aria-label="Analytics market">
+      <button
+        type="button"
+        className={`analytics-market-btn${activeMarket === 'ge' ? ' is-active' : ''}`}
+        onClick={() => navigateToPage?.('analytics')}
+      >
+        GE Analytics
+      </button>
+      <button
+        type="button"
+        className={`analytics-market-btn${activeMarket === 'non_ge' ? ' is-active' : ''}`}
+        onClick={() => navigateToPage?.('analyticsNonGE')}
+      >
+        Non-GE Analytics
+      </button>
+    </div>
+  );
+}
+
 export default function AnalyticsPage({
   userId,
   transactions,
@@ -66,6 +88,14 @@ export default function AnalyticsPage({
   const safeTransactions = transactions || [];
   const safeProfitHistory = profitHistory || [];
   const safeStocksForStats = stocksForStats || [];
+  const geTransactions = useMemo(
+    () => safeTransactions.filter(isGEMarketRow),
+    [safeTransactions]
+  );
+  const geProfitHistory = useMemo(
+    () => safeProfitHistory.filter(isGEMarketRow),
+    [safeProfitHistory]
+  );
 
   const [activeTab, setActiveTab] = useUrlState(
     'tab',
@@ -84,12 +114,12 @@ export default function AnalyticsPage({
 
   const localAllTimeStart = useMemo(() => {
     const dates = [
-      ...safeTransactions.map((transaction) => String(transaction.date || '').slice(0, 10)),
-      ...safeProfitHistory.map((profit) => String(profit.created_at || '').slice(0, 10)),
+      ...geTransactions.map((transaction) => String(transaction.date || '').slice(0, 10)),
+      ...geProfitHistory.map((profit) => String(profit.created_at || '').slice(0, 10)),
     ].filter(Boolean);
 
     return dates.length > 0 ? dates.sort()[0] : null;
-  }, [safeTransactions, safeProfitHistory]);
+  }, [geTransactions, geProfitHistory]);
 
   const hasFullLocalHistory = transactionHistoryScope?.full && profitHistoryScope?.full;
   const allTimeStart = hasFullLocalHistory ? localAllTimeStart : DEFAULT_ALL_TIME_START;
@@ -128,10 +158,10 @@ export default function AnalyticsPage({
   const priorEnd = useMemo(() => addDays(timeframe.start, -1), [timeframe.start]);
 
   const fallbackData = useMemo(() => ({
-    transactions: safeTransactions,
+    transactions: geTransactions,
     stocks: safeStocksForStats,
-    profitHistory: safeProfitHistory,
-  }), [safeTransactions, safeStocksForStats, safeProfitHistory]);
+    profitHistory: geProfitHistory,
+  }), [geTransactions, safeStocksForStats, geProfitHistory]);
 
   const current = useAnalytics({
     userId,
@@ -192,8 +222,9 @@ export default function AnalyticsPage({
         <div>
           <h1 className="analytics-page-title">Analytics</h1>
           <p className="analytics-page-subtitle">
-            Deep portfolio insights across profit, items, categories, and goals.
+            Deep GE-market insights across profit, items, categories, and goals.
           </p>
+          <MarketSwitch activeMarket="ge" navigateToPage={navigateToPage} />
         </div>
         <div className="analytics-header-actions">
           <TimeframeSelector
@@ -246,12 +277,12 @@ export default function AnalyticsPage({
             buckets={current.buckets}
             priorBuckets={prior.buckets}
             timeframe={timeframe}
-            transactions={safeTransactions}
+            transactions={geTransactions}
             stocks={safeStocksForStats}
-            profitHistory={safeProfitHistory}
+            profitHistory={geProfitHistory}
             numberFormat={numberFormat}
             onNavigateToHistory={(dateFrom, dateTo = dateFrom, extraFilters = {}) => navigateToPage?.('history', {
-              query: { dateFrom, dateTo, ...extraFilters },
+              query: { dateFrom, dateTo, ...extraFilters, market: 'ge' },
             })}
             allTimeBuckets={allTime.buckets}
             totalProfitValue={derivedTotalProfit}
@@ -261,8 +292,8 @@ export default function AnalyticsPage({
         {activeTab === 'items' && (
           <ItemsTab
             stocks={safeStocksForStats}
-            transactions={safeTransactions}
-            profitHistory={safeProfitHistory}
+            transactions={geTransactions}
+            profitHistory={geProfitHistory}
             timeframe={timeframe}
             timeframeOptions={timeframe.options}
             numberFormat={numberFormat}
@@ -274,8 +305,8 @@ export default function AnalyticsPage({
             buckets={current.buckets}
             priorBuckets={prior.buckets}
             stocks={safeStocksForStats}
-            transactions={safeTransactions}
-            profitHistory={safeProfitHistory}
+            transactions={geTransactions}
+            profitHistory={geProfitHistory}
             timeframe={timeframe}
             timeframeOptions={timeframe.options}
             numberFormat={numberFormat}

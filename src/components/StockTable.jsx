@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Edit3, Trash2, GripVertical, Star, Bell, BellRing } from 'lucide-react';
+import { Edit3, Trash2, GripVertical, Star, Bell, BellRing, PackageOpen } from 'lucide-react';
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
@@ -54,6 +54,7 @@ export default function StockTable({
   onPriceAlert,
   priceAlerts = {},
   onViewGraph,
+  onMoveToNonGE,
 }) {
   const { gePrices: geData, geIconMap, membershipMap } = useGEData();
   const sortedStocks = useMemo(
@@ -102,6 +103,7 @@ export default function StockTable({
               onPriceAlert={onPriceAlert}
               priceAlerts={priceAlerts}
               onViewGraph={onViewGraph}
+              onMoveToNonGE={onMoveToNonGE}
             />
           ))}
         </tbody>
@@ -187,6 +189,7 @@ function StockRow({
   onPriceAlert,
   priceAlerts = {},
   onViewGraph,
+  onMoveToNonGE,
 }) {
   const avgBuy = calculateAvgBuyPrice(stock);
   const avgSell = calculateAvgSellPrice(stock);
@@ -347,6 +350,7 @@ function StockRow({
           onDelete={onDelete}
           onCalculate={onCalculate}
           onArchive={onArchive}
+          onMoveToNonGE={onMoveToNonGE}
         />
       </td>
     </tr>
@@ -387,7 +391,7 @@ function StatusBadge({ stock }) {
   }
 }
 
-function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onCalculate, onArchive }) {
+function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onCalculate, onArchive, onMoveToNonGE }) {
   return (
     <div className="action-buttons">
       <button className="btn btn-success btn-sm" onClick={() => onBuy(stock)}>
@@ -408,6 +412,12 @@ function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onC
       <button className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)} title="Archive">
         📦 Archive
       </button>
+      {onMoveToNonGE && (
+        <button className="btn btn-secondary btn-sm" onClick={() => onMoveToNonGE(stock)} title="Move to Non-GE">
+          <PackageOpen size={12} />
+          Non-GE
+        </button>
+      )}
       <button className="btn btn-danger btn-sm" onClick={() => onDelete(stock)}>
         <Trash2 size={12} />
       </button>

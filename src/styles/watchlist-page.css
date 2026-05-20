@@ -129,6 +129,21 @@
   cursor: pointer;
 }
 
+.watchlist-search-option-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.watchlist-search-option-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 .watchlist-search-option:hover {
   background: rgba(71, 85, 105, 0.35);
 }
