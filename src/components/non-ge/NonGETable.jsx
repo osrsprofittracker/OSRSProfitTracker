@@ -3,7 +3,7 @@ import { Archive, ArrowDown, ArrowUp, CircleDollarSign, GripVertical, MinusCircl
 import ItemIcon from '../ItemIcon';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../../utils/calculations';
 import { formatAvgPrice, formatNumber } from '../../utils/formatters';
-import { getNonGECatalogItem, getNonGEWikiImageUrl, nonGEItemDisplayName, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
+import { getNonGECatalogItem, getNonGEItemImageUrl, nonGEItemDisplayName, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
 
 function sortNonGEStocks(stocks, sortConfig) {
   if (!sortConfig?.key) return stocks;
@@ -171,7 +171,7 @@ export default function NonGETable({
                 <td className="td-base">
                   <div className="non-ge-name-cell">
                     <ItemIcon
-                      src={getNonGEWikiImageUrl(catalogItem) || stock.imageUrl}
+                      src={getNonGEItemImageUrl(catalogItem) || stock.imageUrl}
                       alt=""
                       className="non-ge-item-icon"
                       fallbackText={name}

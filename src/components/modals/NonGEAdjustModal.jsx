@@ -5,7 +5,7 @@ import { NON_GE_CATALOG } from '../../data/nonGeCatalog';
 import { formatNumber, parseMK } from '../../utils/formatters';
 import {
   getNonGECatalogItem,
-  getNonGEWikiImageUrl,
+  getNonGEItemImageUrl,
   normalizeNonGESearch,
   nonGEItemDisplayName,
   nonGEItemRangeLabel,
@@ -27,7 +27,7 @@ function catalogOption(item) {
     customItemId: null,
     rangeLabel: nonGEItemRangeLabel(item),
     sourceLabel: `${item.category || 'Catalog'} - ${item.sourceName || 'Catalog'}`,
-    imageUrl: getNonGEWikiImageUrl(item),
+    imageUrl: getNonGEItemImageUrl(item),
   };
 }
 
@@ -41,7 +41,7 @@ function customOption(item) {
     customItemId: item.id,
     rangeLabel: item.rangeLabel || 'Unknown',
     sourceLabel: item.sourceName || 'Custom',
-    imageUrl: getNonGEWikiImageUrl(item),
+    imageUrl: getNonGEItemImageUrl(item),
   };
 }
 

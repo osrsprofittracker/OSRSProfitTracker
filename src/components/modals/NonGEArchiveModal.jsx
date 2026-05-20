@@ -1,6 +1,6 @@
 import React from 'react';
 import ItemIcon from '../ItemIcon';
-import { getNonGECatalogItem, getNonGEWikiImageUrl, nonGEItemDisplayName } from '../../utils/nonGeCatalog';
+import { getNonGECatalogItem, getNonGEItemImageUrl, nonGEItemDisplayName } from '../../utils/nonGeCatalog';
 
 export default function NonGEArchiveModal({ archivedStocks, loading, onRestore, onClose }) {
   return (
@@ -24,7 +24,7 @@ export default function NonGEArchiveModal({ archivedStocks, loading, onRestore, 
               <div key={stock.id} className="non-ge-archive-item">
                 <div className="non-ge-archive-info">
                   <ItemIcon
-                    src={getNonGEWikiImageUrl(catalogItem) || stock.imageUrl}
+                    src={getNonGEItemImageUrl(catalogItem) || stock.imageUrl}
                     alt=""
                     className="non-ge-item-icon"
                     fallbackText={name}

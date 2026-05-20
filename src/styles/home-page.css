@@ -247,6 +247,22 @@
   text-overflow: ellipsis;
 }
 
+.home-activity-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.home-activity-item-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 .profit-periods {
   display: flex;
   justify-content: space-between;
@@ -475,7 +491,9 @@
 
 .activity-item {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.75rem;
   background: rgb(15, 23, 42);
   border-radius: 0.5rem;
@@ -485,6 +503,16 @@
 .activity-item-left {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.activity-item-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .activity-item-title {
@@ -606,6 +634,7 @@
 
 .price-mover-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.8rem;
@@ -615,7 +644,16 @@
 }
 
 .price-mover-main {
+  flex: 1 1 auto;
   min-width: 0;
+}
+
+.price-mover-item-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .price-mover-title-row {
@@ -710,7 +748,16 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   gap: 0.25rem;
+}
+
+.watchlist-summary-item-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .watchlist-summary-item-name {

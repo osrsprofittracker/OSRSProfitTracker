@@ -1,0 +1,464 @@
+{
+  "anchovies": {
+    "path": "/icons/non-ge/anchovies.png",
+    "sourceIcon": "Burnt_fish_(anchovies).png",
+    "bytes": 451,
+    "updatedAt": "2026-05-20T19:38:59.007Z"
+  },
+  "anglerfish": {
+    "path": "/icons/non-ge/anglerfish.png",
+    "sourceIcon": "Burnt_anglerfish.png",
+    "bytes": 691,
+    "updatedAt": "2026-05-20T19:38:59.415Z"
+  },
+  "antelope": {
+    "path": "/icons/non-ge/antelope.png",
+    "sourceIcon": "Burnt_antelope.png",
+    "bytes": 384,
+    "updatedAt": "2026-05-20T19:38:59.832Z"
+  },
+  "bass-tuna": {
+    "path": "/icons/non-ge/bass-tuna.png",
+    "sourceIcon": "Burnt_fish_(tuna).png",
+    "bytes": 371,
+    "updatedAt": "2026-05-20T19:39:00.230Z"
+  },
+  "batta": {
+    "path": "/icons/non-ge/batta.png",
+    "sourceIcon": "Burnt_batta.png",
+    "bytes": 421,
+    "updatedAt": "2026-05-20T19:39:00.653Z"
+  },
+  "beast-meat": {
+    "path": "/icons/non-ge/beast-meat.png",
+    "sourceIcon": "Burnt_beast_meat.png",
+    "bytes": 328,
+    "updatedAt": "2026-05-20T19:39:01.069Z"
+  },
+  "bird-meat": {
+    "path": "/icons/non-ge/bird-meat.png",
+    "sourceIcon": "Burnt_bird_meat.png",
+    "bytes": 383,
+    "updatedAt": "2026-05-20T19:39:01.465Z"
+  },
+  "bluefin": {
+    "path": "/icons/non-ge/bluefin.png",
+    "sourceIcon": "Burnt_bluefin.png",
+    "bytes": 363,
+    "updatedAt": "2026-05-20T19:39:01.864Z"
+  },
+  "bread": {
+    "path": "/icons/non-ge/bread.png",
+    "sourceIcon": "Burnt_bread.png",
+    "bytes": 309,
+    "updatedAt": "2026-05-20T19:39:02.296Z"
+  },
+  "bruised-banana": {
+    "path": "/icons/non-ge/bruised-banana.png",
+    "sourceIcon": "Bruised_banana.png",
+    "bytes": 526,
+    "updatedAt": "2026-05-20T19:39:02.701Z"
+  },
+  "bucket-of-rubble-almost": {
+    "path": "/icons/non-ge/bucket-of-rubble-almost.png",
+    "sourceIcon": "Bucket_of_rubble_(almost_full).png",
+    "bytes": 694,
+    "updatedAt": "2026-05-20T19:39:02.984Z"
+  },
+  "bucket-of-rubble-filled": {
+    "path": "/icons/non-ge/bucket-of-rubble-filled.png",
+    "sourceIcon": "Bucket_of_rubble_(totally_filled).png",
+    "bytes": 690,
+    "updatedAt": "2026-05-20T19:39:03.268Z"
+  },
+  "bucket-of-rubble-partial": {
+    "path": "/icons/non-ge/bucket-of-rubble-partial.png",
+    "sourceIcon": "Bucket_of_rubble_(partially_filled).png",
+    "bytes": 679,
+    "updatedAt": "2026-05-20T19:39:03.550Z"
+  },
+  "cake": {
+    "path": "/icons/non-ge/cake.png",
+    "sourceIcon": "Burnt_cake.png",
+    "bytes": 941,
+    "updatedAt": "2026-05-20T19:39:03.956Z"
+  },
+  "cave-eel": {
+    "path": "/icons/non-ge/cave-eel.png",
+    "sourceIcon": "Burnt_cave_eel.png",
+    "bytes": 601,
+    "updatedAt": "2026-05-20T19:39:04.371Z"
+  },
+  "chaotic-handegg": {
+    "path": "/icons/non-ge/chaotic-handegg.png",
+    "sourceIcon": "Chaotic_handegg.png",
+    "bytes": 650,
+    "updatedAt": "2026-05-20T19:39:04.782Z"
+  },
+  "chicken": {
+    "path": "/icons/non-ge/chicken.png",
+    "sourceIcon": "Burnt_chicken.png",
+    "bytes": 392,
+    "updatedAt": "2026-05-20T19:39:05.221Z"
+  },
+  "coconut-shell": {
+    "path": "/icons/non-ge/coconut-shell.png",
+    "sourceIcon": "Coconut_shell.png",
+    "bytes": 439,
+    "updatedAt": "2026-05-20T19:39:05.621Z"
+  },
+  "crab-meat": {
+    "path": "/icons/non-ge/crab-meat.png",
+    "sourceIcon": "Burnt_crab_meat.png",
+    "bytes": 484,
+    "updatedAt": "2026-05-20T19:39:06.031Z"
+  },
+  "crunchies": {
+    "path": "/icons/non-ge/crunchies.png",
+    "sourceIcon": "Burnt_crunchies.png",
+    "bytes": 459,
+    "updatedAt": "2026-05-20T19:39:06.463Z"
+  },
+  "crushed-gem": {
+    "path": "/icons/non-ge/crushed-gem.png",
+    "sourceIcon": "Crushed_gem.png",
+    "bytes": 451,
+    "updatedAt": "2026-05-20T19:39:06.854Z"
+  },
+  "curry": {
+    "path": "/icons/non-ge/curry.png",
+    "sourceIcon": "Burnt_curry.png",
+    "bytes": 564,
+    "updatedAt": "2026-05-20T19:39:07.252Z"
+  },
+  "dark-crab": {
+    "path": "/icons/non-ge/dark-crab.png",
+    "sourceIcon": "Burnt_dark_crab.png",
+    "bytes": 480,
+    "updatedAt": "2026-05-20T19:39:07.661Z"
+  },
+  "demon-dung": {
+    "path": "/icons/non-ge/demon-dung.png",
+    "sourceIcon": "Demon_dung.png",
+    "bytes": 635,
+    "updatedAt": "2026-05-20T19:39:08.070Z"
+  },
+  "eel": {
+    "path": "/icons/non-ge/eel.png",
+    "sourceIcon": "Burnt_eel.png",
+    "bytes": 309,
+    "updatedAt": "2026-05-20T19:39:08.477Z"
+  },
+  "egg": {
+    "path": "/icons/non-ge/egg.png",
+    "sourceIcon": "Burnt_egg.png",
+    "bytes": 668,
+    "updatedAt": "2026-05-20T19:39:08.909Z"
+  },
+  "fossilised-dung": {
+    "path": "/icons/non-ge/fossilised-dung.png",
+    "sourceIcon": "Fossilised_dung.png",
+    "bytes": 429,
+    "updatedAt": "2026-05-20T19:39:09.320Z"
+  },
+  "fox-meat": {
+    "path": "/icons/non-ge/fox-meat.png",
+    "sourceIcon": "Burnt_fox_meat.png",
+    "bytes": 384,
+    "updatedAt": "2026-05-20T19:39:09.713Z"
+  },
+  "giant-krill": {
+    "path": "/icons/non-ge/giant-krill.png",
+    "sourceIcon": "Burnt_giant_krill.png",
+    "bytes": 346,
+    "updatedAt": "2026-05-20T19:39:10.135Z"
+  },
+  "gnomebowl": {
+    "path": "/icons/non-ge/gnomebowl.png",
+    "sourceIcon": "Burnt_gnomebowl.png",
+    "bytes": 550,
+    "updatedAt": "2026-05-20T19:39:10.553Z"
+  },
+  "haddock": {
+    "path": "/icons/non-ge/haddock.png",
+    "sourceIcon": "Burnt_haddock.png",
+    "bytes": 342,
+    "updatedAt": "2026-05-20T19:39:10.976Z"
+  },
+  "halibut": {
+    "path": "/icons/non-ge/halibut.png",
+    "sourceIcon": "Burnt_halibut.png",
+    "bytes": 366,
+    "updatedAt": "2026-05-20T19:39:21.645Z"
+  },
+  "herring": {
+    "path": "/icons/non-ge/herring.png",
+    "sourceIcon": "Burnt_fish_(herring).png",
+    "bytes": 390,
+    "updatedAt": "2026-05-20T19:39:22.075Z"
+  },
+  "holy-handegg": {
+    "path": "/icons/non-ge/holy-handegg.png",
+    "sourceIcon": "Holy_handegg.png",
+    "bytes": 622,
+    "updatedAt": "2026-05-20T19:39:22.507Z"
+  },
+  "jubbly": {
+    "path": "/icons/non-ge/jubbly.png",
+    "sourceIcon": "Burnt_jubbly.png",
+    "bytes": 358,
+    "updatedAt": "2026-05-20T19:39:22.942Z"
+  },
+  "jumbo-squid": {
+    "path": "/icons/non-ge/jumbo-squid.png",
+    "sourceIcon": "Burnt_jumbo_squid.png",
+    "bytes": 423,
+    "updatedAt": "2026-05-20T19:39:23.359Z"
+  },
+  "karambwan": {
+    "path": "/icons/non-ge/karambwan.png",
+    "sourceIcon": "Burnt_karambwan.png",
+    "bytes": 437,
+    "updatedAt": "2026-05-20T19:39:23.811Z"
+  },
+  "kebbit": {
+    "path": "/icons/non-ge/kebbit.png",
+    "sourceIcon": "Burnt_kebbit.png",
+    "bytes": 384,
+    "updatedAt": "2026-05-20T19:39:24.240Z"
+  },
+  "large-beast": {
+    "path": "/icons/non-ge/large-beast.png",
+    "sourceIcon": "Burnt_large_beast.png",
+    "bytes": 384,
+    "updatedAt": "2026-05-20T19:39:24.654Z"
+  },
+  "lobster": {
+    "path": "/icons/non-ge/lobster.png",
+    "sourceIcon": "Burnt_lobster.png",
+    "bytes": 420,
+    "updatedAt": "2026-05-20T19:39:25.087Z"
+  },
+  "manta-ray": {
+    "path": "/icons/non-ge/manta-ray.png",
+    "sourceIcon": "Burnt_manta_ray.png",
+    "bytes": 503,
+    "updatedAt": "2026-05-20T19:39:25.525Z"
+  },
+  "marlin": {
+    "path": "/icons/non-ge/marlin.png",
+    "sourceIcon": "Burnt_marlin.png",
+    "bytes": 323,
+    "updatedAt": "2026-05-20T19:39:25.962Z"
+  },
+  "meat": {
+    "path": "/icons/non-ge/meat.png",
+    "sourceIcon": "Burnt_meat.png",
+    "bytes": 384,
+    "updatedAt": "2026-05-20T19:39:26.392Z"
+  },
+  "monkfish": {
+    "path": "/icons/non-ge/monkfish.png",
+    "sourceIcon": "Burnt_monkfish.png",
+    "bytes": 391,
+    "updatedAt": "2026-05-20T19:39:26.845Z"
+  },
+  "mushroom": {
+    "path": "/icons/non-ge/mushroom.png",
+    "sourceIcon": "Burnt_mushroom.png",
+    "bytes": 808,
+    "updatedAt": "2026-05-20T19:39:27.287Z"
+  },
+  "old-wool": {
+    "path": "/icons/non-ge/old-wool.png",
+    "sourceIcon": "Old_wool.png",
+    "bytes": 461,
+    "updatedAt": "2026-05-20T19:39:27.735Z"
+  },
+  "onion": {
+    "path": "/icons/non-ge/onion.png",
+    "sourceIcon": "Burnt_onion.png",
+    "bytes": 660,
+    "updatedAt": "2026-05-20T19:39:28.150Z"
+  },
+  "oomlie": {
+    "path": "/icons/non-ge/oomlie.png",
+    "sourceIcon": "Burnt_oomlie.png",
+    "bytes": 392,
+    "updatedAt": "2026-05-20T19:39:28.582Z"
+  },
+  "oomlie-wrap": {
+    "path": "/icons/non-ge/oomlie-wrap.png",
+    "sourceIcon": "Burnt_oomlie_wrap.png",
+    "bytes": 493,
+    "updatedAt": "2026-05-20T19:39:29.039Z"
+  },
+  "peaceful-handegg": {
+    "path": "/icons/non-ge/peaceful-handegg.png",
+    "sourceIcon": "Peaceful_handegg.png",
+    "bytes": 628,
+    "updatedAt": "2026-05-20T19:39:29.485Z"
+  },
+  "pie": {
+    "path": "/icons/non-ge/pie.png",
+    "sourceIcon": "Burnt_pie.png",
+    "bytes": 438,
+    "updatedAt": "2026-05-20T19:39:29.913Z"
+  },
+  "pizza": {
+    "path": "/icons/non-ge/pizza.png",
+    "sourceIcon": "Burnt_pizza.png",
+    "bytes": 382,
+    "updatedAt": "2026-05-20T19:39:30.364Z"
+  },
+  "potato": {
+    "path": "/icons/non-ge/potato.png",
+    "sourceIcon": "Burnt_potato.png",
+    "bytes": 239,
+    "updatedAt": "2026-05-20T19:39:30.819Z"
+  },
+  "rabbit": {
+    "path": "/icons/non-ge/rabbit.png",
+    "sourceIcon": "Burnt_rabbit.png",
+    "bytes": 382,
+    "updatedAt": "2026-05-20T19:39:31.261Z"
+  },
+  "rainbow-crab": {
+    "path": "/icons/non-ge/rainbow-crab.png",
+    "sourceIcon": "Burnt_rainbow_crab_meat.png",
+    "bytes": 454,
+    "updatedAt": "2026-05-20T19:39:31.679Z"
+  },
+  "rainbow-fish": {
+    "path": "/icons/non-ge/rainbow-fish.png",
+    "sourceIcon": "Burnt_rainbow_fish.png",
+    "bytes": 545,
+    "updatedAt": "2026-05-20T19:39:32.110Z"
+  },
+  "rotten-food": {
+    "path": "/icons/non-ge/rotten-food.png",
+    "sourceIcon": "Rotten_food.png",
+    "bytes": 445,
+    "updatedAt": "2026-05-20T19:39:32.537Z"
+  },
+  "rotten-tomato": {
+    "path": "/icons/non-ge/rotten-tomato.png",
+    "sourceIcon": "Rotten_tomato.png",
+    "bytes": 379,
+    "updatedAt": "2026-05-20T19:39:32.960Z"
+  },
+  "ruined-chompy": {
+    "path": "/icons/non-ge/ruined-chompy.png",
+    "sourceIcon": "Ruined_chompy.png",
+    "bytes": 357,
+    "updatedAt": "2026-05-20T19:39:33.381Z"
+  },
+  "ruined-herb-tea": {
+    "path": "/icons/non-ge/ruined-herb-tea.png",
+    "sourceIcon": "Ruined_herb_tea.png",
+    "bytes": 675,
+    "updatedAt": "2026-05-20T19:39:33.810Z"
+  },
+  "salmon-trout": {
+    "path": "/icons/non-ge/salmon-trout.png",
+    "sourceIcon": "Burnt_fish_(trout).png",
+    "bytes": 380,
+    "updatedAt": "2026-05-20T19:39:34.241Z"
+  },
+  "sardine": {
+    "path": "/icons/non-ge/sardine.png",
+    "sourceIcon": "Burnt_fish_(sardine).png",
+    "bytes": 297,
+    "updatedAt": "2026-05-20T19:39:34.672Z"
+  },
+  "sea-turtle": {
+    "path": "/icons/non-ge/sea-turtle.png",
+    "sourceIcon": "Burnt_sea_turtle.png",
+    "bytes": 420,
+    "updatedAt": "2026-05-20T19:39:35.099Z"
+  },
+  "shark": {
+    "path": "/icons/non-ge/shark.png",
+    "sourceIcon": "Burnt_shark.png",
+    "bytes": 522,
+    "updatedAt": "2026-05-20T19:39:45.783Z"
+  },
+  "shrimp": {
+    "path": "/icons/non-ge/shrimp.png",
+    "sourceIcon": "Burnt_shrimp.png",
+    "bytes": 451,
+    "updatedAt": "2026-05-20T19:39:46.197Z"
+  },
+  "smelly-sock": {
+    "path": "/icons/non-ge/smelly-sock.png",
+    "sourceIcon": "Smelly_sock.png",
+    "bytes": 586,
+    "updatedAt": "2026-05-20T19:39:46.646Z"
+  },
+  "snail": {
+    "path": "/icons/non-ge/snail.png",
+    "sourceIcon": "Burnt_snail.png",
+    "bytes": 468,
+    "updatedAt": "2026-05-20T19:39:47.082Z"
+  },
+  "spider-on-shaft": {
+    "path": "/icons/non-ge/spider-on-shaft.png",
+    "sourceIcon": "Spider_on_shaft_(burnt).png",
+    "bytes": 301,
+    "updatedAt": "2026-05-20T19:39:47.507Z"
+  },
+  "spider-stick": {
+    "path": "/icons/non-ge/spider-stick.png",
+    "sourceIcon": "Burnt_spider.png",
+    "bytes": 424,
+    "updatedAt": "2026-05-20T19:39:47.937Z"
+  },
+  "spooky-egg": {
+    "path": "/icons/non-ge/spooky-egg.png",
+    "sourceIcon": "Spooky_egg.png",
+    "bytes": 460,
+    "updatedAt": "2026-05-20T19:39:48.363Z"
+  },
+  "stew": {
+    "path": "/icons/non-ge/stew.png",
+    "sourceIcon": "Burnt_stew.png",
+    "bytes": 564,
+    "updatedAt": "2026-05-20T19:39:48.810Z"
+  },
+  "sweetcorn": {
+    "path": "/icons/non-ge/sweetcorn.png",
+    "sourceIcon": "Burnt_sweetcorn.png",
+    "bytes": 498,
+    "updatedAt": "2026-05-20T19:39:49.223Z"
+  },
+  "swordfish": {
+    "path": "/icons/non-ge/swordfish.png",
+    "sourceIcon": "Burnt_swordfish.png",
+    "bytes": 382,
+    "updatedAt": "2026-05-20T19:39:49.642Z"
+  },
+  "swordtip-squid": {
+    "path": "/icons/non-ge/swordtip-squid.png",
+    "sourceIcon": "Burnt_swordtip_squid.png",
+    "bytes": 428,
+    "updatedAt": "2026-05-20T19:39:50.064Z"
+  },
+  "t-bone": {
+    "path": "/icons/non-ge/t-bone.png",
+    "sourceIcon": "Burnt_meat.png",
+    "bytes": 384,
+    "updatedAt": "2026-05-20T19:39:50.458Z"
+  },
+  "washing-bowl": {
+    "path": "/icons/non-ge/washing-bowl.png",
+    "sourceIcon": "Washing_bowl.png",
+    "bytes": 540,
+    "updatedAt": "2026-05-20T19:39:50.889Z"
+  },
+  "yellowfin": {
+    "path": "/icons/non-ge/yellowfin.png",
+    "sourceIcon": "Burnt_yellowfin.png",
+    "bytes": 392,
+    "updatedAt": "2026-05-20T19:39:51.307Z"
+  }
+}

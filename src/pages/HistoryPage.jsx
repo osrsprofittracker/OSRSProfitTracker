@@ -4,6 +4,7 @@ import { formatNumber } from '../utils/formatters';
 import { useGEData } from '../contexts/GEDataContext';
 import { useTrade } from '../contexts/TradeContext';
 import ItemIcon from '../components/ItemIcon';
+import { getNonGECatalogItem, getNonGEItemImageUrl } from '../utils/nonGeCatalog';
 import '../styles/table.css';
 import '../styles/history-page.css';
 import '../styles/filter-panel.css';
@@ -104,7 +105,8 @@ export default function HistoryPage({
   visibleProfits = {},
   onGoToPage, onChangePageSize, onApplyFilters, onInit, numberFormat,
   sortConfig = { key: 'date', dir: 'desc' },
-  onApplySort, onReset, onUndo, showMembershipIcon = true
+  onApplySort, onReset, onUndo, showMembershipIcon = true,
+  nonGEStocks = []
 }) {
   const { geIconMap, membershipMap } = useGEData();
   const { stocks } = useTrade();
@@ -114,6 +116,12 @@ export default function HistoryPage({
     () => Object.fromEntries(stocks.map(s => [s.id, s.itemId])),
     [stocks]
   );
+  const nonGEStockImageMap = useMemo(() => {
+    return Object.fromEntries(nonGEStocks.map(stock => {
+      const catalogItem = getNonGECatalogItem(stock.catalogItemKey);
+      return [stock.id, getNonGEItemImageUrl(catalogItem)];
+    }));
+  }, [nonGEStocks]);
   const enabledProfitTypes = useMemo(
     () => visibleProfitTypes(visibleProfits),
     [visibleProfits]
@@ -494,9 +502,9 @@ export default function HistoryPage({
                 {!isExtraProfits && (
                   <td className="history-cell history-cell--name">
                     <span className="history-item-name">
-                      {stockItemIdMap[t.stockId] && (
+                      {(t.market === 'non_ge' ? nonGEStockImageMap[t.nonGeStockId] : geIconMap[stockItemIdMap[t.stockId]]) && (
                         <ItemIcon
-                          src={geIconMap[stockItemIdMap[t.stockId]]}
+                          src={t.market === 'non_ge' ? nonGEStockImageMap[t.nonGeStockId] : geIconMap[stockItemIdMap[t.stockId]]}
                           alt=""
                           className="history-item-icon"
                           fallbackText={t.stockName}

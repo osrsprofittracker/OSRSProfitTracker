@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { NON_GE_CATALOG } from '../../data/nonGeCatalog';
-import { getNonGEWikiImageUrl, normalizeNonGESearch, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
+import { getNonGEItemImageUrl, normalizeNonGESearch, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
 
 export default function NonGEBulkAddModal({
   categories,
@@ -109,7 +109,7 @@ export default function NonGEBulkAddModal({
                 onChange={() => toggleItem(item.key)}
               />
               <ItemIcon
-                src={getNonGEWikiImageUrl(item)}
+                src={getNonGEItemImageUrl(item)}
                 alt=""
                 className="non-ge-option-icon"
                 fallbackText={item.name}

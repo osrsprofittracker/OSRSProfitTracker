@@ -8,8 +8,10 @@ import ProfitOverTimeChart from '../components/analytics/widgets/ProfitOverTimeC
 import GpTradedChart from '../components/analytics/widgets/GpTradedChart';
 import ProfitHeatmap from '../components/analytics/widgets/ProfitHeatmap';
 import BuyingVsSellingChart from '../components/analytics/widgets/BuyingVsSellingChart';
+import ItemIcon from '../components/ItemIcon';
 import { addDays, inclusiveDayCount, subtractDays, sumProfit } from '../utils/analyticsHelpers';
 import { formatNumber } from '../utils/formatters';
+import { getNonGECatalogItem, getNonGEItemImageUrl } from '../utils/nonGeCatalog';
 import {
   computeNonGEBuyingVsSelling,
   computeNonGECategoryRows,
@@ -112,7 +114,17 @@ function NonGEItemTable({ items = [], numberFormat }) {
           <tbody>
             {visibleItems.map((item) => (
               <tr key={item.id}>
-                <td className="items-name-cell">{item.name}</td>
+                <td className="items-name-cell">
+                  <span className="items-name-content">
+                    <ItemIcon
+                      src={getNonGEItemImageUrl(getNonGECatalogItem(item.catalogItemKey))}
+                      alt=""
+                      className="items-table-item-icon"
+                      fallbackText={item.name}
+                    />
+                    <span>{item.name}</span>
+                  </span>
+                </td>
                 <td>{item.category}</td>
                 <td>{formatNumber(item.shares, numberFormat)}</td>
                 <td>{formatNumber(item.totalCost, numberFormat)}</td>

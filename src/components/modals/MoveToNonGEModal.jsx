@@ -5,7 +5,7 @@ import { NON_GE_CATALOG } from '../../data/nonGeCatalog';
 import { calculateProfit } from '../../utils/calculations';
 import { formatNumber } from '../../utils/formatters';
 import {
-  getNonGEWikiImageUrl,
+  getNonGEItemImageUrl,
   normalizeNonGESearch,
   nonGEItemRangeLabel,
 } from '../../utils/nonGeCatalog';
@@ -18,7 +18,7 @@ function catalogOption(item) {
     name: item.name,
     rangeLabel: nonGEItemRangeLabel(item),
     category: item.category || 'Uncategorized',
-    imageUrl: getNonGEWikiImageUrl(item),
+    imageUrl: getNonGEItemImageUrl(item),
     catalogItemKey: item.key,
     customItemId: null,
   };
@@ -32,7 +32,7 @@ function customOption(item) {
     name: item.name,
     rangeLabel: item.rangeLabel || 'Unknown',
     category: 'Custom',
-    imageUrl: getNonGEWikiImageUrl(item),
+    imageUrl: getNonGEItemImageUrl(item),
     catalogItemKey: null,
     customItemId: item.id,
   };

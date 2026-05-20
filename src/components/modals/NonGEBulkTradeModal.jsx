@@ -3,7 +3,7 @@ import ItemIcon from '../ItemIcon';
 import StepInput from '../StepInput';
 import { calculateAvgBuyPrice, calculateCostBasis, calculateSellProfit } from '../../utils/calculations';
 import { formatNumber, handleMKInput } from '../../utils/formatters';
-import { getNonGECatalogItem, getNonGEWikiImageUrl, nonGEItemDisplayName } from '../../utils/nonGeCatalog';
+import { getNonGECatalogItem, getNonGEItemImageUrl, nonGEItemDisplayName } from '../../utils/nonGeCatalog';
 import '../../styles/bulk-trade-modal.css';
 
 function groupNonGEStocks(stocks, categories, requireShares) {
@@ -269,7 +269,7 @@ export default function NonGEBulkTradeModal({
                     >
                       <ItemIcon
                         className="item-icon"
-                        src={getNonGEWikiImageUrl(catalogItem) || stock.imageUrl}
+                        src={getNonGEItemImageUrl(catalogItem) || stock.imageUrl}
                         alt=""
                         fallbackText={name}
                       />
@@ -330,7 +330,7 @@ export default function NonGEBulkTradeModal({
                     <div className="item-header">
                       <ItemIcon
                         className="item-icon"
-                        src={getNonGEWikiImageUrl(catalogItem) || stock.imageUrl}
+                        src={getNonGEItemImageUrl(catalogItem) || stock.imageUrl}
                         alt=""
                         fallbackText={name}
                       />

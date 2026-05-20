@@ -1,5 +1,7 @@
 import { NON_GE_CATALOG } from '../data/nonGeCatalog';
 
+const NON_GE_ICON_BASE_PATH = '/icons/non-ge';
+
 export function getNonGECatalogItem(key) {
   if (!key) return null;
   return NON_GE_CATALOG.find(item => item.key === key) || null;
@@ -25,14 +27,11 @@ export function nonGEItemRangeLabel(item) {
   return item?.rangeLabel || 'Unknown';
 }
 
-export function getNonGEWikiImageUrl(item) {
+export function getNonGEItemImageUrl(item) {
   if (!item) return '';
+  if (item.key) return `${NON_GE_ICON_BASE_PATH}/${item.key}.png`;
   if (item.imageUrl) return item.imageUrl;
-  if (!item.wikiUrl) return '';
-
-  const pagePath = String(item.wikiUrl).split('#')[0].split('?')[0];
-  const pageName = decodeURIComponent(pagePath.split('/').pop() || '').replace(/ /g, '_');
-  if (!pageName) return '';
-
-  return `https://oldschool.runescape.wiki/images/${pageName}.png`;
+  return '';
 }
+
+export const getNonGEWikiImageUrl = getNonGEItemImageUrl;

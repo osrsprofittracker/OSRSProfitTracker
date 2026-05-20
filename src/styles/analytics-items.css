@@ -221,6 +221,22 @@
   font-weight: 700;
 }
 
+.items-name-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.items-table-item-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 .items-muted {
   color: rgb(148, 163, 184);
 }

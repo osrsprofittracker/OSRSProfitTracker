@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { NON_GE_CATALOG } from '../../data/nonGeCatalog';
-import { getNonGEWikiImageUrl, normalizeNonGESearch, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
+import { getNonGEItemImageUrl, normalizeNonGESearch, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
 import { parseMK } from '../../utils/formatters';
 
 function parseOptionalNumber(value) {
@@ -18,7 +18,7 @@ function catalogOption(item) {
     name: item.name,
     rangeLabel: nonGEItemRangeLabel(item),
     category: item.category || 'Uncategorized',
-    imageUrl: getNonGEWikiImageUrl(item),
+    imageUrl: getNonGEItemImageUrl(item),
     sourceName: item.sourceName,
     sourceDate: item.sourceDate,
     catalogItemKey: item.key,
@@ -33,7 +33,7 @@ function customOption(item) {
     name: item.name,
     rangeLabel: item.rangeLabel || 'Unknown',
     category: 'Custom',
-    imageUrl: getNonGEWikiImageUrl(item),
+    imageUrl: getNonGEItemImageUrl(item),
     sourceName: item.sourceName || 'Custom',
     sourceDate: 'Private',
     catalogItemKey: null,

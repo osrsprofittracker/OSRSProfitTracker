@@ -1511,6 +1511,7 @@ function MainAppInner({ session, onLogout }) {
             onReset={resetPaged}
             onUndo={undoTransaction}
             showMembershipIcon={visibleColumns.membershipIcon}
+            nonGEStocks={nonGEAllStocks}
           />
         ) : currentPage === 'graphs' ? (
           <GraphsPage
