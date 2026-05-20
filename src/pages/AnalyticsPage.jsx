@@ -44,6 +44,27 @@ const copyText = async (text) => {
   return copied;
 };
 
+function MarketSwitch({ activeMarket, navigateToPage }) {
+  return (
+    <div className="analytics-market-switch" aria-label="Analytics market">
+      <button
+        type="button"
+        className={`analytics-market-btn${activeMarket === 'ge' ? ' is-active' : ''}`}
+        onClick={() => navigateToPage?.('analytics')}
+      >
+        GE Analytics
+      </button>
+      <button
+        type="button"
+        className={`analytics-market-btn${activeMarket === 'non_ge' ? ' is-active' : ''}`}
+        onClick={() => navigateToPage?.('analyticsNonGE')}
+      >
+        Non-GE Analytics
+      </button>
+    </div>
+  );
+}
+
 export default function AnalyticsPage({
   userId,
   transactions,
@@ -203,6 +224,7 @@ export default function AnalyticsPage({
           <p className="analytics-page-subtitle">
             Deep GE-market insights across profit, items, categories, and goals.
           </p>
+          <MarketSwitch activeMarket="ge" navigateToPage={navigateToPage} />
         </div>
         <div className="analytics-header-actions">
           <TimeframeSelector

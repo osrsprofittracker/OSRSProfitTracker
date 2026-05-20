@@ -7,6 +7,7 @@ const PAGE_PATHS = {
   history: '/history',
   graphs: '/graphs',
   analytics: '/analytics',
+  analyticsNonGE: '/analytics/nonge',
   watchlist: '/watchlist',
   nonge: '/non-ge',
 };
@@ -25,6 +26,7 @@ function getPageFromURL() {
   if (path === '/history') return 'history';
   if (path === '/graphs') return 'graphs';
   if (path === '/analytics') return 'analytics';
+  if (path === '/analytics/nonge') return 'analyticsNonGE';
   if (path === '/watchlist') return 'watchlist';
   if (path === '/non-ge') return 'nonge';
   return 'home';
@@ -76,7 +78,7 @@ export function useNavigation({
       refetchGPStats();
       refetchProfitHistory();
     }
-    if (page === 'nonge') {
+    if (page === 'nonge' || page === 'analyticsNonGE') {
       refetchNonGEStocks?.();
       fetchNonGECategories?.();
       fetchNonGECustomItems?.();
@@ -119,7 +121,7 @@ export function useNavigation({
         refetchGPStats();
         refetchProfitHistory();
       }
-      if (page === 'nonge') {
+      if (page === 'nonge' || page === 'analyticsNonGE') {
         refetchNonGEStocks?.();
         fetchNonGECategories?.();
         fetchNonGECustomItems?.();

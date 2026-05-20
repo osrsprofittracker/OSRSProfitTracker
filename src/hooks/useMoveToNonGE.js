@@ -95,6 +95,30 @@ export function useMoveToNonGE({
 
       if (profitHistoryError) throw profitHistoryError;
 
+      const { data: movedTransactions, error: movedTransactionsError } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('market', 'non_ge')
+        .eq('non_ge_stock_id', createdStock.id);
+
+      if (movedTransactionsError) throw movedTransactionsError;
+
+      const movedTransactionIds = (movedTransactions || []).map(transaction => transaction.id);
+      if (movedTransactionIds.length > 0) {
+        const { error: linkedProfitHistoryError } = await supabase
+          .from('profit_history')
+          .update({
+            market: 'non_ge',
+            non_ge_stock_id: createdStock.id,
+            stock_id: null,
+          })
+          .eq('user_id', userId)
+          .in('transaction_id', movedTransactionIds);
+
+        if (linkedProfitHistoryError) throw linkedProfitHistoryError;
+      }
+
       if (stock.itemId) {
         const { error: priceAlertError } = await supabase
           .from('price_alerts')

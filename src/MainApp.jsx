@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import NonGEAnalyticsPage from './pages/NonGEAnalyticsPage';
 import WatchlistPage from './pages/WatchlistPage';
 import NonGEPage from './pages/NonGEPage';
 import { supabase } from './lib/supabase';
@@ -1265,7 +1266,7 @@ function MainAppInner({ session, onLogout }) {
             </button>
             <button
               onClick={() => navigateToPage('analytics')}
-              className={`topbar-nav-btn${currentPage === 'analytics' ? ' is-active' : ''}`}
+              className={`topbar-nav-btn${currentPage === 'analytics' || currentPage === 'analyticsNonGE' ? ' is-active' : ''}`}
             >
               <BarChart3 size={14} />
               Analytics
@@ -1472,6 +1473,22 @@ function MainAppInner({ session, onLogout }) {
             milestones={milestones}
             milestoneHistory={milestoneHistory}
             milestoneProgress={milestoneProgress}
+            transactionHistoryScope={transactionHistoryScope}
+            profitHistoryScope={profitHistoryScope}
+            loadFullTransactions={loadFullTransactions}
+            loadFullProfitHistory={loadFullProfitHistory}
+            fullTransactionsLoading={fullTransactionsLoading}
+            fullProfitHistoryLoading={fullProfitHistoryLoading}
+          />
+        ) : currentPage === 'analyticsNonGE' ? (
+          <NonGEAnalyticsPage
+            userId={userId}
+            stocks={nonGEAllStocks}
+            categories={nonGECategories}
+            transactions={transactions}
+            profitHistory={profitHistory}
+            numberFormat={numberFormat}
+            navigateToPage={navigateToPage}
             transactionHistoryScope={transactionHistoryScope}
             profitHistoryScope={profitHistoryScope}
             loadFullTransactions={loadFullTransactions}
