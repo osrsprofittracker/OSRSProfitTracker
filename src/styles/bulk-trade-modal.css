@@ -45,6 +45,14 @@
   letter-spacing: -0.01em;
 }
 
+.bulk-trade-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .bulk-trade-mode-toggle {
   display: flex;
   gap: 2px;
@@ -773,6 +781,17 @@
   .bulk-trade-modal {
     width: 100%;
     height: 95vh;
+  }
+
+  .bulk-trade-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .bulk-trade-header-actions {
+    justify-content: flex-start;
+    width: 100%;
   }
 
   .bulk-trade-body {

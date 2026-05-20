@@ -11,6 +11,7 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
   const isBuy = mode === 'buy';
   const { gePrices, geIconMap } = useGEData();
   const { stocks, categories } = useTrade();
+  const [activeTradeMode, setActiveTradeMode] = useState(tradeMode);
   const [buyMode, setBuyMode] = useState('perItem');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItems, setSelectedItems] = useState({});
@@ -19,9 +20,17 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
   const groupedStocks = useGroupedStocks(
     stocks,
     categories,
-    tradeMode,
+    activeTradeMode,
     isBuy ? undefined : { requireShares: true }
   );
+
+  const handleTradeModeChange = (nextMode) => {
+    if (nextMode === activeTradeMode) return;
+
+    setActiveTradeMode(nextMode);
+    setSearchQuery('');
+    setSelectedItems({});
+  };
 
   const filteredGroups = useMemo(() => {
     if (!searchQuery.trim()) return groupedStocks;
@@ -226,26 +235,46 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
       {/* Header */}
       <div className="bulk-trade-header">
         <h2>{isBuy ? 'Bulk Buy' : 'Bulk Sell'}</h2>
-        {isBuy ? (
-          <div className="bulk-trade-mode-toggle">
+        <div className="bulk-trade-header-actions">
+          <div className="bulk-trade-mode-toggle" aria-label="GE tracker section">
             <button
-              className={`bulk-trade-mode-btn ${buyMode === 'perItem' ? 'active' : ''}`}
-              onClick={() => setBuyMode('perItem')}
+              type="button"
+              className={`bulk-trade-mode-btn ${activeTradeMode === 'trade' ? 'active' : ''}`}
+              onClick={() => handleTradeModeChange('trade')}
             >
-              Per-Item
+              Trading
             </button>
             <button
-              className={`bulk-trade-mode-btn ${buyMode === 'budgetSplit' ? 'active' : ''}`}
-              onClick={() => setBuyMode('budgetSplit')}
+              type="button"
+              className={`bulk-trade-mode-btn ${activeTradeMode === 'investment' ? 'active' : ''}`}
+              onClick={() => handleTradeModeChange('investment')}
             >
-              Budget Split
+              Investments
             </button>
           </div>
-        ) : (
-          selectedCount > 0 && (
-            <span className="bulk-trade-count-badge">{selectedCount}</span>
-          )
-        )}
+          {isBuy ? (
+            <div className="bulk-trade-mode-toggle">
+              <button
+                type="button"
+                className={`bulk-trade-mode-btn ${buyMode === 'perItem' ? 'active' : ''}`}
+                onClick={() => setBuyMode('perItem')}
+              >
+                Per-Item
+              </button>
+              <button
+                type="button"
+                className={`bulk-trade-mode-btn ${buyMode === 'budgetSplit' ? 'active' : ''}`}
+                onClick={() => setBuyMode('budgetSplit')}
+              >
+                Budget Split
+              </button>
+            </div>
+          ) : (
+            selectedCount > 0 && (
+              <span className="bulk-trade-count-badge">{selectedCount}</span>
+            )
+          )}
+        </div>
       </div>
 
       {/* Body */}
