@@ -2,8 +2,16 @@
   padding-bottom: 2rem;
 }
 
-.non-ge-status-companion-row {
-  grid-template-columns: minmax(27rem, 0.9fr) minmax(34rem, 1.65fr);
+.trade-status-companion-row.non-ge-status-companion-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.non-ge-status-companion-row > .trade-quick-actions {
+  grid-column: span 2;
+}
+
+.non-ge-status-companion-row > .non-ge-category-snapshot {
+  grid-column: span 2;
 }
 
 .non-ge-category-snapshot {
@@ -718,6 +726,15 @@
 }
 
 @media (max-width: 800px) {
+  .trade-status-companion-row.non-ge-status-companion-row {
+    grid-template-columns: 1fr;
+  }
+
+  .non-ge-status-companion-row > .trade-quick-actions,
+  .non-ge-status-companion-row > .non-ge-category-snapshot {
+    grid-column: auto;
+  }
+
   .non-ge-page-header {
     flex-direction: column;
     align-items: stretch;
