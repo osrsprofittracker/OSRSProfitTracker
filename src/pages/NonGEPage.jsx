@@ -20,7 +20,7 @@ function NonGEStatusItem({ icon: Icon, label, value, valueClass = '' }) {
   );
 }
 
-function NonGECategorySnapshot({ categories }) {
+function NonGECategorySnapshot({ categories, segments }) {
   return (
     <div className="trade-quick-actions non-ge-category-snapshot" aria-label="Non-GE category snapshot">
       <div className="trade-quick-actions-header">
@@ -61,9 +61,12 @@ function NonGECategorySnapshot({ categories }) {
             </div>
           </div>
           {categories.map(category => (
-            <div key={category.id} className="non-ge-category-snapshot-row">
+            <div key={category.id} className={`non-ge-category-snapshot-row ${category.colorClass}`}>
               <div className="non-ge-category-snapshot-main">
-                <span className="non-ge-category-snapshot-name">{category.name}</span>
+                <span className="non-ge-category-snapshot-name">
+                  <span className={`non-ge-category-snapshot-swatch ${category.colorClass}`} aria-hidden="true" />
+                  {category.name}
+                </span>
                 <span className="non-ge-category-snapshot-meta">
                   {category.itemCount} item{category.itemCount === 1 ? '' : 's'} / {category.heldQtyLabel} held / {category.soldQtyLabel} sold
                 </span>
@@ -77,6 +80,35 @@ function NonGECategorySnapshot({ categories }) {
               </div>
             </div>
           ))}
+          {segments.length > 0 && (
+            <div className="non-ge-category-allocation">
+              <div className="non-ge-category-allocation-header">
+                <span>Cost allocation</span>
+                <span>Top 3 + other</span>
+              </div>
+              <svg
+                className="non-ge-category-allocation-bar"
+                viewBox="0 0 100 8"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Non-GE cost allocation by category"
+              >
+                <rect className="non-ge-category-allocation-bg" x="0" y="0" width="100" height="8" rx="4" />
+                {segments.map(segment => (
+                  <rect
+                    key={segment.id}
+                    className={`non-ge-category-allocation-segment ${segment.colorClass}`}
+                    x={segment.offset}
+                    y="0"
+                    width={segment.width}
+                    height="8"
+                  >
+                    <title>{segment.label}</title>
+                  </rect>
+                ))}
+              </svg>
+            </div>
+          )}
         </div>
       ) : (
         <div className="non-ge-category-snapshot-empty">No category data yet</div>
@@ -139,7 +171,7 @@ export default function NonGEPage({
   }, [stocks, categories]);
 
   const categorySnapshot = useMemo(() => {
-    return categories
+    const rankedCategories = categories
       .map(category => {
         const categoryStocks = groupedStocks.get(category.id) || [];
         const totalCost = categoryStocks.reduce((sum, stock) => sum + (stock.totalCost || 0), 0);
@@ -154,6 +186,7 @@ export default function NonGEPage({
           itemCount: categoryStocks.length,
           totalCost,
           realizedProfit,
+          costShare,
           totalCostLabel: formatNumber(totalCost, numberFormat),
           heldQtyLabel: formatNumber(heldQty, numberFormat),
           soldQtyLabel: formatNumber(soldQty, numberFormat),
@@ -162,8 +195,45 @@ export default function NonGEPage({
         };
       })
       .filter(category => category.itemCount > 0)
-      .sort((a, b) => b.totalCost - a.totalCost)
-      .slice(0, 3);
+      .sort((a, b) => b.totalCost - a.totalCost);
+
+    const visibleCategories = rankedCategories.slice(0, 3).map((category, index) => ({
+      ...category,
+      colorClass: `is-snapshot-${index + 1}`,
+    }));
+
+    let offset = 0;
+    const visibleSegments = summary.totalCost > 0
+      ? visibleCategories
+          .filter(category => category.costShare > 0)
+          .map(category => {
+            const segment = {
+              id: category.id,
+              width: Number(category.costShare.toFixed(2)),
+              offset: Number(offset.toFixed(2)),
+              colorClass: category.colorClass,
+              label: `${category.name}: ${category.costShare.toFixed(1)}% of Non-GE cost`,
+            };
+            offset += category.costShare;
+            return segment;
+          })
+      : [];
+
+    const otherShare = summary.totalCost > 0 ? Math.max(0, 100 - offset) : 0;
+    const otherSegment = otherShare > 0.05
+      ? [{
+        id: 'other',
+        width: Number(otherShare.toFixed(2)),
+        offset: Number(offset.toFixed(2)),
+        colorClass: 'is-snapshot-other',
+        label: `Other categories: ${otherShare.toFixed(1)}% of Non-GE cost`,
+      }]
+      : [];
+
+    return {
+      categories: visibleCategories,
+      segments: [...visibleSegments, ...otherSegment],
+    };
   }, [categories, groupedStocks, numberFormat, summary.totalCost]);
 
   const toggleCategory = (categoryId) => {
@@ -305,7 +375,7 @@ export default function NonGEPage({
               </div>
             </div>
           </div>
-          <NonGECategorySnapshot categories={categorySnapshot} />
+          <NonGECategorySnapshot categories={categorySnapshot.categories} segments={categorySnapshot.segments} />
         </div>
       </section>
 
