@@ -53,10 +53,12 @@ export function useStocks(userId) {
     fetchStocks();
   }, [userId, fetchStocks]);
 
-  const reorderStocks = useCallback(async (stockId, targetStockId, category) => {
+  const reorderStocks = useCallback(async (stockId, targetStockId, category, isInvestment = false) => {
     try {
       // Optimistically update UI first
-      const categoryStocks = stocks.filter(s => s.category === category);
+      const categoryStocks = stocks.filter(s =>
+        s.category === category && Boolean(s.isInvestment) === Boolean(isInvestment)
+      );
       const movingStockIndex = categoryStocks.findIndex(s => s.id === stockId);
       const targetStockIndex = categoryStocks.findIndex(s => s.id === targetStockId);
 
@@ -147,6 +149,7 @@ export function useStocks(userId) {
     if (updates.limit4h !== undefined) dbUpdates.limit4h = updates.limit4h;
     if (updates.onHold !== undefined) dbUpdates.on_hold = updates.onHold;
     if (updates.isInvestment !== undefined) dbUpdates.is_investment = updates.isInvestment;
+    if (updates.position !== undefined) dbUpdates.position = updates.position;
     if (updates.itemId !== undefined) dbUpdates.item_id = updates.itemId;
     if (updates.investmentStartDate !== undefined) dbUpdates.investment_start_date = updates.investmentStartDate || null;
 
