@@ -20,7 +20,7 @@ function NonGEStatusItem({ icon: Icon, label, value, valueClass = '' }) {
   );
 }
 
-function NonGECategorySnapshot({ categories, segments }) {
+function NonGECategorySnapshot({ categories }) {
   return (
     <div className="trade-quick-actions non-ge-category-snapshot" aria-label="Non-GE category snapshot">
       <div className="trade-quick-actions-header">
@@ -61,12 +61,9 @@ function NonGECategorySnapshot({ categories, segments }) {
             </div>
           </div>
           {categories.map(category => (
-            <div key={category.id} className={`non-ge-category-snapshot-row ${category.colorClass}`}>
+            <div key={category.id} className="non-ge-category-snapshot-row">
               <div className="non-ge-category-snapshot-main">
-                <span className="non-ge-category-snapshot-name">
-                  <span className={`non-ge-category-snapshot-swatch ${category.colorClass}`} aria-hidden="true" />
-                  {category.name}
-                </span>
+                <span className="non-ge-category-snapshot-name">{category.name}</span>
                 <span className="non-ge-category-snapshot-meta">
                   {category.itemCount} item{category.itemCount === 1 ? '' : 's'} / {category.heldQtyLabel} held / {category.soldQtyLabel} sold
                 </span>
@@ -80,39 +77,46 @@ function NonGECategorySnapshot({ categories, segments }) {
               </div>
             </div>
           ))}
-          {segments.length > 0 && (
-            <div className="non-ge-category-allocation">
-              <div className="non-ge-category-allocation-header">
-                <span>Cost allocation</span>
-                <span>Top 3 + other</span>
-              </div>
-              <svg
-                className="non-ge-category-allocation-bar"
-                viewBox="0 0 100 8"
-                preserveAspectRatio="none"
-                role="img"
-                aria-label="Non-GE cost allocation by category"
-              >
-                <rect className="non-ge-category-allocation-bg" x="0" y="0" width="100" height="8" rx="4" />
-                {segments.map(segment => (
-                  <rect
-                    key={segment.id}
-                    className={`non-ge-category-allocation-segment ${segment.colorClass}`}
-                    x={segment.offset}
-                    y="0"
-                    width={segment.width}
-                    height="8"
-                  >
-                    <title>{segment.label}</title>
-                  </rect>
-                ))}
-              </svg>
-            </div>
-          )}
         </div>
       ) : (
         <div className="non-ge-category-snapshot-empty">No category data yet</div>
       )}
+    </div>
+  );
+}
+
+function NonGEQuantityFlow({ flow }) {
+  if (flow.totalQty <= 0) return null;
+
+  return (
+    <div className="non-ge-quick-flow" aria-label="Non-GE quantity flow">
+      <div className="non-ge-quick-flow-header">
+        <span>Quantity flow</span>
+        <span>{flow.heldPercentLabel} held</span>
+      </div>
+      <svg
+        className="non-ge-quick-flow-bar"
+        viewBox="0 0 100 8"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={`Held quantity ${flow.heldQtyLabel}, sold quantity ${flow.soldQtyLabel}`}
+      >
+        <rect className="non-ge-quick-flow-bg" x="0" y="0" width="100" height="8" rx="4" />
+        {flow.heldPercent > 0 && (
+          <rect className="non-ge-quick-flow-segment is-held" x="0" y="0" width={flow.heldPercent} height="8">
+            <title>Held quantity: {flow.heldQtyLabel}</title>
+          </rect>
+        )}
+        {flow.soldPercent > 0 && (
+          <rect className="non-ge-quick-flow-segment is-sold" x={flow.heldPercent} y="0" width={flow.soldPercent} height="8">
+            <title>Sold quantity: {flow.soldQtyLabel}</title>
+          </rect>
+        )}
+      </svg>
+      <div className="non-ge-quick-flow-legend">
+        <span><i className="is-held" aria-hidden="true" />Held {flow.heldQtyLabel}</span>
+        <span><i className="is-sold" aria-hidden="true" />Sold {flow.soldQtyLabel}</span>
+      </div>
     </div>
   );
 }
@@ -150,12 +154,28 @@ export default function NonGEPage({
       (acc, stock) => ({
         activeItems: acc.activeItems + 1,
         heldQty: acc.heldQty + (stock.shares || 0),
+        soldQty: acc.soldQty + (stock.sharesSold || 0),
         totalCost: acc.totalCost + (stock.totalCost || 0),
         realizedProfit: acc.realizedProfit + calculateProfit(stock),
       }),
-      { activeItems: 0, heldQty: 0, totalCost: 0, realizedProfit: 0 }
+      { activeItems: 0, heldQty: 0, soldQty: 0, totalCost: 0, realizedProfit: 0 }
     );
   }, [stocks]);
+
+  const quantityFlow = useMemo(() => {
+    const totalQty = summary.heldQty + summary.soldQty;
+    const heldPercent = totalQty > 0 ? (summary.heldQty / totalQty) * 100 : 0;
+    const soldPercent = totalQty > 0 ? Math.max(0, 100 - heldPercent) : 0;
+
+    return {
+      totalQty,
+      heldPercent: Number(heldPercent.toFixed(2)),
+      soldPercent: Number(soldPercent.toFixed(2)),
+      heldPercentLabel: `${heldPercent.toFixed(1)}%`,
+      heldQtyLabel: formatNumber(summary.heldQty, numberFormat),
+      soldQtyLabel: formatNumber(summary.soldQty, numberFormat),
+    };
+  }, [numberFormat, summary.heldQty, summary.soldQty]);
 
   const groupedStocks = useMemo(() => {
     const groups = new Map(categories.map(category => [category.id, []]));
@@ -171,7 +191,7 @@ export default function NonGEPage({
   }, [stocks, categories]);
 
   const categorySnapshot = useMemo(() => {
-    const rankedCategories = categories
+    return categories
       .map(category => {
         const categoryStocks = groupedStocks.get(category.id) || [];
         const totalCost = categoryStocks.reduce((sum, stock) => sum + (stock.totalCost || 0), 0);
@@ -186,7 +206,6 @@ export default function NonGEPage({
           itemCount: categoryStocks.length,
           totalCost,
           realizedProfit,
-          costShare,
           totalCostLabel: formatNumber(totalCost, numberFormat),
           heldQtyLabel: formatNumber(heldQty, numberFormat),
           soldQtyLabel: formatNumber(soldQty, numberFormat),
@@ -195,45 +214,8 @@ export default function NonGEPage({
         };
       })
       .filter(category => category.itemCount > 0)
-      .sort((a, b) => b.totalCost - a.totalCost);
-
-    const visibleCategories = rankedCategories.slice(0, 3).map((category, index) => ({
-      ...category,
-      colorClass: `is-snapshot-${index + 1}`,
-    }));
-
-    let offset = 0;
-    const visibleSegments = summary.totalCost > 0
-      ? visibleCategories
-          .filter(category => category.costShare > 0)
-          .map(category => {
-            const segment = {
-              id: category.id,
-              width: Number(category.costShare.toFixed(2)),
-              offset: Number(offset.toFixed(2)),
-              colorClass: category.colorClass,
-              label: `${category.name}: ${category.costShare.toFixed(1)}% of Non-GE cost`,
-            };
-            offset += category.costShare;
-            return segment;
-          })
-      : [];
-
-    const otherShare = summary.totalCost > 0 ? Math.max(0, 100 - offset) : 0;
-    const otherSegment = otherShare > 0.05
-      ? [{
-        id: 'other',
-        width: Number(otherShare.toFixed(2)),
-        offset: Number(offset.toFixed(2)),
-        colorClass: 'is-snapshot-other',
-        label: `Other categories: ${otherShare.toFixed(1)}% of Non-GE cost`,
-      }]
-      : [];
-
-    return {
-      categories: visibleCategories,
-      segments: [...visibleSegments, ...otherSegment],
-    };
+      .sort((a, b) => b.totalCost - a.totalCost)
+      .slice(0, 3);
   }, [categories, groupedStocks, numberFormat, summary.totalCost]);
 
   const toggleCategory = (categoryId) => {
@@ -374,8 +356,9 @@ export default function NonGEPage({
                 </button>
               </div>
             </div>
+            <NonGEQuantityFlow flow={quantityFlow} />
           </div>
-          <NonGECategorySnapshot categories={categorySnapshot.categories} segments={categorySnapshot.segments} />
+          <NonGECategorySnapshot categories={categorySnapshot} />
         </div>
       </section>
 
