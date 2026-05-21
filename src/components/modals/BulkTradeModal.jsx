@@ -19,7 +19,7 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
   const groupedStocks = useGroupedStocks(
     stocks,
     categories,
-    tradeMode,
+    tradeMode === 'all' ? 'all' : tradeMode,
     isBuy ? undefined : { requireShares: true }
   );
 
@@ -263,7 +263,7 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
           <div className="bulk-trade-item-list">
             {filteredGroups.map(group => (
               <React.Fragment key={group.name}>
-                <div className="bulk-trade-category-label">{group.name}</div>
+                <div className="bulk-trade-category-label">{group.label || group.name}</div>
                 {group.stocks.map(stock => {
                   const isSelected = !!selectedItems[stock.id];
                   const iconUrl = stock.itemId ? geIconMap[stock.itemId] : null;

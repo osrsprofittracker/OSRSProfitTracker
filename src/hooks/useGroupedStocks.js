@@ -6,18 +6,68 @@ import { useMemo } from 'react';
  *
  * @param {Stock[]} stocks
  * @param {Category[]} categories
- * @param {'trade'|'investment'} tradeMode
+ * @param {'trade'|'investment'|'all'} tradeMode
  * @param {{ requireShares?: boolean }} options
  */
 export function useGroupedStocks(stocks, categories = [], tradeMode = 'trade', { requireShares = false } = {}) {
   return useMemo(() => {
+    const matchesMode = (item) => {
+      if (tradeMode === 'all') return true;
+      return tradeMode === 'investment' ? item.isInvestment : !item.isInvestment;
+    };
+
+    if (tradeMode === 'all') {
+      const filteredCats = categories.filter(matchesMode);
+      const filtered = stocks.filter(s => matchesMode(s) && (!requireShares || s.shares > 0));
+      const groups = [];
+
+      for (const cat of filteredCats) {
+        if (cat.name === 'Uncategorized') continue;
+
+        const catStocks = filtered.filter(s =>
+          s.category === cat.name && Boolean(s.isInvestment) === Boolean(cat.isInvestment)
+        );
+
+        if (catStocks.length > 0) {
+          const modeLabel = cat.isInvestment ? 'Investments' : 'Trading';
+          groups.push({
+            name: `${modeLabel}:${cat.name}`,
+            label: `${modeLabel} / ${cat.name}`,
+            stocks: catStocks,
+          });
+        }
+      }
+
+      for (const isInvestment of [false, true]) {
+        const modeLabel = isInvestment ? 'Investments' : 'Trading';
+        const catNames = filteredCats
+          .filter(c => Boolean(c.isInvestment) === isInvestment)
+          .map(c => c.name);
+
+        const uncategorized = filtered.filter(s =>
+          Boolean(s.isInvestment) === isInvestment &&
+          (s.category === 'Uncategorized' || !s.category || !catNames.includes(s.category))
+        );
+
+        if (uncategorized.length > 0) {
+          groups.push({
+            name: `${modeLabel}:Uncategorized`,
+            label: `${modeLabel} / Uncategorized`,
+            stocks: uncategorized,
+          });
+        }
+      }
+
+      return groups;
+    }
+
     const filteredCats = categories.filter(c =>
-      tradeMode === 'investment' ? c.isInvestment : !c.isInvestment
+      matchesMode(c)
     );
     const catNames = filteredCats.map(c => c.name);
 
     const filtered = stocks.filter(s => {
-      const modeMatch = tradeMode === 'investment' ? s.isInvestment : !s.isInvestment;
+      const modeMatch = matchesMode(s);
       return modeMatch && (!requireShares || s.shares > 0);
     });
 
