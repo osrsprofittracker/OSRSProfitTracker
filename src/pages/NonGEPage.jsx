@@ -33,10 +33,16 @@ function NonGECategorySnapshot({ categories }) {
               <div className="non-ge-category-snapshot-main">
                 <span className="non-ge-category-snapshot-name">{category.name}</span>
                 <span className="non-ge-category-snapshot-meta">
-                  {category.itemCount} item{category.itemCount === 1 ? '' : 's'} / {category.heldQtyLabel} held
+                  {category.itemCount} item{category.itemCount === 1 ? '' : 's'} / {category.heldQtyLabel} held / {category.soldQtyLabel} sold
                 </span>
               </div>
-              <span className="non-ge-category-snapshot-value">{category.totalCostLabel}</span>
+              <div className="non-ge-category-snapshot-values">
+                <span className="non-ge-category-snapshot-value">{category.totalCostLabel}</span>
+                <span className={`non-ge-category-snapshot-profit ${category.realizedProfit >= 0 ? 'positive' : 'negative'}`}>
+                  {category.realizedProfitLabel}
+                </span>
+                <span className="non-ge-category-snapshot-share">{category.costShareLabel}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -106,20 +112,27 @@ export default function NonGEPage({
         const categoryStocks = groupedStocks.get(category.id) || [];
         const totalCost = categoryStocks.reduce((sum, stock) => sum + (stock.totalCost || 0), 0);
         const heldQty = categoryStocks.reduce((sum, stock) => sum + (stock.shares || 0), 0);
+        const soldQty = categoryStocks.reduce((sum, stock) => sum + (stock.sharesSold || 0), 0);
+        const realizedProfit = categoryStocks.reduce((sum, stock) => sum + calculateProfit(stock), 0);
+        const costShare = summary.totalCost > 0 ? (totalCost / summary.totalCost) * 100 : 0;
 
         return {
           id: category.id,
           name: category.name,
           itemCount: categoryStocks.length,
           totalCost,
+          realizedProfit,
           totalCostLabel: formatNumber(totalCost, numberFormat),
           heldQtyLabel: formatNumber(heldQty, numberFormat),
+          soldQtyLabel: formatNumber(soldQty, numberFormat),
+          realizedProfitLabel: `${realizedProfit >= 0 ? '+' : ''}${formatNumber(realizedProfit, numberFormat)}`,
+          costShareLabel: `${costShare.toFixed(1)}% of cost`,
         };
       })
       .filter(category => category.itemCount > 0)
       .sort((a, b) => b.totalCost - a.totalCost)
       .slice(0, 3);
-  }, [categories, groupedStocks, numberFormat]);
+  }, [categories, groupedStocks, numberFormat, summary.totalCost]);
 
   const toggleCategory = (categoryId) => {
     setCollapsedCategories(prev => ({ ...prev, [categoryId]: !prev[categoryId] }));

@@ -3,7 +3,7 @@
 }
 
 .non-ge-status-companion-row {
-  grid-template-columns: minmax(28rem, 1.4fr) minmax(20rem, 0.9fr);
+  grid-template-columns: minmax(27rem, 0.9fr) minmax(34rem, 1.65fr);
 }
 
 .non-ge-category-snapshot {
@@ -50,11 +50,40 @@
   white-space: nowrap;
 }
 
-.non-ge-category-snapshot-value {
+.non-ge-category-snapshot-values {
   flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(5.5rem, auto) minmax(5.5rem, auto) minmax(5.5rem, auto);
+  gap: 0.65rem;
+  align-items: center;
+  text-align: right;
+}
+
+.non-ge-category-snapshot-value {
   color: rgb(147, 197, 253);
   font-size: 0.82rem;
   font-weight: 800;
+  white-space: nowrap;
+}
+
+.non-ge-category-snapshot-profit {
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.non-ge-category-snapshot-profit.positive {
+  color: rgb(52, 211, 153);
+}
+
+.non-ge-category-snapshot-profit.negative {
+  color: rgb(248, 113, 113);
+}
+
+.non-ge-category-snapshot-share {
+  color: rgb(148, 163, 184);
+  font-size: 0.74rem;
+  font-weight: 700;
   white-space: nowrap;
 }
 
