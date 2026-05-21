@@ -20,6 +20,33 @@ function NonGEStatusItem({ icon: Icon, label, value, valueClass = '' }) {
   );
 }
 
+function NonGECategorySnapshot({ categories }) {
+  return (
+    <div className="trade-quick-actions non-ge-category-snapshot" aria-label="Non-GE category snapshot">
+      <div className="trade-quick-actions-header">
+        <span className="trade-quick-actions-title">Category Snapshot</span>
+      </div>
+      {categories.length > 0 ? (
+        <div className="non-ge-category-snapshot-list">
+          {categories.map(category => (
+            <div key={category.id} className="non-ge-category-snapshot-row">
+              <div className="non-ge-category-snapshot-main">
+                <span className="non-ge-category-snapshot-name">{category.name}</span>
+                <span className="non-ge-category-snapshot-meta">
+                  {category.itemCount} item{category.itemCount === 1 ? '' : 's'} / {category.heldQtyLabel} held
+                </span>
+              </div>
+              <span className="non-ge-category-snapshot-value">{category.totalCostLabel}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="non-ge-category-snapshot-empty">No category data yet</div>
+      )}
+    </div>
+  );
+}
+
 export default function NonGEPage({
   stocks,
   categories,
@@ -72,6 +99,27 @@ export default function NonGEPage({
 
     return groups;
   }, [stocks, categories]);
+
+  const categorySnapshot = useMemo(() => {
+    return categories
+      .map(category => {
+        const categoryStocks = groupedStocks.get(category.id) || [];
+        const totalCost = categoryStocks.reduce((sum, stock) => sum + (stock.totalCost || 0), 0);
+        const heldQty = categoryStocks.reduce((sum, stock) => sum + (stock.shares || 0), 0);
+
+        return {
+          id: category.id,
+          name: category.name,
+          itemCount: categoryStocks.length,
+          totalCost,
+          totalCostLabel: formatNumber(totalCost, numberFormat),
+          heldQtyLabel: formatNumber(heldQty, numberFormat),
+        };
+      })
+      .filter(category => category.itemCount > 0)
+      .sort((a, b) => b.totalCost - a.totalCost)
+      .slice(0, 3);
+  }, [categories, groupedStocks, numberFormat]);
 
   const toggleCategory = (categoryId) => {
     setCollapsedCategories(prev => ({ ...prev, [categoryId]: !prev[categoryId] }));
@@ -212,6 +260,7 @@ export default function NonGEPage({
               </div>
             </div>
           </div>
+          <NonGECategorySnapshot categories={categorySnapshot} />
         </div>
       </section>
 
