@@ -28,12 +28,36 @@ function NonGECategorySnapshot({ categories }) {
       </div>
       {categories.length > 0 ? (
         <div className="non-ge-category-snapshot-list">
-          <div className="non-ge-category-snapshot-heading" aria-hidden="true">
-            <span>Category</span>
+          <div className="non-ge-category-snapshot-heading">
+            <span
+              className="non-ge-category-snapshot-tooltip"
+              data-tooltip="Category name and item, held, and sold counts."
+              tabIndex={0}
+            >
+              Category
+            </span>
             <div className="non-ge-category-snapshot-heading-values">
-              <span>Cost</span>
-              <span>Profit</span>
-              <span>Share</span>
+              <span
+                className="non-ge-category-snapshot-tooltip"
+                data-tooltip="Current total cost basis for held items in this category."
+                tabIndex={0}
+              >
+                Cost
+              </span>
+              <span
+                className="non-ge-category-snapshot-tooltip"
+                data-tooltip="All-time realized profit from sold items in this category."
+                tabIndex={0}
+              >
+                Profit
+              </span>
+              <span
+                className="non-ge-category-snapshot-tooltip"
+                data-tooltip="This category's percentage of total Non-GE cost."
+                tabIndex={0}
+              >
+                Share
+              </span>
             </div>
           </div>
           {categories.map(category => (
