@@ -2,6 +2,10 @@
   padding-bottom: 2rem;
 }
 
+.non-ge-status-companion-row {
+  grid-template-columns: 1fr;
+}
+
 .non-ge-page .btn:hover,
 .non-ge-modal .btn:hover {
   transform: none;

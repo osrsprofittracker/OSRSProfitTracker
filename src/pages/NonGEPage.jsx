@@ -1,15 +1,21 @@
 import React, { useMemo, useState } from 'react';
-import { Archive, Boxes, FolderPlus, PackagePlus, Plus, ShoppingCart, TrendingDown } from 'lucide-react';
+import { Archive, Boxes, FolderPlus, Package, PackagePlus, Plus, ShoppingCart, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import NonGECategorySection from '../components/non-ge/NonGECategorySection';
 import { calculateProfit } from '../utils/calculations';
 import { formatNumber } from '../utils/formatters';
+import '../styles/trade-status-strip.css';
 import '../styles/non-ge-page.css';
 
-function SummaryCard({ label, value }) {
+function NonGEStatusItem({ icon: Icon, label, value, valueClass = '' }) {
   return (
-    <div className="non-ge-summary-card">
-      <div className="non-ge-summary-label">{label}</div>
-      <div className="non-ge-summary-value">{value}</div>
+    <div className="trade-status-item">
+      <div className="trade-status-icon">
+        <Icon size={16} />
+      </div>
+      <div className="trade-status-copy">
+        <span className="trade-status-label">{label}</span>
+        <span className={`trade-status-value ${valueClass}`}>{value}</span>
+      </div>
     </div>
   );
 }
@@ -119,48 +125,95 @@ export default function NonGEPage({
 
   return (
     <div className="non-ge-page">
-      <div className="non-ge-page-header">
-        <div>
-          <h1 className="non-ge-page-title">Non-GE Tracker</h1>
-          <p className="non-ge-page-subtitle">Track fixed catalog and private collector items outside Grand Exchange pricing.</p>
+      <section className="trade-status-overview" aria-label="Non-GE overview">
+        <div className="trade-status-strip">
+          <NonGEStatusItem
+            icon={Package}
+            label="Active Items"
+            value={formatNumber(summary.activeItems, 'full')}
+          />
+          <NonGEStatusItem
+            icon={Boxes}
+            label="Held Qty"
+            value={formatNumber(summary.heldQty, numberFormat)}
+          />
+          <NonGEStatusItem
+            icon={Wallet}
+            label="Total Cost"
+            value={formatNumber(summary.totalCost, numberFormat)}
+          />
+          <NonGEStatusItem
+            icon={TrendingUp}
+            label="Realized Profit"
+            value={`${summary.realizedProfit >= 0 ? '+' : ''}${formatNumber(summary.realizedProfit, numberFormat)}`}
+            valueClass={summary.realizedProfit >= 0 ? 'positive' : 'negative'}
+          />
         </div>
-        <div className="non-ge-page-actions">
-          <button type="button" className="btn btn-primary" onClick={onAddCategory}>
-            <FolderPlus size={16} />
-            Add Category
-          </button>
-          <button type="button" className="btn btn-success" onClick={() => onAddItem()}>
-            <Plus size={16} />
-            Add Item
-          </button>
-          <button type="button" className="btn btn-primary" onClick={onBulkAdd}>
-            <PackagePlus size={16} />
-            Bulk Add
-          </button>
-          <button type="button" className="btn btn-success" onClick={onBulkBuy}>
-            <ShoppingCart size={16} />
-            Bulk Buy
-          </button>
-          <button type="button" className="btn btn-sell" onClick={onBulkSell}>
-            <TrendingDown size={16} />
-            Bulk Sell
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={onArchiveOpen}>
-            <Archive size={16} />
-            Archive
-          </button>
-        </div>
-      </div>
 
-      <div className="non-ge-summary-grid">
-        <SummaryCard label="Active Items" value={formatNumber(summary.activeItems, 'full')} />
-        <SummaryCard label="Held Qty" value={formatNumber(summary.heldQty, numberFormat)} />
-        <SummaryCard label="Total Cost" value={formatNumber(summary.totalCost, numberFormat)} />
-        <SummaryCard
-          label="Realized Profit"
-          value={`${summary.realizedProfit >= 0 ? '+' : ''}${formatNumber(summary.realizedProfit, numberFormat)}`}
-        />
-      </div>
+        <div className="trade-status-companion-row non-ge-status-companion-row">
+          <div className="trade-quick-actions" aria-label="Non-GE quick actions">
+            <div className="trade-quick-actions-header">
+              <span className="trade-quick-actions-title">Quick Actions</span>
+            </div>
+            <div className="trade-quick-actions-grid">
+              <div className="trade-quick-action-group">
+                <button
+                  type="button"
+                  className="trade-quick-action-btn is-category"
+                  onClick={onAddCategory}
+                >
+                  <FolderPlus size={14} />
+                  Add Category
+                </button>
+                <button
+                  type="button"
+                  className="trade-quick-action-btn is-item"
+                  onClick={() => onAddItem()}
+                >
+                  <Plus size={14} />
+                  Add Item
+                </button>
+              </div>
+              <div className="trade-quick-action-group">
+                <button
+                  type="button"
+                  className="trade-quick-action-btn is-item"
+                  onClick={onBulkAdd}
+                >
+                  <PackagePlus size={14} />
+                  Bulk Add
+                </button>
+                <button
+                  type="button"
+                  className="trade-quick-action-btn is-success"
+                  onClick={onBulkBuy}
+                >
+                  <ShoppingCart size={14} />
+                  Bulk Buy
+                </button>
+                <button
+                  type="button"
+                  className="trade-quick-action-btn is-danger"
+                  onClick={onBulkSell}
+                >
+                  <TrendingDown size={14} />
+                  Bulk Sell
+                </button>
+              </div>
+              <div className="trade-quick-action-group trade-quick-action-group-archive">
+                <button
+                  type="button"
+                  className="trade-quick-action-btn"
+                  onClick={onArchiveOpen}
+                >
+                  <Archive size={14} />
+                  Archive
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {loading ? (
         <div className="non-ge-page-empty">Loading Non-GE items...</div>
