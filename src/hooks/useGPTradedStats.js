@@ -73,25 +73,6 @@ export function useGPTradedStats(userId) {
       return nextStats;
     };
 
-    const fetchAggregateTotal = async (startDate = null) => {
-      let query = supabase
-        .from('transactions')
-        .select('gp_traded:total.sum()')
-        .eq('user_id', userId);
-
-      if (startDate) {
-        query = query.gte('date', startDate);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        return null;
-      }
-
-      return Number(data?.[0]?.gp_traded) || 0;
-    };
-
     const fetchRowsSince = async (startDate = null) => {
       const rows = [];
       let from = 0;
@@ -131,26 +112,9 @@ export function useGPTradedStats(userId) {
       return buildStatsFromRows(allRows);
     };
 
-    const fetchStatsFromAggregates = async () => {
-      const [daily, weekly, monthly, yearly, total] = await Promise.all([
-        fetchAggregateTotal(dailyStart),
-        fetchAggregateTotal(weeklyStart),
-        fetchAggregateTotal(monthlyStart),
-        fetchAggregateTotal(yearlyStart),
-        fetchAggregateTotal()
-      ]);
-
-      if ([daily, weekly, monthly, yearly, total].some(value => value === null)) {
-        return null;
-      }
-
-      return { daily, weekly, monthly, yearly, total };
-    };
-
     try {
       setLoading(true);
-      const aggregateStats = await fetchStatsFromAggregates();
-      const nextStats = aggregateStats || await fetchStatsFromRows();
+      const nextStats = await fetchStatsFromRows();
       if (nextStats) {
         setStats(nextStats);
       }
