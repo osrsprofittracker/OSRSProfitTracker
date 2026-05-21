@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Archive, BarChart3, Eye, FolderPlus, LogOut, Package, PackagePlus } from 'lucide-react';
+import { Archive, BarChart3, Eye, FolderPlus, LogOut, Package, PackagePlus, ShoppingCart, TrendingDown } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
@@ -1646,6 +1646,24 @@ function MainAppInner({ session, onLogout }) {
                     >
                       <PackagePlus size={14} />
                       Add Item
+                    </button>
+                  </div>
+                  <div className="trade-quick-action-group">
+                    <button
+                      type="button"
+                      onClick={() => openModal('bulkBuy')}
+                      className="trade-quick-action-btn is-success"
+                    >
+                      <ShoppingCart size={14} />
+                      Bulk Buy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openModal('bulkSell')}
+                      className="trade-quick-action-btn is-danger"
+                    >
+                      <TrendingDown size={14} />
+                      Bulk Sell
                     </button>
                   </div>
                   <div className="trade-quick-action-group trade-quick-action-group-archive">
