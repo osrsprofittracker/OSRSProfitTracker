@@ -147,7 +147,7 @@ export default function ModalManager({
       <ModalContainer isOpen={modals.bulkBuy}>
         <BulkTradeModal
           mode="buy"
-          tradeMode="all"
+          tradeMode={tradeMode}
           onConfirm={handleBulkBuy}
           onCancel={() => closeModal('bulkBuy')}
           isSubmitting={isSubmitting}
@@ -157,7 +157,7 @@ export default function ModalManager({
       <ModalContainer isOpen={modals.bulkSell}>
         <BulkTradeModal
           mode="sell"
-          tradeMode="all"
+          tradeMode={tradeMode}
           onConfirm={handleBulkSell}
           onCancel={() => closeModal('bulkSell')}
           isSubmitting={isSubmitting}

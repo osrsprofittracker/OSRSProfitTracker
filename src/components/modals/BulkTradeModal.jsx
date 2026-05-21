@@ -19,8 +19,10 @@ export default function BulkTradeModal({ mode, tradeMode = 'trade', onConfirm, o
   const groupedStocks = useGroupedStocks(
     stocks,
     categories,
-    tradeMode === 'all' ? 'all' : tradeMode,
-    isBuy ? undefined : { requireShares: true }
+    'all',
+    isBuy
+      ? { preferredTradeMode: tradeMode }
+      : { requireShares: true, preferredTradeMode: tradeMode }
   );
 
   const filteredGroups = useMemo(() => {

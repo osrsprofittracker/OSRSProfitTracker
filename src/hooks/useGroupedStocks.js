@@ -7,9 +7,14 @@ import { useMemo } from 'react';
  * @param {Stock[]} stocks
  * @param {Category[]} categories
  * @param {'trade'|'investment'|'all'} tradeMode
- * @param {{ requireShares?: boolean }} options
+ * @param {{ requireShares?: boolean, preferredTradeMode?: 'trade'|'investment' }} options
  */
-export function useGroupedStocks(stocks, categories = [], tradeMode = 'trade', { requireShares = false } = {}) {
+export function useGroupedStocks(
+  stocks,
+  categories = [],
+  tradeMode = 'trade',
+  { requireShares = false, preferredTradeMode = 'trade' } = {}
+) {
   return useMemo(() => {
     const matchesMode = (item) => {
       if (tradeMode === 'all') return true;
@@ -20,26 +25,30 @@ export function useGroupedStocks(stocks, categories = [], tradeMode = 'trade', {
       const filteredCats = categories.filter(matchesMode);
       const filtered = stocks.filter(s => matchesMode(s) && (!requireShares || s.shares > 0));
       const groups = [];
+      const modeOrder = preferredTradeMode === 'investment'
+        ? [true, false]
+        : [false, true];
 
-      for (const cat of filteredCats) {
-        if (cat.name === 'Uncategorized') continue;
-
-        const catStocks = filtered.filter(s =>
-          s.category === cat.name && Boolean(s.isInvestment) === Boolean(cat.isInvestment)
+      for (const isInvestment of modeOrder) {
+        const modeLabel = isInvestment ? 'Investments' : 'Trading';
+        const modeCategories = filteredCats.filter(c =>
+          Boolean(c.isInvestment) === isInvestment && c.name !== 'Uncategorized'
         );
 
-        if (catStocks.length > 0) {
-          const modeLabel = cat.isInvestment ? 'Investments' : 'Trading';
-          groups.push({
-            name: `${modeLabel}:${cat.name}`,
-            label: `${modeLabel} / ${cat.name}`,
-            stocks: catStocks,
-          });
-        }
-      }
+        for (const cat of modeCategories) {
+          const catStocks = filtered.filter(s =>
+            s.category === cat.name && Boolean(s.isInvestment) === isInvestment
+          );
 
-      for (const isInvestment of [false, true]) {
-        const modeLabel = isInvestment ? 'Investments' : 'Trading';
+          if (catStocks.length > 0) {
+            groups.push({
+              name: `${modeLabel}:${cat.name}`,
+              label: `${modeLabel} / ${cat.name}`,
+              stocks: catStocks,
+            });
+          }
+        }
+
         const catNames = filteredCats
           .filter(c => Boolean(c.isInvestment) === isInvestment)
           .map(c => c.name);
@@ -87,5 +96,5 @@ export function useGroupedStocks(stocks, categories = [], tradeMode = 'trade', {
     }
 
     return groups;
-  }, [stocks, categories, tradeMode, requireShares]);
+  }, [stocks, categories, tradeMode, requireShares, preferredTradeMode]);
 }

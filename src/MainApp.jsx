@@ -1013,8 +1013,9 @@ function MainAppInner({ session, onLogout }) {
 
     try {
       // Get the target position
+      const isInvestmentMode = tradeMode === 'investment';
       const filteredForMode = categories.filter(c =>
-        c.name === 'Uncategorized' || (tradeMode === 'investment' ? c.isInvestment : !c.isInvestment)
+        Boolean(c.isInvestment) === isInvestmentMode
       );
       const targetIndex = filteredForMode.findIndex(c => c.name === targetCategory);
 
@@ -1052,6 +1053,7 @@ function MainAppInner({ session, onLogout }) {
     e.preventDefault();
     const draggedStockId = parseInt(e.dataTransfer.getData('stockId'));
     const sourceCategory = e.dataTransfer.getData('sourceCategory');
+    const isInvestmentMode = tradeMode === 'investment';
 
     // If targetStockId is null/undefined, we're dropping on category header
     if (!targetStockId || draggedStockId === targetStockId) {
@@ -1060,7 +1062,9 @@ function MainAppInner({ session, onLogout }) {
         try {
           const draggedStock = stocks.find(s => s.id === draggedStockId);
           if (draggedStock) {
-            const targetCategoryStocks = stocks.filter(s => s.category === targetCategory);
+            const targetCategoryStocks = stocks.filter(s =>
+              s.category === targetCategory && Boolean(s.isInvestment) === isInvestmentMode
+            );
             const newPosition = targetCategoryStocks.length;
 
             await updateStock(draggedStockId, {
@@ -1083,7 +1087,9 @@ function MainAppInner({ session, onLogout }) {
       if (sourceCategory !== targetCategory) {
         // Move to different category - need to set proper position
         const draggedStock = stocks.find(s => s.id === draggedStockId);
-        const targetCategoryStocks = stocks.filter(s => s.category === targetCategory);
+        const targetCategoryStocks = stocks.filter(s =>
+          s.category === targetCategory && Boolean(s.isInvestment) === isInvestmentMode
+        );
         const targetStockIndex = targetCategoryStocks.findIndex(s => s.id === targetStockId);
 
         if (draggedStock) {
@@ -1117,7 +1123,8 @@ function MainAppInner({ session, onLogout }) {
             limit4h: stock.id === draggedStockId ? draggedStock.limit4h : stock.limit4h,
             needed: stock.id === draggedStockId ? draggedStock.needed : stock.needed,
             timer_end_time: stock.id === draggedStockId ? draggedStock.timerEndTime : stock.timerEndTime,
-            category: targetCategory
+            category: targetCategory,
+            is_investment: isInvestmentMode
           }));
 
           await supabase
@@ -1129,7 +1136,7 @@ function MainAppInner({ session, onLogout }) {
         }
       } else {
         // Reorder within same category
-        await reorderStocks(draggedStockId, targetStockId, targetCategory);
+        await reorderStocks(draggedStockId, targetStockId, targetCategory, isInvestmentMode);
         await refetch();
         highlightRow(draggedStockId);
       }
