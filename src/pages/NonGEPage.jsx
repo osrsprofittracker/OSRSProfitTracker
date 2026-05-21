@@ -28,6 +28,14 @@ function NonGECategorySnapshot({ categories }) {
       </div>
       {categories.length > 0 ? (
         <div className="non-ge-category-snapshot-list">
+          <div className="non-ge-category-snapshot-heading" aria-hidden="true">
+            <span>Category</span>
+            <div className="non-ge-category-snapshot-heading-values">
+              <span>Cost</span>
+              <span>Profit</span>
+              <span>Share</span>
+            </div>
+          </div>
           {categories.map(category => (
             <div key={category.id} className="non-ge-category-snapshot-row">
               <div className="non-ge-category-snapshot-main">
