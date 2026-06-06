@@ -1,5 +1,20 @@
-import React, { useMemo } from 'react';
-import { Edit3, Trash2, GripVertical, Star, Bell, BellRing, PackageOpen } from 'lucide-react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import {
+  Archive,
+  Bell,
+  BellRing,
+  Calculator,
+  CircleDollarSign,
+  GripVertical,
+  MinusCircle,
+  MoreHorizontal,
+  PackageOpen,
+  Pencil,
+  ShoppingCart,
+  Star,
+  StickyNote,
+  Trash2,
+} from 'lucide-react';
 import { formatNumber, formatTimer, formatAvgPrice } from '../utils/formatters';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../utils/calculations';
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
@@ -25,6 +40,10 @@ function investmentAge(dateStr) {
   if (months > 0) parts.push(`${months}mo`);
   if (days > 0) parts.push(`${days}d`);
   return parts.length ? parts.join(' ') : 'Today';
+}
+
+function isInteractiveTarget(target) {
+  return Boolean(target.closest('button, input, textarea, select, a, summary, details'));
 }
 
 export default function StockTable({
@@ -57,10 +76,44 @@ export default function StockTable({
   onMoveToNonGE,
 }) {
   const { gePrices: geData, geIconMap, membershipMap } = useGEData();
+  const hoveredStockRef = useRef(null);
   const sortedStocks = useMemo(
     () => sortStocks(stocks, sortConfig),
     [stocks, sortConfig]
   );
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.target instanceof Element && isInteractiveTarget(event.target)) return;
+
+      const stock = hoveredStockRef.current;
+      if (!stock) return;
+
+      const key = event.key.toLowerCase();
+      if (key === 'b') {
+        event.preventDefault();
+        hoveredStockRef.current = null;
+        onBuy(stock);
+      } else if (key === 's') {
+        event.preventDefault();
+        hoveredStockRef.current = null;
+        onSell(stock);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onBuy, onSell]);
+
+  const handleRowHoverStart = (stock) => {
+    hoveredStockRef.current = stock;
+  };
+
+  const handleRowHoverEnd = (stockId) => {
+    if (hoveredStockRef.current?.id === stockId) {
+      hoveredStockRef.current = null;
+    }
+  };
 
   return (
     <div className="table-container">
@@ -104,6 +157,8 @@ export default function StockTable({
               priceAlerts={priceAlerts}
               onViewGraph={onViewGraph}
               onMoveToNonGE={onMoveToNonGE}
+              onHoverStart={handleRowHoverStart}
+              onHoverEnd={handleRowHoverEnd}
             />
           ))}
         </tbody>
@@ -129,8 +184,7 @@ function TableHeader({ sortConfig, onSort, visibleColumns, showInvestmentDate })
     { label: 'GE Low', key: null, visible: visibleColumns.geLow, tooltip: 'Live GE lowest sell price' },
     { label: 'Unreal. Profit', key: null, visible: visibleColumns.unrealizedProfit, tooltip: 'Estimated profit if sold at GE high (after 2% tax)' },
     { label: 'Start Date', key: null, visible: showInvestmentDate, tooltip: 'Date this investment was started' },
-    { label: 'Notes', key: null, visible: visibleColumns.notes, tooltip: 'Your notes for this item' },
-    { label: 'Actions', key: null, visible: true, tooltip: 'Buy, sell, adjust, calculate, archive, or delete' }
+    { label: 'Actions', key: null, visible: true, tooltip: 'Buy, sell, and more item actions' }
   ];
 
   return (
@@ -190,18 +244,45 @@ function StockRow({
   priceAlerts = {},
   onViewGraph,
   onMoveToNonGE,
+  onHoverStart,
+  onHoverEnd,
 }) {
   const avgBuy = calculateAvgBuyPrice(stock);
   const avgSell = calculateAvgSellPrice(stock);
   const profit = calculateProfit(stock);
   const timerDisplay = formatTimer(stock.timerEndTime);
   const isTimerActive = stock.timerEndTime && stock.timerEndTime > Date.now();
+  const handleRowClick = (event) => {
+    if (!isInteractiveTarget(event.target)) {
+      event.currentTarget.focus();
+    }
+  };
+  const handleRowKeyDown = (event) => {
+    if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isInteractiveTarget(event.target)) return;
+
+    const key = event.key.toLowerCase();
+    if (key === 'b') {
+      event.preventDefault();
+      event.stopPropagation();
+      onBuy(stock);
+    } else if (key === 's') {
+      event.preventDefault();
+      event.stopPropagation();
+      onSell(stock);
+    }
+  };
 
   return (
     <tr
       data-stock-id={stock.id}
       className={`tr-base ${isHighlighted ? 'tr-highlighted' : (index % 2 ? 'tr-even' : 'tr-odd')}`}
+      tabIndex={0}
+      aria-keyshortcuts="B S"
       draggable
+      onClick={handleRowClick}
+      onKeyDown={handleRowKeyDown}
+      onMouseEnter={() => onHoverStart(stock)}
+      onMouseLeave={() => onHoverEnd(stock.id)}
       onDragStart={(e) => onDragStart(e, stock.id, category)}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, stock.id, category)}
@@ -210,7 +291,7 @@ function StockRow({
         <GripVertical size={16} style={{ color: 'rgb(107, 114, 128)', margin: '0 auto' }} />
       </td>
       <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600', color: 'white', border: '1px solid rgb(51, 65, 85)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <div className="stock-name-cell">
           {stock.itemId && (
             <ItemIcon
               src={geIconMap[stock.itemId]}
@@ -236,17 +317,29 @@ function StockRow({
               {stock.name}
             </span>
           ) : (
-            stock.name
+            <span className="stock-name-text">{stock.name}</span>
           )}
-          {stock.itemId && onPriceAlert && (
-            <button
-              className={`stock-name-bell ${priceAlerts[stock.itemId]?.isActive ? 'stock-name-bell-active' : ''}`}
-              onClick={(e) => { e.stopPropagation(); onPriceAlert(stock); }}
-              title={priceAlerts[stock.itemId]?.isActive ? 'Edit price alert' : 'Set price alert'}
-            >
-              {priceAlerts[stock.itemId]?.isActive ? <BellRing size={12} /> : <Bell size={12} />}
-            </button>
-          )}
+          <div className="stock-name-actions">
+            {stock.itemId && onPriceAlert && (
+              <button
+                className={`stock-name-bell ${priceAlerts[stock.itemId]?.isActive ? 'stock-name-bell-active' : ''}`}
+                onClick={(e) => { e.stopPropagation(); onPriceAlert(stock); }}
+                title={priceAlerts[stock.itemId]?.isActive ? 'Edit price alert' : 'Set price alert'}
+              >
+                {priceAlerts[stock.itemId]?.isActive ? <BellRing size={12} /> : <Bell size={12} />}
+              </button>
+            )}
+            {visibleColumns.notes && (
+              <button
+                className={`stock-name-notes ${stockNotes[stock.id] ? 'stock-name-notes-active' : ''}`}
+                onClick={(e) => { e.stopPropagation(); onNotes(stock); }}
+                title={stockNotes[stock.id] ? 'Edit notes' : 'Add notes'}
+                aria-label={stockNotes[stock.id] ? `Edit notes for ${stock.name}` : `Add notes for ${stock.name}`}
+              >
+                <StickyNote size={12} />
+              </button>
+            )}
+          </div>
         </div>
       </td>
       {visibleColumns.status && (
@@ -330,16 +423,6 @@ function StockRow({
           </div>
         </td>
       )}
-      {visibleColumns.notes && (
-        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
-          <button
-            onClick={() => onNotes(stock)}
-            className={`btn btn-sm ${stockNotes[stock.id] ? 'btn-purple' : 'btn-secondary'}`}
-          >
-            {stockNotes[stock.id] ? '📝 Edit' : '➕ Add'}
-          </button>
-        </td>
-      )}
       <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center', border: '1px solid rgb(51, 65, 85)' }}>
         <ActionButtons
           stock={stock}
@@ -392,35 +475,54 @@ function StatusBadge({ stock }) {
 }
 
 function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onCalculate, onArchive, onMoveToNonGE }) {
+  const handleMenuAction = (event, action) => {
+    event.currentTarget.closest('details')?.removeAttribute('open');
+    action(stock);
+  };
+
   return (
-    <div className="action-buttons">
-      <button className="btn btn-success btn-sm" onClick={() => onBuy(stock)}>
+    <div className="action-buttons row-action-buttons">
+      <button type="button" className="btn btn-success btn-sm" onClick={() => onBuy(stock)} title="Buy">
+        <ShoppingCart size={12} />
         Buy
       </button>
-      <button className="btn btn-sell btn-sm" onClick={() => onSell(stock)}>
+      <button type="button" className="btn btn-sell btn-sm" onClick={() => onSell(stock)} title="Sell">
+        <CircleDollarSign size={12} />
         Sell
       </button>
-      <button className="btn btn-remove btn-sm" onClick={() => onRemove(stock)}>
-        Remove
-      </button>
-      <button className="btn btn-blue btn-sm" onClick={() => onCalculate(stock)}>
-        ⏱️ Calc
-      </button>
-      <button className="btn btn-warning btn-sm" onClick={() => onAdjust(stock)}>
-        Adjust
-      </button>
-      <button className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)} title="Archive">
-        📦 Archive
-      </button>
-      {onMoveToNonGE && (
-        <button className="btn btn-secondary btn-sm" onClick={() => onMoveToNonGE(stock)} title="Move to Non-GE">
-          <PackageOpen size={12} />
-          Non-GE
-        </button>
-      )}
-      <button className="btn btn-danger btn-sm" onClick={() => onDelete(stock)}>
-        <Trash2 size={12} />
-      </button>
+      <details className="row-action-menu">
+        <summary className="row-action-menu-trigger" title="More actions" aria-label="More actions">
+          <MoreHorizontal size={16} aria-hidden="true" />
+        </summary>
+        <div className="row-action-menu-list">
+          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onRemove)}>
+            <MinusCircle size={14} />
+            Remove
+          </button>
+          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onCalculate)}>
+            <Calculator size={14} />
+            Calc
+          </button>
+          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onAdjust)}>
+            <Pencil size={14} />
+            Adjust
+          </button>
+          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onArchive)}>
+            <Archive size={14} />
+            Archive
+          </button>
+          {onMoveToNonGE && (
+            <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onMoveToNonGE)}>
+              <PackageOpen size={14} />
+              Move to Non-GE
+            </button>
+          )}
+          <button type="button" className="row-action-menu-item row-action-menu-item--danger" onClick={(event) => handleMenuAction(event, onDelete)}>
+            <Trash2 size={14} />
+            Delete
+          </button>
+        </div>
+      </details>
     </div>
   );
 }

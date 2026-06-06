@@ -27294,6 +27294,104 @@
     "bytes": 297,
     "updatedAt": "2026-05-20T20:19:02.044Z"
   },
+  "31918": {
+    "path": "/icons/ge/31918.png",
+    "sourceIcon": "Bronze chainshot cannonball.png",
+    "mirrorIcon": "Bronze chainshot cannonball.png",
+    "bytes": 557,
+    "updatedAt": "2026-05-25T14:10:41.909Z"
+  },
+  "31920": {
+    "path": "/icons/ge/31920.png",
+    "sourceIcon": "Iron chainshot cannonball.png",
+    "mirrorIcon": "Iron chainshot cannonball.png",
+    "bytes": 525,
+    "updatedAt": "2026-05-25T14:10:42.370Z"
+  },
+  "31922": {
+    "path": "/icons/ge/31922.png",
+    "sourceIcon": "Steel chainshot cannonball.png",
+    "mirrorIcon": "Steel chainshot cannonball.png",
+    "bytes": 629,
+    "updatedAt": "2026-05-25T14:10:42.794Z"
+  },
+  "31924": {
+    "path": "/icons/ge/31924.png",
+    "sourceIcon": "Mithril chainshot cannonball.png",
+    "mirrorIcon": "Mithril chainshot cannonball.png",
+    "bytes": 627,
+    "updatedAt": "2026-05-25T14:10:43.217Z"
+  },
+  "31926": {
+    "path": "/icons/ge/31926.png",
+    "sourceIcon": "Adamant chainshot cannonball.png",
+    "mirrorIcon": "Adamant chainshot cannonball.png",
+    "bytes": 608,
+    "updatedAt": "2026-05-25T14:10:43.640Z"
+  },
+  "31928": {
+    "path": "/icons/ge/31928.png",
+    "sourceIcon": "Rune chainshot cannonball.png",
+    "mirrorIcon": "Rune chainshot cannonball.png",
+    "bytes": 670,
+    "updatedAt": "2026-05-25T14:10:44.061Z"
+  },
+  "31930": {
+    "path": "/icons/ge/31930.png",
+    "sourceIcon": "Dragon chainshot cannonball.png",
+    "mirrorIcon": "Dragon chainshot cannonball.png",
+    "bytes": 557,
+    "updatedAt": "2026-05-25T14:10:44.489Z"
+  },
+  "31932": {
+    "path": "/icons/ge/31932.png",
+    "sourceIcon": "Bronze incendiary cannonball.png",
+    "mirrorIcon": "Bronze incendiary cannonball.png",
+    "bytes": 631,
+    "updatedAt": "2026-05-25T14:10:44.901Z"
+  },
+  "31934": {
+    "path": "/icons/ge/31934.png",
+    "sourceIcon": "Iron incendiary cannonball.png",
+    "mirrorIcon": "Iron incendiary cannonball.png",
+    "bytes": 673,
+    "updatedAt": "2026-05-25T14:10:45.324Z"
+  },
+  "31936": {
+    "path": "/icons/ge/31936.png",
+    "sourceIcon": "Steel incendiary cannonball.png",
+    "mirrorIcon": "Steel incendiary cannonball.png",
+    "bytes": 767,
+    "updatedAt": "2026-05-25T14:10:45.756Z"
+  },
+  "31938": {
+    "path": "/icons/ge/31938.png",
+    "sourceIcon": "Mithril incendiary cannonball.png",
+    "mirrorIcon": "Mithril incendiary cannonball.png",
+    "bytes": 677,
+    "updatedAt": "2026-05-25T14:10:46.188Z"
+  },
+  "31940": {
+    "path": "/icons/ge/31940.png",
+    "sourceIcon": "Adamant incendiary cannonball.png",
+    "mirrorIcon": "Adamant incendiary cannonball.png",
+    "bytes": 673,
+    "updatedAt": "2026-05-25T14:10:46.628Z"
+  },
+  "31942": {
+    "path": "/icons/ge/31942.png",
+    "sourceIcon": "Rune incendiary cannonball.png",
+    "mirrorIcon": "Rune incendiary cannonball.png",
+    "bytes": 729,
+    "updatedAt": "2026-05-25T14:10:47.057Z"
+  },
+  "31944": {
+    "path": "/icons/ge/31944.png",
+    "sourceIcon": "Dragon incendiary cannonball.png",
+    "mirrorIcon": "Dragon incendiary cannonball.png",
+    "bytes": 625,
+    "updatedAt": "2026-05-25T14:10:47.483Z"
+  },
   "31946": {
     "path": "/icons/ge/31946.png",
     "sourceIcon": "Echo pearl.png",
