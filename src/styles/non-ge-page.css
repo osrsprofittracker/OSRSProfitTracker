@@ -408,12 +408,8 @@
   width: 4.25rem;
 }
 
-.non-ge-col-notes {
-  width: 5.75rem;
-}
-
 .non-ge-col-actions {
-  width: 25.5rem;
+  width: 12rem;
 }
 
 .non-ge-table-th {
@@ -495,12 +491,8 @@
   white-space: nowrap;
 }
 
-.non-ge-notes-btn {
-  margin: 0 auto;
-}
-
 .non-ge-actions-cell {
-  min-width: 25.5rem;
+  min-width: 12rem;
 }
 
 .non-ge-action-buttons {

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Archive, ArrowDown, ArrowUp, CircleDollarSign, GripVertical, MinusCircle, Pencil, ShoppingCart, StickyNote, Trash2 } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, CircleDollarSign, GripVertical, MinusCircle, MoreHorizontal, Pencil, ShoppingCart, StickyNote, Trash2 } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../../utils/calculations';
 import { formatAvgPrice, formatNumber } from '../../utils/formatters';
@@ -83,6 +83,11 @@ function NumberCell({ value, numberFormat, className = '' }) {
   );
 }
 
+function closeMenuAndRun(event, action, stock) {
+  event.currentTarget.closest('details')?.removeAttribute('open');
+  action(stock);
+}
+
 export default function NonGETable({
   stocks,
   categoryId,
@@ -126,7 +131,6 @@ export default function NonGETable({
           <col className="non-ge-col-range" />
           <col className="non-ge-col-target" />
           <col className="non-ge-col-target" />
-          <col className="non-ge-col-notes" />
           <col className="non-ge-col-actions" />
         </colgroup>
         <thead className="thead-base">
@@ -143,7 +147,6 @@ export default function NonGETable({
             <HeaderCell label="Range" columnKey="range" sortConfig={sortConfig} onSort={onSort} />
             <HeaderCell label="Target Buy" columnKey="targetBuyPrice" sortConfig={sortConfig} onSort={onSort} align="right" />
             <HeaderCell label="Target Sell" columnKey="targetSellPrice" sortConfig={sortConfig} onSort={onSort} align="right" />
-            <HeaderCell label="Notes" />
             <HeaderCell label="Actions" align="right" />
           </tr>
         </thead>
@@ -179,6 +182,17 @@ export default function NonGETable({
                     <div className="non-ge-name-text">
                       <span className="non-ge-item-name">{name}</span>
                     </div>
+                    <div className="stock-name-actions">
+                      <button
+                        type="button"
+                        className={`item-notes-btn ${stock.notes ? 'item-notes-btn--active' : ''}`}
+                        onClick={() => onNotes(stock)}
+                        title={stock.notes ? 'Edit notes' : 'Add notes'}
+                        aria-label={stock.notes ? `Edit notes for ${name}` : `Add notes for ${name}`}
+                      >
+                        <StickyNote size={12} />
+                      </button>
+                    </div>
                   </div>
                 </td>
                 <NumberCell value={stock.shares} numberFormat={numberFormat} />
@@ -199,19 +213,8 @@ export default function NonGETable({
                 </td>
                 <NumberCell value={stock.targetBuyPrice} numberFormat={numberFormat} />
                 <NumberCell value={stock.targetSellPrice} numberFormat={numberFormat} />
-                <td className="td-base td-center">
-                  <button
-                    type="button"
-                    className={`btn btn-sm ${stock.notes ? 'btn-purple' : 'btn-secondary'} non-ge-notes-btn`}
-                    onClick={() => onNotes(stock)}
-                    title={stock.notes || 'Add notes'}
-                  >
-                    <StickyNote size={12} />
-                    {stock.notes ? 'Edit' : 'Add'}
-                  </button>
-                </td>
                 <td className="td-base non-ge-actions-cell">
-                  <div className="action-buttons non-ge-action-buttons">
+                  <div className="action-buttons row-action-buttons non-ge-action-buttons">
                     <button type="button" className="btn btn-success btn-sm" onClick={() => onBuy(stock)} title="Buy">
                       <ShoppingCart size={12} />
                       Buy
@@ -226,29 +229,36 @@ export default function NonGETable({
                       <CircleDollarSign size={12} />
                       Sell
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-remove btn-sm"
-                      onClick={() => onRemove(stock)}
-                      disabled={(stock.shares || 0) <= 0}
-                      title="Remove"
-                    >
-                      <MinusCircle size={12} />
-                      Remove
-                    </button>
-                    <button type="button" className="btn btn-warning btn-sm" onClick={() => onAdjust(stock)} title="Adjust metadata">
-                      <Pencil size={12} />
-                      Adjust
-                    </button>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => onArchive(stock)}>
-                      <Archive size={12} />
-                      Archive
-                    </button>
-                    {onDelete && (
-                      <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(stock)} title="Delete item">
-                        <Trash2 size={12} />
-                      </button>
-                    )}
+                    <details className="row-action-menu">
+                      <summary className="row-action-menu-trigger" title="More actions" aria-label="More actions">
+                        <MoreHorizontal size={16} aria-hidden="true" />
+                      </summary>
+                      <div className="row-action-menu-list">
+                        <button
+                          type="button"
+                          className="row-action-menu-item"
+                          onClick={(event) => closeMenuAndRun(event, onRemove, stock)}
+                          disabled={(stock.shares || 0) <= 0}
+                        >
+                          <MinusCircle size={14} />
+                          Remove
+                        </button>
+                        <button type="button" className="row-action-menu-item" onClick={(event) => closeMenuAndRun(event, onAdjust, stock)}>
+                          <Pencil size={14} />
+                          Adjust
+                        </button>
+                        <button type="button" className="row-action-menu-item" onClick={(event) => closeMenuAndRun(event, onArchive, stock)}>
+                          <Archive size={14} />
+                          Archive
+                        </button>
+                        {onDelete && (
+                          <button type="button" className="row-action-menu-item row-action-menu-item--danger" onClick={(event) => closeMenuAndRun(event, onDelete, stock)}>
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </details>
                   </div>
                 </td>
               </tr>

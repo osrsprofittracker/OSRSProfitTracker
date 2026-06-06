@@ -171,6 +171,15 @@ Non-GE modals currently include:
 
 - Dont use inline CSS
 
+### GitHub workflow
+
+- Repository: `osrsprofittracker/OSRSProfitTracker`.
+- For creating or editing GitHub issues, use the local `gh` CLI first. The GitHub connector may return `403 Resource not accessible by integration` for issue writes in this repo.
+- Check auth with `gh auth status` only if a `gh` command fails.
+- Create backlog issues with `gh issue create --repo osrsprofittracker/OSRSProfitTracker --title "..." --body "..."`.
+- Do not add a `backlog` label unless it exists; this repo currently did not have that label when last checked.
+- Use the GitHub connector for reading PRs/issues when convenient, but prefer `gh` for write actions that need repo permissions.
+
 ### Rules
 - Do not use the classic - that ai agents use
 - Do not add automated tests, test files, test runners, or test-related dependencies unless explicitly requested.
