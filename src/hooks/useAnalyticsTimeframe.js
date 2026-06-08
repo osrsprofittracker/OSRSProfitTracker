@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useCallback } from 'react';
-import { subtractDays, toIsoDate } from '../utils/analyticsHelpers';
+import { subtractDays } from '../utils/analyticsHelpers';
+import { formatLocalDate } from '../utils/localPeriods';
 import { useUrlState } from './useUrlState';
 
 const WINDOW_OPTIONS = ['1W', '1M', '3M', '6M', '1Y', 'All'];
@@ -68,7 +69,7 @@ export function useAnalyticsTimeframe(userId, allTimeStart = null) {
   }, [setWindowState, storageKey]);
 
   const { start, end, bucket } = useMemo(() => {
-    const endIso = toIsoDate(new Date());
+    const endIso = formatLocalDate(new Date());
     const days = daysForWindow(window);
 
     if (days == null) {

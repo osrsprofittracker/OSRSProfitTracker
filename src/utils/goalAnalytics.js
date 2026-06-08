@@ -2,6 +2,7 @@
 // shaped like { period, period_start, achieved_at, goal_amount, actual_amount }.
 
 import { addDays, inclusiveDayCount } from './analyticsHelpers';
+import { formatLocalDate, getLocalPeriodStart } from './localPeriods';
 
 const HIT_RATE_WINDOW = 7;
 
@@ -64,7 +65,7 @@ const isHit = (entry) => (
 );
 
 export const periodDate = (entry) => (
-  entry.period_start || String(entry.achieved_at || '').slice(0, 10)
+  entry.period_start || formatLocalDate(entry.achieved_at)
 );
 
 const sortedForPeriod = (history, period) => (
@@ -146,35 +147,16 @@ export function estimateTimeToGoal({ currentProgress, goal, elapsedDays, totalDa
   return { daysRemaining, onTrack, pacePerDay, projected };
 }
 
-const utcPeriodStart = (now, period) => {
-  if (period === 'day') {
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  }
-  if (period === 'week') {
-    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    const dayOfWeek = (start.getUTCDay() + 6) % 7; // Monday = 0
-    start.setUTCDate(start.getUTCDate() - dayOfWeek);
-    return start;
-  }
-  if (period === 'month') {
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  }
-  if (period === 'year') {
-    return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-  }
-  return now;
-};
-
-// Calendar helpers used by the estimator widget. All period boundaries are UTC.
+// Calendar helpers used by the estimator widget.
 export const periodTotalDays = (period) => {
   if (period === 'day') return 1;
   if (period === 'week') return 7;
   if (period === 'month') {
     const now = new Date();
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   }
   if (period === 'year') {
-    const year = new Date().getUTCFullYear();
+    const year = new Date().getFullYear();
     const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
     return isLeap ? 366 : 365;
   }
@@ -184,7 +166,7 @@ export const periodTotalDays = (period) => {
 export const periodElapsedDays = (period) => {
   const now = new Date();
   if (period === 'day' || period === 'week' || period === 'month' || period === 'year') {
-    return Math.max(1 / 1440, (now - utcPeriodStart(now, period)) / 86400000);
+    return Math.max(1 / 1440, (now - getLocalPeriodStart(now, period)) / 86400000);
   }
   return 1;
 };

@@ -15,6 +15,7 @@ import {
   getItemTransactions,
 } from '../../../utils/itemAnalytics';
 import { formatNumber } from '../../../utils/formatters';
+import { formatLocalDate } from '../../../utils/localPeriods';
 
 function ChartTooltip({ active, payload, label, numberFormat, valueLabel }) {
   if (!active || !payload?.length) return null;
@@ -93,7 +94,7 @@ export default function ItemDrilldownDrawer({
   const priceSeries = useMemo(() => (
     (priceData || [])
       .map((row) => ({
-        date: new Date(Number(row.timestamp) * 1000).toISOString().slice(0, 10),
+        date: formatLocalDate(new Date(Number(row.timestamp) * 1000)),
         high: Number(row.avgHighPrice),
       }))
       .filter((row) => Number.isFinite(row.high) && row.high > 0)
@@ -263,7 +264,7 @@ export default function ItemDrilldownDrawer({
             <tbody>
               {itemTransactions.map((transaction) => (
                 <tr key={transaction.id}>
-                  <td>{String(transaction.date).slice(0, 10)}</td>
+                  <td>{formatLocalDate(transaction.date)}</td>
                   <td><span className="items-badge">{transaction.type}</span></td>
                   <td>{formatNumber(transaction.shares, numberFormat)}</td>
                   <td>{formatNumber(transaction.total, numberFormat)}</td>

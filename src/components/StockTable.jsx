@@ -22,10 +22,12 @@ import { useGEData } from '../contexts/GEDataContext';
 import ItemIcon from './ItemIcon';
 import '../styles/table.css';
 import { sortStocks } from '../utils/calculations';
+import { parseLocalDate } from '../utils/localPeriods';
 
 function investmentAge(dateStr) {
   if (!dateStr) return null;
-  const start = new Date(dateStr);
+  const start = parseLocalDate(dateStr);
+  if (!start) return null;
   const now = new Date();
   let years = now.getFullYear() - start.getFullYear();
   let months = now.getMonth() - start.getMonth();

@@ -1,5 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { formatNumber } from '../../../utils/formatters';
+import { formatLocalDate } from '../../../utils/localPeriods';
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_LABELS = {
@@ -23,16 +24,6 @@ const TOOLTIP_HEIGHT = 58;
 
 const getProfitType = (profit) => profit.profit_type ?? profit.profitType;
 const getProfitTxId = (profit) => profit.transaction_id ?? profit.transactionId;
-
-function toLocalDateKey(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 function buildThresholds(values, count = 5) {
   const sorted = [...values].filter((value) => value > 0).sort((a, b) => a - b);
@@ -119,7 +110,7 @@ function rowsFromCells(cells) {
 function addSellToCells({ cells, transaction, profit, startDate, endDate }) {
   if (!transaction?.date) return;
 
-  const localDate = toLocalDateKey(transaction.date);
+  const localDate = formatLocalDate(transaction.date);
   if (startDate && localDate < startDate) return;
   if (endDate && localDate > endDate) return;
 

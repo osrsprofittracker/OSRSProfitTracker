@@ -1,5 +1,6 @@
 import { calculateUnrealizedProfit } from './taxUtils';
 import { applyAverageCostExit } from './positionAnalytics';
+import { formatLocalDate } from './localPeriods';
 
 const DEFAULT_CATEGORY = 'Uncategorized';
 
@@ -11,7 +12,7 @@ const itemIdOf = (stock) => stock?.itemId ?? stock?.item_id;
 const stockIdOf = (row) => row?.stockId ?? row?.stock_id;
 const transactionIdOf = (row) => row?.transactionId ?? row?.transaction_id;
 const profitTypeOf = (row) => row?.profitType ?? row?.profit_type;
-const isoOf = (value) => String(value || '').slice(0, 10);
+const isoOf = (value) => formatLocalDate(value);
 
 const MS_PER_DAY = 86400000;
 

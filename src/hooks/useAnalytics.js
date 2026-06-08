@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatLocalDate } from '../utils/localPeriods';
 
 const MAX_CACHE_ENTRIES = 50;
 const cache = new Map();
@@ -25,7 +26,7 @@ const aggregateGpTradedLocally = ({ transactions, start, end, bucket }) => {
   const totals = new Map();
 
   for (const tx of transactions || []) {
-    const iso = String(tx.date || '').slice(0, 10);
+    const iso = formatLocalDate(tx.date);
     if (iso < start || iso > end) continue;
 
     const key = truncBucket(iso, bucket);
@@ -154,7 +155,7 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
   };
 
   for (const tx of transactions || []) {
-    const iso = String(tx.date || '').slice(0, 10);
+    const iso = formatLocalDate(tx.date);
     if (!inWindow(iso)) continue;
 
     const key = truncBucket(iso, bucket);
@@ -165,7 +166,7 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
   for (const profit of profitHistory || []) {
     const tx = txMap.get(String(profit.transaction_id ?? profit.transactionId ?? ''));
     const isoSource = profit.profit_type === 'stock' && tx?.date ? tx.date : profit.created_at;
-    const iso = String(isoSource || '').slice(0, 10);
+    const iso = formatLocalDate(isoSource);
     if (!inWindow(iso)) continue;
 
     const key = truncBucket(iso, bucket);

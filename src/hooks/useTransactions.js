@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { getLocalDateEndIso, getLocalDateStartIso } from '../utils/localPeriods';
 
 const RECENT_TRANSACTION_WINDOW_DAYS = 90;
 const RECENT_TRANSACTION_ROW_CAP = 10000;
@@ -157,8 +158,10 @@ export function useTransactions(userId) {
       if (visibleProfitTypes.includes(activeFilters.type)) {
         query = query.eq('profit_type', activeFilters.type);
       }
-      if (activeFilters.dateFrom) query = query.gte('created_at', activeFilters.dateFrom);
-      if (activeFilters.dateTo) query = query.lte('created_at', activeFilters.dateTo + 'T23:59:59');
+      const dateFromIso = getLocalDateStartIso(activeFilters.dateFrom);
+      const dateToIso = getLocalDateEndIso(activeFilters.dateTo);
+      if (dateFromIso) query = query.gte('created_at', dateFromIso);
+      if (dateToIso) query = query.lte('created_at', dateToIso);
       if (activeFilters.gpMin) query = query.gte('amount', Number(activeFilters.gpMin));
       if (activeFilters.gpMax) query = query.lte('amount', Number(activeFilters.gpMax));
       if (activeFilters.profitMin) query = query.gte('amount', Number(activeFilters.profitMin));
@@ -240,8 +243,10 @@ export function useTransactions(userId) {
     }
     if (activeFilters.type !== 'all') query = query.eq('type', activeFilters.type);
     if (activeFilters.stockName) query = query.ilike('stock_name', `%${activeFilters.stockName}%`);
-    if (activeFilters.dateFrom) query = query.gte('date', activeFilters.dateFrom);
-    if (activeFilters.dateTo) query = query.lte('date', activeFilters.dateTo + 'T23:59:59');
+    const dateFromIso = getLocalDateStartIso(activeFilters.dateFrom);
+    const dateToIso = getLocalDateEndIso(activeFilters.dateTo);
+    if (dateFromIso) query = query.gte('date', dateFromIso);
+    if (dateToIso) query = query.lte('date', dateToIso);
     if (activeFilters.gpMin) query = query.gte('total', Number(activeFilters.gpMin));
     if (activeFilters.gpMax) query = query.lte('total', Number(activeFilters.gpMax));
     if (activeFilters.priceMin) query = query.gte('price', Number(activeFilters.priceMin));

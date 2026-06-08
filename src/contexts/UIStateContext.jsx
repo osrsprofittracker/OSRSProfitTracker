@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useMemo, useRef } from 'react';
 import { useProfitHistoryContext } from './ProfitHistoryContext';
+import { getLocalPeriodStart } from '../utils/localPeriods';
 
 const UIStateContext = createContext(null);
 const HighlightContext = createContext(null);
@@ -32,16 +33,7 @@ export function UIStateProvider({ userId, children }) {
 
     const getStartOfPeriod = (period) => {
       const now = new Date();
-      const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-      if (period === 'day') return date;
-      if (period === 'week') {
-        const dayOfWeek = (date.getUTCDay() + 6) % 7;
-        date.setUTCDate(date.getUTCDate() - dayOfWeek);
-        return date;
-      }
-      if (period === 'month') return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-      if (period === 'year') return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-      return date;
+      return getLocalPeriodStart(now, period);
     };
 
     const calcPeriod = (period) => {

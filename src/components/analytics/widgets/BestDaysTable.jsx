@@ -8,6 +8,7 @@ import {
   toIsoDate,
   totalProfit,
 } from '../../../utils/analyticsHelpers';
+import { formatLocalDate } from '../../../utils/localPeriods';
 
 const TIMEFRAMES = ['1W', '1M', '3M', '6M', '1Y', 'All'];
 const PERIODS = [
@@ -98,7 +99,7 @@ function buildTopItemsByPeriod(transactions, stocks, profitHistory, period, star
     if (getProfitType(profitEntry) !== 'stock') continue;
 
     const tx = txMap.get(String(getProfitTxId(profitEntry)));
-    const iso = String(tx?.date || getProfitDate(profitEntry) || '').slice(0, 10);
+    const iso = formatLocalDate(tx?.date || getProfitDate(profitEntry));
     if (!iso) continue;
     if (startDate && iso < startDate) continue;
     if (endDate && iso > endDate) continue;
@@ -116,7 +117,7 @@ function buildTopItemsByPeriod(transactions, stocks, profitHistory, period, star
   for (const transaction of transactions) {
     if (transaction.type !== 'sell') continue;
 
-    const iso = String(transaction.date || '').slice(0, 10);
+    const iso = formatLocalDate(transaction.date);
     if (!iso) continue;
     if (startDate && iso < startDate) continue;
     if (endDate && iso > endDate) continue;

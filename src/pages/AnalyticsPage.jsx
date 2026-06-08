@@ -12,6 +12,7 @@ import CategoriesTab from '../components/analytics/CategoriesTab';
 import GoalsTab from '../components/analytics/GoalsTab';
 import { useTrade } from '../contexts/TradeContext';
 import { addDays, inclusiveDayCount, subtractDays, sumProfit } from '../utils/analyticsHelpers';
+import { formatLocalDate } from '../utils/localPeriods';
 import '../styles/analytics-page.css';
 import '../styles/analytics-widgets.css';
 
@@ -109,13 +110,13 @@ export default function AnalyticsPage({
   const scopeCoversStart = (scope, start) => {
     if (scope?.full) return true;
     if (!scope?.since || !start) return false;
-    return start >= String(scope.since).slice(0, 10);
+    return start >= formatLocalDate(scope.since);
   };
 
   const localAllTimeStart = useMemo(() => {
     const dates = [
-      ...geTransactions.map((transaction) => String(transaction.date || '').slice(0, 10)),
-      ...geProfitHistory.map((profit) => String(profit.created_at || '').slice(0, 10)),
+      ...geTransactions.map((transaction) => formatLocalDate(transaction.date)),
+      ...geProfitHistory.map((profit) => formatLocalDate(profit.created_at)),
     ].filter(Boolean);
 
     return dates.length > 0 ? dates.sort()[0] : null;
