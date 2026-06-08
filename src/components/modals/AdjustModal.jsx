@@ -4,6 +4,7 @@ import { useGEData } from '../../contexts/GEDataContext';
 import { useTrade } from '../../contexts/TradeContext';
 import StepInput from '../StepInput';
 import { searchGEItems } from '../../utils/geItemSearch';
+import { formatLocalDate } from '../../utils/localPeriods';
 
 export default function AdjustModal({ stock, onConfirm, onCancel }) {
   const { geMapping: mapping } = useGEData();
@@ -15,7 +16,7 @@ export default function AdjustModal({ stock, onConfirm, onCancel }) {
   const [limit4h, setLimit4h] = useState(stock.limit4h.toString());
   const [onHold, setOnHold] = useState(stock.onHold || false);
   const [isInvestment, setIsInvestment] = useState(stock.isInvestment || false);
-  const [investmentStartDate, setInvestmentStartDate] = useState(stock.investmentStartDate ? stock.investmentStartDate.slice(0, 10) : '');
+  const [investmentStartDate, setInvestmentStartDate] = useState(formatLocalDate(stock.investmentStartDate));
   const [targetCategory, setTargetCategory] = useState('Uncategorized');
   const [itemId, setItemId] = useState(stock.itemId || null);
   const [searchQuery, setSearchQuery] = useState(() => {

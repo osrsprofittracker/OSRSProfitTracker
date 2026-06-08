@@ -1,6 +1,7 @@
 import { calculateUnrealizedProfit } from './taxUtils';
+import { formatLocalDate } from './localPeriods';
 
-export const isoOf = (value) => String(value || '').slice(0, 10);
+export const isoOf = (value) => formatLocalDate(value);
 export const stockIdOf = (row) => row?.stockId ?? row?.stock_id;
 export const transactionIdOf = (row) => row?.transactionId ?? row?.transaction_id;
 export const profitTypeOf = (row) => row?.profitType ?? row?.profit_type;

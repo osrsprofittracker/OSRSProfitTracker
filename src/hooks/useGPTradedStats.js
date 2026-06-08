@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { formatLocalDate } from '../utils/localPeriods';
 
 const GP_TRADED_BATCH_SIZE = 1000;
 
@@ -10,10 +11,6 @@ const EMPTY_STATS = {
   yearly: 0,
   total: 0
 };
-
-function toIsoDate(date) {
-  return date.toISOString().slice(0, 10);
-}
 
 export function useGPTradedStats(userId) {
   const [stats, setStats] = useState(EMPTY_STATS);
@@ -31,21 +28,21 @@ export function useGPTradedStats(userId) {
       switch (period) {
         case 'day':
           date.setHours(0, 0, 0, 0);
-          return toIsoDate(date);
+          return formatLocalDate(date);
         case 'week':
           const day = date.getDay();
           const diff = date.getDate() - day + (day === 0 ? -6 : 1);
           date.setDate(diff);
           date.setHours(0, 0, 0, 0);
-          return toIsoDate(date);
+          return formatLocalDate(date);
         case 'month':
           date.setDate(1);
           date.setHours(0, 0, 0, 0);
-          return toIsoDate(date);
+          return formatLocalDate(date);
         case 'year':
           date.setMonth(0, 1);
           date.setHours(0, 0, 0, 0);
-          return toIsoDate(date);
+          return formatLocalDate(date);
         default:
           return null;
       }
@@ -60,7 +57,7 @@ export function useGPTradedStats(userId) {
       const nextStats = { ...EMPTY_STATS };
 
       for (const row of rows || []) {
-        const rowDate = String(row.bucket_date || row.date || '').slice(0, 10);
+        const rowDate = formatLocalDate(row.bucket_date || row.date);
         const gpTraded = Number(row.gp_traded ?? row.total) || 0;
 
         nextStats.total += gpTraded;

@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer } from 'recharts';
 import { formatNumber } from '../../../utils/formatters';
 import { addDays, subtractDays, totalProfit } from '../../../utils/analyticsHelpers';
+import { formatLocalDate } from '../../../utils/localPeriods';
 
 const WINDOWS = [7, 30, 90];
 const SPARKLINE_POINTS = 60;
@@ -22,7 +23,7 @@ function buildDailySeries(buckets, endDate) {
   }
 
   const sortedDates = dates.sort();
-  const endIso = endDate || sortedDates[sortedDates.length - 1] || new Date().toISOString().slice(0, 10);
+  const endIso = endDate || sortedDates[sortedDates.length - 1] || formatLocalDate(new Date());
   const startIso = subtractDays(endIso, LOOKBACK_DAYS);
   const series = [];
 

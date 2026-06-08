@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { buildCategoryDrilldownData } from '../../../utils/categoryAnalytics';
 import { formatNumber } from '../../../utils/formatters';
+import { formatLocalDate } from '../../../utils/localPeriods';
 
 function ChartTooltip({ active, payload, label, numberFormat }) {
   if (!active || !payload?.length) return null;
@@ -45,7 +46,7 @@ const formatTurnover = (value) => {
   return `${numericValue.toFixed(1)}%`;
 };
 
-const formatDate = (value) => (value ? String(value).slice(0, 10) : '-');
+const formatDate = (value) => formatLocalDate(value) || '-';
 
 export default function CategoryDrilldownDrawer({
   category,

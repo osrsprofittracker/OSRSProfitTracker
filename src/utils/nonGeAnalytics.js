@@ -1,7 +1,9 @@
+import { formatLocalDate } from './localPeriods';
+
 const DEFAULT_CATEGORY = 'Uncategorized';
 
 const toNumber = (value) => Number(value) || 0;
-const isoOf = (value) => String(value || '').slice(0, 10);
+const isoOf = (value) => formatLocalDate(value);
 const stockIdOf = (row) => row?.nonGeStockId ?? row?.non_ge_stock_id ?? row?.stockId ?? row?.stock_id;
 const transactionIdOf = (row) => row?.transactionId ?? row?.transaction_id;
 const profitTypeOf = (row) => row?.profitType ?? row?.profit_type;

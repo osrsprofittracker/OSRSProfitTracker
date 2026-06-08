@@ -56,6 +56,7 @@ import {
   DEFAULT_CATEGORIES,
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
+import { getNextLocalMidnight } from './utils/localPeriods';
 import { useModalHandlers } from './hooks/useModalHandlers';
 import { useNavigation } from './hooks/useNavigation';
 
@@ -85,6 +86,7 @@ export default function MainApp(props) {
 function MainAppInner({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
+  const [milestoneBoundaryTick, setMilestoneBoundaryTick] = useState(0);
   const {
     tradeMode,
     setTradeMode,
@@ -583,6 +585,39 @@ function MainAppInner({ session, onLogout }) {
   }, [userId, ensureNonGEDefaultCategories]);
 
   useEffect(() => {
+    if (!userId) return;
+
+    let timeoutId;
+    let nextBoundary = getNextLocalMidnight();
+
+    function scheduleNextRefresh() {
+      window.clearTimeout(timeoutId);
+      const delay = Math.max(0, nextBoundary.getTime() - Date.now());
+      timeoutId = window.setTimeout(refreshAfterBoundary, delay);
+    }
+
+    function refreshAfterBoundary() {
+      nextBoundary = getNextLocalMidnight();
+      setMilestoneBoundaryTick(tick => tick + 1);
+      scheduleNextRefresh();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible' && Date.now() >= nextBoundary.getTime()) {
+        refreshAfterBoundary();
+      }
+    }
+
+    scheduleNextRefresh();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [userId]);
+
+  useEffect(() => {
     if (!profitHistory || profitHistoryLoading) return;
 
     const newProgress = calculateMilestoneProgress();
@@ -632,7 +667,18 @@ function MainAppInner({ session, onLogout }) {
     if (!milestonesLoading) {
       recordCompletedPeriods(profitHistory, milestones);
     }
-  }, [profitHistory, milestones, calculateMilestoneProgress, setMilestoneProgress]);
+  }, [
+    profitHistory,
+    profitHistoryLoading,
+    milestones,
+    milestonesLoading,
+    milestoneBoundaryTick,
+    calculateMilestoneProgress,
+    setMilestoneProgress,
+    recordCompletedPeriods,
+    addNotification,
+    userId
+  ]);
 
   // OSRS News notification effect
   useEffect(() => {
