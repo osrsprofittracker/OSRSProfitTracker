@@ -3,11 +3,6 @@
      publish = "dist"
 
    [[redirects]]
-     from = "/api/ge-prices/latest"
-     to = "/.netlify/functions/ge-prices?endpoint=latest"
-     status = 200
-
-   [[redirects]]
      from = "/api/ge-prices/mapping"
      to = "/.netlify/functions/ge-prices?endpoint=mapping"
      status = 200
@@ -37,5 +32,3 @@
      to = "/index.html"
      status = 200
 
-   [functions."ge-prices-cache"]
-   schedule = "*/1 * * * *"

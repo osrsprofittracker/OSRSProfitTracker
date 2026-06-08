@@ -42,7 +42,7 @@ function getRequestedEndpoint(request) {
   const pathEndpoint = url.pathname.split('/').filter(Boolean).pop();
   if (pathEndpoint && pathEndpoint !== 'ge-prices') return pathEndpoint;
 
-  return 'latest';
+  return 'mapping';
 }
 
 function getEndpointParams(request) {

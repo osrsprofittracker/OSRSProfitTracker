@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 
 const PROXY_URL = '/api/ge-prices';
 const WIKI_BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
-const USER_AGENT = 'OSRSProfitTracker - osrsprofittracker@gmail.com';
 const REFRESH_INTERVAL = 60_000;
 const ICON_BASE_PATH = '/icons/ge';
 const ICON_MANIFEST_URL = `${ICON_BASE_PATH}/manifest.json`;
@@ -15,19 +14,31 @@ export function useGEPrices() {
   const [mappingLoading, setMappingLoading] = useState(true);
   const intervalRef = useRef(null);
 
-  const fetchHeaders = { 'User-Agent': USER_AGENT };
+  const fetchWikiEndpoint = (endpoint) => fetch(`${WIKI_BASE_URL}/${endpoint}`, {
+    cache: endpoint === 'latest' ? 'no-store' : 'default',
+  });
+
+  const fetchProxyEndpoint = (endpoint) => fetch(`${PROXY_URL}/${endpoint}`);
+
+  const isJsonResponse = (res) => {
+    const contentType = res.headers.get('content-type') || '';
+    return res.ok && contentType.includes('application/json');
+  };
 
   const fetchGEEndpoint = async (endpoint) => {
+    if (endpoint === 'latest') {
+      return fetchWikiEndpoint(endpoint);
+    }
+
     try {
-      const res = await fetch(`${PROXY_URL}/${endpoint}`);
-      const contentType = res.headers.get('content-type') || '';
-      if (res.ok && contentType.includes('application/json')) return res;
+      const res = await fetchProxyEndpoint(endpoint);
+      if (isJsonResponse(res)) return res;
     } catch (proxyError) {
       if (!USE_DIRECT_WIKI_FALLBACK) throw proxyError;
     }
 
     if (!USE_DIRECT_WIKI_FALLBACK) return null;
-    return fetch(`${WIKI_BASE_URL}/${endpoint}`, { headers: fetchHeaders });
+    return fetchWikiEndpoint(endpoint);
   };
 
   const fetchMapping = async () => {
