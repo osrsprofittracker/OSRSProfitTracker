@@ -1,6 +1,6 @@
 # Cloudflare Cache Setup
 
-Use this when the Netlify site is proxied through Cloudflare. The goal is to let Cloudflare serve shared public OSRS data from edge cache so Netlify Functions are only hit on cache misses.
+Use this when the Netlify site is proxied through Cloudflare. The goal is to let Cloudflare serve cacheable shared OSRS data from edge cache so Netlify Functions are only hit on cache misses.
 
 ## DNS
 
@@ -11,25 +11,26 @@ Use this when the Netlify site is proxied through Cloudflare. The goal is to let
 
 ## Cache Rules
 
-Create one Cloudflare Cache Rule for GE prices:
+Create one Cloudflare Cache Rule for cacheable GE price API paths:
 
 ```txt
 Name: Cache GE price API
-When: URI Path starts with /api/ge-prices/
+When: URI Path is /api/ge-prices/mapping or /api/ge-prices/1h
 Cache eligibility: Eligible for cache
 Edge TTL: Respect origin headers
 Browser TTL: Respect origin headers
 Cache key: Include query string, or use default full URL cache key
 ```
 
-The app now calls:
+The app calls:
 
 ```txt
-/api/ge-prices/latest
+https://prices.runescape.wiki/api/v1/osrs/latest
 /api/ge-prices/mapping
+/api/ge-prices/1h
 ```
 
-Those paths are deliberately separate so Cloudflare does not need to rely on `endpoint=latest` and `endpoint=mapping` query-string handling for the main app flow.
+The live `/latest` price feed is fetched directly from the OSRS Wiki API by the browser. Netlify no longer proxies or warms `/latest`.
 
 Optional extra rules:
 
@@ -45,36 +46,29 @@ Both functions already return public cache headers, so a Cloudflare rule is only
 
 ## Expected Headers
 
-For `/api/ge-prices/latest`, the origin returns:
-
-```txt
-Cache-Control: public, max-age=30, stale-while-revalidate=30
-CDN-Cache-Control: public, max-age=60, stale-while-revalidate=30
-Netlify-CDN-Cache-Control: public, max-age=60, stale-while-revalidate=30
-```
-
 For `/api/ge-prices/mapping`, the origin returns longer-lived cache headers.
+
+For `/api/ge-prices/1h`, the origin returns medium-lived cache headers.
 
 ## Verification
 
 After deploying and enabling Cloudflare, check:
 
 ```powershell
-curl.exe -I https://YOUR_DOMAIN/api/ge-prices/latest
 curl.exe -I https://YOUR_DOMAIN/api/ge-prices/mapping
+curl.exe -I "https://YOUR_DOMAIN/api/ge-prices/1h?timestamp=UNIX_TIMESTAMP"
 ```
 
 Look for:
 
 ```txt
 cf-cache-status: HIT
-cache-control: public, max-age=30, stale-while-revalidate=30
-cdn-cache-control: public, max-age=60, stale-while-revalidate=30
+cache-control: public
 ```
 
-The first request can be `MISS`; repeat the request after a few seconds. The second request should usually be `HIT`.
+The first request can be `MISS`; repeat the request after a few seconds. The repeated request should usually be `HIT`.
 
 ## What Still Hits Netlify
 
-Cloudflare cache misses still hit Netlify. The scheduled `ge-prices-cache` function also keeps running every minute on Netlify so fresh GE data is ready before users ask for it.
+Cloudflare cache misses for `/api/ge-prices/mapping` and `/api/ge-prices/1h` still hit Netlify. Live `/latest` requests go directly to the OSRS Wiki API.
 

@@ -1,16 +1,9 @@
 import { getStore } from '@netlify/blobs';
 
 const BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
-const USER_AGENT = 'OSRSProfitTracker - osrsprofittracker@gmail.com';
+const USER_AGENT = 'OSRSProfitTracker/3.0 (https://osrs-portfolio.fun; contact: osrsprofittracker@gmail.com)';
 
 export const ENDPOINTS = {
-  latest: {
-    path: '/latest',
-    key: 'latest',
-    maxBlobAgeMs: 70_000,
-    cdnCacheControl: 'public, max-age=60, stale-while-revalidate=30',
-    browserCacheControl: 'public, max-age=30, stale-while-revalidate=30',
-  },
   mapping: {
     path: '/mapping',
     key: 'mapping',
