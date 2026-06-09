@@ -41,6 +41,7 @@ export const totalProfit = (bucket) => (
   + Number(bucket.profit_dump || 0)
   + Number(bucket.profit_referral || 0)
   + Number(bucket.profit_bonds || 0)
+  + Number(bucket.profit_active_flipping || 0)
 );
 
 export const sumProfit = (buckets = []) => (

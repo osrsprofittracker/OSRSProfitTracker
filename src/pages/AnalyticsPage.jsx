@@ -193,7 +193,8 @@ export default function AnalyticsPage({
     );
     const otherProfit = (profits?.dumpProfit || 0)
       + (profits?.referralProfit || 0)
-      + (profits?.bondsProfit || 0);
+      + (profits?.bondsProfit || 0)
+      + (profits?.activeFlippingProfit || 0);
 
     return stocksProfit + otherProfit;
   }, [safeStocksForStats, profits]);

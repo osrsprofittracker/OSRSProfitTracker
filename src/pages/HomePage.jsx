@@ -34,7 +34,7 @@ export default function HomePage({
   profits,
   statsStocks = null,
   nonGEStatsStocks = [],
-  visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true },
+  visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true, activeFlippingProfit: true },
   watchlistItems = [],
   numberFormat,
   milestones,
@@ -44,6 +44,7 @@ export default function HomePage({
   onAddDumpProfit = () => {},
   onAddReferralProfit = () => {},
   onAddBondsProfit = () => {},
+  onAddActiveFlippingProfit = () => {},
   onOpenMilestoneModal,
   onOpenMilestoneHistory,
   profitHistory,
@@ -69,22 +70,28 @@ export default function HomePage({
   const geProfit = stocksForStats?.reduce((sum, stock) => sum + calculateProfit(stock), 0) || 0;
   const nonGEProfit = nonGEStatsStocks?.reduce((sum, stock) => sum + calculateProfit(stock), 0) || 0;
 
-  // Add dump, referral, bonds profit
-  const { dumpProfit = 0, referralProfit = 0, bondsProfit = 0 } = profits || {};
-  const totalProfit = geProfit + nonGEProfit + dumpProfit + referralProfit + bondsProfit;
+  // Add dump, referral, bonds, and active flipping profit
+  const { dumpProfit = 0, referralProfit = 0, bondsProfit = 0, activeFlippingProfit = 0 } = profits || {};
+  const totalProfit = geProfit + nonGEProfit + dumpProfit + referralProfit + bondsProfit + activeFlippingProfit;
 
   const itemProfitSources = [
     { label: 'GE Items', value: geProfit },
-    { label: 'Non-GE Items', value: nonGEProfit },
-  ];
-
-  const extraProfitSources = [
     {
       label: 'Dumps',
       value: dumpProfit,
       visible: visibleProfits?.dumpProfit !== false,
       onAdd: onAddDumpProfit
     },
+    {
+      label: 'Active Flipping',
+      value: activeFlippingProfit,
+      visible: visibleProfits?.activeFlippingProfit !== false,
+      onAdd: onAddActiveFlippingProfit
+    },
+  ].filter(source => source.visible !== false);
+
+  const extraProfitSources = [
+    { label: 'Non-GE Items', value: nonGEProfit },
     {
       label: 'Referrals',
       value: referralProfit,
@@ -278,30 +285,43 @@ export default function HomePage({
           <div className="profit-source-list">
             <div className="profit-source-column">
               {itemProfitSources.map(source => (
-                <div className="profit-source-row" key={source.label}>
+                <div className={`profit-source-row ${source.onAdd ? 'profit-source-row--action' : ''}`} key={source.label}>
                   <span className="profit-source-label">{source.label}</span>
                   <span className={`profit-source-value ${source.value >= 0 ? 'positive' : 'negative'}`}>
                     {source.value >= 0 ? '+' : ''}{formatNumber(source.value, numberFormat)}
                   </span>
+                  {source.onAdd && (
+                    <button
+                      type="button"
+                      className="profit-source-add-btn"
+                      onClick={source.onAdd}
+                      aria-label={`Add ${source.label} profit`}
+                      title={`Add ${source.label} profit`}
+                    >
+                      <Plus size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
             <div className="profit-source-column">
               {extraProfitSources.map(source => (
-                <div className="profit-source-row" key={source.label}>
+                <div className={`profit-source-row ${source.onAdd ? 'profit-source-row--action' : ''}`} key={source.label}>
                   <span className="profit-source-label">{source.label}</span>
                   <span className={`profit-source-value ${source.value >= 0 ? 'positive' : 'negative'}`}>
                     {source.value >= 0 ? '+' : ''}{formatNumber(source.value, numberFormat)}
                   </span>
-                  <button
-                    type="button"
-                    className="profit-source-add-btn"
-                    onClick={source.onAdd}
-                    aria-label={`Add ${source.label} profit`}
-                    title={`Add ${source.label} profit`}
-                  >
-                    <Plus size={14} />
-                  </button>
+                  {source.onAdd && (
+                    <button
+                      type="button"
+                      className="profit-source-add-btn"
+                      onClick={source.onAdd}
+                      aria-label={`Add ${source.label} profit`}
+                      title={`Add ${source.label} profit`}
+                    >
+                      <Plus size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

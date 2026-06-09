@@ -15,6 +15,7 @@ const SOURCES = [
   { key: 'profit_dump', label: 'Dump', color: 'rgb(52, 211, 153)' },
   { key: 'profit_referral', label: 'Referral', color: 'rgb(168, 85, 247)' },
   { key: 'profit_bonds', label: 'Bonds', color: 'rgb(234, 179, 8)' },
+  { key: 'profit_active_flipping', label: 'Active Flipping', color: 'rgb(56, 189, 248)' },
 ];
 
 const getStackDomain = (data) => {
@@ -73,7 +74,7 @@ export default function ProfitBySourceChart({ buckets = [], numberFormat }) {
       <div className="analytics-widget-header">
         <h3
           className="analytics-widget-title has-tooltip"
-          data-tooltip="Breaks each period's realized profit into item sales, dump profit, referral profit, and bonds profit."
+          data-tooltip="Breaks each period's realized profit into item sales, dump profit, referral profit, bonds profit, and active flipping profit."
         >
           Profit by source
         </h3>

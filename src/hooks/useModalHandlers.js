@@ -453,6 +453,14 @@ export function useModalHandlers() {
     closeModal('bondsProfit');
   }, [updateProfit, addProfitEntry, closeModal]);
 
+  const handleAddActiveFlippingProfit = useCallback(async (amount) => {
+    const success = await updateProfit('activeFlippingProfit', amount);
+    if (success) {
+      await addProfitEntry('active_flipping', amount);
+    }
+    closeModal('activeFlippingProfit');
+  }, [updateProfit, addProfitEntry, closeModal]);
+
   const handleUpdateMilestone = useCallback(async (period, goal, enabled) => {
     const success = await updateMilestone(period, goal, enabled);
     if (success) {
@@ -513,6 +521,7 @@ export function useModalHandlers() {
     handleAddDumpProfit,
     handleAddReferralProfit,
     handleAddBondsProfit,
+    handleAddActiveFlippingProfit,
     handleUpdateMilestone,
     archivedStocks,
     archivedLoading,

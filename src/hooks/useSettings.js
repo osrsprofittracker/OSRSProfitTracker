@@ -17,7 +17,8 @@ const DEFAULT_VISIBLE_COLUMNS = {
 const DEFAULT_VISIBLE_PROFITS = {
   dumpProfit: false,
   referralProfit: false,
-  bondsProfit: true
+  bondsProfit: true,
+  activeFlippingProfit: true
 };
 
 export function useSettings(userId) {

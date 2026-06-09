@@ -5,7 +5,8 @@ export function useProfits(userId) {
   const [profits, setProfits] = useState({
     dumpProfit: 0,
     referralProfit: 0,
-    bondsProfit: 0
+    bondsProfit: 0,
+    activeFlippingProfit: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +27,8 @@ export function useProfits(userId) {
       setProfits({
         dumpProfit: data.dump_profit || 0,
         referralProfit: data.referral_profit || 0,
-        bondsProfit: data.bonds_profit || 0
+        bondsProfit: data.bonds_profit || 0,
+        activeFlippingProfit: data.active_flipping_profit || 0
       });
     } else {
       // No data exists yet, use upsert to handle race conditions
@@ -36,7 +38,8 @@ export function useProfits(userId) {
           user_id: userId,
           dump_profit: 0,
           referral_profit: 0,
-          bonds_profit: 0
+          bonds_profit: 0,
+          active_flipping_profit: 0
         }, {
           onConflict: 'user_id',
           ignoreDuplicates: false
@@ -50,7 +53,8 @@ export function useProfits(userId) {
         setProfits({
           dumpProfit: upsertData.dump_profit || 0,
           referralProfit: upsertData.referral_profit || 0,
-          bondsProfit: upsertData.bonds_profit || 0
+          bondsProfit: upsertData.bonds_profit || 0,
+          activeFlippingProfit: upsertData.active_flipping_profit || 0
         });
       }
     }
@@ -67,10 +71,13 @@ export function useProfits(userId) {
     const dbColumnMap = {
       dumpProfit: 'dump_profit',
       referralProfit: 'referral_profit',
-      bondsProfit: 'bonds_profit'
+      bondsProfit: 'bonds_profit',
+      activeFlippingProfit: 'active_flipping_profit'
     };
 
     const dbColumn = dbColumnMap[profitType];
+    if (!dbColumn) return false;
+
     const newValue = profits[profitType] + amount;
 
     const { error } = await supabase

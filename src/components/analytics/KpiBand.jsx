@@ -14,7 +14,7 @@ function KpiCard({ label, icon, value, deltaPct, numberFormat, valueClass = '', 
     : deltaPct >= 0 ? 'is-positive' : 'is-negative';
 
   const defaultTooltip = {
-    'Total Profit': 'All-time realized profit using the same accounting as the Trade and Home screens: item profit plus dump, referral, and bonds profit.',
+    'Total Profit': 'All-time realized profit using the same accounting as the Trade and Home screens: item profit plus dump, referral, bonds, and active flipping profit.',
     'Period Profit': 'Realized profit inside the selected analytics timeframe. On All, this uses the same total as Total Profit.',
     'GP Traded': 'Total GP value of transactions in the selected timeframe, including buys and sells.',
     'Inventory Value': 'Current GP cost basis of items still held in your tracked stock.',
