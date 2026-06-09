@@ -7,7 +7,6 @@ import {
   CircleDollarSign,
   GripVertical,
   MinusCircle,
-  MoreHorizontal,
   PackageOpen,
   Pencil,
   ShoppingCart,
@@ -20,6 +19,7 @@ import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '..
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { useGEData } from '../contexts/GEDataContext';
 import ItemIcon from './ItemIcon';
+import RowActionMenu from './RowActionMenu';
 import '../styles/table.css';
 import { sortStocks } from '../utils/calculations';
 import { parseLocalDate } from '../utils/localPeriods';
@@ -477,8 +477,7 @@ function StatusBadge({ stock }) {
 }
 
 function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onCalculate, onArchive, onMoveToNonGE }) {
-  const handleMenuAction = (event, action) => {
-    event.currentTarget.closest('details')?.removeAttribute('open');
+  const handleMenuAction = (action) => {
     action(stock);
   };
 
@@ -492,39 +491,34 @@ function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onC
         <CircleDollarSign size={12} />
         Sell
       </button>
-      <details className="row-action-menu">
-        <summary className="row-action-menu-trigger" title="More actions" aria-label="More actions">
-          <MoreHorizontal size={16} aria-hidden="true" />
-        </summary>
-        <div className="row-action-menu-list">
-          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onRemove)}>
-            <MinusCircle size={14} />
-            Remove
+      <RowActionMenu>
+        <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onRemove)}>
+          <MinusCircle size={14} />
+          Remove
+        </button>
+        <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onCalculate)}>
+          <Calculator size={14} />
+          Calc
+        </button>
+        <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onAdjust)}>
+          <Pencil size={14} />
+          Adjust
+        </button>
+        <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onArchive)}>
+          <Archive size={14} />
+          Archive
+        </button>
+        {onMoveToNonGE && (
+          <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onMoveToNonGE)}>
+            <PackageOpen size={14} />
+            Move to Non-GE
           </button>
-          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onCalculate)}>
-            <Calculator size={14} />
-            Calc
-          </button>
-          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onAdjust)}>
-            <Pencil size={14} />
-            Adjust
-          </button>
-          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onArchive)}>
-            <Archive size={14} />
-            Archive
-          </button>
-          {onMoveToNonGE && (
-            <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onMoveToNonGE)}>
-              <PackageOpen size={14} />
-              Move to Non-GE
-            </button>
-          )}
-          <button type="button" className="row-action-menu-item row-action-menu-item--danger" onClick={(event) => handleMenuAction(event, onDelete)}>
-            <Trash2 size={14} />
-            Delete
-          </button>
-        </div>
-      </details>
+        )}
+        <button type="button" className="row-action-menu-item row-action-menu-item--danger" onClick={() => handleMenuAction(onDelete)}>
+          <Trash2 size={14} />
+          Delete
+        </button>
+      </RowActionMenu>
     </div>
   );
 }

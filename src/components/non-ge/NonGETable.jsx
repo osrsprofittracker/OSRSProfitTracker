@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { Archive, ArrowDown, ArrowUp, CircleDollarSign, GripVertical, MinusCircle, MoreHorizontal, Pencil, ShoppingCart, StickyNote, Trash2 } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, CircleDollarSign, GripVertical, MinusCircle, Pencil, ShoppingCart, StickyNote, Trash2 } from 'lucide-react';
 import ItemIcon from '../ItemIcon';
+import RowActionMenu from '../RowActionMenu';
 import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '../../utils/calculations';
 import { formatAvgPrice, formatNumber } from '../../utils/formatters';
 import { getNonGECatalogItem, getNonGEItemImageUrl, nonGEItemDisplayName, nonGEItemRangeLabel } from '../../utils/nonGeCatalog';
@@ -83,8 +84,7 @@ function NumberCell({ value, numberFormat, className = '' }) {
   );
 }
 
-function closeMenuAndRun(event, action, stock) {
-  event.currentTarget.closest('details')?.removeAttribute('open');
+function closeMenuAndRun(action, stock) {
   action(stock);
 }
 
@@ -229,36 +229,31 @@ export default function NonGETable({
                       <CircleDollarSign size={12} />
                       Sell
                     </button>
-                    <details className="row-action-menu">
-                      <summary className="row-action-menu-trigger" title="More actions" aria-label="More actions">
-                        <MoreHorizontal size={16} aria-hidden="true" />
-                      </summary>
-                      <div className="row-action-menu-list">
-                        <button
-                          type="button"
-                          className="row-action-menu-item"
-                          onClick={(event) => closeMenuAndRun(event, onRemove, stock)}
-                          disabled={(stock.shares || 0) <= 0}
-                        >
-                          <MinusCircle size={14} />
-                          Remove
+                    <RowActionMenu>
+                      <button
+                        type="button"
+                        className="row-action-menu-item"
+                        onClick={() => closeMenuAndRun(onRemove, stock)}
+                        disabled={(stock.shares || 0) <= 0}
+                      >
+                        <MinusCircle size={14} />
+                        Remove
+                      </button>
+                      <button type="button" className="row-action-menu-item" onClick={() => closeMenuAndRun(onAdjust, stock)}>
+                        <Pencil size={14} />
+                        Adjust
+                      </button>
+                      <button type="button" className="row-action-menu-item" onClick={() => closeMenuAndRun(onArchive, stock)}>
+                        <Archive size={14} />
+                        Archive
+                      </button>
+                      {onDelete && (
+                        <button type="button" className="row-action-menu-item row-action-menu-item--danger" onClick={() => closeMenuAndRun(onDelete, stock)}>
+                          <Trash2 size={14} />
+                          Delete
                         </button>
-                        <button type="button" className="row-action-menu-item" onClick={(event) => closeMenuAndRun(event, onAdjust, stock)}>
-                          <Pencil size={14} />
-                          Adjust
-                        </button>
-                        <button type="button" className="row-action-menu-item" onClick={(event) => closeMenuAndRun(event, onArchive, stock)}>
-                          <Archive size={14} />
-                          Archive
-                        </button>
-                        {onDelete && (
-                          <button type="button" className="row-action-menu-item row-action-menu-item--danger" onClick={(event) => closeMenuAndRun(event, onDelete, stock)}>
-                            <Trash2 size={14} />
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    </details>
+                      )}
+                    </RowActionMenu>
                   </div>
                 </td>
               </tr>

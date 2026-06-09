@@ -175,16 +175,14 @@
 }
 
 .row-action-menu-trigger:hover,
-.row-action-menu[open] .row-action-menu-trigger {
+.row-action-menu-trigger[aria-expanded="true"] {
   background: rgb(51, 65, 85);
   border-color: rgba(148, 163, 184, 0.65);
 }
 
 .row-action-menu-list {
-  position: absolute;
-  top: calc(100% + 0.35rem);
-  right: 0;
-  z-index: 30;
+  position: fixed;
+  z-index: 500;
   min-width: 11rem;
   padding: 0.35rem;
   border: 1px solid rgba(71, 85, 105, 0.95);
