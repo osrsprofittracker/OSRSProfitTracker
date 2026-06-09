@@ -4,7 +4,7 @@ A web-based tool for Old School RuneScape players to track investments, monitor 
 
 **Live App:** [https://osrs-portfolio.fun/](https://osrs-portfolio.fun/)
 
-**Current Version:** v3.0.0
+**Current Version:** v4.0.0
 
 > **Status: Beta** - The app is functional but still in active development. Bugs and breaking changes may occur.
 
@@ -15,6 +15,7 @@ A web-based tool for Old School RuneScape players to track investments, monitor 
 - **Profit Tracking** - Track items with buy/sell prices and automatic profit, ROI, cost basis, and tax-aware unrealized profit calculations
 - **Live GE Data** - Link stocks to OSRS Grand Exchange items with live high/low prices, buy limits, member status, and local item icons
 - **Analytics** - Explore profit, item, category, and goal dashboards with timeframe filters, heatmaps, comparisons, drilldowns, and milestone views
+- **Non-GE Trading** - Track collector and off-market items with custom categories, private custom items, bulk trades, and dedicated analytics
 - **Watchlist** - Track non-owned items with target buy/sell prices, notes, price alerts, and quick conversion into active trades
 - **Price Graphs** - Search OSRS items and inspect interactive price history, volume, margins, favorites, and recent items
 - **Buy Limit Timers** - Automatic 4-hour GE limit timers and notifications so you never miss a buy window

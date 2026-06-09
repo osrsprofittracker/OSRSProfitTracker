@@ -153,9 +153,22 @@ export function useMilestones(userId) {
       const pastPeriods = generatePastPeriods(period, effectiveMinDate);
       if (pastPeriods.length === 0) continue;
 
+      const { data: existing, error: existingError } = await supabase
+        .from('milestone_history')
+        .select('period_start')
+        .eq('user_id', userId)
+        .eq('period', period);
+
+      if (existingError) {
+        console.error(`Error fetching milestone history for ${period}:`, existingError);
+        continue;
+      }
+
+      const existingStarts = new Set((existing || []).map(row => row.period_start));
       const toInsert = [];
       for (const periodStart of pastPeriods) {
         const periodStartStr = formatLocalDate(periodStart);
+        if (existingStarts.has(periodStartStr)) continue;
 
         const periodEnd = getLocalPeriodEnd(periodStart, period);
 
@@ -179,7 +192,7 @@ export function useMilestones(userId) {
       if (toInsert.length > 0) {
         const { error } = await supabase
           .from('milestone_history')
-          .upsert(toInsert, { onConflict: 'user_id,period,period_start' });
+          .upsert(toInsert, { onConflict: 'user_id,period,period_start', ignoreDuplicates: true });
 
         if (error) {
           console.error(`Error recording milestone history for ${period}:`, error);
