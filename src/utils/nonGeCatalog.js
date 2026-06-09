@@ -1,6 +1,22 @@
 import { NON_GE_CATALOG } from '../data/nonGeCatalog';
+import { CURRENT_VERSION } from '../data/changelog';
 
 const NON_GE_ICON_BASE_PATH = '/icons/non-ge';
+const ICON_CACHE_VERSION_KEY = 'osrs_icon_cache_version';
+
+function getIconCacheVersion() {
+  try {
+    return localStorage.getItem(ICON_CACHE_VERSION_KEY) || CURRENT_VERSION;
+  } catch {
+    return CURRENT_VERSION;
+  }
+}
+
+function getVersionedIconUrl(path) {
+  if (!path || path.startsWith('http')) return path || '';
+  const version = getIconCacheVersion();
+  return version ? `${path}${path.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}` : path;
+}
 
 export function getNonGECatalogItem(key) {
   if (!key) return null;
@@ -29,7 +45,7 @@ export function nonGEItemRangeLabel(item) {
 
 export function getNonGEItemImageUrl(item) {
   if (!item) return '';
-  if (item.key) return `${NON_GE_ICON_BASE_PATH}/${item.key}.png`;
+  if (item.key) return getVersionedIconUrl(`${NON_GE_ICON_BASE_PATH}/${item.key}.png`);
   if (item.imageUrl) return item.imageUrl;
   return '';
 }

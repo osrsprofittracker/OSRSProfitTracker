@@ -25,6 +25,11 @@ export default function ProfitModal({ type, onConfirm, onCancel }) {
       title: 'Add Bonds Profit',
       color: 'rgb(161, 98, 7)',
       hoverColor: 'rgb(133, 77, 14)'
+    },
+    activeFlipping: {
+      title: 'Add Active Flipping Profit',
+      color: 'rgb(14, 165, 233)',
+      hoverColor: 'rgb(2, 132, 199)'
     }
   };
 

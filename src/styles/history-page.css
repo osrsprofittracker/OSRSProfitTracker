@@ -147,6 +147,11 @@
   color: white;
 }
 
+.history-filter-btn--active_flipping.history-filter-btn--active {
+  background: rgb(2, 132, 199);
+  color: white;
+}
+
 .history-market-filter-btn--active {
   background: rgb(15, 118, 110);
   color: white;
@@ -218,6 +223,10 @@
 
 .history-row--bonds {
   border-left: 3px solid rgb(245, 158, 11);
+}
+
+.history-row--active_flipping {
+  border-left: 3px solid rgb(56, 189, 248);
 }
 
 .history-row:hover {
@@ -353,6 +362,12 @@
   background: rgba(245, 158, 11, 0.2);
   color: rgb(253, 186, 116);
   border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.history-type-badge--active_flipping {
+  background: rgba(14, 165, 233, 0.2);
+  color: rgb(125, 211, 252);
+  border: 1px solid rgba(14, 165, 233, 0.3);
 }
 
 .history-total--buy {

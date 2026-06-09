@@ -73,6 +73,7 @@
  * @property {number} dumpProfit - Extra profit from item dumps
  * @property {number} referralProfit - Extra profit from referrals
  * @property {number} bondsProfit - Extra profit from bonds
+ * @property {number} activeFlippingProfit - Extra profit from active flipping
  */
 
 // ──────────────────────────────────────────────
@@ -82,7 +83,7 @@
 /**
  * @typedef {Object} ProfitHistoryEntry
  * @property {number} id
- * @property {string} profit_type - e.g. 'sell', 'dump', 'referral', 'bonds'
+ * @property {string} profit_type - e.g. 'sell', 'dump', 'referral', 'bonds', 'active_flipping'
  * @property {number} amount - GP amount (rounded integer)
  * @property {number|null} stock_id - FK to stocks.id (null for non-trade profits)
  * @property {number|null} transaction_id - FK to transactions.id (null for non-trade profits)
@@ -151,6 +152,7 @@
  * @property {boolean} dumpProfit
  * @property {boolean} referralProfit
  * @property {boolean} bondsProfit
+ * @property {boolean} activeFlippingProfit
  */
 
 /**

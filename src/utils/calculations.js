@@ -4,9 +4,9 @@ export const calculateStocksProfit = (stocks) => {
   }, 0);
 };
 
-export const calculateTotalProfit = (stocks, dumpProfit, referralProfit, bondsProfit) => {
+export const calculateTotalProfit = (stocks, dumpProfit, referralProfit, bondsProfit, activeFlippingProfit = 0) => {
   const stocksProfit = calculateStocksProfit(stocks);
-  return stocksProfit + dumpProfit + referralProfit + bondsProfit;
+  return stocksProfit + dumpProfit + referralProfit + bondsProfit + activeFlippingProfit;
 };
 
 export const calculateAvgBuyPrice = (stock) => {

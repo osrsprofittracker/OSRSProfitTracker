@@ -173,7 +173,7 @@ function MainAppInner({ session, onLogout }) {
   } = useNonGEStocks(userId);
 
   // Destructure profits
-  const { dumpProfit, referralProfit, bondsProfit } = profits;
+  const { dumpProfit, referralProfit, bondsProfit, activeFlippingProfit } = profits;
 
   // Destructure settings
   const { numberFormat, visibleColumns, visibleProfits, altAccountTimer, showCategoryStats,
@@ -744,6 +744,7 @@ function MainAppInner({ session, onLogout }) {
 
   const handleCloseChangelog = () => {
     localStorage.setItem(`lastSeenVersion_${userId}`, CURRENT_VERSION);
+    localStorage.setItem('osrs_icon_cache_version', CURRENT_VERSION);
     closeModal('changelog');
   };
 
@@ -769,6 +770,7 @@ function MainAppInner({ session, onLogout }) {
     handleAddDumpProfit,
     handleAddReferralProfit,
     handleAddBondsProfit,
+    handleAddActiveFlippingProfit,
     handleUpdateMilestone,
     archivedStocks,
     archivedLoading,
@@ -1536,6 +1538,7 @@ function MainAppInner({ session, onLogout }) {
             onAddDumpProfit={() => openModal('dumpProfit')}
             onAddReferralProfit={() => openModal('referralProfit')}
             onAddBondsProfit={() => openModal('bondsProfit')}
+            onAddActiveFlippingProfit={() => openModal('activeFlippingProfit')}
             onOpenMilestoneModal={() => openModal('milestone', { milestoneView: 'main' })}
             onOpenMilestoneHistory={() => openModal('milestone', { milestoneView: 'history' })}
           />
@@ -1833,6 +1836,7 @@ function MainAppInner({ session, onLogout }) {
           handleAddDumpProfit={handleAddDumpProfit}
           handleAddReferralProfit={handleAddReferralProfit}
           handleAddBondsProfit={handleAddBondsProfit}
+          handleAddActiveFlippingProfit={handleAddActiveFlippingProfit}
           handleUpdateMilestone={handleUpdateMilestone}
           archivedStocks={archivedStocks}
           archivedLoading={archivedLoading}
@@ -1872,6 +1876,7 @@ function MainAppInner({ session, onLogout }) {
           dumpProfit={dumpProfit}
           referralProfit={referralProfit}
           bondsProfit={bondsProfit}
+          activeFlippingProfit={activeFlippingProfit}
           numberFormat={numberFormat}
           groupedStocks={groupedStocks}
           groupedStatsStocks={groupedStatsStocks}

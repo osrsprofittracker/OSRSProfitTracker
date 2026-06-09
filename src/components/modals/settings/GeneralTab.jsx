@@ -47,6 +47,11 @@ const PROFIT_TYPES = [
     label: 'Bonds Profit',
     info: 'Track profits from buying and selling OSRS bonds'
   },
+  {
+    key: 'activeFlippingProfit',
+    label: 'Active Flipping Profit',
+    info: 'Track manual profit from active flipping outside individual item sales.'
+  },
 ];
 
 export default function GeneralTab({

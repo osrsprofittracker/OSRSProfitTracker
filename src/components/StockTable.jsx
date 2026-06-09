@@ -7,7 +7,6 @@ import {
   CircleDollarSign,
   GripVertical,
   MinusCircle,
-  MoreHorizontal,
   PackageOpen,
   Pencil,
   ShoppingCart,
@@ -20,6 +19,7 @@ import { calculateAvgBuyPrice, calculateAvgSellPrice, calculateProfit } from '..
 import { calculateUnrealizedProfit } from '../utils/taxUtils';
 import { useGEData } from '../contexts/GEDataContext';
 import ItemIcon from './ItemIcon';
+import RowActionMenu from './RowActionMenu';
 import '../styles/table.css';
 import { sortStocks } from '../utils/calculations';
 import { parseLocalDate } from '../utils/localPeriods';
@@ -46,6 +46,10 @@ function investmentAge(dateStr) {
 
 function isInteractiveTarget(target) {
   return Boolean(target.closest('button, input, textarea, select, a, summary, details'));
+}
+
+function normalizeGEItemName(name) {
+  return String(name || '').trim().toLowerCase();
 }
 
 export default function StockTable({
@@ -77,8 +81,16 @@ export default function StockTable({
   onViewGraph,
   onMoveToNonGE,
 }) {
-  const { gePrices: geData, geIconMap, membershipMap } = useGEData();
+  const { gePrices: geData, geIconMap, geMapping, membershipMap } = useGEData();
   const hoveredStockRef = useRef(null);
+  const itemIdByName = useMemo(() => {
+    const map = new Map();
+    (geMapping || []).forEach(item => {
+      const name = normalizeGEItemName(item.name);
+      if (name && !map.has(name)) map.set(name, item.id);
+    });
+    return map;
+  }, [geMapping]);
   const sortedStocks = useMemo(
     () => sortStocks(stocks, sortConfig),
     [stocks, sortConfig]
@@ -151,6 +163,7 @@ export default function StockTable({
               numberFormat={numberFormat}
               geData={geData}
               geIconMap={geIconMap}
+              itemIdByName={itemIdByName}
               membershipMap={membershipMap}
               showMembershipIcon={showMembershipIcon}
               showInvestmentDate={showInvestmentDate}
@@ -237,6 +250,7 @@ function StockRow({
   numberFormat,
   geData = {},
   geIconMap = {},
+  itemIdByName = new Map(),
   membershipMap = {},
   showMembershipIcon = true,
   onArchive,
@@ -254,6 +268,7 @@ function StockRow({
   const profit = calculateProfit(stock);
   const timerDisplay = formatTimer(stock.timerEndTime);
   const isTimerActive = stock.timerEndTime && stock.timerEndTime > Date.now();
+  const displayItemId = stock.itemId || itemIdByName.get(normalizeGEItemName(stock.name));
   const handleRowClick = (event) => {
     if (!isInteractiveTarget(event.target)) {
       event.currentTarget.focus();
@@ -294,20 +309,20 @@ function StockRow({
       </td>
       <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600', color: 'white', border: '1px solid rgb(51, 65, 85)' }}>
         <div className="stock-name-cell">
-          {stock.itemId && (
+          {displayItemId && (
             <ItemIcon
-              src={geIconMap[stock.itemId]}
+              src={geIconMap[displayItemId]}
               alt=""
               className="stock-table-item-icon"
               fallbackText={stock.name}
             />
           )}
-          {showMembershipIcon && stock.itemId && stock.itemId in membershipMap && (
+          {showMembershipIcon && displayItemId && displayItemId in membershipMap && (
             <Star
-              className={`members-star ${membershipMap[stock.itemId] ? 'members-star--p2p' : 'members-star--f2p'}`}
+              className={`members-star ${membershipMap[displayItemId] ? 'members-star--p2p' : 'members-star--f2p'}`}
               size={12}
               fill="currentColor"
-              title={membershipMap[stock.itemId] ? 'Members item' : 'Free-to-play item'}
+              title={membershipMap[displayItemId] ? 'Members item' : 'Free-to-play item'}
             />
           )}
           {stock.itemId && onViewGraph ? (
@@ -477,8 +492,7 @@ function StatusBadge({ stock }) {
 }
 
 function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onCalculate, onArchive, onMoveToNonGE }) {
-  const handleMenuAction = (event, action) => {
-    event.currentTarget.closest('details')?.removeAttribute('open');
+  const handleMenuAction = (action) => {
     action(stock);
   };
 
@@ -492,39 +506,34 @@ function ActionButtons({ stock, onBuy, onSell, onRemove, onAdjust, onDelete, onC
         <CircleDollarSign size={12} />
         Sell
       </button>
-      <details className="row-action-menu">
-        <summary className="row-action-menu-trigger" title="More actions" aria-label="More actions">
-          <MoreHorizontal size={16} aria-hidden="true" />
-        </summary>
-        <div className="row-action-menu-list">
-          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onRemove)}>
-            <MinusCircle size={14} />
-            Remove
+      <RowActionMenu>
+        <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onRemove)}>
+          <MinusCircle size={14} />
+          Remove
+        </button>
+        <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onCalculate)}>
+          <Calculator size={14} />
+          Calc
+        </button>
+        <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onAdjust)}>
+          <Pencil size={14} />
+          Adjust
+        </button>
+        <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onArchive)}>
+          <Archive size={14} />
+          Archive
+        </button>
+        {onMoveToNonGE && (
+          <button type="button" className="row-action-menu-item" onClick={() => handleMenuAction(onMoveToNonGE)}>
+            <PackageOpen size={14} />
+            Move to Non-GE
           </button>
-          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onCalculate)}>
-            <Calculator size={14} />
-            Calc
-          </button>
-          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onAdjust)}>
-            <Pencil size={14} />
-            Adjust
-          </button>
-          <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onArchive)}>
-            <Archive size={14} />
-            Archive
-          </button>
-          {onMoveToNonGE && (
-            <button type="button" className="row-action-menu-item" onClick={(event) => handleMenuAction(event, onMoveToNonGE)}>
-              <PackageOpen size={14} />
-              Move to Non-GE
-            </button>
-          )}
-          <button type="button" className="row-action-menu-item row-action-menu-item--danger" onClick={(event) => handleMenuAction(event, onDelete)}>
-            <Trash2 size={14} />
-            Delete
-          </button>
-        </div>
-      </details>
+        )}
+        <button type="button" className="row-action-menu-item row-action-menu-item--danger" onClick={() => handleMenuAction(onDelete)}>
+          <Trash2 size={14} />
+          Delete
+        </button>
+      </RowActionMenu>
     </div>
   );
 }

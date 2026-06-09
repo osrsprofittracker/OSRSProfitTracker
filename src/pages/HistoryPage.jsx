@@ -33,13 +33,14 @@ const EMPTY_FILTERS = {
 
 const MARKET_FILTERS = ['all', 'ge', 'non_ge'];
 const TRANSACTION_TYPES = ['all', 'buy', 'sell', 'remove'];
-const PROFIT_TYPES = ['all', 'dump', 'referral', 'bonds'];
+const PROFIT_TYPES = ['all', 'dump', 'referral', 'bonds', 'active_flipping'];
 
 function visibleProfitTypes(visibleProfits = {}) {
   return [
     visibleProfits.dumpProfit !== false ? 'dump' : null,
     visibleProfits.referralProfit !== false ? 'referral' : null,
-    visibleProfits.bondsProfit !== false ? 'bonds' : null
+    visibleProfits.bondsProfit !== false ? 'bonds' : null,
+    visibleProfits.activeFlippingProfit !== false ? 'active_flipping' : null
   ].filter(Boolean);
 }
 
@@ -51,7 +52,8 @@ function typeLabel(type) {
     remove: 'Removes',
     dump: 'Dumps',
     referral: 'Referrals',
-    bonds: 'Bonds'
+    bonds: 'Bonds',
+    active_flipping: 'Active Flipping'
   };
   return labels[type] || type;
 }
@@ -101,7 +103,7 @@ export default function HistoryPage({
   pagedTransactions = [], pagedLoading = false, totalCount = 0, totalPages = 0,
   page = 1, pageSize = 25, filters = EMPTY_FILTERS,
   historySource = 'transactions', onChangeHistorySource,
-  historyProfitTypes = ['dump', 'referral', 'bonds'], onChangeHistoryProfitTypes,
+  historyProfitTypes = ['dump', 'referral', 'bonds', 'active_flipping'], onChangeHistoryProfitTypes,
   visibleProfits = {},
   onGoToPage, onChangePageSize, onApplyFilters, onInit, numberFormat,
   sortConfig = { key: 'date', dir: 'desc' },

@@ -229,6 +229,10 @@
   background: rgb(234, 179, 8);
 }
 
+.analytics-legend-swatch[data-color="profit_active_flipping"] {
+  background: rgb(56, 189, 248);
+}
+
 .category-filter-bar {
   display: flex;
   flex-wrap: wrap;

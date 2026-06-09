@@ -34,7 +34,7 @@ export default function ProfitOverTimeChart({
   buckets = [],
   numberFormat,
   title = 'Profit over time',
-  tooltip = 'Net realized profit by bucket in the selected timeframe, including item, dump, referral, and bonds profit.',
+  tooltip = 'Net realized profit by bucket in the selected timeframe, including item, dump, referral, bonds, and active flipping profit.',
   emptyMessage = 'No activity in this window. Try a wider timeframe.',
 }) {
   if (!buckets.length) {

@@ -51,6 +51,21 @@ function getEndpointParams(request) {
 }
 
 function validateEndpointRequest(endpoint, params) {
+  if (endpoint === 'timeseries') {
+    const id = params.get('id');
+    const timestep = params.get('timestep');
+
+    if (!id || !/^\d+$/.test(id)) {
+      return 'id must be a numeric item id';
+    }
+
+    if (!['5m', '1h', '6h', '24h'].includes(timestep)) {
+      return 'timestep must be one of: 5m, 1h, 6h, 24h';
+    }
+
+    return null;
+  }
+
   if (endpoint !== '1h') return null;
 
   const timestamp = params.get('timestamp');

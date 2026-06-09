@@ -51,6 +51,7 @@ export default function ModalManager({
   handleAddDumpProfit,
   handleAddReferralProfit,
   handleAddBondsProfit,
+  handleAddActiveFlippingProfit,
   handleUpdateMilestone,
   archivedStocks,
   archivedLoading,
@@ -268,6 +269,14 @@ export default function ModalManager({
           type="bonds"
           onConfirm={handleAddBondsProfit}
           onCancel={() => closeModal('bondsProfit')}
+        />
+      </ModalContainer>
+
+      <ModalContainer isOpen={modals.activeFlippingProfit}>
+        <ProfitModal
+          type="activeFlipping"
+          onConfirm={handleAddActiveFlippingProfit}
+          onCancel={() => closeModal('activeFlippingProfit')}
         />
       </ModalContainer>
 

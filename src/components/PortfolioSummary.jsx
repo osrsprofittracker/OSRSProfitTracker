@@ -10,11 +10,13 @@ export default function PortfolioSummary({
   dumpProfit,
   referralProfit,
   bondsProfit,
+  activeFlippingProfit = 0,
   statsStocks = null,
-  visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true },
+  visibleProfits = { dumpProfit: true, referralProfit: true, bondsProfit: true, activeFlippingProfit: true },
   onAddDumpProfit,
   onAddReferralProfit,
   onAddBondsProfit,
+  onAddActiveFlippingProfit,
   numberFormat,
   showUnrealisedProfitStats = false
 }) {
@@ -22,7 +24,7 @@ export default function PortfolioSummary({
   const { stocks, allStocks } = useTrade();
   const stocksForStats = statsStocks || (allStocks?.length > 0 ? allStocks : stocks);
   const stocksProfit = calculateStocksProfit(stocksForStats);
-  const totalProfit = calculateTotalProfit(stocksForStats, dumpProfit, referralProfit, bondsProfit);
+  const totalProfit = calculateTotalProfit(stocksForStats, dumpProfit, referralProfit, bondsProfit, activeFlippingProfit);
 
   const totalUnrealised = showUnrealisedProfitStats
     ? stocksForStats.reduce((sum, s) => {
@@ -69,7 +71,7 @@ export default function PortfolioSummary({
           label="Total Profit:"
           value={formatNumber(totalProfit)}
           color={totalProfit >= 0 ? 'rgb(52, 211, 153)' : 'rgb(248, 113, 113)'}
-          tooltip="Stocks + dumps + referrals + bonds profit combined"
+          tooltip="Stocks + dumps + referrals + bonds + active flipping profit combined"
         />
       </div>
 
@@ -124,6 +126,21 @@ export default function PortfolioSummary({
               onClick: onAddBondsProfit,
               color: 'rgb(161, 98, 7)',
               hoverColor: 'rgb(133, 77, 14)'
+            }}
+          />
+        )}
+
+        {/* Active Flipping Profit */}
+        {visibleProfits?.activeFlippingProfit !== false && (
+          <SummaryCard
+            label="Active Flipping:"
+            value={formatNumber(activeFlippingProfit)}
+            color="rgb(56, 189, 248)"
+            tooltip="Manual profit from active flipping"
+            button={{
+              onClick: onAddActiveFlippingProfit,
+              color: 'rgb(2, 132, 199)',
+              hoverColor: 'rgb(3, 105, 161)'
             }}
           />
         )}

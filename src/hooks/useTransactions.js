@@ -49,7 +49,7 @@ export function useTransactions(userId) {
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
   const [historySource, setHistorySource] = useState('transactions');
-  const [historyProfitTypes, setHistoryProfitTypes] = useState(['dump', 'referral', 'bonds']);
+  const [historyProfitTypes, setHistoryProfitTypes] = useState(['dump', 'referral', 'bonds', 'active_flipping']);
   const pagedRequestId = useRef(0);
 
   const fetchTransactions = useCallback(async (options = {}) => {
@@ -599,7 +599,8 @@ function profitTypeLabel(type) {
   const labels = {
     dump: 'Dump profit',
     referral: 'Referral profit',
-    bonds: 'Bond profit'
+    bonds: 'Bond profit',
+    active_flipping: 'Active flipping profit'
   };
   return labels[type] || 'Extra profit';
 }

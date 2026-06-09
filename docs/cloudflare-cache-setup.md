@@ -1,6 +1,6 @@
 # Cloudflare Cache Setup
 
-Use this when the Netlify site is proxied through Cloudflare. The goal is to let Cloudflare serve cacheable shared OSRS data from edge cache so Netlify Functions are only hit on cache misses.
+Use this when the Netlify site is proxied through Cloudflare. The app prefers direct browser calls to the OSRS Wiki API. These cache rules only apply to the first-party fallback API, which is used when the direct Wiki request fails because of CORS or a network issue.
 
 ## DNS
 
@@ -15,22 +15,32 @@ Create one Cloudflare Cache Rule for cacheable GE price API paths:
 
 ```txt
 Name: Cache GE price API
-When: URI Path is /api/ge-prices/mapping or /api/ge-prices/1h
+When: URI Path is /api/ge-prices/latest, /api/ge-prices/mapping, /api/ge-prices/1h, or /api/ge-prices/timeseries
 Cache eligibility: Eligible for cache
 Edge TTL: Respect origin headers
 Browser TTL: Respect origin headers
 Cache key: Include query string, or use default full URL cache key
 ```
 
-The app calls:
+The app normally calls:
 
 ```txt
 https://prices.runescape.wiki/api/v1/osrs/latest
-/api/ge-prices/mapping
-/api/ge-prices/1h
+https://prices.runescape.wiki/api/v1/osrs/mapping
+https://prices.runescape.wiki/api/v1/osrs/1h
+https://prices.runescape.wiki/api/v1/osrs/timeseries
 ```
 
-The live `/latest` price feed is fetched directly from the OSRS Wiki API by the browser. Netlify no longer proxies or warms `/latest`.
+When a direct Wiki call fails, the app falls back to:
+
+```txt
+/api/ge-prices/latest
+/api/ge-prices/mapping
+/api/ge-prices/1h
+/api/ge-prices/timeseries
+```
+
+The fallback keeps the app working if the Wiki API temporarily omits CORS headers for the production origin.
 
 Optional extra rules:
 
@@ -48,7 +58,11 @@ Both functions already return public cache headers, so a Cloudflare rule is only
 
 For `/api/ge-prices/mapping`, the origin returns longer-lived cache headers.
 
+For `/api/ge-prices/latest`, the origin returns short-lived cache headers.
+
 For `/api/ge-prices/1h`, the origin returns medium-lived cache headers.
+
+For `/api/ge-prices/timeseries`, the origin returns medium-lived cache headers and includes the query string in the cache key.
 
 ## Verification
 
@@ -56,7 +70,9 @@ After deploying and enabling Cloudflare, check:
 
 ```powershell
 curl.exe -I https://YOUR_DOMAIN/api/ge-prices/mapping
+curl.exe -I https://YOUR_DOMAIN/api/ge-prices/latest
 curl.exe -I "https://YOUR_DOMAIN/api/ge-prices/1h?timestamp=UNIX_TIMESTAMP"
+curl.exe -I "https://YOUR_DOMAIN/api/ge-prices/timeseries?id=31722&timestep=5m"
 ```
 
 Look for:
@@ -70,5 +86,5 @@ The first request can be `MISS`; repeat the request after a few seconds. The rep
 
 ## What Still Hits Netlify
 
-Cloudflare cache misses for `/api/ge-prices/mapping` and `/api/ge-prices/1h` still hit Netlify. Live `/latest` requests go directly to the OSRS Wiki API.
+Only fallback requests hit Netlify. Cloudflare cache misses for `/api/ge-prices/*` hit the Netlify Function, which then fetches the OSRS Wiki API server-side and stores cacheable responses in Netlify Blobs.
 

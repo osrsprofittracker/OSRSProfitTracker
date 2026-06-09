@@ -4,6 +4,13 @@ const BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
 const USER_AGENT = 'OSRSProfitTracker/3.0 (https://osrs-portfolio.fun; contact: osrsprofittracker@gmail.com)';
 
 export const ENDPOINTS = {
+  latest: {
+    path: '/latest',
+    key: 'latest',
+    maxBlobAgeMs: 30 * 1000,
+    cdnCacheControl: 'public, max-age=30, stale-while-revalidate=60',
+    browserCacheControl: 'public, max-age=15, stale-while-revalidate=45',
+  },
   mapping: {
     path: '/mapping',
     key: 'mapping',
@@ -21,6 +28,19 @@ export const ENDPOINTS = {
     cacheKey: (params) => {
       const timestamp = params?.get('timestamp');
       return timestamp ? `1h-${timestamp}` : '1h-latest';
+    },
+  },
+  timeseries: {
+    path: '/timeseries',
+    key: 'timeseries',
+    maxBlobAgeMs: 5 * 60 * 1000,
+    cdnCacheControl: 'public, max-age=300, stale-while-revalidate=900',
+    browserCacheControl: 'public, max-age=60, stale-while-revalidate=300',
+    queryParams: ['id', 'timestep'],
+    cacheKey: (params) => {
+      const id = params?.get('id') || 'unknown';
+      const timestep = params?.get('timestep') || 'unknown';
+      return `timeseries-${id}-${timestep}`;
     },
   },
 };

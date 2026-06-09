@@ -48,6 +48,7 @@ const mergeGpTraded = (buckets, gpTotals) => {
       profit_dump: 0,
       profit_referral: 0,
       profit_bonds: 0,
+      profit_active_flipping: 0,
       gp_traded: 0,
       sell_basis: 0,
       by_category: {},
@@ -143,6 +144,7 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
         profit_dump: 0,
         profit_referral: 0,
         profit_bonds: 0,
+        profit_active_flipping: 0,
         gp_traded: 0,
         sell_basis: 0,
         by_category: {},
@@ -189,6 +191,7 @@ export function aggregateBucketsLocally({ transactions, stocks, profitHistory, s
     if (profit.profit_type === 'dump') row.profit_dump += amount;
     if (profit.profit_type === 'referral') row.profit_referral += amount;
     if (profit.profit_type === 'bonds') row.profit_bonds += amount;
+    if (profit.profit_type === 'active_flipping') row.profit_active_flipping += amount;
   }
 
   return [...buckets.values()].sort((a, b) => a.bucket_date.localeCompare(b.bucket_date));

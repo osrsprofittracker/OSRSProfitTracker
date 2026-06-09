@@ -19,6 +19,7 @@ const MODAL_DEFAULTS = {
   dumpProfit: false,
   referralProfit: false,
   bondsProfit: false,
+  activeFlippingProfit: false,
   notes: false,
   settings: false,
   timeCalculator: false,
