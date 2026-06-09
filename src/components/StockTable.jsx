@@ -48,6 +48,10 @@ function isInteractiveTarget(target) {
   return Boolean(target.closest('button, input, textarea, select, a, summary, details'));
 }
 
+function normalizeGEItemName(name) {
+  return String(name || '').trim().toLowerCase();
+}
+
 export default function StockTable({
   stocks,
   category,
@@ -77,8 +81,16 @@ export default function StockTable({
   onViewGraph,
   onMoveToNonGE,
 }) {
-  const { gePrices: geData, geIconMap, membershipMap } = useGEData();
+  const { gePrices: geData, geIconMap, geMapping, membershipMap } = useGEData();
   const hoveredStockRef = useRef(null);
+  const itemIdByName = useMemo(() => {
+    const map = new Map();
+    (geMapping || []).forEach(item => {
+      const name = normalizeGEItemName(item.name);
+      if (name && !map.has(name)) map.set(name, item.id);
+    });
+    return map;
+  }, [geMapping]);
   const sortedStocks = useMemo(
     () => sortStocks(stocks, sortConfig),
     [stocks, sortConfig]
@@ -151,6 +163,7 @@ export default function StockTable({
               numberFormat={numberFormat}
               geData={geData}
               geIconMap={geIconMap}
+              itemIdByName={itemIdByName}
               membershipMap={membershipMap}
               showMembershipIcon={showMembershipIcon}
               showInvestmentDate={showInvestmentDate}
@@ -237,6 +250,7 @@ function StockRow({
   numberFormat,
   geData = {},
   geIconMap = {},
+  itemIdByName = new Map(),
   membershipMap = {},
   showMembershipIcon = true,
   onArchive,
@@ -254,6 +268,7 @@ function StockRow({
   const profit = calculateProfit(stock);
   const timerDisplay = formatTimer(stock.timerEndTime);
   const isTimerActive = stock.timerEndTime && stock.timerEndTime > Date.now();
+  const displayItemId = stock.itemId || itemIdByName.get(normalizeGEItemName(stock.name));
   const handleRowClick = (event) => {
     if (!isInteractiveTarget(event.target)) {
       event.currentTarget.focus();
@@ -294,20 +309,20 @@ function StockRow({
       </td>
       <td style={{ padding: '0.5rem 0.75rem', fontWeight: '600', color: 'white', border: '1px solid rgb(51, 65, 85)' }}>
         <div className="stock-name-cell">
-          {stock.itemId && (
+          {displayItemId && (
             <ItemIcon
-              src={geIconMap[stock.itemId]}
+              src={geIconMap[displayItemId]}
               alt=""
               className="stock-table-item-icon"
               fallbackText={stock.name}
             />
           )}
-          {showMembershipIcon && stock.itemId && stock.itemId in membershipMap && (
+          {showMembershipIcon && displayItemId && displayItemId in membershipMap && (
             <Star
-              className={`members-star ${membershipMap[stock.itemId] ? 'members-star--p2p' : 'members-star--f2p'}`}
+              className={`members-star ${membershipMap[displayItemId] ? 'members-star--p2p' : 'members-star--f2p'}`}
               size={12}
               fill="currentColor"
-              title={membershipMap[stock.itemId] ? 'Members item' : 'Free-to-play item'}
+              title={membershipMap[displayItemId] ? 'Members item' : 'Free-to-play item'}
             />
           )}
           {stock.itemId && onViewGraph ? (
