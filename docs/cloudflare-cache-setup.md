@@ -1,6 +1,6 @@
 # Cloudflare Cache Setup
 
-Use this when the Netlify site is proxied through Cloudflare. The goal is to let Cloudflare serve cacheable shared OSRS data from edge cache so Netlify Functions are only hit on cache misses.
+Use this when the Netlify site is proxied through Cloudflare. The app prefers direct browser calls to the OSRS Wiki API. These cache rules only apply to the first-party fallback API, which is used when the direct Wiki request fails because of CORS or a network issue.
 
 ## DNS
 
@@ -22,7 +22,16 @@ Browser TTL: Respect origin headers
 Cache key: Include query string, or use default full URL cache key
 ```
 
-The app calls:
+The app normally calls:
+
+```txt
+https://prices.runescape.wiki/api/v1/osrs/latest
+https://prices.runescape.wiki/api/v1/osrs/mapping
+https://prices.runescape.wiki/api/v1/osrs/1h
+https://prices.runescape.wiki/api/v1/osrs/timeseries
+```
+
+When a direct Wiki call fails, the app falls back to:
 
 ```txt
 /api/ge-prices/latest
@@ -31,7 +40,7 @@ The app calls:
 /api/ge-prices/timeseries
 ```
 
-The browser routes Wiki API calls through `/api/ge-prices/*` so production is not dependent on third-party CORS headers.
+The fallback keeps the app working if the Wiki API temporarily omits CORS headers for the production origin.
 
 Optional extra rules:
 
@@ -77,5 +86,5 @@ The first request can be `MISS`; repeat the request after a few seconds. The rep
 
 ## What Still Hits Netlify
 
-Cloudflare cache misses for `/api/ge-prices/*` still hit Netlify. Netlify then fetches the OSRS Wiki API server-side and stores cacheable responses in Netlify Blobs.
+Only fallback requests hit Netlify. Cloudflare cache misses for `/api/ge-prices/*` hit the Netlify Function, which then fetches the OSRS Wiki API server-side and stores cacheable responses in Netlify Blobs.
 

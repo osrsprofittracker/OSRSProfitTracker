@@ -2,24 +2,27 @@ import { useState, useEffect } from 'react';
 
 const PROXY_URL = '/api/ge-prices';
 const WIKI_BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
-const USER_AGENT = 'OSRSProfitTracker - osrsprofittracker@gmail.com';
-const USE_DIRECT_WIKI_FALLBACK = import.meta.env.DEV;
 
 async function fetchTimeseries(itemId, timestep) {
   const endpoint = `timeseries?id=${itemId}&timestep=${timestep}`;
 
   try {
+    const res = await fetch(`${WIKI_BASE_URL}/${endpoint}`);
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) return res;
+  } catch {
+    // Fall back to the first-party proxy when the Wiki API has a CORS or network issue.
+  }
+
+  try {
     const res = await fetch(`${PROXY_URL}/${endpoint}`);
     const contentType = res.headers.get('content-type') || '';
     if (res.ok && contentType.includes('application/json')) return res;
-  } catch (proxyError) {
-    if (!USE_DIRECT_WIKI_FALLBACK) throw proxyError;
+  } catch {
+    return null;
   }
 
-  if (!USE_DIRECT_WIKI_FALLBACK) return null;
-  return fetch(`${WIKI_BASE_URL}/${endpoint}`, {
-    headers: { 'User-Agent': USER_AGENT },
-  });
+  return null;
 }
 
 export function useTimeseries(itemId, timestep, options = {}) {

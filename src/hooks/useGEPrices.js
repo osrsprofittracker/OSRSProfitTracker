@@ -5,7 +5,6 @@ const WIKI_BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
 const REFRESH_INTERVAL = 60_000;
 const ICON_BASE_PATH = '/icons/ge';
 const ICON_MANIFEST_URL = `${ICON_BASE_PATH}/manifest.json`;
-const USE_DIRECT_WIKI_FALLBACK = import.meta.env.DEV;
 
 export function useGEPrices() {
   const [prices, setPrices] = useState({});   // { [itemId]: { high, low, highTime, lowTime } }
@@ -27,14 +26,20 @@ export function useGEPrices() {
 
   const fetchGEEndpoint = async (endpoint) => {
     try {
-      const res = await fetchProxyEndpoint(endpoint);
+      const res = await fetchWikiEndpoint(endpoint);
       if (isJsonResponse(res)) return res;
-    } catch (proxyError) {
-      if (!USE_DIRECT_WIKI_FALLBACK) throw proxyError;
+    } catch {
+      // Fall back to the first-party proxy when the Wiki API has a CORS or network issue.
     }
 
-    if (!USE_DIRECT_WIKI_FALLBACK) return null;
-    return fetchWikiEndpoint(endpoint);
+    try {
+      const res = await fetchProxyEndpoint(endpoint);
+      if (isJsonResponse(res)) return res;
+    } catch {
+      return null;
+    }
+
+    return null;
   };
 
   const fetchMapping = async () => {
