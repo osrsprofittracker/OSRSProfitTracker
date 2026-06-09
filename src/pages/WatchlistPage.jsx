@@ -14,6 +14,23 @@ function parseTargetValue(value) {
   return Math.floor(numeric);
 }
 
+function formatWatchlistPercent(value) {
+  if (!Number.isFinite(value)) return '';
+  return `${Math.abs(value).toFixed(2)}%`;
+}
+
+function watchlistStatus({ buyHit, sellHit, buyDeltaPct, sellDeltaPct }) {
+  if (buyHit) return `Buy ${formatWatchlistPercent(buyDeltaPct)} below target`;
+  if (sellHit) return `Sell ${formatWatchlistPercent(sellDeltaPct)} above target`;
+
+  const buyDistance = buyDeltaPct == null ? Infinity : Math.max(buyDeltaPct, 0);
+  const sellDistance = sellDeltaPct == null ? Infinity : Math.max(-sellDeltaPct, 0);
+
+  if (buyDistance === Infinity && sellDistance === Infinity) return 'Watching';
+  if (buyDistance <= sellDistance) return `Buy ${formatWatchlistPercent(buyDistance)} away`;
+  return `Sell ${formatWatchlistPercent(sellDistance)} away`;
+}
+
 export default function WatchlistPage({
   watchlistItems = [],
   loading = false,
@@ -206,7 +223,15 @@ export default function WatchlistPage({
                       className="watchlist-search-option"
                       onMouseDown={() => handleSelectItem(item)}
                     >
-                      <span>{item.name}</span>
+                      <span className="watchlist-search-option-name">
+                        <ItemIcon
+                          src={geIconMap[item.id]}
+                          alt=""
+                          className="watchlist-search-option-icon"
+                          fallbackText={item.name}
+                        />
+                        <span>{item.name}</span>
+                      </span>
                       <span className="watchlist-search-option-limit">
                         Limit: {item.limit?.toLocaleString() ?? '-'}
                       </span>
@@ -293,11 +318,13 @@ export default function WatchlistPage({
                 const low = live?.low ?? null;
                 const buyHit = item.targetBuyPrice && low != null && low <= item.targetBuyPrice;
                 const sellHit = item.targetSellPrice && high != null && high >= item.targetSellPrice;
-                const statusLabel = buyHit
-                  ? 'Buy target hit'
-                  : sellHit
-                    ? 'Sell target hit'
-                    : 'Watching';
+                const buyDeltaPct = item.targetBuyPrice && low != null
+                  ? ((low - item.targetBuyPrice) / item.targetBuyPrice) * 100
+                  : null;
+                const sellDeltaPct = item.targetSellPrice && high != null
+                  ? ((high - item.targetSellPrice) / item.targetSellPrice) * 100
+                  : null;
+                const statusLabel = watchlistStatus({ buyHit, sellHit, buyDeltaPct, sellDeltaPct });
 
                 return (
                   <tr key={item.id} className={index % 2 === 0 ? 'tr-even' : 'tr-odd'}>

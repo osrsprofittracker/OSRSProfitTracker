@@ -1,67 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { formatLocalDate, getLocalPeriodEnd, getLocalPeriodStart } from '../utils/localPeriods';
 
 const PRESET_GOALS = [10000000, 50000000, 100000000, 500000000, 1000000000]; // 10M, 50M, 100M, 500M, 1B
 
 // --- Period helpers ---
 
-const getPeriodStart = (date, period) => {
-  const d = new Date(date);
-  switch (period) {
-    case 'day':
-      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-    case 'week': {
-      const day = d.getUTCDay();
-      const diff = day === 0 ? -6 : 1 - day; // Monday = start
-      const start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-      start.setUTCDate(start.getUTCDate() + diff);
-      return start;
-    }
-    case 'month':
-      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
-    case 'year':
-      return new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    default:
-      return d;
-  }
-};
-
-const getPeriodEnd = (periodStart, period) => {
-  const d = new Date(periodStart);
-  switch (period) {
-    case 'day':
-      d.setUTCDate(d.getUTCDate() + 1);
-      return d;
-    case 'week':
-      d.setUTCDate(d.getUTCDate() + 7);
-      return d;
-    case 'month':
-      d.setUTCMonth(d.getUTCMonth() + 1);
-      return d;
-    case 'year':
-      d.setUTCFullYear(d.getUTCFullYear() + 1);
-      return d;
-    default:
-      return d;
-  }
-};
-
 // Returns all completed period start dates between minDate and now (exclusive current period)
 const generatePastPeriods = (period, minDate) => {
   const now = new Date();
-  const currentPeriodStart = getPeriodStart(now, period);
+  const currentPeriodStart = getLocalPeriodStart(now, period);
   const periods = [];
 
-  let cursor = getPeriodStart(minDate, period);
+  let cursor = getLocalPeriodStart(minDate, period);
   while (cursor < currentPeriodStart) {
     periods.push(new Date(cursor));
-    cursor = getPeriodEnd(cursor, period);
+    cursor = getLocalPeriodEnd(cursor, period);
   }
 
   return periods;
 };
-
-const toDateString = (date) => date.toISOString().slice(0, 10);
 
 // ---
 
@@ -176,8 +134,8 @@ export function useMilestones(userId) {
     return true;
   }, [userId, fetchMilestoneHistory]);
 
-  // Scans profitHistory to backfill milestone_history for all completed past periods.
-  // Safe to call repeatedly — skips periods already recorded.
+  // Scans profitHistory to upsert milestone_history for all completed past periods.
+  // Safe to call repeatedly because completed period rows are keyed by period_start.
   const recordCompletedPeriods = useCallback(async (profitHistory, currentMilestones) => {
     if (!profitHistory || profitHistory.length === 0) return;
 
@@ -185,7 +143,7 @@ export function useMilestones(userId) {
     const entryDates = profitHistory.map(e => new Date(e.created_at).getTime());
     const minDate = new Date(Math.min(...entryDates));
     const oneYearAgo = new Date();
-    oneYearAgo.setUTCFullYear(oneYearAgo.getUTCFullYear() - 1);
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const effectiveMinDate = minDate < oneYearAgo ? oneYearAgo : minDate;
 
     const periodTypes = ['day', 'week', 'month', 'year'];
@@ -195,21 +153,24 @@ export function useMilestones(userId) {
       const pastPeriods = generatePastPeriods(period, effectiveMinDate);
       if (pastPeriods.length === 0) continue;
 
-      // Fetch already-recorded period_starts for this user+period
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('milestone_history')
         .select('period_start')
         .eq('user_id', userId)
         .eq('period', period);
 
-      const existingStarts = new Set((existing || []).map(r => r.period_start));
+      if (existingError) {
+        console.error(`Error fetching milestone history for ${period}:`, existingError);
+        continue;
+      }
 
+      const existingStarts = new Set((existing || []).map(row => row.period_start));
       const toInsert = [];
       for (const periodStart of pastPeriods) {
-        const periodStartStr = toDateString(periodStart);
+        const periodStartStr = formatLocalDate(periodStart);
         if (existingStarts.has(periodStartStr)) continue;
 
-        const periodEnd = getPeriodEnd(periodStart, period);
+        const periodEnd = getLocalPeriodEnd(periodStart, period);
 
         const actualAmount = profitHistory
           .filter(entry => {

@@ -42,7 +42,23 @@ function getRequestedEndpoint(request) {
   const pathEndpoint = url.pathname.split('/').filter(Boolean).pop();
   if (pathEndpoint && pathEndpoint !== 'ge-prices') return pathEndpoint;
 
-  return 'latest';
+  return 'mapping';
+}
+
+function getEndpointParams(request) {
+  const url = new URL(request.url);
+  return url.searchParams;
+}
+
+function validateEndpointRequest(endpoint, params) {
+  if (endpoint !== '1h') return null;
+
+  const timestamp = params.get('timestamp');
+  if (timestamp != null && !/^\d+$/.test(timestamp)) {
+    return 'timestamp must be a Unix timestamp in seconds';
+  }
+
+  return null;
 }
 
 export default async function handler(request) {
@@ -51,14 +67,20 @@ export default async function handler(request) {
   }
 
   const endpoint = getRequestedEndpoint(request);
+  const params = getEndpointParams(request);
   const config = getEndpointConfig(endpoint);
 
   if (!config) {
     return json(400, { error: `Unsupported GE endpoint: ${endpoint}` });
   }
 
+  const validationError = validateEndpointRequest(endpoint, params);
+  if (validationError) {
+    return json(400, { error: validationError });
+  }
+
   try {
-    const cached = await readCachedEndpoint(endpoint);
+    const cached = await readCachedEndpoint(endpoint, params);
 
     if (cached && isCachedEndpointFresh(endpoint, cached)) {
       return json(200, cached.payload, responseHeaders(config, cached, 'blob'));
@@ -66,7 +88,7 @@ export default async function handler(request) {
 
     if (cached) {
       try {
-        const refreshed = await refreshEndpoint(endpoint);
+        const refreshed = await refreshEndpoint(endpoint, params);
         return json(200, refreshed.payload, responseHeaders(config, refreshed, 'origin-refresh'));
       } catch (refreshError) {
         console.error(`GE ${endpoint} stale refresh error:`, refreshError.message);
@@ -78,7 +100,7 @@ export default async function handler(request) {
   }
 
   try {
-    const refreshed = await refreshEndpoint(endpoint);
+    const refreshed = await refreshEndpoint(endpoint, params);
     return json(200, refreshed.payload, responseHeaders(config, refreshed, 'origin'));
   } catch (originError) {
     console.error(`GE ${endpoint} origin fallback error:`, originError.message);

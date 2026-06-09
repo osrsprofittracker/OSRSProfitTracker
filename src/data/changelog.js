@@ -1,6 +1,23 @@
-export const CURRENT_VERSION = "3.0.0";
+export const CURRENT_VERSION = "4.0.0";
 
 export const changelog = [
+  {
+    version: "4.0.0",
+    date: "2026-06-09",
+    changes: [
+      { type: "new", text: "Non-GE tracker for collector and off-market items, with its own page, catalog, custom items, categories, archive, notes, and trade actions" },
+      { type: "new", text: "Non-GE analytics page with dedicated profit, item, and category insights for off-market holdings" },
+      { type: "new", text: "Bulk buy and bulk sell support for Non-GE items, including quick action quantities and cross-category ordering fixes" },
+      { type: "new", text: "Move to Non-GE flow for converting GE stock rows into Non-GE holdings while preserving history and cleaning up GE-only data" },
+      { type: "new", text: "Local Non-GE item icons and refreshed GE item icons for more reliable item visuals" },
+      { type: "improved", text: "Non-GE summaries, category headers, allocation bars, table actions, add flows, and modal layouts have been polished across desktop and mobile layouts" },
+      { type: "improved", text: "GE price fetching now uses the app's direct Wiki price cache, with reduced background polling and better cache behavior" },
+      { type: "improved", text: "History now includes market filters, and analytics view state can persist in the URL" },
+      { type: "fix", text: "Analytics profit margin, timeframe windows, day counts, cache invalidation, top gainers, drilldowns, empty states, and negative-zero displays have been corrected" },
+      { type: "fix", text: "Local time boundaries now drive date-based analytics and milestone calculations more consistently" },
+      { type: "fix", text: "Milestone history backfill now avoids RLS update errors by only inserting missing completed periods" },
+    ],
+  },
   {
     version: "3.0.0",
     date: "2026-05-06",

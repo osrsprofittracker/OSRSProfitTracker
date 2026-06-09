@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { BarChart3, Eye, LogOut } from 'lucide-react';
+import { Archive, BarChart3, Eye, FolderPlus, LogOut, Package, PackagePlus, ShoppingCart, TrendingDown } from 'lucide-react';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import GraphsPage from './pages/GraphsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import NonGEAnalyticsPage from './pages/NonGEAnalyticsPage';
 import WatchlistPage from './pages/WatchlistPage';
+import NonGEPage from './pages/NonGEPage';
 import { supabase } from './lib/supabase';
 import { useGPTradedStats } from './hooks/useGPTradedStats';
 import { useStockNotes } from './hooks/useStockNotes.js';
@@ -12,6 +14,7 @@ import { useSettings } from './hooks/useSettings';
 import { useNotificationSettings } from './hooks/useNotificationSettings';
 import { useGEData } from './contexts/GEDataContext';
 import { TradeProvider } from './contexts/TradeContext';
+import { NonGEProvider } from './contexts/NonGEContext';
 import { ModalProvider, useModal } from './contexts/ModalContext';
 import { UIStateProvider, useUIState, useHighlight } from './contexts/UIStateContext';
 import { StocksProvider, useStocksContext } from './contexts/StocksContext';
@@ -28,16 +31,22 @@ import MilestoneProgressBar from './components/MilestoneProgressBar';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import NotificationCenter from './components/NotificationCenter';
-import PortfolioSummary from './components/PortfolioSummary';
 import AltAccountTimer from './components/AltAccountTimer';
 import CategorySection from './components/CategorySection';
+import TradeStatusStrip from './components/TradeStatusStrip';
 import ModalManager from './components/ModalManager';
 import { CURRENT_VERSION } from './data/changelog';
 import { usePriceAlerts } from './hooks/usePriceAlerts';
 import { usePriceAlertChecker } from './hooks/usePriceAlertChecker';
 import { useWatchlist } from './hooks/useWatchlist';
 import { useWatchlistAlertChecker } from './hooks/useWatchlistAlertChecker';
+import { useNonGECategories } from './hooks/useNonGECategories';
+import { useNonGECustomItems } from './hooks/useNonGECustomItems';
+import { useNonGEStocks } from './hooks/useNonGEStocks';
+import { useNonGETradeHandlers } from './hooks/useNonGETradeHandlers';
+import { useMoveToNonGE } from './hooks/useMoveToNonGE';
 import GlobalSearch from './components/GlobalSearch';
+import { NON_GE_DEFAULT_CATEGORIES } from './data/nonGeCatalog';
 
 import {
   STORAGE_KEY,
@@ -47,6 +56,7 @@ import {
   DEFAULT_CATEGORIES,
   DEFAULT_VISIBLE_COLUMNS
 } from './utils/constants';
+import { getNextLocalMidnight } from './utils/localPeriods';
 import { useModalHandlers } from './hooks/useModalHandlers';
 import { useNavigation } from './hooks/useNavigation';
 
@@ -76,6 +86,7 @@ export default function MainApp(props) {
 function MainAppInner({ session, onLogout }) {
   const userId = session.user.id;
   const userEmail = session.user.email;
+  const [milestoneBoundaryTick, setMilestoneBoundaryTick] = useState(0);
   const {
     tradeMode,
     setTradeMode,
@@ -95,25 +106,28 @@ function MainAppInner({ session, onLogout }) {
     fetchCategories();
     setTradeMode(mode);
   };
-  const { stocks, allStocks, loading: stocksLoading, updateStock, deleteStock, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
+  const { stocks, allStocks, loading: stocksLoading, updateStock, deleteStock, deleteStockRowOnly, refetch, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks } = useStocksContext();
   const { categories, loading: categoriesLoading, addCategory, deleteCategory, updateCategory, fetchCategories, reorderCategories } = useCategoriesContext();
   const {
-    transactions, loading: transactionsLoading, addTransaction,
+    transactions, loading: transactionsLoading, addTransaction, refetch: refetchTransactions,
     loadFullHistory: loadFullTransactions,
     fullHistoryLoading: fullTransactionsLoading,
     historyScope: transactionHistoryScope,
     pagedTransactions, pagedLoading, totalCount, totalPages,
-    page, pageSize, filters, goToPage, changePageSize, applyFilters, initPaged,
+    page, pageSize, filters, historySource, changeHistorySource,
+    historyProfitTypes, changeHistoryProfitTypes,
+    goToPage, changePageSize, applyFilters, initPaged,
     sortConfig: historySortConfig, applySort, resetPaged, undoTransaction
   } = useTransactionsContext();
  const { stats: gpTradedStats, loading: gpStatsLoading, refetch: refetchGPStats } = useGPTradedStats(userId);
-  const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote } = useStockNotes(userId);
+  const { notes: stockNotes, loading: notesLoading, saveNote, deleteNote, refetch: refetchStockNotes } = useStockNotes(userId);
   const { settings, loading: settingsLoading, updateSettings } = useSettings(userId);
   const { notificationPreferences, updateNotificationPreference, loading: notificationSettingsLoading } = useNotificationSettings(userId);
   const { profits, loading: profitsLoading, updateProfit } = useProfitsContext();
   const {
     profitHistory,
     loading: profitHistoryLoading,
+    addProfitEntry,
     refetch: refetchProfitHistory,
     loadFullHistory: loadFullProfitHistory,
     fullHistoryLoading: fullProfitHistoryLoading,
@@ -129,6 +143,34 @@ function MainAppInner({ session, onLogout }) {
     deleteWatchlistItem,
     refetch: refetchWatchlist
   } = useWatchlist(userId);
+  const {
+    categories: nonGECategories,
+    loading: nonGECategoriesLoading,
+    fetchCategories: fetchNonGECategories,
+    addCategory: addNonGECategory,
+    updateCategory: updateNonGECategory,
+    deleteCategory: deleteNonGECategory,
+    reorderCategories: reorderNonGECategories,
+    ensureDefaultCategories: ensureNonGEDefaultCategories,
+  } = useNonGECategories(userId);
+  const {
+    customItems: nonGECustomItems,
+    loading: nonGECustomItemsLoading,
+    fetchCustomItems: fetchNonGECustomItems,
+    addCustomItem: addNonGECustomItem,
+  } = useNonGECustomItems(userId);
+  const {
+    stocks: nonGEStocks,
+    allStocks: nonGEAllStocks,
+    loading: nonGEStocksLoading,
+    addStock: addNonGEStock,
+    updateStock: updateNonGEStock,
+    archiveStock: archiveNonGEStock,
+    restoreStock: restoreNonGEStock,
+    fetchArchivedStocks: fetchNonGEArchivedStocks,
+    reorderStocks: reorderNonGEStocks,
+    refetch: refetchNonGEStocks,
+  } = useNonGEStocks(userId);
 
   // Destructure profits
   const { dumpProfit, referralProfit, bondsProfit } = profits;
@@ -145,7 +187,18 @@ function MainAppInner({ session, onLogout }) {
     expandCategory,
     handleQuickNavNavigate,
     handleNotificationNavigate,
-  } = useNavigation({ refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters, stocks, categories });
+  } = useNavigation({
+    refetch,
+    fetchCategories,
+    refetchGPStats,
+    refetchProfitHistory,
+    refetchNonGEStocks,
+    fetchNonGECategories,
+    fetchNonGECustomItems,
+    applyFilters,
+    stocks,
+    categories
+  });
   const initialTabParam = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('tab');
@@ -156,6 +209,11 @@ function MainAppInner({ session, onLogout }) {
 
   const [selectedMilestonePeriod, setSelectedMilestonePeriod] = useState('day');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [nonGEArchivedStocks, setNonGEArchivedStocks] = useState([]);
+  const [nonGEArchivedLoading, setNonGEArchivedLoading] = useState(false);
+  const [nonGEStockToArchive, setNonGEStockToArchive] = useState(null);
+  const [moveToNonGESummary, setMoveToNonGESummary] = useState({ transactionCount: 0 });
+  const [moveToNonGESummaryLoading, setMoveToNonGESummaryLoading] = useState(false);
   const userDropdownRef = useRef(null);
   const userMenuOpenRef = useRef(false);
   const ignoreNextUserMenuClickRef = useRef(false);
@@ -520,6 +578,46 @@ function MainAppInner({ session, onLogout }) {
   };
 
   useEffect(() => {
+    if (!userId) return;
+    ensureNonGEDefaultCategories(NON_GE_DEFAULT_CATEGORIES).catch(error => {
+      console.error('Error ensuring Non-GE default categories:', error);
+    });
+  }, [userId, ensureNonGEDefaultCategories]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let timeoutId;
+    let nextBoundary = getNextLocalMidnight();
+
+    function scheduleNextRefresh() {
+      window.clearTimeout(timeoutId);
+      const delay = Math.max(0, nextBoundary.getTime() - Date.now());
+      timeoutId = window.setTimeout(refreshAfterBoundary, delay);
+    }
+
+    function refreshAfterBoundary() {
+      nextBoundary = getNextLocalMidnight();
+      setMilestoneBoundaryTick(tick => tick + 1);
+      scheduleNextRefresh();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible' && Date.now() >= nextBoundary.getTime()) {
+        refreshAfterBoundary();
+      }
+    }
+
+    scheduleNextRefresh();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [userId]);
+
+  useEffect(() => {
     if (!profitHistory || profitHistoryLoading) return;
 
     const newProgress = calculateMilestoneProgress();
@@ -569,7 +667,18 @@ function MainAppInner({ session, onLogout }) {
     if (!milestonesLoading) {
       recordCompletedPeriods(profitHistory, milestones);
     }
-  }, [profitHistory, milestones, calculateMilestoneProgress, setMilestoneProgress]);
+  }, [
+    profitHistory,
+    profitHistoryLoading,
+    milestones,
+    milestonesLoading,
+    milestoneBoundaryTick,
+    calculateMilestoneProgress,
+    setMilestoneProgress,
+    recordCompletedPeriods,
+    addNotification,
+    userId
+  ]);
 
   // OSRS News notification effect
   useEffect(() => {
@@ -671,6 +780,50 @@ function MainAppInner({ session, onLogout }) {
     refreshArchivedStocks,
   } = useModalHandlers();
 
+  const {
+    nonGETradeSubmitting,
+    nonGEBulkSummaryData,
+    nonGEBulkUndoing,
+    nonGEBulkUndoResult,
+    handleNonGEBuy,
+    handleNonGESell,
+    handleNonGEBulkBuy,
+    handleNonGEBulkSell,
+    handleNonGEBulkUndo,
+    handleNonGEBulkSummaryDone,
+    handleNonGERemove,
+    handleNonGEAdjust,
+    handleNonGESaveNotes,
+  } = useNonGETradeHandlers({
+    selectedStock,
+    updateStock: updateNonGEStock,
+    refetchStocks: refetchNonGEStocks,
+    addTransaction,
+    undoTransaction,
+    addProfitEntry,
+    closeModal,
+    highlightRow,
+  });
+
+  const {
+    moveSubmitting: moveToNonGESubmitting,
+    moveError: moveToNonGEError,
+    setMoveError: setMoveToNonGEError,
+    fetchMoveSummary,
+    moveToNonGE,
+  } = useMoveToNonGE({
+    userId,
+    stockNotes,
+    addNonGEStock,
+    deleteStockRowOnly,
+    refetchGEStocks: refetch,
+    refetchNonGEStocks,
+    refetchStockNotes,
+    refetchTransactions,
+    refetchProfitHistory,
+    refetchPriceAlerts,
+  });
+
   const handleInvestmentDateChange = async (stock, date) => {
     await updateStock(stock.id, { investmentStartDate: date });
     await refetch();
@@ -694,8 +847,197 @@ function MainAppInner({ session, onLogout }) {
     closeModal('notes');
   };
 
+  const getNonGEDuplicateKey = (stockOrItem) => {
+    if (stockOrItem.catalogItemKey) return `catalog:${stockOrItem.catalogItemKey}`;
+    if (stockOrItem.customItemId) return `custom:${stockOrItem.customItemId}`;
+    return null;
+  };
+
+  const handleAddNonGEItem = async (item) => {
+    const duplicateKey = getNonGEDuplicateKey(item);
+    const duplicate = duplicateKey && nonGEAllStocks.some(stock => getNonGEDuplicateKey(stock) === duplicateKey);
+
+    if (duplicate) {
+      alert('This Non-GE item already exists. Restore it from the archive if needed.');
+      return null;
+    }
+
+    const created = await addNonGEStock({
+      ...item,
+      shares: 0,
+      totalCost: 0,
+      sharesSold: 0,
+      totalCostSold: 0,
+      totalCostBasisSold: 0,
+    });
+
+    if (created) {
+      await refetchNonGEStocks();
+      closeModal('nonGEAddItem');
+    }
+
+    return created;
+  };
+
+  const handleAddNonGECategory = async (name) => {
+    const trimmedName = String(name || '').trim();
+    if (!trimmedName) return null;
+
+    const duplicate = nonGECategories.some(
+      category => category.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicate) {
+      alert('This Non-GE category already exists.');
+      return null;
+    }
+
+    const created = await addNonGECategory(trimmedName);
+    if (created) {
+      await fetchNonGECategories();
+      closeModal('nonGECategory');
+    }
+
+    return created;
+  };
+
+  const handleEditNonGECategory = async (category, newName) => {
+    const trimmedName = String(newName || '').trim();
+    if (!category?.id || !trimmedName || category.name === 'Uncategorized') return null;
+
+    const duplicate = nonGECategories.some(existingCategory =>
+      existingCategory.id !== category.id &&
+      existingCategory.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicate) {
+      alert('This Non-GE category already exists.');
+      return null;
+    }
+
+    await updateNonGECategory(category.id, { name: trimmedName });
+    await fetchNonGECategories();
+    closeModal('nonGEEditCategory');
+    return { success: true };
+  };
+
+  const handleDeleteNonGECategory = async (category) => {
+    if (!category?.id || category.name === 'Uncategorized') return null;
+
+    await deleteNonGECategory(category.id);
+    await fetchNonGECategories();
+    await refetchNonGEStocks();
+    closeModal('nonGEDeleteCategory');
+    return { success: true };
+  };
+
+  const handleCreateNonGECustomItem = async (item) => {
+    const created = await addNonGECustomItem(item);
+    if (created) {
+      await fetchNonGECustomItems();
+    }
+    return created;
+  };
+
+  const handleBulkAddNonGEItems = async ({ items }) => {
+    const existingKeys = new Set(nonGEAllStocks.map(getNonGEDuplicateKey).filter(Boolean));
+    let added = 0;
+    let skipped = 0;
+
+    for (const item of items) {
+      const duplicateKey = getNonGEDuplicateKey(item);
+      if (!duplicateKey || existingKeys.has(duplicateKey)) {
+        skipped += 1;
+        continue;
+      }
+
+      const created = await addNonGEStock({
+        ...item,
+        shares: 0,
+        totalCost: 0,
+        sharesSold: 0,
+        totalCostSold: 0,
+        totalCostBasisSold: 0,
+      });
+
+      if (created) {
+        existingKeys.add(duplicateKey);
+        added += 1;
+      } else {
+        skipped += 1;
+      }
+    }
+
+    if (added > 0) {
+      await refetchNonGEStocks();
+    }
+
+    return { added, skipped };
+  };
+
+  const handleOpenNonGEArchive = async () => {
+    setNonGEArchivedLoading(true);
+    try {
+      const archived = await fetchNonGEArchivedStocks();
+      setNonGEArchivedStocks(archived);
+    } finally {
+      setNonGEArchivedLoading(false);
+    }
+  };
+
+  const handleArchiveNonGEStock = async (stock) => {
+    const success = await archiveNonGEStock(stock.id);
+    if (success) {
+      await refetchNonGEStocks();
+    }
+  };
+
+  const handleRequestArchiveNonGEStock = (stock) => {
+    setNonGEStockToArchive(stock);
+    openModal('nonGEArchiveConfirm');
+  };
+
+  const handleConfirmArchiveNonGEStock = async () => {
+    if (!nonGEStockToArchive) return;
+    await handleArchiveNonGEStock(nonGEStockToArchive);
+    setNonGEStockToArchive(null);
+    closeModal('nonGEArchiveConfirm');
+  };
+
+  const handleRestoreNonGEStock = async (stock) => {
+    const success = await restoreNonGEStock(stock.id);
+    if (success) {
+      await refetchNonGEStocks();
+      await handleOpenNonGEArchive();
+    }
+  };
+
   const handleBuyWithWatchlistCleanup = async (data) => {
     await handleBuy(data);
+  };
+
+  const handleOpenMoveToNonGE = async (stock) => {
+    setMoveToNonGEError('');
+    setMoveToNonGESummary({ transactionCount: 0 });
+    openModal('moveToNonGE', { stock });
+    setMoveToNonGESummaryLoading(true);
+    try {
+      const summary = await fetchMoveSummary(stock.id);
+      setMoveToNonGESummary(summary);
+    } finally {
+      setMoveToNonGESummaryLoading(false);
+    }
+  };
+
+  const handleMoveToNonGE = async (destination) => {
+    const result = await moveToNonGE(selectedStock, destination);
+    if (result.success) {
+      closeModal('moveToNonGE');
+      if (result.stock?.id) {
+        highlightRow(result.stock.id);
+      }
+    }
+    return result;
   };
 
   // Drag and drop operations
@@ -717,8 +1059,9 @@ function MainAppInner({ session, onLogout }) {
 
     try {
       // Get the target position
+      const isInvestmentMode = tradeMode === 'investment';
       const filteredForMode = categories.filter(c =>
-        c.name === 'Uncategorized' || (tradeMode === 'investment' ? c.isInvestment : !c.isInvestment)
+        Boolean(c.isInvestment) === isInvestmentMode
       );
       const targetIndex = filteredForMode.findIndex(c => c.name === targetCategory);
 
@@ -756,6 +1099,7 @@ function MainAppInner({ session, onLogout }) {
     e.preventDefault();
     const draggedStockId = parseInt(e.dataTransfer.getData('stockId'));
     const sourceCategory = e.dataTransfer.getData('sourceCategory');
+    const isInvestmentMode = tradeMode === 'investment';
 
     // If targetStockId is null/undefined, we're dropping on category header
     if (!targetStockId || draggedStockId === targetStockId) {
@@ -764,7 +1108,9 @@ function MainAppInner({ session, onLogout }) {
         try {
           const draggedStock = stocks.find(s => s.id === draggedStockId);
           if (draggedStock) {
-            const targetCategoryStocks = stocks.filter(s => s.category === targetCategory);
+            const targetCategoryStocks = stocks.filter(s =>
+              s.category === targetCategory && Boolean(s.isInvestment) === isInvestmentMode
+            );
             const newPosition = targetCategoryStocks.length;
 
             await updateStock(draggedStockId, {
@@ -787,7 +1133,9 @@ function MainAppInner({ session, onLogout }) {
       if (sourceCategory !== targetCategory) {
         // Move to different category - need to set proper position
         const draggedStock = stocks.find(s => s.id === draggedStockId);
-        const targetCategoryStocks = stocks.filter(s => s.category === targetCategory);
+        const targetCategoryStocks = stocks.filter(s =>
+          s.category === targetCategory && Boolean(s.isInvestment) === isInvestmentMode
+        );
         const targetStockIndex = targetCategoryStocks.findIndex(s => s.id === targetStockId);
 
         if (draggedStock) {
@@ -821,7 +1169,8 @@ function MainAppInner({ session, onLogout }) {
             limit4h: stock.id === draggedStockId ? draggedStock.limit4h : stock.limit4h,
             needed: stock.id === draggedStockId ? draggedStock.needed : stock.needed,
             timer_end_time: stock.id === draggedStockId ? draggedStock.timerEndTime : stock.timerEndTime,
-            category: targetCategory
+            category: targetCategory,
+            is_investment: isInvestmentMode
           }));
 
           await supabase
@@ -833,7 +1182,7 @@ function MainAppInner({ session, onLogout }) {
         }
       } else {
         // Reorder within same category
-        await reorderStocks(draggedStockId, targetStockId, targetCategory);
+        await reorderStocks(draggedStockId, targetStockId, targetCategory, isInvestmentMode);
         await refetch();
         highlightRow(draggedStockId);
       }
@@ -845,6 +1194,21 @@ function MainAppInner({ session, onLogout }) {
 
   const handleCalculateTime = (stock) => {
     openModal('timeCalculator', { stock });
+  };
+
+  const handleReorderNonGECategory = async (categoryId, newPosition) => {
+    await reorderNonGECategories(categoryId, newPosition);
+    await fetchNonGECategories();
+  };
+
+  const handleReorderNonGEStock = async (stockId, targetStockId, categoryId) => {
+    await reorderNonGEStocks(stockId, targetStockId, categoryId);
+    await refetchNonGEStocks();
+  };
+
+  const handleMoveNonGEStock = async (stockId, categoryId) => {
+    await updateNonGEStock(stockId, { categoryId });
+    await refetchNonGEStocks();
   };
 
 
@@ -888,6 +1252,15 @@ function MainAppInner({ session, onLogout }) {
 
   return (
     <TradeProvider stocks={stocks} allStocks={allStocks} categories={categories} refetchStocks={refetch} refetchCategories={fetchCategories}>
+    <NonGEProvider
+      stocks={nonGEStocks}
+      allStocks={nonGEAllStocks}
+      categories={nonGECategories}
+      customItems={nonGECustomItems}
+      refetchStocks={refetchNonGEStocks}
+      refetchCategories={fetchNonGECategories}
+      refetchCustomItems={fetchNonGECustomItems}
+    >
     <div style={{
       minHeight: '100vh',
       background: 'rgb(15, 23, 42)',
@@ -957,6 +1330,13 @@ function MainAppInner({ session, onLogout }) {
               💼 Trade
             </button>
             <button
+              onClick={() => navigateToPage('nonge')}
+              className={`topbar-nav-btn${currentPage === 'nonge' ? ' is-active' : ''}`}
+            >
+              <Package size={14} />
+              Non-GE
+            </button>
+            <button
               onClick={() => navigateToPage('history')}
               style={{
                 padding: '0.75rem 1.5rem',
@@ -1002,7 +1382,7 @@ function MainAppInner({ session, onLogout }) {
             </button>
             <button
               onClick={() => navigateToPage('analytics')}
-              className={`topbar-nav-btn${currentPage === 'analytics' ? ' is-active' : ''}`}
+              className={`topbar-nav-btn${currentPage === 'analytics' || currentPage === 'analyticsNonGE' ? ' is-active' : ''}`}
             >
               <BarChart3 size={14} />
               Analytics
@@ -1145,12 +1525,17 @@ function MainAppInner({ session, onLogout }) {
             gpTradedStats={gpTradedStats}
             profits={profits}
             statsStocks={allStocks}
+            nonGEStatsStocks={nonGEAllStocks}
+            visibleProfits={visibleProfits}
             watchlistItems={watchlistItems}
             numberFormat={numberFormat}
             milestones={milestones}
             milestoneProgress={milestoneProgress}
             onNavigateToTrade={() => navigateToPage('trade')}
             onNavigateToWatchlist={() => navigateToPage('watchlist')}
+            onAddDumpProfit={() => openModal('dumpProfit')}
+            onAddReferralProfit={() => openModal('referralProfit')}
+            onAddBondsProfit={() => openModal('bondsProfit')}
             onOpenMilestoneModal={() => openModal('milestone', { milestoneView: 'main' })}
             onOpenMilestoneHistory={() => openModal('milestone', { milestoneView: 'history' })}
           />
@@ -1164,6 +1549,11 @@ function MainAppInner({ session, onLogout }) {
             page={page}
             pageSize={pageSize}
             filters={filters}
+            historySource={historySource}
+            onChangeHistorySource={changeHistorySource}
+            historyProfitTypes={historyProfitTypes}
+            onChangeHistoryProfitTypes={changeHistoryProfitTypes}
+            visibleProfits={visibleProfits}
             onGoToPage={goToPage}
             onChangePageSize={changePageSize}
             onApplyFilters={applyFilters}
@@ -1174,6 +1564,7 @@ function MainAppInner({ session, onLogout }) {
             onReset={resetPaged}
             onUndo={undoTransaction}
             showMembershipIcon={visibleColumns.membershipIcon}
+            nonGEStocks={nonGEAllStocks}
           />
         ) : currentPage === 'graphs' ? (
           <GraphsPage
@@ -1206,6 +1597,52 @@ function MainAppInner({ session, onLogout }) {
             fullTransactionsLoading={fullTransactionsLoading}
             fullProfitHistoryLoading={fullProfitHistoryLoading}
           />
+        ) : currentPage === 'analyticsNonGE' ? (
+          <NonGEAnalyticsPage
+            userId={userId}
+            stocks={nonGEAllStocks}
+            categories={nonGECategories}
+            transactions={transactions}
+            profitHistory={profitHistory}
+            numberFormat={numberFormat}
+            navigateToPage={navigateToPage}
+            transactionHistoryScope={transactionHistoryScope}
+            profitHistoryScope={profitHistoryScope}
+            loadFullTransactions={loadFullTransactions}
+            loadFullProfitHistory={loadFullProfitHistory}
+            fullTransactionsLoading={fullTransactionsLoading}
+            fullProfitHistoryLoading={fullProfitHistoryLoading}
+          />
+        ) : currentPage === 'nonge' ? (
+          <NonGEPage
+            stocks={nonGEStocks}
+            categories={nonGECategories}
+            loading={nonGEStocksLoading || nonGECategoriesLoading || nonGECustomItemsLoading}
+            numberFormat={numberFormat}
+            sortConfig={sortConfig}
+            onSort={handleSort}
+            onAddCategory={() => openModal('nonGECategory')}
+            onAddItem={(categoryId) => openModal('nonGEAddItem', { category: categoryId || nonGECategories[0]?.id || '' })}
+            onEditCategory={(category) => openModal('nonGEEditCategory', { category })}
+            onDeleteCategory={(category) => openModal('nonGEDeleteCategory', { category })}
+            onBulkAdd={() => openModal('nonGEBulkAdd')}
+            onBulkBuy={() => openModal('nonGEBulkBuy')}
+            onBulkSell={() => openModal('nonGEBulkSell')}
+            onArchiveOpen={async () => {
+              await handleOpenNonGEArchive();
+              openModal('nonGEArchive');
+            }}
+            onArchive={handleArchiveNonGEStock}
+            onArchiveRequest={handleRequestArchiveNonGEStock}
+            onReorderCategory={handleReorderNonGECategory}
+            onReorderStock={handleReorderNonGEStock}
+            onMoveStock={handleMoveNonGEStock}
+            onBuy={(stock) => openModal('nonGEBuy', { stock })}
+            onSell={(stock) => openModal('nonGESell', { stock })}
+            onRemove={(stock) => openModal('nonGERemove', { stock })}
+            onAdjust={(stock) => openModal('nonGEAdjust', { stock })}
+            onNotes={(stock) => openModal('nonGENotes', { stock })}
+          />
         ) : currentPage === 'watchlist' ? (
           <WatchlistPage
             watchlistItems={watchlistItems}
@@ -1224,28 +1661,11 @@ function MainAppInner({ session, onLogout }) {
               onNavigate={handleQuickNavNavigate}
             />
 
-            <PortfolioSummary
-              dumpProfit={dumpProfit}
-              referralProfit={referralProfit}
-              bondsProfit={bondsProfit}
-              statsStocks={allStocks}
-              visibleProfits={visibleProfits}
-              onAddDumpProfit={() => openModal('dumpProfit')}
-              onAddReferralProfit={() => openModal('referralProfit')}
-              onAddBondsProfit={() => openModal('bondsProfit')}
+            <TradeStatusStrip
+              stocks={stocks}
+              gePrices={gePrices}
               numberFormat={numberFormat}
-              showUnrealisedProfitStats={showUnrealisedProfitStats}
-            />
-
-            {/* Milestone Progress Bar and Alt Account Timer Row */}
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              alignItems: 'center',
-              marginBottom: '1.5rem',
-              marginTop: '1rem',
-              flexWrap: 'wrap'
-            }}>
+            >
               <MilestoneProgressBar
                 milestones={milestones}
                 currentProgress={milestoneProgress}
@@ -1255,13 +1675,73 @@ function MainAppInner({ session, onLogout }) {
                 numberFormat={numberFormat}
               />
 
+              <div className="trade-quick-actions" aria-label="Trade quick actions">
+                <div className="trade-quick-actions-header">
+                  <span className="trade-quick-actions-title">Quick Actions</span>
+                </div>
+                <div className="trade-quick-actions-grid">
+                  <div className="trade-quick-action-group">
+                    <button
+                      type="button"
+                      onClick={() => openModal('category')}
+                      className="trade-quick-action-btn is-category"
+                    >
+                      <FolderPlus size={14} />
+                      Add Category
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await refreshArchivedStocks();
+                        openModal('newStock', { newStockCategory: '' });
+                      }}
+                      className="trade-quick-action-btn is-item"
+                    >
+                      <PackagePlus size={14} />
+                      Add Item
+                    </button>
+                  </div>
+                  <div className="trade-quick-action-group">
+                    <button
+                      type="button"
+                      onClick={() => openModal('bulkBuy')}
+                      className="trade-quick-action-btn is-success"
+                    >
+                      <ShoppingCart size={14} />
+                      Bulk Buy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openModal('bulkSell')}
+                      className="trade-quick-action-btn is-danger"
+                    >
+                      <TrendingDown size={14} />
+                      Bulk Sell
+                    </button>
+                  </div>
+                  <div className="trade-quick-action-group trade-quick-action-group-archive">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handleOpenArchive();
+                        openModal('archive');
+                      }}
+                      className="trade-quick-action-btn"
+                    >
+                      <Archive size={14} />
+                      Archive
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <AltAccountTimer
                 altAccountTimer={altAccountTimer}
                 onSetAltTimer={() => openModal('altTimer')}
                 onResetAltTimer={handleResetAltTimer}
                 currentTime={currentTime}
               />
-            </div>
+            </TradeStatusStrip>
             {/* Trade Mode Toggle */}
             <div className="trade-mode-toggle-wrapper">
               <div className="trade-mode-toggle">
@@ -1280,45 +1760,6 @@ function MainAppInner({ session, onLogout }) {
               </div>
             </div>
 
-            {/* Category Actions */}
-            <div className="category-actions-row">
-              <button
-                onClick={() => openModal('category')}
-                className="btn btn-primary"
-              >
-                + Add Category
-              </button>
-              <button
-                onClick={async () => {
-                  await refreshArchivedStocks();
-                  openModal('newStock', { newStockCategory: '' });
-                }}
-                className="btn btn-success"
-              >
-                + Add Item
-              </button>
-              <button
-                onClick={() => openModal('bulkBuy')}
-                className="btn btn-success"
-              >
-                Bulk Buy
-              </button>
-              <button
-                onClick={() => openModal('bulkSell')}
-                className="btn btn-danger"
-              >
-                Bulk Sell
-              </button>
-              <button
-                onClick={async () => {
-                  await handleOpenArchive();
-                  openModal('archive');
-                }}
-                className="btn btn-secondary"
-              >
-                📦 Archive
-              </button>
-            </div>
 
 
             {Object.entries(groupedStocks).map(([category, categoryStocks]) => (
@@ -1364,6 +1805,7 @@ function MainAppInner({ session, onLogout }) {
                 onPriceAlert={handleOpenPriceAlert}
                 priceAlerts={priceAlerts}
                 onViewGraph={(stock) => stock.itemId && navigateToPage('graphs', { query: { item: stock.itemId } })}
+                onMoveToNonGE={handleOpenMoveToNonGE}
               />
             ))}
 
@@ -1397,6 +1839,29 @@ function MainAppInner({ session, onLogout }) {
           stockToArchive={stockToArchive}
           handleConfirmArchive={handleConfirmArchive}
           handleRestore={handleRestore}
+          handleMoveToNonGE={handleMoveToNonGE}
+          handleAddNonGEItem={handleAddNonGEItem}
+          handleAddNonGECategory={handleAddNonGECategory}
+          handleEditNonGECategory={handleEditNonGECategory}
+          handleDeleteNonGECategory={handleDeleteNonGECategory}
+          handleCreateNonGECustomItem={handleCreateNonGECustomItem}
+          handleBulkAddNonGEItems={handleBulkAddNonGEItems}
+          handleRestoreNonGEStock={handleRestoreNonGEStock}
+          nonGEStockToArchive={nonGEStockToArchive}
+          handleConfirmArchiveNonGEStock={handleConfirmArchiveNonGEStock}
+          nonGETradeSubmitting={nonGETradeSubmitting}
+          nonGEBulkSummaryData={nonGEBulkSummaryData}
+          nonGEBulkUndoing={nonGEBulkUndoing}
+          nonGEBulkUndoResult={nonGEBulkUndoResult}
+          handleNonGEBuy={handleNonGEBuy}
+          handleNonGESell={handleNonGESell}
+          handleNonGEBulkBuy={handleNonGEBulkBuy}
+          handleNonGEBulkSell={handleNonGEBulkSell}
+          handleNonGEBulkUndo={handleNonGEBulkUndo}
+          handleNonGEBulkSummaryDone={handleNonGEBulkSummaryDone}
+          handleNonGERemove={handleNonGERemove}
+          handleNonGEAdjust={handleNonGEAdjust}
+          handleNonGESaveNotes={handleNonGESaveNotes}
           handleSetAltTimer={handleSetAltTimer}
           handleSaveNotes={handleSaveNotes}
           handleCloseChangelog={handleCloseChangelog}
@@ -1414,6 +1879,16 @@ function MainAppInner({ session, onLogout }) {
           geIconMap={geIconMap}
           gePrices={gePrices}
           priceAlerts={priceAlerts}
+          nonGECategories={nonGECategories}
+          nonGECustomItems={nonGECustomItems}
+          nonGEStocks={nonGEStocks}
+          nonGEAllStocks={nonGEAllStocks}
+          nonGEArchivedStocks={nonGEArchivedStocks}
+          nonGEArchivedLoading={nonGEArchivedLoading}
+          moveToNonGESummary={moveToNonGESummary}
+          moveToNonGESummaryLoading={moveToNonGESummaryLoading}
+          moveToNonGEError={moveToNonGEError}
+          moveToNonGESubmitting={moveToNonGESubmitting}
           visibleColumns={visibleColumns}
           visibleProfits={visibleProfits}
           showCategoryStats={showCategoryStats}
@@ -1432,6 +1907,7 @@ function MainAppInner({ session, onLogout }) {
       </div>
       <Footer />
     </div>
+    </NonGEProvider>
     </TradeProvider>
   );
 }

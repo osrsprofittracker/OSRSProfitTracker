@@ -1,7 +1,7 @@
 import { calculateUnrealizedProfit } from './taxUtils';
-import { applyAverageCostExit } from './positionAnalytics';
+import { formatLocalDate } from './localPeriods';
 
-export const isoOf = (value) => String(value || '').slice(0, 10);
+export const isoOf = (value) => formatLocalDate(value);
 export const stockIdOf = (row) => row?.stockId ?? row?.stock_id;
 export const transactionIdOf = (row) => row?.transactionId ?? row?.transaction_id;
 export const profitTypeOf = (row) => row?.profitType ?? row?.profit_type;
@@ -132,44 +132,22 @@ export function buildDailyItemProfit({ itemId, transactions = [], profitHistory 
   const profitByTx = buildStockProfitByTransaction(profitHistory);
   const byDay = new Map();
   const dates = [];
-  const position = { shares: 0, cost: 0 };
 
   const itemTransactions = (transactions || [])
     .filter((tx) => String(stockIdOf(tx)) === String(itemId))
     .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
 
   for (const tx of itemTransactions) {
-    const shares = Number(tx.shares) || 0;
-    const total = Number(tx.total) || 0;
-
-    if (tx.type === 'buy') {
-      position.shares += shares;
-      position.cost += total;
-      continue;
-    }
-
     const iso = isoOf(tx.date);
-    if (tx.type === 'remove') {
-      const nextPosition = applyAverageCostExit(position, shares);
-      position.shares = nextPosition.shares;
-      position.cost = nextPosition.cost;
-      continue;
-    }
-
     if (tx.type !== 'sell') continue;
 
-    const nextPosition = applyAverageCostExit(position, shares);
-    position.shares = nextPosition.shares;
-    position.cost = nextPosition.cost;
-
     if (start && end && !inWindow(iso, start, end)) continue;
-    dates.push(iso);
 
     const txKey = String(tx.id);
-    const profit = profitByTx.has(txKey)
-      ? profitByTx.get(txKey)
-      : total - nextPosition.estimatedBasis;
+    if (!profitByTx.has(txKey)) continue;
 
+    dates.push(iso);
+    const profit = profitByTx.get(txKey);
     byDay.set(iso, (byDay.get(iso) || 0) + profit);
   }
 

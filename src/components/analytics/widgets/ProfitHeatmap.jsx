@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { formatNumber } from '../../../utils/formatters';
 import { parseIsoDateUtc, totalProfit } from '../../../utils/analyticsHelpers';
+import { formatLocalDate } from '../../../utils/localPeriods';
 
 const CELL = 10;
 const GAP = 2;
@@ -14,7 +15,7 @@ const TOOLTIP_TEXT_SIZE = 10;
 
 function buildLast365Days(endIso) {
   const days = [];
-  const end = endIso ? parseIsoDateUtc(endIso) : new Date();
+  const end = parseIsoDateUtc(endIso || formatLocalDate(new Date()));
 
   for (let index = 364; index >= 0; index -= 1) {
     const date = new Date(end);

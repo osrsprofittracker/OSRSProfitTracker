@@ -81,14 +81,17 @@ export function useProfitHistory(userId) {
 
   const loadFullHistory = useCallback(() => fetchProfitHistory({ full: true }), [fetchProfitHistory]);
 
-  const addProfitEntry = async (profitType, amount, stockId = null, transactionId = null) => {
+  const addProfitEntry = async (profitType, amount, stockId = null, transactionId = null, options = {}) => {
+    const market = options.market || 'ge';
     const { data, error } = await supabase
       .from('profit_history')
       .insert([{
         user_id: userId,
         profit_type: profitType,
         amount: Math.round(Number(amount)),
-        stock_id: stockId,
+        market,
+        stock_id: market === 'non_ge' ? null : stockId,
+        non_ge_stock_id: options.nonGeStockId || null,
         transaction_id: transactionId,
         created_at: new Date().toISOString()
       }])

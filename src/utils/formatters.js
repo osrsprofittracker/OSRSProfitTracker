@@ -24,11 +24,15 @@ export const handleMKInput = (value, setter) => {
   return value;
 };
 
+export const normalizeDisplayNumber = (value) => {
+  return Object.is(value, -0) ? 0 : value;
+};
+
 export const formatNumber = (num, numberFormat = 'compact') => {
   if (num == null || isNaN(num)) return '-';
 
   // Round to nearest integer first
-  const rounded = Math.round(num);
+  const rounded = normalizeDisplayNumber(Math.round(num));
   const sign = rounded < 0 ? '-' : '';
   const absolute = Math.abs(rounded);
 
@@ -53,12 +57,14 @@ export const formatNumber = (num, numberFormat = 'compact') => {
 };
 
 export function formatAvgPrice(value, numberFormat) {
-  if (value < 100000) {
+  const displayValue = normalizeDisplayNumber(value);
+
+  if (displayValue < 100000) {
     // Below 100K: show with 2 decimals
-    return `$${value.toFixed(2)}`;
+    return `$${displayValue.toFixed(2)}`;
   } else {
     // Above 100K: use formatNumber
-    return `$${formatNumber(value, numberFormat)}`;
+    return `$${formatNumber(displayValue, numberFormat)}`;
   }
 }
 

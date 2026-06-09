@@ -7,14 +7,17 @@ const PAGE_PATHS = {
   history: '/history',
   graphs: '/graphs',
   analytics: '/analytics',
+  analyticsNonGE: '/analytics/nonge',
   watchlist: '/watchlist',
+  nonge: '/non-ge',
 };
 
 const HISTORY_EMPTY_FILTERS = {
-  type: 'all', mode: 'all', stockName: '', category: '',
+  market: 'all', type: 'all', mode: 'all', stockName: '', category: '',
   dateFrom: '', dateTo: '', gpMin: '', gpMax: '',
   priceMin: '', priceMax: '', profitMin: '', profitMax: '',
-  qtyMin: '', qtyMax: '', marginMin: '', marginMax: ''
+  qtyMin: '', qtyMax: '', marginMin: '', marginMax: '',
+  dayOfWeek: '', hourOfDay: ''
 };
 
 function getPageFromURL() {
@@ -23,24 +26,30 @@ function getPageFromURL() {
   if (path === '/history') return 'history';
   if (path === '/graphs') return 'graphs';
   if (path === '/analytics') return 'analytics';
+  if (path === '/analytics/nonge') return 'analyticsNonGE';
   if (path === '/watchlist') return 'watchlist';
+  if (path === '/non-ge') return 'nonge';
   return 'home';
 }
 
 function filtersFromHistoryParams(params) {
+  const filters = { ...HISTORY_EMPTY_FILTERS };
+
   if (params.has('search')) {
-    return { ...HISTORY_EMPTY_FILTERS, stockName: params.get('search') };
+    filters.stockName = params.get('search') || '';
   }
 
   if (params.has('dateFrom') || params.has('dateTo')) {
-    return {
-      ...HISTORY_EMPTY_FILTERS,
-      dateFrom: params.get('dateFrom') || '',
-      dateTo: params.get('dateTo') || '',
-    };
+    filters.dateFrom = params.get('dateFrom') || '';
+    filters.dateTo = params.get('dateTo') || '';
   }
 
-  return { ...HISTORY_EMPTY_FILTERS };
+  if (params.has('type')) filters.type = params.get('type') || 'all';
+  if (params.has('market')) filters.market = params.get('market') || 'all';
+  if (params.has('dayOfWeek')) filters.dayOfWeek = params.get('dayOfWeek') || '';
+  if (params.has('hourOfDay')) filters.hourOfDay = params.get('hourOfDay') || '';
+
+  return filters;
 }
 
 export function useNavigation({
@@ -48,6 +57,9 @@ export function useNavigation({
   fetchCategories,
   refetchGPStats,
   refetchProfitHistory,
+  refetchNonGEStocks,
+  fetchNonGECategories,
+  fetchNonGECustomItems,
   applyFilters,
   stocks,
   categories,
@@ -66,6 +78,11 @@ export function useNavigation({
       refetchGPStats();
       refetchProfitHistory();
     }
+    if (page === 'nonge' || page === 'analyticsNonGE') {
+      refetchNonGEStocks?.();
+      fetchNonGECategories?.();
+      fetchNonGECustomItems?.();
+    }
     setCurrentPage(page);
     let url = PAGE_PATHS[page] || '/';
     if (options.query) {
@@ -83,7 +100,7 @@ export function useNavigation({
       applyFilters({ ...HISTORY_EMPTY_FILTERS });
     }
     window.history.pushState({ page }, '', url);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
+  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, refetchNonGEStocks, fetchNonGECategories, fetchNonGECustomItems, applyFilters]);
 
   // Replace initial history entry so back button works correctly
   useEffect(() => {
@@ -104,6 +121,11 @@ export function useNavigation({
         refetchGPStats();
         refetchProfitHistory();
       }
+      if (page === 'nonge' || page === 'analyticsNonGE') {
+        refetchNonGEStocks?.();
+        fetchNonGECategories?.();
+        fetchNonGECustomItems?.();
+      }
       setCurrentPage(page);
       const searchParams = new URLSearchParams(window.location.search);
       setGraphItemId(searchParams.get('item'));
@@ -113,7 +135,7 @@ export function useNavigation({
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, applyFilters]);
+  }, [refetch, fetchCategories, refetchGPStats, refetchProfitHistory, refetchNonGEStocks, fetchNonGECategories, fetchNonGECustomItems, applyFilters]);
 
   const toggleCategory = useCallback((category) => {
     setCollapsedCategories(prev => {

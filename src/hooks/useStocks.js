@@ -53,10 +53,12 @@ export function useStocks(userId) {
     fetchStocks();
   }, [userId, fetchStocks]);
 
-  const reorderStocks = useCallback(async (stockId, targetStockId, category) => {
+  const reorderStocks = useCallback(async (stockId, targetStockId, category, isInvestment = false) => {
     try {
       // Optimistically update UI first
-      const categoryStocks = stocks.filter(s => s.category === category);
+      const categoryStocks = stocks.filter(s =>
+        s.category === category && Boolean(s.isInvestment) === Boolean(isInvestment)
+      );
       const movingStockIndex = categoryStocks.findIndex(s => s.id === stockId);
       const targetStockIndex = categoryStocks.findIndex(s => s.id === targetStockId);
 
@@ -147,6 +149,7 @@ export function useStocks(userId) {
     if (updates.limit4h !== undefined) dbUpdates.limit4h = updates.limit4h;
     if (updates.onHold !== undefined) dbUpdates.on_hold = updates.onHold;
     if (updates.isInvestment !== undefined) dbUpdates.is_investment = updates.isInvestment;
+    if (updates.position !== undefined) dbUpdates.position = updates.position;
     if (updates.itemId !== undefined) dbUpdates.item_id = updates.itemId;
     if (updates.investmentStartDate !== undefined) dbUpdates.investment_start_date = updates.investmentStartDate || null;
 
@@ -208,6 +211,21 @@ export function useStocks(userId) {
     }
   }, [userId]);
 
+  const deleteStockRowOnly = useCallback(async (id) => {
+    const { error } = await supabase
+      .from('stocks')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error deleting stock row:', error);
+      return false;
+    }
+
+    return true;
+  }, [userId]);
+
   const archiveStock = useCallback(async (id) => {
     const { error } = await supabase
       .from('stocks')
@@ -239,5 +257,5 @@ export function useStocks(userId) {
     return (data || []).map(formatStock);
   }, [userId]);
 
-  return { stocks, allStocks, loading, addStock, updateStock, deleteStock, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
+  return { stocks, allStocks, loading, addStock, updateStock, deleteStock, deleteStockRowOnly, refetch: fetchStocks, reorderStocks, archiveStock, restoreStock, fetchArchivedStocks };
 }

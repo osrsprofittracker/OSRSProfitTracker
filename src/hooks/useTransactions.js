@@ -1,11 +1,33 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { getLocalDateEndIso, getLocalDateStartIso } from '../utils/localPeriods';
 
 const RECENT_TRANSACTION_WINDOW_DAYS = 90;
 const RECENT_TRANSACTION_ROW_CAP = 10000;
 const FULL_TRANSACTION_ROW_CAP = 50000;
 const TRANSACTION_BATCH_SIZE = 1000;
 const DAY_MS = 86400_000;
+const DEFAULT_HISTORY_FILTERS = {
+  market: 'all',
+  type: 'all',
+  mode: 'all',
+  stockName: '',
+  category: '',
+  dateFrom: '',
+  dateTo: '',
+  gpMin: '',
+  gpMax: '',
+  priceMin: '',
+  priceMax: '',
+  profitMin: '',
+  profitMax: '',
+  qtyMin: '',
+  qtyMax: '',
+  marginMin: '',
+  marginMax: '',
+  dayOfWeek: '',
+  hourOfDay: '',
+};
 
 export function useTransactions(userId) {
   const [transactions, setTransactions] = useState([]);
@@ -22,10 +44,12 @@ export function useTransactions(userId) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState({ type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' });
+  const [filters, setFilters] = useState(DEFAULT_HISTORY_FILTERS);
   const [sortConfig, setSortConfig] = useState({ key: 'date', dir: 'desc' });
   const [pagedTransactions, setPagedTransactions] = useState([]);
   const [pagedLoading, setPagedLoading] = useState(false);
+  const [historySource, setHistorySource] = useState('transactions');
+  const [historyProfitTypes, setHistoryProfitTypes] = useState(['dump', 'referral', 'bonds']);
   const pagedRequestId = useRef(0);
 
   const fetchTransactions = useCallback(async (options = {}) => {
@@ -93,7 +117,14 @@ export function useTransactions(userId) {
   const loadFullHistory = useCallback(() => fetchTransactions({ full: true }), [fetchTransactions]);
 
   // Paginated fetch - used by HistoryPage
-  const fetchPage = useCallback(async (targetPage, size, activeFilters, activeSort = sortConfig) => {
+  const fetchPage = useCallback(async (
+    targetPage,
+    size,
+    activeFilters,
+    activeSort = sortConfig,
+    activeSource = historySource,
+    activeProfitTypes = historyProfitTypes
+  ) => {
     if (!userId) return;
     const requestId = pagedRequestId.current + 1;
     pagedRequestId.current = requestId;
@@ -101,12 +132,104 @@ export function useTransactions(userId) {
 
     const from = (targetPage - 1) * size;
     const to = from + size - 1;
+    const hasLocalTimeFilters = (activeFilters.dayOfWeek ?? '') !== '' || (activeFilters.hourOfDay ?? '') !== '';
+
+    if (activeSource === 'profits') {
+      const visibleProfitTypes = activeProfitTypes.filter(Boolean);
+
+      if (visibleProfitTypes.length === 0) {
+        setPagedTransactions([]);
+        setTotalCount(0);
+        setPagedLoading(false);
+        return;
+      }
+
+      let query = supabase
+        .from('profit_history')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId)
+        .in('profit_type', visibleProfitTypes);
+
+      const sortKey = activeSort.key || 'date';
+      const ascending = activeSort.dir === 'asc';
+
+      query = query.order(profitHistoryColumn(sortKey), { ascending, nullsFirst: ascending });
+
+      if (visibleProfitTypes.includes(activeFilters.type)) {
+        query = query.eq('profit_type', activeFilters.type);
+      }
+      const dateFromIso = getLocalDateStartIso(activeFilters.dateFrom);
+      const dateToIso = getLocalDateEndIso(activeFilters.dateTo);
+      if (dateFromIso) query = query.gte('created_at', dateFromIso);
+      if (dateToIso) query = query.lte('created_at', dateToIso);
+      if (activeFilters.gpMin) query = query.gte('amount', Number(activeFilters.gpMin));
+      if (activeFilters.gpMax) query = query.lte('amount', Number(activeFilters.gpMax));
+      if (activeFilters.profitMin) query = query.gte('amount', Number(activeFilters.profitMin));
+      if (activeFilters.profitMax) query = query.lte('amount', Number(activeFilters.profitMax));
+
+      if (!hasLocalTimeFilters) {
+        query = query.range(from, to);
+      }
+
+      if (hasLocalTimeFilters) {
+        const matchedRows = [];
+        let matchedCount = 0;
+        let scanFrom = 0;
+        let candidateCount = null;
+        let scanComplete = false;
+        const batchSize = 1000;
+
+        while (!scanComplete) {
+          const scanTo = scanFrom + batchSize - 1;
+          const { data, error, count } = await query.range(scanFrom, scanTo);
+
+          if (requestId !== pagedRequestId.current) return;
+
+          if (error) {
+            console.error('Error fetching paged profit history:', error.message, error.details, error.hint);
+            setPagedLoading(false);
+            return;
+          }
+
+          if (candidateCount == null) candidateCount = count || 0;
+
+          for (const row of (data || []).map(formatProfitRow)) {
+            if (!matchesLocalTimeFilters(row, activeFilters)) continue;
+
+            if (matchedCount >= from && matchedRows.length < size) {
+              matchedRows.push(row);
+            }
+            matchedCount += 1;
+          }
+
+          scanFrom += batchSize;
+          scanComplete = (data || []).length < batchSize || scanFrom >= candidateCount;
+        }
+
+        setPagedTransactions(matchedRows);
+        setTotalCount(matchedCount);
+        setPagedLoading(false);
+        return;
+      }
+
+      const { data, error, count } = await query;
+
+      if (requestId !== pagedRequestId.current) return;
+
+      if (error) {
+        console.error('Error fetching paged profit history:', error.message, error.details, error.hint);
+      } else {
+        setPagedTransactions((data || []).map(formatProfitRow));
+        setTotalCount(count || 0);
+      }
+      setPagedLoading(false);
+      return;
+    }
 
     let query = supabase
       .from('transactions_view')
       .select('*', { count: 'exact' })
-      .eq('user_id', userId)
-      .range(from, to);
+      .eq('user_id', userId);
 
     // Apply sort
     const sortKey = activeSort.key || 'date';
@@ -115,10 +238,15 @@ export function useTransactions(userId) {
     query = query.order(dbColumn(sortKey), { ascending, nullsFirst: ascending });
 
     // Apply filters
+    if (activeFilters.market && activeFilters.market !== 'all') {
+      query = query.eq('market', activeFilters.market);
+    }
     if (activeFilters.type !== 'all') query = query.eq('type', activeFilters.type);
     if (activeFilters.stockName) query = query.ilike('stock_name', `%${activeFilters.stockName}%`);
-    if (activeFilters.dateFrom) query = query.gte('date', activeFilters.dateFrom);
-    if (activeFilters.dateTo) query = query.lte('date', activeFilters.dateTo + 'T23:59:59');
+    const dateFromIso = getLocalDateStartIso(activeFilters.dateFrom);
+    const dateToIso = getLocalDateEndIso(activeFilters.dateTo);
+    if (dateFromIso) query = query.gte('date', dateFromIso);
+    if (dateToIso) query = query.lte('date', dateToIso);
     if (activeFilters.gpMin) query = query.gte('total', Number(activeFilters.gpMin));
     if (activeFilters.gpMax) query = query.lte('total', Number(activeFilters.gpMax));
     if (activeFilters.priceMin) query = query.gte('price', Number(activeFilters.priceMin));
@@ -136,6 +264,51 @@ export function useTransactions(userId) {
       query = query.eq('is_investment', activeFilters.mode === 'investment');
     }
 
+    if (!hasLocalTimeFilters) {
+      query = query.range(from, to);
+    }
+
+    if (hasLocalTimeFilters) {
+      const matchedRows = [];
+      let matchedCount = 0;
+      let scanFrom = 0;
+      let candidateCount = null;
+      let scanComplete = false;
+      const batchSize = 1000;
+
+      while (!scanComplete) {
+        const scanTo = scanFrom + batchSize - 1;
+        const { data, error, count } = await query.range(scanFrom, scanTo);
+
+        if (requestId !== pagedRequestId.current) return;
+
+        if (error) {
+          console.error('Error fetching paged transactions:', error.message, error.details, error.hint);
+          setPagedLoading(false);
+          return;
+        }
+
+        if (candidateCount == null) candidateCount = count || 0;
+
+        for (const row of (data || []).map(formatRow)) {
+          if (!matchesLocalTimeFilters(row, activeFilters)) continue;
+
+          if (matchedCount >= from && matchedRows.length < size) {
+            matchedRows.push(row);
+          }
+          matchedCount += 1;
+        }
+
+        scanFrom += batchSize;
+        scanComplete = (data || []).length < batchSize || scanFrom >= candidateCount;
+      }
+
+      setPagedTransactions(matchedRows);
+      setTotalCount(matchedCount);
+      setPagedLoading(false);
+      return;
+    }
+
     const { data, error, count } = await query;
 
     if (requestId !== pagedRequestId.current) return;
@@ -147,46 +320,86 @@ export function useTransactions(userId) {
       setTotalCount(count || 0);
     }
     setPagedLoading(false);
-  }, [userId]);
+  }, [userId, historySource, historyProfitTypes, sortConfig]);
 
   const goToPage = useCallback((targetPage) => {
     setPage(targetPage);
-    fetchPage(targetPage, pageSize, filters);
-  }, [fetchPage, pageSize, filters]);
+    fetchPage(targetPage, pageSize, filters, sortConfig, historySource, historyProfitTypes);
+  }, [fetchPage, pageSize, filters, sortConfig, historySource, historyProfitTypes]);
 
   const changePageSize = useCallback((size) => {
     setPageSize(size);
     setPage(1);
-    fetchPage(1, size, filters);
-  }, [fetchPage, filters]);
+    fetchPage(1, size, filters, sortConfig, historySource, historyProfitTypes);
+  }, [fetchPage, filters, sortConfig, historySource, historyProfitTypes]);
 
   const applyFilters = useCallback((newFilters) => {
     setFilters(newFilters);
     setPage(1);
-    fetchPage(1, pageSize, newFilters);
-  }, [fetchPage, pageSize]);
+    fetchPage(1, pageSize, newFilters, sortConfig, historySource, historyProfitTypes);
+  }, [fetchPage, pageSize, sortConfig, historySource, historyProfitTypes]);
 
-  const initPaged = useCallback(() => fetchPage(1, pageSize, filters), [fetchPage, pageSize, filters]);
+  const initPaged = useCallback(() => fetchPage(1, pageSize, filters, sortConfig, historySource, historyProfitTypes), [fetchPage, pageSize, filters, sortConfig, historySource, historyProfitTypes]);
 
   const applySort = useCallback((newSort) => {
     setSortConfig(newSort);
     setPage(1);
-    fetchPage(1, pageSize, filters, newSort);
-  }, [fetchPage, pageSize, filters]);
+    fetchPage(1, pageSize, filters, newSort, historySource, historyProfitTypes);
+  }, [fetchPage, pageSize, filters, historySource, historyProfitTypes]);
 
   const resetPaged = useCallback(() => {
     const defaultSort = { key: 'date', dir: 'desc' };
-    const defaultFilters = { type: 'all', mode: 'all', stockName: '', category: '', dateFrom: '', dateTo: '', gpMin: '', gpMax: '', priceMin: '', priceMax: '', profitMin: '', profitMax: '', qtyMin: '', qtyMax: '', marginMin: '', marginMax: '' };
+    const defaultFilters = { ...DEFAULT_HISTORY_FILTERS };
     setSortConfig(defaultSort);
     setFilters(defaultFilters);
     setPage(1);
-    fetchPage(1, pageSize, defaultFilters, defaultSort);
-  }, [fetchPage, pageSize]);
+    fetchPage(1, pageSize, defaultFilters, defaultSort, historySource, historyProfitTypes);
+  }, [fetchPage, pageSize, historySource, historyProfitTypes]);
+
+  const changeHistorySource = useCallback((source) => {
+    const defaultSort = { key: 'date', dir: 'desc' };
+    const sourceFilters = {
+      market: 'all',
+      type: 'all',
+      mode: 'all',
+      stockName: '',
+      category: '',
+      priceMin: '',
+      priceMax: '',
+      qtyMin: '',
+      qtyMax: '',
+      marginMin: '',
+      marginMax: ''
+    };
+    const nextFilters = { ...filters, ...sourceFilters };
+    setHistorySource(source);
+    setSortConfig(defaultSort);
+    setFilters(nextFilters);
+    setPage(1);
+    fetchPage(1, pageSize, nextFilters, defaultSort, source, historyProfitTypes);
+  }, [fetchPage, pageSize, filters, historyProfitTypes]);
+
+  const changeHistoryProfitTypes = useCallback((types) => {
+    const nextTypes = types.length > 0 ? types : [];
+    const nextFilters = nextTypes.includes(filters.type)
+      ? filters
+      : { ...filters, type: 'all' };
+
+    setHistoryProfitTypes(nextTypes);
+
+    if (historySource === 'profits') {
+      if (nextFilters !== filters) setFilters(nextFilters);
+      setPage(1);
+      fetchPage(1, pageSize, nextFilters, sortConfig, historySource, nextTypes);
+    }
+  }, [fetchPage, filters, historySource, pageSize, sortConfig]);
 
   const addTransaction = useCallback(async (transaction) => {
     const dbTransaction = {
       user_id: userId,
-      stock_id: transaction.stockId,
+      market: transaction.market || 'ge',
+      non_ge_stock_id: transaction.nonGeStockId || null,
+      stock_id: transaction.stockId || null,
       stock_name: transaction.stockName,
       type: transaction.type,
       shares: transaction.shares,
@@ -201,7 +414,12 @@ export function useTransactions(userId) {
       .select();
 
     if (error) {
-      console.error('Error adding transaction:', error);
+      console.error('Error adding transaction:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
       return null;
     } else {
       const formatted = formatRow(data[0]);
@@ -213,11 +431,24 @@ export function useTransactions(userId) {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const undoTransaction = useCallback(async (transaction) => {
+    const market = transaction.market || 'ge';
+    const isNonGE = market === 'non_ge';
+    const stockId = isNonGE ? transaction.nonGeStockId : transaction.stockId;
+    const stockTable = isNonGE ? 'non_ge_stocks' : 'stocks';
+    const stockIdColumn = isNonGE ? 'non_ge_stock_id' : 'stock_id';
+    const txShares = Number(transaction.shares || 0);
+    const txTotal = Number(transaction.total || 0);
+
+    if (!stockId) {
+      return { success: false, warning: 'stock_not_found' };
+    }
+
     if (transaction.type === 'buy') {
       const { data: laterSells } = await supabase
         .from('transactions')
         .select('id')
-        .eq('stock_id', transaction.stockId)
+        .eq('market', market)
+        .eq(stockIdColumn, stockId)
         .eq('type', 'sell')
         .gt('date', transaction.date)
         .limit(1);
@@ -246,9 +477,10 @@ export function useTransactions(userId) {
 
       // 3. Revert the stock
       const { data: stockData, error: stockFetchError } = await supabase
-        .from('stocks')
+        .from(stockTable)
         .select('*')
-        .eq('id', transaction.stockId)
+        .eq('id', stockId)
+        .eq('user_id', userId)
         .single();
 
       if (stockFetchError || !stockData) {
@@ -256,51 +488,57 @@ export function useTransactions(userId) {
       }
 
       let stockUpdate = {};
+      const heldShares = Number(stockData.shares || 0);
+      const totalCost = Number(stockData.total_cost || 0);
+      const sharesSold = Number(stockData.shares_sold || 0);
+      const totalCostSold = Number(stockData.total_cost_sold || 0);
+      const totalCostBasisSold = Number(stockData.total_cost_basis_sold || 0);
 
       if (transaction.type === 'buy') {
-        const avgBuy = stockData.shares > 0 ? stockData.total_cost / stockData.shares : 0;
-        const costBasisToRemove = avgBuy * transaction.shares;
+        const avgBuy = heldShares > 0 ? totalCost / heldShares : 0;
+        const costBasisToRemove = avgBuy * txShares;
         stockUpdate = {
-          shares: stockData.shares - transaction.shares,
-          total_cost: stockData.total_cost - costBasisToRemove,
+          shares: heldShares - txShares,
+          total_cost: totalCost - costBasisToRemove,
         };
       } else if (transaction.type === 'sell') {
-        const avgBuyAtSell = stockData.shares_sold > 0
-          ? stockData.total_cost_basis_sold / stockData.shares_sold
+        const avgBuyAtSell = sharesSold > 0
+          ? totalCostBasisSold / sharesSold
           : 0;
-        const costBasisToRestore = avgBuyAtSell * transaction.shares;
+        const costBasisToRestore = avgBuyAtSell * txShares;
         stockUpdate = {
-          shares: stockData.shares + transaction.shares,
-          total_cost: stockData.total_cost + costBasisToRestore,
-          shares_sold: stockData.shares_sold - transaction.shares,
-          total_cost_sold: stockData.total_cost_sold - transaction.total,
-          total_cost_basis_sold: stockData.total_cost_basis_sold - costBasisToRestore,
+          shares: heldShares + txShares,
+          total_cost: totalCost + costBasisToRestore,
+          shares_sold: sharesSold - txShares,
+          total_cost_sold: totalCostSold - txTotal,
+          total_cost_basis_sold: totalCostBasisSold - costBasisToRestore,
         };
       } else if (transaction.type === 'remove') {
         const avgPrice = transaction.price || 0;
-        const costToRestore = avgPrice * transaction.shares;
+        const costToRestore = avgPrice * txShares;
         stockUpdate = {
-          shares: stockData.shares + transaction.shares,
-          total_cost: stockData.total_cost + costToRestore,
+          shares: heldShares + txShares,
+          total_cost: totalCost + costToRestore,
         };
       }
 
       const { error: stockUpdateError } = await supabase
-        .from('stocks')
+        .from(stockTable)
         .update(stockUpdate)
-        .eq('id', transaction.stockId);
+        .eq('id', stockId)
+        .eq('user_id', userId);
       if (stockUpdateError) throw stockUpdateError;
 
       // 4. Refresh local state
       await fetchTransactions();
-      await fetchPage(1, pageSize, filters);
+      await fetchPage(1, pageSize, filters, sortConfig, historySource, historyProfitTypes);
 
       return { success: true };
     } catch (err) {
       console.error('Error undoing transaction:', err);
       return { success: false, error: err.message };
     }
-  }, [userId, fetchTransactions, fetchPage, pageSize, filters]);
+  }, [userId, fetchTransactions, fetchPage, pageSize, filters, sortConfig, historySource, historyProfitTypes]);
 
   return {
     // Original API - unchanged
@@ -308,7 +546,8 @@ export function useTransactions(userId) {
     loadFullHistory, fullHistoryLoading, historyScope,
     // Paginated API - for HistoryPage
     pagedTransactions, pagedLoading, totalCount, totalPages,
-    page, pageSize, filters,
+    page, pageSize, filters, historySource, changeHistorySource,
+    historyProfitTypes, changeHistoryProfitTypes,
     goToPage, changePageSize, applyFilters, initPaged,
     sortConfig, applySort, resetPaged, undoTransaction
   };
@@ -317,7 +556,10 @@ export function useTransactions(userId) {
 function formatRow(t) {
   return {
     id: Number(t.id),
+    activityKind: 'transaction',
+    market: t.market || 'ge',
     stockId: t.stock_id,
+    nonGeStockId: t.non_ge_stock_id ?? null,
     stockName: t.stock_name,
     type: t.type,
     shares: t.shares,
@@ -329,6 +571,37 @@ function formatRow(t) {
     profit: t.profit ?? null,
     margin: t.margin ?? null
   };
+}
+
+function formatProfitRow(row) {
+  const amount = Number(row.amount || 0);
+
+  return {
+    id: Number(row.id),
+    activityKind: 'profit',
+    market: row.market || 'ge',
+    stockId: row.stock_id ?? null,
+    nonGeStockId: row.non_ge_stock_id ?? null,
+    stockName: profitTypeLabel(row.profit_type),
+    type: row.profit_type,
+    shares: null,
+    price: null,
+    total: amount,
+    date: row.created_at,
+    category: 'Extra Profit',
+    profitHistoryId: null,
+    profit: amount,
+    margin: null
+  };
+}
+
+function profitTypeLabel(type) {
+  const labels = {
+    dump: 'Dump profit',
+    referral: 'Referral profit',
+    bonds: 'Bond profit'
+  };
+  return labels[type] || 'Extra profit';
 }
 
 function dbColumn(key) {
@@ -344,4 +617,36 @@ function dbColumn(key) {
     margin: 'margin'
   };
   return map[key] || 'date';
+}
+
+function profitHistoryColumn(key) {
+  const map = {
+    stockName: 'profit_type',
+    total: 'amount',
+    date: 'created_at',
+    type: 'profit_type',
+    category: 'profit_type',
+    profit: 'amount'
+  };
+  return map[key] || 'created_at';
+}
+
+function matchesLocalTimeFilters(row, filters) {
+  const dayOfWeek = filters.dayOfWeek ?? '';
+  const hourOfDay = filters.hourOfDay ?? '';
+
+  if (dayOfWeek === '' && hourOfDay === '') return true;
+
+  const date = new Date(row.date);
+  if (Number.isNaN(date.getTime())) return false;
+
+  if (dayOfWeek !== '' && date.getDay() !== Number(dayOfWeek)) {
+    return false;
+  }
+
+  if (hourOfDay !== '' && date.getHours() !== Number(hourOfDay)) {
+    return false;
+  }
+
+  return true;
 }

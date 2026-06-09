@@ -1,5 +1,7 @@
-import { useState, useMemo, useCallback } from 'react';
-import { subtractDays, toIsoDate } from '../utils/analyticsHelpers';
+import { useEffect, useMemo, useCallback } from 'react';
+import { subtractDays } from '../utils/analyticsHelpers';
+import { formatLocalDate } from '../utils/localPeriods';
+import { useUrlState } from './useUrlState';
 
 const WINDOW_OPTIONS = ['1W', '1M', '3M', '6M', '1Y', 'All'];
 
@@ -28,22 +30,46 @@ const daysForWindow = (window) => {
   }
 };
 
+const parseWindowParam = (value) => (
+  WINDOW_OPTIONS.includes(value) ? value : null
+);
+
+const serializeWindowParam = (value) => (
+  WINDOW_OPTIONS.includes(value) ? value : null
+);
+
 export function useAnalyticsTimeframe(userId, allTimeStart = null) {
   const storageKey = `analyticsTimeframe_${userId}`;
 
-  const [window, setWindowState] = useState(() => {
+  const initialWindow = useCallback(() => {
     const stored = localStorage.getItem(storageKey);
     return WINDOW_OPTIONS.includes(stored) ? stored : '1M';
-  });
+  }, [storageKey]);
+
+  const [window, setWindowState] = useUrlState(
+    'window',
+    initialWindow,
+    parseWindowParam,
+    serializeWindowParam,
+    { history: 'push' }
+  );
+
+  useEffect(() => {
+    const url = new URL(globalThis.location.href);
+    if (url.searchParams.get('window') === window) return;
+
+    url.searchParams.set('window', window);
+    globalThis.history.replaceState(globalThis.history.state || {}, '', url);
+  }, [window]);
 
   const setWindow = useCallback((next) => {
     if (!WINDOW_OPTIONS.includes(next)) return;
-    setWindowState(next);
+    setWindowState(next, { history: 'push' });
     localStorage.setItem(storageKey, next);
-  }, [storageKey]);
+  }, [setWindowState, storageKey]);
 
   const { start, end, bucket } = useMemo(() => {
-    const endIso = toIsoDate(new Date());
+    const endIso = formatLocalDate(new Date());
     const days = daysForWindow(window);
 
     if (days == null) {

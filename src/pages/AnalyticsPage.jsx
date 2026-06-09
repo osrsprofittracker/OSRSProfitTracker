@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Check, Copy } from 'lucide-react';
 import { useAnalyticsTimeframe } from '../hooks/useAnalyticsTimeframe';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useUrlState } from '../hooks/useUrlState';
 import TimeframeSelector from '../components/analytics/TimeframeSelector';
 import TabNav, { ANALYTICS_TABS } from '../components/analytics/TabNav';
 import KpiBand from '../components/analytics/KpiBand';
@@ -10,11 +12,59 @@ import CategoriesTab from '../components/analytics/CategoriesTab';
 import GoalsTab from '../components/analytics/GoalsTab';
 import { useTrade } from '../contexts/TradeContext';
 import { addDays, inclusiveDayCount, subtractDays, sumProfit } from '../utils/analyticsHelpers';
+import { formatLocalDate } from '../utils/localPeriods';
 import '../styles/analytics-page.css';
 import '../styles/analytics-widgets.css';
 
 const sumGpTraded = (buckets) => buckets.reduce((sum, bucket) => sum + (bucket.gp_traded || 0), 0);
 const DEFAULT_ALL_TIME_START = '2020-01-01';
+const isGEMarketRow = (row) => (row?.market || 'ge') === 'ge';
+
+const parseTabParam = (value) => (
+  ANALYTICS_TABS.includes(value) ? value : null
+);
+
+const serializeTabParam = (value) => (
+  ANALYTICS_TABS.includes(value) ? value : null
+);
+
+const copyText = async (text) => {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.className = 'analytics-copy-fallback';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  return copied;
+};
+
+function MarketSwitch({ activeMarket, navigateToPage }) {
+  return (
+    <div className="analytics-market-switch" aria-label="Analytics market">
+      <button
+        type="button"
+        className={`analytics-market-btn${activeMarket === 'ge' ? ' is-active' : ''}`}
+        onClick={() => navigateToPage?.('analytics')}
+      >
+        GE Analytics
+      </button>
+      <button
+        type="button"
+        className={`analytics-market-btn${activeMarket === 'non_ge' ? ' is-active' : ''}`}
+        onClick={() => navigateToPage?.('analyticsNonGE')}
+      >
+        Non-GE Analytics
+      </button>
+    </div>
+  );
+}
 
 export default function AnalyticsPage({
   userId,
@@ -39,25 +89,38 @@ export default function AnalyticsPage({
   const safeTransactions = transactions || [];
   const safeProfitHistory = profitHistory || [];
   const safeStocksForStats = stocksForStats || [];
+  const geTransactions = useMemo(
+    () => safeTransactions.filter(isGEMarketRow),
+    [safeTransactions]
+  );
+  const geProfitHistory = useMemo(
+    () => safeProfitHistory.filter(isGEMarketRow),
+    [safeProfitHistory]
+  );
 
-  const [activeTab, setActiveTab] = useState(() => (
-    ANALYTICS_TABS.includes(initialTab) ? initialTab : 'profit'
-  ));
+  const [activeTab, setActiveTab] = useUrlState(
+    'tab',
+    ANALYTICS_TABS.includes(initialTab) ? initialTab : 'profit',
+    parseTabParam,
+    serializeTabParam,
+    { history: 'push' }
+  );
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const scopeCoversStart = (scope, start) => {
     if (scope?.full) return true;
     if (!scope?.since || !start) return false;
-    return start >= String(scope.since).slice(0, 10);
+    return start >= formatLocalDate(scope.since);
   };
 
   const localAllTimeStart = useMemo(() => {
     const dates = [
-      ...safeTransactions.map((transaction) => String(transaction.date || '').slice(0, 10)),
-      ...safeProfitHistory.map((profit) => String(profit.created_at || '').slice(0, 10)),
+      ...geTransactions.map((transaction) => formatLocalDate(transaction.date)),
+      ...geProfitHistory.map((profit) => formatLocalDate(profit.created_at)),
     ].filter(Boolean);
 
     return dates.length > 0 ? dates.sort()[0] : null;
-  }, [safeTransactions, safeProfitHistory]);
+  }, [geTransactions, geProfitHistory]);
 
   const hasFullLocalHistory = transactionHistoryScope?.full && profitHistoryScope?.full;
   const allTimeStart = hasFullLocalHistory ? localAllTimeStart : DEFAULT_ALL_TIME_START;
@@ -96,10 +159,10 @@ export default function AnalyticsPage({
   const priorEnd = useMemo(() => addDays(timeframe.start, -1), [timeframe.start]);
 
   const fallbackData = useMemo(() => ({
-    transactions: safeTransactions,
+    transactions: geTransactions,
     stocks: safeStocksForStats,
-    profitHistory: safeProfitHistory,
-  }), [safeTransactions, safeStocksForStats, safeProfitHistory]);
+    profitHistory: geProfitHistory,
+  }), [geTransactions, safeStocksForStats, geProfitHistory]);
 
   const current = useAnalytics({
     userId,
@@ -144,13 +207,15 @@ export default function AnalyticsPage({
     [safeStocksForStats]
   );
 
-  const handleTabChange = (next) => {
-    setActiveTab(next);
+  const handleTabChange = useCallback((next) => {
+    setActiveTab(next, { history: 'push' });
+  }, [setActiveTab]);
 
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', next);
-    window.history.replaceState({}, '', url);
-  };
+  const handleCopyLink = useCallback(async () => {
+    const copied = await copyText(window.location.href).catch(() => false);
+    setLinkCopied(copied);
+    window.setTimeout(() => setLinkCopied(false), 1600);
+  }, []);
 
   return (
     <div className="analytics-page">
@@ -158,14 +223,27 @@ export default function AnalyticsPage({
         <div>
           <h1 className="analytics-page-title">Analytics</h1>
           <p className="analytics-page-subtitle">
-            Deep portfolio insights across profit, items, categories, and goals.
+            Deep GE-market insights across profit, items, categories, and goals.
           </p>
+          <MarketSwitch activeMarket="ge" navigateToPage={navigateToPage} />
         </div>
-        <TimeframeSelector
-          window={timeframe.window}
-          options={timeframe.options}
-          onChange={timeframe.setWindow}
-        />
+        <div className="analytics-header-actions">
+          <TimeframeSelector
+            window={timeframe.window}
+            options={timeframe.options}
+            onChange={timeframe.setWindow}
+          />
+          <button
+            type="button"
+            className={`analytics-copy-link-btn has-tooltip${linkCopied ? ' is-copied' : ''}`}
+            data-tooltip={linkCopied ? 'Link copied.' : 'Copy link to this analytics view.'}
+            aria-label="Copy link to this analytics view"
+            onClick={handleCopyLink}
+          >
+            {linkCopied ? <Check size={16} /> : <Copy size={16} />}
+          </button>
+          {linkCopied && <span className="analytics-copy-toast">Copied</span>}
+        </div>
       </div>
 
       {current.fromFallback && (
@@ -200,12 +278,12 @@ export default function AnalyticsPage({
             buckets={current.buckets}
             priorBuckets={prior.buckets}
             timeframe={timeframe}
-            transactions={safeTransactions}
+            transactions={geTransactions}
             stocks={safeStocksForStats}
-            profitHistory={safeProfitHistory}
+            profitHistory={geProfitHistory}
             numberFormat={numberFormat}
-            onNavigateToHistory={(dateFrom, dateTo = dateFrom) => navigateToPage?.('history', {
-              query: { dateFrom, dateTo },
+            onNavigateToHistory={(dateFrom, dateTo = dateFrom, extraFilters = {}) => navigateToPage?.('history', {
+              query: { dateFrom, dateTo, ...extraFilters, market: 'ge' },
             })}
             allTimeBuckets={allTime.buckets}
             totalProfitValue={derivedTotalProfit}
@@ -215,8 +293,8 @@ export default function AnalyticsPage({
         {activeTab === 'items' && (
           <ItemsTab
             stocks={safeStocksForStats}
-            transactions={safeTransactions}
-            profitHistory={safeProfitHistory}
+            transactions={geTransactions}
+            profitHistory={geProfitHistory}
             timeframe={timeframe}
             timeframeOptions={timeframe.options}
             numberFormat={numberFormat}
@@ -228,8 +306,8 @@ export default function AnalyticsPage({
             buckets={current.buckets}
             priorBuckets={prior.buckets}
             stocks={safeStocksForStats}
-            transactions={safeTransactions}
-            profitHistory={safeProfitHistory}
+            transactions={geTransactions}
+            profitHistory={geProfitHistory}
             timeframe={timeframe}
             timeframeOptions={timeframe.options}
             numberFormat={numberFormat}

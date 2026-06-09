@@ -24,14 +24,22 @@ export default function AltAccountTimer({
   const isReady = altAccountTimer && altAccountTimer <= currentTime;
   const isActive = altAccountTimer && altAccountTimer > currentTime;
   const stateClass = isReady ? 'is-ready' : isActive ? 'is-active' : 'is-idle';
+  const stateLabel = isReady ? 'Ready' : isActive ? 'Running' : 'Idle';
+  const timerValue = altAccountTimer ? formatTimeRemaining(altAccountTimer) : 'Not Set';
 
   return (
     <div className={`alt-account-timer ${stateClass}`}>
-      <div className="alt-account-timer-body">
-        <span className="alt-account-timer-label">Alt Account Timer</span>
-        <span className="alt-account-timer-value">
-          {altAccountTimer ? formatTimeRemaining(altAccountTimer) : 'Not Set'}
-        </span>
+      <div className="alt-account-timer-main">
+        <div className="alt-account-timer-icon">
+          <Clock size={16} />
+        </div>
+        <div className="alt-account-timer-body">
+          <div className="alt-account-timer-heading">
+            <span className="alt-account-timer-label">Alt Timer</span>
+            <span className="alt-account-timer-status">{stateLabel}</span>
+          </div>
+          <span className="alt-account-timer-value">{timerValue}</span>
+        </div>
       </div>
       <div className="alt-account-timer-actions">
         <button

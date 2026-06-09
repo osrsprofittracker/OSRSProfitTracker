@@ -1,5 +1,6 @@
 import { calculateUnrealizedProfit } from './taxUtils';
 import { applyAverageCostExit } from './positionAnalytics';
+import { formatLocalDate } from './localPeriods';
 
 const DEFAULT_CATEGORY = 'Uncategorized';
 
@@ -11,7 +12,7 @@ const itemIdOf = (stock) => stock?.itemId ?? stock?.item_id;
 const stockIdOf = (row) => row?.stockId ?? row?.stock_id;
 const transactionIdOf = (row) => row?.transactionId ?? row?.transaction_id;
 const profitTypeOf = (row) => row?.profitType ?? row?.profit_type;
-const isoOf = (value) => String(value || '').slice(0, 10);
+const isoOf = (value) => formatLocalDate(value);
 
 const MS_PER_DAY = 86400000;
 
@@ -537,48 +538,22 @@ export function buildCategoryDrilldownData({
     profit: toNumber(bucket.by_category?.[category]),
   }));
   const profitByTransaction = buildProfitByTransaction(profitHistory);
-  const positions = new Map();
   const windowProfitByStock = new Map();
   const categoryTransactions = (transactions || [])
     .filter((transaction) => stockIds.has(String(stockIdOf(transaction))));
 
-  for (const transaction of [...categoryTransactions].sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))) {
+  for (const transaction of categoryTransactions) {
     const stockId = String(stockIdOf(transaction));
-    const position = positions.get(stockId) || { shares: 0, cost: 0 };
-    const shares = toNumber(transaction.shares);
-    const total = toNumber(transaction.total);
+    if (transaction.type !== 'sell') continue;
 
-    if (transaction.type === 'buy') {
-      position.shares += shares;
-      position.cost += total;
-      positions.set(stockId, position);
-      continue;
-    }
-
-    if (transaction.type !== 'sell') {
-      if (transaction.type === 'remove') {
-        const nextPosition = applyAverageCostExit(position, shares);
-        position.shares = nextPosition.shares;
-        position.cost = nextPosition.cost;
-      }
-      positions.set(stockId, position);
-      continue;
-    }
-
-    const nextPosition = applyAverageCostExit(position, shares);
-    const estimatedBasis = nextPosition.estimatedBasis;
     const iso = isoOf(transaction.date);
+    if (start && end && (iso < start || iso > end)) continue;
 
-    if (!start || !end || (iso >= start && iso <= end)) {
-      const transactionProfit = profitByTransaction.has(String(transaction.id))
-        ? profitByTransaction.get(String(transaction.id))
-        : total - estimatedBasis;
-      windowProfitByStock.set(stockId, (windowProfitByStock.get(stockId) || 0) + transactionProfit);
-    }
+    const txKey = String(transaction.id);
+    if (!profitByTransaction.has(txKey)) continue;
 
-    position.shares = nextPosition.shares;
-    position.cost = nextPosition.cost;
-    positions.set(stockId, position);
+    const transactionProfit = profitByTransaction.get(txKey);
+    windowProfitByStock.set(stockId, (windowProfitByStock.get(stockId) || 0) + transactionProfit);
   }
 
   const recentTransactions = (transactions || [])

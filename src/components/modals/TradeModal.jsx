@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ArrowDown, ArrowUp, Check, Repeat2, X } from 'lucide-react';
 import { formatNumber, parseMK, handleMKInput } from '../../utils/formatters';
 import { useGEData } from '../../contexts/GEDataContext';
 import '../../styles/trade-modal.css';
@@ -11,6 +12,7 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
   const [price, setPrice] = useState('');
   const [useTotal, setUseTotal] = useState(false);
   const [totalAmount, setTotalAmount] = useState('');
+  const [targetSellValue, setTargetSellValue] = useState('');
   const [startTimer, setStartTimer] = useState(true);
   const [multiplier, setMultiplier] = useState(1);
 
@@ -87,6 +89,19 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
     }
   };
 
+  const applyTargetSellValue = () => {
+    if (isBuy || !targetSellValue || !price) return;
+
+    const targetValue = parseFloat(parseMK(String(targetSellValue).replace(/,/g, '')));
+    const priceNum = parseFloat(price);
+    if (!Number.isFinite(targetValue) || targetValue <= 0 || !Number.isFinite(priceNum) || priceNum <= 0) return;
+
+    const targetShares = Math.floor(targetValue / priceNum);
+    const cappedShares = Math.min(stock.shares, Math.max(1, targetShares));
+    setShares(cappedShares.toString());
+    setTotalAmount((cappedShares * priceNum).toFixed(0));
+  };
+
   const stepShares = (delta) => {
     const current = parseFloat(parseMK(shares)) || 0;
     let newVal = Math.max(0, current + delta);
@@ -131,11 +146,28 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
   const calculatedTotal = !useTotal && shares && price
     ? (parseFloat(shares) * parseFloat(price)).toFixed(2)
     : null;
+  const parsedShares = parseFloat(shares);
+  const parsedPrice = parseFloat(price);
+  const hasTradeQuantity = Number.isFinite(parsedShares) && parsedShares > 0;
+  const hasTradePrice = Number.isFinite(parsedPrice) && parsedPrice > 0;
+  const hasSellEstimate = !isBuy && hasTradeQuantity && hasTradePrice;
+  const afterQuantity = hasTradeQuantity
+    ? (isBuy ? stock.shares + parsedShares : stock.shares - parsedShares)
+    : stock.shares;
+  const currentQuantityExact = Number(stock.shares || 0).toLocaleString();
+  const afterQuantityExact = Number(afterQuantity || 0).toLocaleString();
 
   // Sell-only profit calculator values
   const avgBuy = stock.shares > 0 ? stock.totalCost / stock.shares : 0;
-  const expectedProfit = !isBuy && shares && price ? (parseFloat(price) - avgBuy) * parseFloat(shares) : 0;
-  const profitPercent = !isBuy && avgBuy > 0 && price ? ((parseFloat(price) - avgBuy) / avgBuy * 100) : 0;
+  const expectedProfit = hasSellEstimate ? (parsedPrice - avgBuy) * parsedShares : 0;
+  const profitPercent = hasSellEstimate && avgBuy > 0 ? ((parsedPrice - avgBuy) / avgBuy * 100) : 0;
+  const sellOverviewClass = !hasSellEstimate ? 'neutral' : (expectedProfit >= 0 ? 'positive' : 'negative');
+  const totalResultLabel = useTotal ? 'Avg:' : 'Total:';
+  const totalResultValue = useTotal
+    ? (hasTradePrice ? `$${price}` : '-')
+    : (hasTradeQuantity && hasTradePrice && calculatedTotal
+      ? `$${formatNumber(parseFloat(calculatedTotal), 'full')}`
+      : '-');
 
   const sellDisabled = !isBuy && (
     isSubmitting || !shares || parseFloat(shares) > stock.shares || parseFloat(shares) <= 0
@@ -144,55 +176,70 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
 
   return (
     <div className={`trade-modal ${isBuy ? 'buy' : 'sell'}`}>
-      <h2 className="trade-modal-title">
-        {isBuy ? 'Buy' : 'Sell'} {stock.name}
-      </h2>
+      <div className="trade-modal-header">
+        <div className="trade-modal-heading">
+          <h2 className="trade-modal-title">
+            {isBuy ? 'Buy' : 'Sell'} {stock.name}
+          </h2>
+        </div>
+        <button type="button" className="trade-modal-close" onClick={onCancel} aria-label="Close modal">
+          <X size={18} />
+        </button>
+      </div>
 
-      <div className={`trade-modal-banner ${isBuy ? 'buy' : 'sell'}`}>
-        <div className="trade-modal-banner-row">
-          <span className="trade-modal-banner-label">
-            {isBuy ? 'Current' : 'Available'}: {formatNumber(stock.shares)} quantity
-          </span>
-          {shares && parseFloat(shares) > 0 && (
-            <span className="trade-modal-banner-after">
-              After: {formatNumber(isBuy ? stock.shares + parseFloat(shares) : stock.shares - parseFloat(shares))} quantity
-            </span>
-          )}
+      <div className="trade-modal-summary-grid">
+        <div
+          className="trade-modal-summary-card"
+          data-tooltip={`Exact quantity: ${currentQuantityExact}`}
+          aria-label={`${isBuy ? 'Current' : 'Available'} exact quantity ${currentQuantityExact}`}
+        >
+          <span className="trade-modal-summary-label">{isBuy ? 'Current' : 'Available'}</span>
+          <strong className="trade-modal-summary-value">{formatNumber(stock.shares)}</strong>
+          <span className="trade-modal-summary-meta">quantity</span>
+        </div>
+        <div
+          className="trade-modal-summary-card accent"
+          data-tooltip={`Exact quantity: ${afterQuantityExact}`}
+          aria-label={`After exact quantity ${afterQuantityExact}`}
+        >
+          <span className="trade-modal-summary-label">After</span>
+          <strong className="trade-modal-summary-value">{formatNumber(afterQuantity)}</strong>
+          <span className="trade-modal-summary-meta">quantity</span>
         </div>
       </div>
 
-      {!isBuy && shares && price && parseFloat(shares) > 0 && parseFloat(price) > 0 && (
-        <div className={`trade-modal-profit ${expectedProfit >= 0 ? 'positive' : 'negative'}`}>
+      {!isBuy && (
+        <div className={`trade-modal-profit ${sellOverviewClass}`}>
           <div className="trade-modal-profit-row">
-            <span className="trade-modal-profit-label">Avg Buy Price:</span>
+            <span className="trade-modal-profit-label">Avg buy</span>
             <span className="trade-modal-profit-value">${avgBuy.toFixed(2)}</span>
           </div>
           <div className="trade-modal-profit-row">
-            <span className="trade-modal-profit-label">Sell Price:</span>
-            <span className="trade-modal-profit-value">${parseFloat(price).toFixed(2)}</span>
+            <span className="trade-modal-profit-label">Sell price</span>
+            <span className="trade-modal-profit-value">{hasTradePrice ? `$${parsedPrice.toFixed(2)}` : '-'}</span>
           </div>
-          {!useTotal && calculatedTotal && (
-            <div className="trade-modal-profit-row">
-              <span className="trade-modal-profit-label">Total Revenue:</span>
-              <span className="trade-modal-profit-value">${formatNumber(calculatedTotal)}</span>
-            </div>
-          )}
+          <div className="trade-modal-profit-row">
+            <span className="trade-modal-profit-label">Revenue</span>
+            <span className="trade-modal-profit-value">
+              {hasSellEstimate ? `$${formatNumber(calculatedTotal)}` : '-'}
+            </span>
+          </div>
           <div className="trade-modal-profit-divider">
             <div className="trade-modal-profit-row">
-              <span className="trade-modal-profit-total-label">Expected Profit:</span>
-              <span className={`trade-modal-profit-total-value ${expectedProfit >= 0 ? 'positive' : 'negative'}`}>
-                {(expectedProfit >= 0 ? '+' : '') + formatNumber(expectedProfit)}
+              <span className="trade-modal-profit-total-label">Expected profit</span>
+              <span className={`trade-modal-profit-total-value ${sellOverviewClass}`}>
+                {hasSellEstimate ? `${expectedProfit >= 0 ? '+' : ''}${formatNumber(expectedProfit)}` : '-'}
               </span>
             </div>
             <div className="trade-modal-profit-percent">
-              {(profitPercent >= 0 ? '+' : '') + profitPercent.toFixed(2)}%
+              {hasSellEstimate ? `${profitPercent >= 0 ? '+' : ''}${profitPercent.toFixed(2)}%` : '-'}
             </div>
           </div>
         </div>
       )}
 
-      <div className="trade-modal-body">
-        <div>
+      <div className="trade-modal-body trade-modal-body-grid">
+        <section className="trade-modal-field-card">
           {isBuy ? (
             <>
               <label className="trade-modal-field-label">Quantity</label>
@@ -235,16 +282,50 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
               }}
             />
             <div className="input-step-btns">
-              <button type="button" className="input-step-btn" onClick={() => stepShares(1)}>▲</button>
-              <button type="button" className="input-step-btn" onClick={() => stepShares(-1)}>▼</button>
+              <button type="button" className="input-step-btn" onClick={() => stepShares(1)} aria-label="Increase quantity">
+                <ArrowUp size={14} />
+              </button>
+              <button type="button" className="input-step-btn" onClick={() => stepShares(-1)} aria-label="Decrease quantity">
+                <ArrowDown size={14} />
+              </button>
             </div>
           </div>
-        </div>
+          {!isBuy && (
+            <div className="trade-modal-worth-row">
+              <label className="trade-modal-worth-label" htmlFor="target-sell-value">
+                Sell worth
+              </label>
+              <input
+                id="target-sell-value"
+                className="trade-modal-worth-input"
+                type="text"
+                value={targetSellValue}
+                onChange={(e) => setTargetSellValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyTargetSellValue();
+                  }
+                }}
+                placeholder="20m"
+              />
+              <button
+                type="button"
+                className="trade-modal-worth-btn"
+                onClick={applyTargetSellValue}
+                disabled={!price}
+                title={price ? 'Set quantity from target value' : 'Enter price per item first'}
+              >
+                Set Qty
+              </button>
+            </div>
+          )}
+        </section>
 
-        <div>
+        <section className="trade-modal-field-card">
           <div className="trade-modal-field-header">
             <label className="trade-modal-field-label">
-              {useTotal ? (isBuy ? 'Total Cost' : 'Total Revenue') : 'Price per Item'}
+              {useTotal ? (isBuy ? 'Total Cost' : 'Total Revenue') : 'Price'}
             </label>
             {!useTotal && (geLow || geHigh) && (
               <div className="trade-modal-ge-buttons">
@@ -253,7 +334,7 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
                     onClick={() => handlePriceChange(geLow.toString())}
                     className="trade-modal-ge-btn low"
                   >
-                    Low: {formatNumber(geLow)}
+                    Low {formatNumber(geLow)}
                   </button>
                 )}
                 {geHigh && (
@@ -261,13 +342,14 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
                     onClick={() => handlePriceChange(geHigh.toString())}
                     className="trade-modal-ge-btn high"
                   >
-                    High: {formatNumber(geHigh)}
+                    High {formatNumber(geHigh)}
                   </button>
                 )}
               </div>
             )}
             <button onClick={handleModeToggle} className="trade-modal-toggle">
-              ⇄ {useTotal ? 'Price' : 'Total'}
+              <Repeat2 size={14} />
+              <span>{useTotal ? 'Price' : 'Total'}</span>
             </button>
           </div>
           <div className="input-step-wrapper">
@@ -306,25 +388,19 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
               }}
             />
             <div className="input-step-btns">
-              <button type="button" className="input-step-btn" onClick={() => stepPrice(1)}>▲</button>
-              <button type="button" className="input-step-btn" onClick={() => stepPrice(-1)}>▼</button>
+              <button type="button" className="input-step-btn" onClick={() => stepPrice(1)} aria-label="Increase price">
+                <ArrowUp size={14} />
+              </button>
+              <button type="button" className="input-step-btn" onClick={() => stepPrice(-1)} aria-label="Decrease price">
+                <ArrowDown size={14} />
+              </button>
             </div>
           </div>
-          {useTotal && price && (
-            <div className="trade-modal-result">
-              <span className="trade-modal-result-label">Avg: </span>
-              <span className="trade-modal-result-value">${price}</span>
-            </div>
-          )}
-          {!useTotal && calculatedTotal && (
-            <div className="trade-modal-result">
-              <span className="trade-modal-result-label">Total: </span>
-              <span className="trade-modal-result-value">
-                ${formatNumber(parseFloat(calculatedTotal), 'full')}
-              </span>
-            </div>
-          )}
-        </div>
+          <div className="trade-modal-result">
+            <span className="trade-modal-result-label">{totalResultLabel}</span>
+            <span className="trade-modal-result-value">{totalResultValue}</span>
+          </div>
+        </section>
 
         {isBuy && (
           <label className="trade-modal-checkbox-row">
@@ -344,10 +420,12 @@ export default function TradeModal({ stock, mode, onConfirm, onCancel, isSubmitt
             disabled={confirmDisabled}
             className={`trade-modal-confirm ${isBuy ? 'buy' : 'sell'}`}
           >
-            Confirm
+            <Check size={16} />
+            <span>Confirm</span>
           </button>
           <button onClick={onCancel} className="trade-modal-cancel">
-            Cancel
+            <X size={16} />
+            <span>Cancel</span>
           </button>
         </div>
       </div>
