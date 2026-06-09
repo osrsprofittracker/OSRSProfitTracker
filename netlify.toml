@@ -8,8 +8,18 @@
      status = 200
 
    [[redirects]]
+     from = "/api/ge-prices/latest"
+     to = "/.netlify/functions/ge-prices?endpoint=latest"
+     status = 200
+
+   [[redirects]]
      from = "/api/ge-prices/1h"
      to = "/.netlify/functions/ge-prices?endpoint=1h"
+     status = 200
+
+   [[redirects]]
+     from = "/api/ge-prices/timeseries"
+     to = "/.netlify/functions/ge-prices?endpoint=timeseries"
      status = 200
 
    [[redirects]]

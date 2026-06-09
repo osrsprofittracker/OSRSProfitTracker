@@ -26,10 +26,6 @@ export function useGEPrices() {
   };
 
   const fetchGEEndpoint = async (endpoint) => {
-    if (endpoint === 'latest') {
-      return fetchWikiEndpoint(endpoint);
-    }
-
     try {
       const res = await fetchProxyEndpoint(endpoint);
       if (isJsonResponse(res)) return res;
