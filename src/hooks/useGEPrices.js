@@ -6,15 +6,6 @@ const WIKI_BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs';
 const REFRESH_INTERVAL = 60_000;
 const ICON_BASE_PATH = '/icons/ge';
 const ICON_MANIFEST_URL = `${ICON_BASE_PATH}/manifest.json`;
-const ICON_CACHE_VERSION_KEY = 'osrs_icon_cache_version';
-
-function getIconCacheVersion() {
-  try {
-    return localStorage.getItem(ICON_CACHE_VERSION_KEY) || CURRENT_VERSION;
-  } catch {
-    return CURRENT_VERSION;
-  }
-}
 
 function getVersionedAssetUrl(path, version) {
   if (!path) return '';
@@ -67,7 +58,10 @@ export function useGEPrices() {
 
       let iconManifest = null;
       try {
-        const manifestRes = await fetch(getVersionedAssetUrl(ICON_MANIFEST_URL, CURRENT_VERSION));
+        const manifestRes = await fetch(
+          getVersionedAssetUrl(ICON_MANIFEST_URL, CURRENT_VERSION),
+          { cache: 'no-store' }
+        );
         if (manifestRes.ok) {
           iconManifest = await manifestRes.json();
         }
@@ -77,11 +71,14 @@ export function useGEPrices() {
 
       // Build iconMap: { [id]: iconUrl }
       const map = {};
-      const iconCacheVersion = getIconCacheVersion();
       data.forEach(item => {
-        const mirroredIcon = iconManifest?.[item.id]?.path;
+        const manifestEntry = iconManifest?.[item.id];
+        const mirroredIcon = manifestEntry?.path;
         if (mirroredIcon) {
-          map[item.id] = getVersionedAssetUrl(mirroredIcon, iconCacheVersion);
+          map[item.id] = getVersionedAssetUrl(
+            mirroredIcon,
+            manifestEntry.updatedAt || CURRENT_VERSION
+          );
         }
       });
       setIconMap(map);

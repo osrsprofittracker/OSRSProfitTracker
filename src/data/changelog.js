@@ -1,6 +1,13 @@
-export const CURRENT_VERSION = "4.0.0";
+export const CURRENT_VERSION = "4.0.1";
 
 export const changelog = [
+  {
+    version: "4.0.1",
+    date: "2026-07-29",
+    changes: [
+      { type: "fix", text: "Refreshed GE and Non-GE icon cache versions so newly added and updated item images appear immediately" },
+    ],
+  },
   {
     version: "4.0.0",
     date: "2026-06-09",

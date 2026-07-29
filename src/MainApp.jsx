@@ -744,7 +744,6 @@ function MainAppInner({ session, onLogout }) {
 
   const handleCloseChangelog = () => {
     localStorage.setItem(`lastSeenVersion_${userId}`, CURRENT_VERSION);
-    localStorage.setItem('osrs_icon_cache_version', CURRENT_VERSION);
     closeModal('changelog');
   };
 
