@@ -16,6 +16,8 @@ const ICON_NAME_OVERRIDES = {
   28220: 'Crystal felling axe.png',
   28223: 'Crystal felling axe (inactive).png',
   33320: 'Uncharged toxic trident (e).png',
+  33428: 'Trinket of vengeance.png',
+  33431: 'Trinket of vengeance.png',
 };
 
 function getArgValue(name, fallback) {
