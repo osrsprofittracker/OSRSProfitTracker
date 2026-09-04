@@ -750,10 +750,10 @@
   },
   "245": {
     "path": "/icons/ge/245.png",
-    "sourceIcon": "Wine of zamorak.png",
-    "mirrorIcon": "Wine of zamorak.png",
+    "sourceIcon": "Wine of Zamorak.png",
+    "mirrorIcon": "Wine of Zamorak.png",
     "bytes": 617,
-    "updatedAt": "2026-07-29T11:45:26.132Z"
+    "updatedAt": "2026-09-04T08:35:57.760Z"
   },
   "247": {
     "path": "/icons/ge/247.png",
@@ -2332,10 +2332,10 @@
   },
   "981": {
     "path": "/icons/ge/981.png",
-    "sourceIcon": "Disk of returning.png",
-    "mirrorIcon": "Disk of returning.png",
+    "sourceIcon": "Disk of Returning.png",
+    "mirrorIcon": "Disk of Returning.png",
     "bytes": 536,
-    "updatedAt": "2026-07-29T11:45:27.289Z"
+    "updatedAt": "2026-09-04T08:35:58.251Z"
   },
   "983": {
     "path": "/icons/ge/983.png",
@@ -15625,10 +15625,10 @@
   },
   "9735": {
     "path": "/icons/ge/9735.png",
-    "sourceIcon": "Desert goat horn.png",
-    "mirrorIcon": "Desert goat horn.png",
+    "sourceIcon": "Goat horn.png",
+    "mirrorIcon": "Goat horn.png",
     "bytes": 538,
-    "updatedAt": "2026-07-29T11:45:39.243Z"
+    "updatedAt": "2026-09-04T08:35:59.046Z"
   },
   "9736": {
     "path": "/icons/ge/9736.png",
@@ -16633,87 +16633,87 @@
   },
   "10330": {
     "path": "/icons/ge/10330.png",
-    "sourceIcon": "3rd age range top.png",
-    "mirrorIcon": "3rd age range top.png",
+    "sourceIcon": "3rd Age range top.png",
+    "mirrorIcon": "3rd Age range top.png",
     "bytes": 750,
-    "updatedAt": "2026-07-29T11:45:40.147Z"
+    "updatedAt": "2026-09-04T08:35:59.502Z"
   },
   "10332": {
     "path": "/icons/ge/10332.png",
-    "sourceIcon": "3rd age range legs.png",
-    "mirrorIcon": "3rd age range legs.png",
+    "sourceIcon": "3rd Age range legs.png",
+    "mirrorIcon": "3rd Age range legs.png",
     "bytes": 695,
-    "updatedAt": "2026-07-29T11:45:40.148Z"
+    "updatedAt": "2026-09-04T08:35:59.960Z"
   },
   "10334": {
     "path": "/icons/ge/10334.png",
-    "sourceIcon": "3rd age range coif.png",
-    "mirrorIcon": "3rd age range coif.png",
+    "sourceIcon": "3rd Age range coif.png",
+    "mirrorIcon": "3rd Age range coif.png",
     "bytes": 381,
-    "updatedAt": "2026-07-29T11:45:40.147Z"
+    "updatedAt": "2026-09-04T08:36:00.402Z"
   },
   "10336": {
     "path": "/icons/ge/10336.png",
-    "sourceIcon": "3rd age vambraces.png",
-    "mirrorIcon": "3rd age vambraces.png",
+    "sourceIcon": "3rd Age vambraces.png",
+    "mirrorIcon": "3rd Age vambraces.png",
     "bytes": 344,
-    "updatedAt": "2026-07-29T11:45:40.155Z"
+    "updatedAt": "2026-09-04T08:36:00.808Z"
   },
   "10338": {
     "path": "/icons/ge/10338.png",
-    "sourceIcon": "3rd age robe top.png",
-    "mirrorIcon": "3rd age robe top.png",
+    "sourceIcon": "3rd Age robe top.png",
+    "mirrorIcon": "3rd Age robe top.png",
     "bytes": 487,
-    "updatedAt": "2026-07-29T11:45:40.157Z"
+    "updatedAt": "2026-09-04T08:36:01.231Z"
   },
   "10340": {
     "path": "/icons/ge/10340.png",
-    "sourceIcon": "3rd age robe.png",
-    "mirrorIcon": "3rd age robe.png",
+    "sourceIcon": "3rd Age robe.png",
+    "mirrorIcon": "3rd Age robe.png",
     "bytes": 429,
-    "updatedAt": "2026-07-29T11:45:40.155Z"
+    "updatedAt": "2026-09-04T08:36:01.860Z"
   },
   "10342": {
     "path": "/icons/ge/10342.png",
-    "sourceIcon": "3rd age mage hat.png",
-    "mirrorIcon": "3rd age mage hat.png",
+    "sourceIcon": "3rd Age mage hat.png",
+    "mirrorIcon": "3rd Age mage hat.png",
     "bytes": 481,
-    "updatedAt": "2026-07-29T11:45:40.155Z"
+    "updatedAt": "2026-09-04T08:36:02.293Z"
   },
   "10344": {
     "path": "/icons/ge/10344.png",
-    "sourceIcon": "3rd age amulet.png",
-    "mirrorIcon": "3rd age amulet.png",
+    "sourceIcon": "3rd Age amulet.png",
+    "mirrorIcon": "3rd Age amulet.png",
     "bytes": 270,
-    "updatedAt": "2026-07-29T11:45:40.155Z"
+    "updatedAt": "2026-09-04T08:36:02.708Z"
   },
   "10346": {
     "path": "/icons/ge/10346.png",
-    "sourceIcon": "3rd age platelegs.png",
-    "mirrorIcon": "3rd age platelegs.png",
+    "sourceIcon": "3rd Age platelegs.png",
+    "mirrorIcon": "3rd Age platelegs.png",
     "bytes": 497,
-    "updatedAt": "2026-07-29T11:45:40.259Z"
+    "updatedAt": "2026-09-04T08:36:03.172Z"
   },
   "10348": {
     "path": "/icons/ge/10348.png",
-    "sourceIcon": "3rd age platebody.png",
-    "mirrorIcon": "3rd age platebody.png",
+    "sourceIcon": "3rd Age platebody.png",
+    "mirrorIcon": "3rd Age platebody.png",
     "bytes": 745,
-    "updatedAt": "2026-07-29T11:45:40.260Z"
+    "updatedAt": "2026-09-04T08:36:03.590Z"
   },
   "10350": {
     "path": "/icons/ge/10350.png",
-    "sourceIcon": "3rd age full helmet.png",
-    "mirrorIcon": "3rd age full helmet.png",
+    "sourceIcon": "3rd Age full helmet.png",
+    "mirrorIcon": "3rd Age full helmet.png",
     "bytes": 520,
-    "updatedAt": "2026-07-29T11:45:40.262Z"
+    "updatedAt": "2026-09-04T08:36:04.007Z"
   },
   "10352": {
     "path": "/icons/ge/10352.png",
-    "sourceIcon": "3rd age kiteshield.png",
-    "mirrorIcon": "3rd age kiteshield.png",
+    "sourceIcon": "3rd Age kiteshield.png",
+    "mirrorIcon": "3rd Age kiteshield.png",
     "bytes": 258,
-    "updatedAt": "2026-07-29T11:45:40.259Z"
+    "updatedAt": "2026-09-04T08:36:04.461Z"
   },
   "10354": {
     "path": "/icons/ge/10354.png",
@@ -17221,10 +17221,10 @@
   },
   "10828": {
     "path": "/icons/ge/10828.png",
-    "sourceIcon": "Helm of neitiznot.png",
-    "mirrorIcon": "Helm of neitiznot.png",
+    "sourceIcon": "Helm of Neitiznot.png",
+    "mirrorIcon": "Helm of Neitiznot.png",
     "bytes": 638,
-    "updatedAt": "2026-07-29T11:45:40.677Z"
+    "updatedAt": "2026-09-04T08:36:04.899Z"
   },
   "10891": {
     "path": "/icons/ge/10891.png",
@@ -18236,10 +18236,10 @@
   },
   "11791": {
     "path": "/icons/ge/11791.png",
-    "sourceIcon": "Staff of the dead.png",
-    "mirrorIcon": "Staff of the dead.png",
+    "sourceIcon": "Staff of the Dead.png",
+    "mirrorIcon": "Staff of the Dead.png",
     "bytes": 285,
-    "updatedAt": "2026-07-29T11:45:41.596Z"
+    "updatedAt": "2026-09-04T08:36:05.364Z"
   },
   "11798": {
     "path": "/icons/ge/11798.png",
@@ -18425,10 +18425,10 @@
   },
   "11905": {
     "path": "/icons/ge/11905.png",
-    "sourceIcon": "Trident of the seas (full).png",
-    "mirrorIcon": "Trident of the seas (full).png",
+    "sourceIcon": "Trident of the Seas (full).png",
+    "mirrorIcon": "Trident of the Seas (full).png",
     "bytes": 375,
-    "updatedAt": "2026-07-29T11:45:41.797Z"
+    "updatedAt": "2026-09-04T08:36:05.798Z"
   },
   "11908": {
     "path": "/icons/ge/11908.png",
@@ -18663,10 +18663,10 @@
   },
   "12007": {
     "path": "/icons/ge/12007.png",
-    "sourceIcon": "Jar of dirt.png",
-    "mirrorIcon": "Jar of dirt.png",
+    "sourceIcon": "Jar of Dirt.png",
+    "mirrorIcon": "Jar of Dirt.png",
     "bytes": 629,
-    "updatedAt": "2026-07-29T11:45:41.969Z"
+    "updatedAt": "2026-09-04T08:36:06.240Z"
   },
   "12193": {
     "path": "/icons/ge/12193.png",
@@ -19475,24 +19475,24 @@
   },
   "12422": {
     "path": "/icons/ge/12422.png",
-    "sourceIcon": "3rd age wand.png",
-    "mirrorIcon": "3rd age wand.png",
+    "sourceIcon": "3rd Age wand.png",
+    "mirrorIcon": "3rd Age wand.png",
     "bytes": 297,
-    "updatedAt": "2026-07-29T11:45:42.725Z"
+    "updatedAt": "2026-09-04T08:36:06.696Z"
   },
   "12424": {
     "path": "/icons/ge/12424.png",
-    "sourceIcon": "3rd age bow.png",
-    "mirrorIcon": "3rd age bow.png",
+    "sourceIcon": "3rd Age bow.png",
+    "mirrorIcon": "3rd Age bow.png",
     "bytes": 312,
-    "updatedAt": "2026-07-29T11:45:42.725Z"
+    "updatedAt": "2026-09-04T08:36:07.140Z"
   },
   "12426": {
     "path": "/icons/ge/12426.png",
-    "sourceIcon": "3rd age longsword.png",
-    "mirrorIcon": "3rd age longsword.png",
+    "sourceIcon": "3rd Age longsword.png",
+    "mirrorIcon": "3rd Age longsword.png",
     "bytes": 296,
-    "updatedAt": "2026-07-29T11:45:42.829Z"
+    "updatedAt": "2026-09-04T08:36:07.595Z"
   },
   "12428": {
     "path": "/icons/ge/12428.png",
@@ -19524,10 +19524,10 @@
   },
   "12437": {
     "path": "/icons/ge/12437.png",
-    "sourceIcon": "3rd age cloak.png",
-    "mirrorIcon": "3rd age cloak.png",
+    "sourceIcon": "3rd Age cloak.png",
+    "mirrorIcon": "3rd Age cloak.png",
     "bytes": 450,
-    "updatedAt": "2026-07-29T11:45:42.829Z"
+    "updatedAt": "2026-09-04T08:36:08.038Z"
   },
   "12439": {
     "path": "/icons/ge/12439.png",
@@ -20082,6 +20082,20 @@
     "bytes": 607,
     "updatedAt": "2026-07-29T11:45:43.355Z"
   },
+  "12746": {
+    "path": "/icons/ge/12746.png",
+    "sourceIcon": "Archaic emblem (tier 1).png",
+    "mirrorIcon": "Archaic emblem (tier 1).png",
+    "bytes": 296,
+    "updatedAt": "2026-09-04T08:36:08.478Z"
+  },
+  "12751": {
+    "path": "/icons/ge/12751.png",
+    "sourceIcon": "Archaic emblem (tier 5).png",
+    "mirrorIcon": "Archaic emblem (tier 5).png",
+    "bytes": 349,
+    "updatedAt": "2026-09-04T08:36:08.901Z"
+  },
   "12757": {
     "path": "/icons/ge/12757.png",
     "sourceIcon": "Blue dark bow paint.png",
@@ -20308,10 +20322,10 @@
   },
   "12851": {
     "path": "/icons/ge/12851.png",
-    "sourceIcon": "Amulet of the damned (full).png",
-    "mirrorIcon": "Amulet of the damned (full).png",
+    "sourceIcon": "Amulet of the Damned (full).png",
+    "mirrorIcon": "Amulet of the Damned (full).png",
     "bytes": 436,
-    "updatedAt": "2026-07-29T11:45:43.579Z"
+    "updatedAt": "2026-09-04T08:36:09.353Z"
   },
   "12863": {
     "path": "/icons/ge/12863.png",
@@ -20392,10 +20406,10 @@
   },
   "12885": {
     "path": "/icons/ge/12885.png",
-    "sourceIcon": "Jar of sand.png",
-    "mirrorIcon": "Jar of sand.png",
+    "sourceIcon": "Jar of Sand.png",
+    "mirrorIcon": "Jar of Sand.png",
     "bytes": 693,
-    "updatedAt": "2026-07-29T11:45:43.700Z"
+    "updatedAt": "2026-09-04T08:36:09.755Z"
   },
   "12900": {
     "path": "/icons/ge/12900.png",
@@ -20511,10 +20525,10 @@
   },
   "12936": {
     "path": "/icons/ge/12936.png",
-    "sourceIcon": "Jar of swamp.png",
-    "mirrorIcon": "Jar of swamp.png",
+    "sourceIcon": "Jar of Swamp.png",
+    "mirrorIcon": "Jar of Swamp.png",
     "bytes": 570,
-    "updatedAt": "2026-07-29T11:45:43.804Z"
+    "updatedAt": "2026-09-04T08:36:20.361Z"
   },
   "12938": {
     "path": "/icons/ge/12938.png",
@@ -20917,31 +20931,31 @@
   },
   "13153": {
     "path": "/icons/ge/13153.png",
-    "sourceIcon": "Book of balance page set.png",
-    "mirrorIcon": "Book of balance page set.png",
+    "sourceIcon": "Book of Balance page set.png",
+    "mirrorIcon": "Book of Balance page set.png",
     "bytes": 531,
-    "updatedAt": "2026-07-29T11:45:44.155Z"
+    "updatedAt": "2026-09-04T08:36:20.838Z"
   },
   "13155": {
     "path": "/icons/ge/13155.png",
-    "sourceIcon": "Book of war page set.png",
-    "mirrorIcon": "Book of war page set.png",
+    "sourceIcon": "Book of War page set.png",
+    "mirrorIcon": "Book of War page set.png",
     "bytes": 518,
-    "updatedAt": "2026-07-29T11:45:44.130Z"
+    "updatedAt": "2026-09-04T08:36:21.273Z"
   },
   "13157": {
     "path": "/icons/ge/13157.png",
-    "sourceIcon": "Book of law page set.png",
-    "mirrorIcon": "Book of law page set.png",
+    "sourceIcon": "Book of Law page set.png",
+    "mirrorIcon": "Book of Law page set.png",
     "bytes": 517,
-    "updatedAt": "2026-07-29T11:45:44.131Z"
+    "updatedAt": "2026-09-04T08:36:21.715Z"
   },
   "13159": {
     "path": "/icons/ge/13159.png",
-    "sourceIcon": "Book of darkness page set.png",
-    "mirrorIcon": "Book of darkness page set.png",
+    "sourceIcon": "Book of Darkness page set.png",
+    "mirrorIcon": "Book of Darkness page set.png",
     "bytes": 531,
-    "updatedAt": "2026-07-29T11:45:44.148Z"
+    "updatedAt": "2026-09-04T08:36:22.141Z"
   },
   "13161": {
     "path": "/icons/ge/13161.png",
@@ -21057,10 +21071,10 @@
   },
   "13245": {
     "path": "/icons/ge/13245.png",
-    "sourceIcon": "Jar of souls.png",
-    "mirrorIcon": "Jar of souls.png",
+    "sourceIcon": "Jar of Souls.png",
+    "mirrorIcon": "Jar of Souls.png",
     "bytes": 729,
-    "updatedAt": "2026-07-29T11:45:44.342Z"
+    "updatedAt": "2026-09-04T08:36:22.580Z"
   },
   "13249": {
     "path": "/icons/ge/13249.png",
@@ -21113,10 +21127,10 @@
   },
   "13277": {
     "path": "/icons/ge/13277.png",
-    "sourceIcon": "Jar of miasma.png",
-    "mirrorIcon": "Jar of miasma.png",
+    "sourceIcon": "Jar of Miasma.png",
+    "mirrorIcon": "Jar of Miasma.png",
     "bytes": 665,
-    "updatedAt": "2026-07-29T11:45:44.373Z"
+    "updatedAt": "2026-09-04T08:36:23.084Z"
   },
   "13383": {
     "path": "/icons/ge/13383.png",
@@ -21729,10 +21743,10 @@
   },
   "19701": {
     "path": "/icons/ge/19701.png",
-    "sourceIcon": "Jar of darkness.png",
-    "mirrorIcon": "Jar of darkness.png",
+    "sourceIcon": "Jar of Darkness.png",
+    "mirrorIcon": "Jar of Darkness.png",
     "bytes": 507,
-    "updatedAt": "2026-07-29T11:45:44.958Z"
+    "updatedAt": "2026-09-04T08:36:23.568Z"
   },
   "19707": {
     "path": "/icons/ge/19707.png",
@@ -21974,17 +21988,17 @@
   },
   "20011": {
     "path": "/icons/ge/20011.png",
-    "sourceIcon": "3rd age axe.png",
-    "mirrorIcon": "3rd age axe.png",
+    "sourceIcon": "3rd Age axe.png",
+    "mirrorIcon": "3rd Age axe.png",
     "bytes": 460,
-    "updatedAt": "2026-07-29T11:45:45.148Z"
+    "updatedAt": "2026-09-04T08:36:24.003Z"
   },
   "20014": {
     "path": "/icons/ge/20014.png",
-    "sourceIcon": "3rd age pickaxe.png",
-    "mirrorIcon": "3rd age pickaxe.png",
+    "sourceIcon": "3rd Age pickaxe.png",
+    "mirrorIcon": "3rd Age pickaxe.png",
     "bytes": 495,
-    "updatedAt": "2026-07-29T11:45:45.149Z"
+    "updatedAt": "2026-09-04T08:36:24.427Z"
   },
   "20017": {
     "path": "/icons/ge/20017.png",
@@ -22674,10 +22688,10 @@
   },
   "20716": {
     "path": "/icons/ge/20716.png",
-    "sourceIcon": "Tome of fire (empty).png",
-    "mirrorIcon": "Tome of fire (empty).png",
+    "sourceIcon": "Tome of Fire (empty).png",
+    "mirrorIcon": "Tome of Fire (empty).png",
     "bytes": 721,
-    "updatedAt": "2026-07-29T11:45:46.385Z"
+    "updatedAt": "2026-09-04T08:36:24.874Z"
   },
   "20718": {
     "path": "/icons/ge/20718.png",
@@ -23402,10 +23416,10 @@
   },
   "21745": {
     "path": "/icons/ge/21745.png",
-    "sourceIcon": "Jar of stone.png",
-    "mirrorIcon": "Jar of stone.png",
+    "sourceIcon": "Jar of Stone.png",
+    "mirrorIcon": "Jar of Stone.png",
     "bytes": 696,
-    "updatedAt": "2026-07-29T11:45:47.037Z"
+    "updatedAt": "2026-09-04T08:36:25.312Z"
   },
   "21754": {
     "path": "/icons/ge/21754.png",
@@ -23794,10 +23808,10 @@
   },
   "22106": {
     "path": "/icons/ge/22106.png",
-    "sourceIcon": "Jar of decay.png",
-    "mirrorIcon": "Jar of decay.png",
+    "sourceIcon": "Jar of Decay.png",
+    "mirrorIcon": "Jar of Decay.png",
     "bytes": 710,
-    "updatedAt": "2026-07-29T11:45:47.418Z"
+    "updatedAt": "2026-09-04T08:36:25.742Z"
   },
   "22111": {
     "path": "/icons/ge/22111.png",
@@ -24032,10 +24046,10 @@
   },
   "22296": {
     "path": "/icons/ge/22296.png",
-    "sourceIcon": "Staff of light.png",
-    "mirrorIcon": "Staff of light.png",
+    "sourceIcon": "Staff of Light.png",
+    "mirrorIcon": "Staff of Light.png",
     "bytes": 302,
-    "updatedAt": "2026-07-29T11:45:47.621Z"
+    "updatedAt": "2026-09-04T08:36:26.175Z"
   },
   "22299": {
     "path": "/icons/ge/22299.png",
@@ -24200,10 +24214,10 @@
   },
   "22486": {
     "path": "/icons/ge/22486.png",
-    "sourceIcon": "Scythe of vitur (uncharged).png",
-    "mirrorIcon": "Scythe of vitur (uncharged).png",
+    "sourceIcon": "Scythe of Vitur (uncharged).png",
+    "mirrorIcon": "Scythe of Vitur (uncharged).png",
     "bytes": 358,
-    "updatedAt": "2026-07-29T11:45:47.842Z"
+    "updatedAt": "2026-09-04T08:36:26.575Z"
   },
   "22542": {
     "path": "/icons/ge/22542.png",
@@ -24613,10 +24627,10 @@
   },
   "22951": {
     "path": "/icons/ge/22951.png",
-    "sourceIcon": "Boots of brimstone.png",
-    "mirrorIcon": "Boots of brimstone.png",
+    "sourceIcon": "Boots of Brimstone.png",
+    "mirrorIcon": "Boots of Brimstone.png",
     "bytes": 650,
-    "updatedAt": "2026-07-29T11:45:48.183Z"
+    "updatedAt": "2026-09-04T08:36:27.081Z"
   },
   "22954": {
     "path": "/icons/ge/22954.png",
@@ -24746,10 +24760,10 @@
   },
   "23064": {
     "path": "/icons/ge/23064.png",
-    "sourceIcon": "Jar of chemicals.png",
-    "mirrorIcon": "Jar of chemicals.png",
+    "sourceIcon": "Jar of Chemicals.png",
+    "mirrorIcon": "Jar of Chemicals.png",
     "bytes": 712,
-    "updatedAt": "2026-07-29T11:45:48.258Z"
+    "updatedAt": "2026-09-04T08:36:27.509Z"
   },
   "23110": {
     "path": "/icons/ge/23110.png",
@@ -24788,10 +24802,10 @@
   },
   "23185": {
     "path": "/icons/ge/23185.png",
-    "sourceIcon": "Ring of 3rd age.png",
-    "mirrorIcon": "Ring of 3rd age.png",
+    "sourceIcon": "Ring of 3rd Age.png",
+    "mirrorIcon": "Ring of 3rd Age.png",
     "bytes": 844,
-    "updatedAt": "2026-07-29T11:45:48.361Z"
+    "updatedAt": "2026-09-04T08:36:27.942Z"
   },
   "23188": {
     "path": "/icons/ge/23188.png",
@@ -24907,10 +24921,10 @@
   },
   "23242": {
     "path": "/icons/ge/23242.png",
-    "sourceIcon": "3rd age plateskirt.png",
-    "mirrorIcon": "3rd age plateskirt.png",
+    "sourceIcon": "3rd Age plateskirt.png",
+    "mirrorIcon": "3rd Age plateskirt.png",
     "bytes": 615,
-    "updatedAt": "2026-07-29T11:45:48.472Z"
+    "updatedAt": "2026-09-04T08:36:28.358Z"
   },
   "23246": {
     "path": "/icons/ge/23246.png",
@@ -25089,52 +25103,52 @@
   },
   "23321": {
     "path": "/icons/ge/23321.png",
-    "sourceIcon": "Rune scimitar ornament kit (guthix).png",
-    "mirrorIcon": "Rune scimitar ornament kit (guthix).png",
+    "sourceIcon": "Rune scimitar ornament kit (Guthix).png",
+    "mirrorIcon": "Rune scimitar ornament kit (Guthix).png",
     "bytes": 603,
-    "updatedAt": "2026-07-29T11:45:48.665Z"
+    "updatedAt": "2026-09-04T08:36:28.825Z"
   },
   "23324": {
     "path": "/icons/ge/23324.png",
-    "sourceIcon": "Rune scimitar ornament kit (saradomin).png",
-    "mirrorIcon": "Rune scimitar ornament kit (saradomin).png",
+    "sourceIcon": "Rune scimitar ornament kit (Saradomin).png",
+    "mirrorIcon": "Rune scimitar ornament kit (Saradomin).png",
     "bytes": 627,
-    "updatedAt": "2026-07-29T11:45:48.660Z"
+    "updatedAt": "2026-09-04T08:36:29.230Z"
   },
   "23327": {
     "path": "/icons/ge/23327.png",
-    "sourceIcon": "Rune scimitar ornament kit (zamorak).png",
-    "mirrorIcon": "Rune scimitar ornament kit (zamorak).png",
+    "sourceIcon": "Rune scimitar ornament kit (Zamorak).png",
+    "mirrorIcon": "Rune scimitar ornament kit (Zamorak).png",
     "bytes": 628,
-    "updatedAt": "2026-07-29T11:45:48.645Z"
+    "updatedAt": "2026-09-04T08:36:29.646Z"
   },
   "23336": {
     "path": "/icons/ge/23336.png",
-    "sourceIcon": "3rd age druidic robe top.png",
-    "mirrorIcon": "3rd age druidic robe top.png",
+    "sourceIcon": "3rd Age druidic robe top.png",
+    "mirrorIcon": "3rd Age druidic robe top.png",
     "bytes": 1156,
-    "updatedAt": "2026-07-29T11:45:48.639Z"
+    "updatedAt": "2026-09-04T08:36:30.067Z"
   },
   "23339": {
     "path": "/icons/ge/23339.png",
-    "sourceIcon": "3rd age druidic robe bottoms.png",
-    "mirrorIcon": "3rd age druidic robe bottoms.png",
+    "sourceIcon": "3rd Age druidic robe bottoms.png",
+    "mirrorIcon": "3rd Age druidic robe bottoms.png",
     "bytes": 713,
-    "updatedAt": "2026-07-29T11:45:48.641Z"
+    "updatedAt": "2026-09-04T08:36:30.481Z"
   },
   "23342": {
     "path": "/icons/ge/23342.png",
-    "sourceIcon": "3rd age druidic staff.png",
-    "mirrorIcon": "3rd age druidic staff.png",
+    "sourceIcon": "3rd Age druidic staff.png",
+    "mirrorIcon": "3rd Age druidic staff.png",
     "bytes": 321,
-    "updatedAt": "2026-07-29T11:45:48.639Z"
+    "updatedAt": "2026-09-04T08:36:30.906Z"
   },
   "23345": {
     "path": "/icons/ge/23345.png",
-    "sourceIcon": "3rd age druidic cloak.png",
-    "mirrorIcon": "3rd age druidic cloak.png",
+    "sourceIcon": "3rd Age druidic cloak.png",
+    "mirrorIcon": "3rd Age druidic cloak.png",
     "bytes": 473,
-    "updatedAt": "2026-07-29T11:45:48.639Z"
+    "updatedAt": "2026-09-04T08:36:31.297Z"
   },
   "23348": {
     "path": "/icons/ge/23348.png",
@@ -25173,10 +25187,10 @@
   },
   "23363": {
     "path": "/icons/ge/23363.png",
-    "sourceIcon": "Staff of bob the cat.png",
-    "mirrorIcon": "Staff of bob the cat.png",
+    "sourceIcon": "Staff of Bob the Cat.png",
+    "mirrorIcon": "Staff of Bob the Cat.png",
     "bytes": 340,
-    "updatedAt": "2026-07-29T11:45:48.645Z"
+    "updatedAt": "2026-09-04T08:36:31.813Z"
   },
   "23366": {
     "path": "/icons/ge/23366.png",
@@ -25320,17 +25334,17 @@
   },
   "23522": {
     "path": "/icons/ge/23522.png",
-    "sourceIcon": "Mask of ranul.png",
-    "mirrorIcon": "Mask of ranul.png",
+    "sourceIcon": "Mask of Ranul.png",
+    "mirrorIcon": "Mask of Ranul.png",
     "bytes": 565,
-    "updatedAt": "2026-07-29T11:45:48.876Z"
+    "updatedAt": "2026-09-04T08:36:32.269Z"
   },
   "23525": {
     "path": "/icons/ge/23525.png",
-    "sourceIcon": "Jar of eyes.png",
-    "mirrorIcon": "Jar of eyes.png",
+    "sourceIcon": "Jar of Eyes.png",
+    "mirrorIcon": "Jar of Eyes.png",
     "bytes": 923,
-    "updatedAt": "2026-07-29T11:45:48.842Z"
+    "updatedAt": "2026-09-04T08:36:32.672Z"
   },
   "23528": {
     "path": "/icons/ge/23528.png",
@@ -25558,10 +25572,10 @@
   },
   "23997": {
     "path": "/icons/ge/23997.png",
-    "sourceIcon": "Blade of saeldor (inactive).png",
-    "mirrorIcon": "Blade of saeldor (inactive).png",
+    "sourceIcon": "Blade of Saeldor (inactive).png",
+    "mirrorIcon": "Blade of Saeldor (inactive).png",
     "bytes": 324,
-    "updatedAt": "2026-07-29T11:45:49.081Z"
+    "updatedAt": "2026-09-04T08:36:33.085Z"
   },
   "24000": {
     "path": "/icons/ge/24000.png",
@@ -25670,10 +25684,10 @@
   },
   "24144": {
     "path": "/icons/ge/24144.png",
-    "sourceIcon": "Staff of balance.png",
-    "mirrorIcon": "Staff of balance.png",
+    "sourceIcon": "Staff of Balance.png",
+    "mirrorIcon": "Staff of Balance.png",
     "bytes": 390,
-    "updatedAt": "2026-07-29T11:45:49.170Z"
+    "updatedAt": "2026-09-04T08:36:33.512Z"
   },
   "24187": {
     "path": "/icons/ge/24187.png",
@@ -25929,10 +25943,10 @@
   },
   "24495": {
     "path": "/icons/ge/24495.png",
-    "sourceIcon": "Jar of dreams.png",
-    "mirrorIcon": "Jar of dreams.png",
+    "sourceIcon": "Jar of Dreams.png",
+    "mirrorIcon": "Jar of Dreams.png",
     "bytes": 698,
-    "updatedAt": "2026-07-29T11:45:49.375Z"
+    "updatedAt": "2026-09-04T08:36:33.949Z"
   },
   "24511": {
     "path": "/icons/ge/24511.png",
@@ -26482,24 +26496,24 @@
   },
   "25521": {
     "path": "/icons/ge/25521.png",
-    "sourceIcon": "Jar of spirits.png",
-    "mirrorIcon": "Jar of spirits.png",
+    "sourceIcon": "Jar of Spirits.png",
+    "mirrorIcon": "Jar of Spirits.png",
     "bytes": 698,
-    "updatedAt": "2026-07-29T11:45:49.914Z"
+    "updatedAt": "2026-09-04T08:36:34.414Z"
   },
   "25524": {
     "path": "/icons/ge/25524.png",
-    "sourceIcon": "Jar of smoke.png",
-    "mirrorIcon": "Jar of smoke.png",
+    "sourceIcon": "Jar of Smoke.png",
+    "mirrorIcon": "Jar of Smoke.png",
     "bytes": 710,
-    "updatedAt": "2026-07-29T11:45:49.911Z"
+    "updatedAt": "2026-09-04T08:36:34.837Z"
   },
   "25576": {
     "path": "/icons/ge/25576.png",
-    "sourceIcon": "Tome of water (empty).png",
-    "mirrorIcon": "Tome of water (empty).png",
+    "sourceIcon": "Tome of Water (empty).png",
+    "mirrorIcon": "Tome of Water (empty).png",
     "bytes": 728,
-    "updatedAt": "2026-07-29T11:45:49.908Z"
+    "updatedAt": "2026-09-04T08:36:35.307Z"
   },
   "25578": {
     "path": "/icons/ge/25578.png",
@@ -26601,10 +26615,10 @@
   },
   "25862": {
     "path": "/icons/ge/25862.png",
-    "sourceIcon": "Bow of faerdhinen (inactive).png",
-    "mirrorIcon": "Bow of faerdhinen (inactive).png",
+    "sourceIcon": "Bow of Faerdhinen (inactive).png",
+    "mirrorIcon": "Bow of Faerdhinen (inactive).png",
     "bytes": 415,
-    "updatedAt": "2026-07-29T11:45:50.017Z"
+    "updatedAt": "2026-09-04T08:36:35.688Z"
   },
   "25975": {
     "path": "/icons/ge/25975.png",
@@ -27504,10 +27518,10 @@
   },
   "27272": {
     "path": "/icons/ge/27272.png",
-    "sourceIcon": "Lily of the sands.png",
-    "mirrorIcon": "Lily of the sands.png",
+    "sourceIcon": "Lily of the Sands.png",
+    "mirrorIcon": "Lily of the Sands.png",
     "bytes": 534,
-    "updatedAt": "2026-07-29T11:45:50.896Z"
+    "updatedAt": "2026-09-04T08:36:36.157Z"
   },
   "27277": {
     "path": "/icons/ge/27277.png",
@@ -27602,24 +27616,24 @@
   },
   "27667": {
     "path": "/icons/ge/27667.png",
-    "sourceIcon": "Claws of callisto.png",
-    "mirrorIcon": "Claws of callisto.png",
+    "sourceIcon": "Claws of Callisto.png",
+    "mirrorIcon": "Claws of Callisto.png",
     "bytes": 440,
-    "updatedAt": "2026-07-29T11:45:50.992Z"
+    "updatedAt": "2026-09-04T08:36:36.585Z"
   },
   "27670": {
     "path": "/icons/ge/27670.png",
-    "sourceIcon": "Fangs of venenatis.png",
-    "mirrorIcon": "Fangs of venenatis.png",
+    "sourceIcon": "Fangs of Venenatis.png",
+    "mirrorIcon": "Fangs of Venenatis.png",
     "bytes": 462,
-    "updatedAt": "2026-07-29T11:45:50.976Z"
+    "updatedAt": "2026-09-04T08:36:36.988Z"
   },
   "27673": {
     "path": "/icons/ge/27673.png",
-    "sourceIcon": "Skull of vet'ion.png",
-    "mirrorIcon": "Skull of vet'ion.png",
+    "sourceIcon": "Skull of Vet'ion.png",
+    "mirrorIcon": "Skull of Vet'ion.png",
     "bytes": 775,
-    "updatedAt": "2026-07-29T11:45:50.975Z"
+    "updatedAt": "2026-09-04T08:36:37.376Z"
   },
   "27676": {
     "path": "/icons/ge/27676.png",
@@ -27819,10 +27833,10 @@
   },
   "28226": {
     "path": "/icons/ge/28226.png",
-    "sourceIcon": "3rd age felling axe.png",
-    "mirrorIcon": "3rd age felling axe.png",
+    "sourceIcon": "3rd Age felling axe.png",
+    "mirrorIcon": "3rd Age felling axe.png",
     "bytes": 421,
-    "updatedAt": "2026-07-29T11:45:51.242Z"
+    "updatedAt": "2026-09-04T08:36:37.809Z"
   },
   "28276": {
     "path": "/icons/ge/28276.png",
@@ -27952,10 +27966,10 @@
   },
   "28499": {
     "path": "/icons/ge/28499.png",
-    "sourceIcon": "Sigil of the well-fed.png",
-    "mirrorIcon": "Sigil of the well-fed.png",
+    "sourceIcon": "Sigil of the well fed.png",
+    "mirrorIcon": "Sigil of the well fed.png",
     "bytes": 755,
-    "updatedAt": "2026-07-29T11:45:51.407Z"
+    "updatedAt": "2026-09-04T08:36:38.240Z"
   },
   "28502": {
     "path": "/icons/ge/28502.png",
@@ -28435,10 +28449,10 @@
   },
   "28919": {
     "path": "/icons/ge/28919.png",
-    "sourceIcon": "Tonalztics of ralos (uncharged).png",
-    "mirrorIcon": "Tonalztics of ralos (uncharged).png",
+    "sourceIcon": "Tonalztics of Ralos (uncharged).png",
+    "mirrorIcon": "Tonalztics of Ralos (uncharged).png",
     "bytes": 474,
-    "updatedAt": "2026-07-29T11:45:51.863Z"
+    "updatedAt": "2026-09-04T08:36:38.624Z"
   },
   "28924": {
     "path": "/icons/ge/28924.png",
@@ -29100,10 +29114,10 @@
   },
   "29602": {
     "path": "/icons/ge/29602.png",
-    "sourceIcon": "Corrupted volatile nightmare staff.png",
-    "mirrorIcon": "Corrupted volatile nightmare staff.png",
+    "sourceIcon": "Corrupted Volatile Nightmare staff.png",
+    "mirrorIcon": "Corrupted Volatile Nightmare staff.png",
     "bytes": 456,
-    "updatedAt": "2026-07-29T11:45:52.488Z"
+    "updatedAt": "2026-09-04T08:36:39.082Z"
   },
   "29619": {
     "path": "/icons/ge/29619.png",
@@ -29184,10 +29198,10 @@
   },
   "29655": {
     "path": "/icons/ge/29655.png",
-    "sourceIcon": "Sigil of rampart.png",
-    "mirrorIcon": "Sigil of rampart.png",
+    "sourceIcon": "Sigil of the rampart.png",
+    "mirrorIcon": "Sigil of the rampart.png",
     "bytes": 491,
-    "updatedAt": "2026-07-29T11:45:52.564Z"
+    "updatedAt": "2026-09-04T08:36:39.502Z"
   },
   "29658": {
     "path": "/icons/ge/29658.png",
@@ -29198,17 +29212,17 @@
   },
   "29661": {
     "path": "/icons/ge/29661.png",
-    "sourceIcon": "Sigil of lithe.png",
-    "mirrorIcon": "Sigil of lithe.png",
+    "sourceIcon": "Sigil of litheness.png",
+    "mirrorIcon": "Sigil of litheness.png",
     "bytes": 757,
-    "updatedAt": "2026-07-29T11:45:52.588Z"
+    "updatedAt": "2026-09-04T08:36:39.917Z"
   },
   "29664": {
     "path": "/icons/ge/29664.png",
-    "sourceIcon": "Sigil of adroit.png",
-    "mirrorIcon": "Sigil of adroit.png",
+    "sourceIcon": "Sigil of the adroit.png",
+    "mirrorIcon": "Sigil of the adroit.png",
     "bytes": 617,
-    "updatedAt": "2026-07-29T11:45:52.565Z"
+    "updatedAt": "2026-09-04T08:36:40.326Z"
   },
   "29667": {
     "path": "/icons/ge/29667.png",
@@ -29226,17 +29240,17 @@
   },
   "29673": {
     "path": "/icons/ge/29673.png",
-    "sourceIcon": "Sigil of swashbuckler.png",
-    "mirrorIcon": "Sigil of swashbuckler.png",
+    "sourceIcon": "Sigil of the swashbuckler.png",
+    "mirrorIcon": "Sigil of the swashbuckler.png",
     "bytes": 573,
-    "updatedAt": "2026-07-29T11:45:52.594Z"
+    "updatedAt": "2026-09-04T08:36:40.760Z"
   },
   "29676": {
     "path": "/icons/ge/29676.png",
-    "sourceIcon": "Sigil of gunslinger.png",
-    "mirrorIcon": "Sigil of gunslinger.png",
+    "sourceIcon": "Sigil of the gunslinger.png",
+    "mirrorIcon": "Sigil of the gunslinger.png",
     "bytes": 639,
-    "updatedAt": "2026-07-29T11:45:52.670Z"
+    "updatedAt": "2026-09-04T08:36:41.183Z"
   },
   "29679": {
     "path": "/icons/ge/29679.png",
@@ -29408,10 +29422,10 @@
   },
   "30066": {
     "path": "/icons/ge/30066.png",
-    "sourceIcon": "Tome of earth (empty).png",
-    "mirrorIcon": "Tome of earth (empty).png",
+    "sourceIcon": "Tome of Earth (empty).png",
+    "mirrorIcon": "Tome of Earth (empty).png",
     "bytes": 707,
-    "updatedAt": "2026-07-29T11:45:52.783Z"
+    "updatedAt": "2026-09-04T08:36:41.618Z"
   },
   "30068": {
     "path": "/icons/ge/30068.png",
@@ -29723,10 +29737,10 @@
   },
   "30457": {
     "path": "/icons/ge/30457.png",
-    "sourceIcon": "Raging echoes npc contact scroll.png",
-    "mirrorIcon": "Raging echoes npc contact scroll.png",
+    "sourceIcon": "Raging echoes astral contact scroll.png",
+    "mirrorIcon": "Raging echoes astral contact scroll.png",
     "bytes": 703,
-    "updatedAt": "2026-07-29T11:45:53.078Z"
+    "updatedAt": "2026-09-04T08:36:42.056Z"
   },
   "30459": {
     "path": "/icons/ge/30459.png",
@@ -29919,80 +29933,80 @@
   },
   "30810": {
     "path": "/icons/ge/30810.png",
-    "sourceIcon": "Contract of glyphic attenuation.png",
-    "mirrorIcon": "Contract of glyphic attenuation.png",
+    "sourceIcon": "Contract of Glyphic Attenuation.png",
+    "mirrorIcon": "Contract of Glyphic Attenuation.png",
     "bytes": 473,
-    "updatedAt": "2026-07-29T11:45:53.294Z"
+    "updatedAt": "2026-09-04T08:36:42.498Z"
   },
   "30813": {
     "path": "/icons/ge/30813.png",
-    "sourceIcon": "Contract of sensory clouding.png",
-    "mirrorIcon": "Contract of sensory clouding.png",
+    "sourceIcon": "Contract of Sensory Clouding.png",
+    "mirrorIcon": "Contract of Sensory Clouding.png",
     "bytes": 478,
-    "updatedAt": "2026-07-29T11:45:53.286Z"
+    "updatedAt": "2026-09-04T08:36:42.905Z"
   },
   "30816": {
     "path": "/icons/ge/30816.png",
-    "sourceIcon": "Contract of bloodied blows.png",
-    "mirrorIcon": "Contract of bloodied blows.png",
+    "sourceIcon": "Contract of Bloodied Blows.png",
+    "mirrorIcon": "Contract of Bloodied Blows.png",
     "bytes": 546,
-    "updatedAt": "2026-07-29T11:45:53.294Z"
+    "updatedAt": "2026-09-04T08:36:43.329Z"
   },
   "30819": {
     "path": "/icons/ge/30819.png",
-    "sourceIcon": "Contract of divine severance.png",
-    "mirrorIcon": "Contract of divine severance.png",
+    "sourceIcon": "Contract of Divine Severance.png",
+    "mirrorIcon": "Contract of Divine Severance.png",
     "bytes": 541,
-    "updatedAt": "2026-07-29T11:45:53.294Z"
+    "updatedAt": "2026-09-04T08:36:43.765Z"
   },
   "30822": {
     "path": "/icons/ge/30822.png",
-    "sourceIcon": "Contract of forfeit breath.png",
-    "mirrorIcon": "Contract of forfeit breath.png",
+    "sourceIcon": "Contract of Forfeit Breath.png",
+    "mirrorIcon": "Contract of Forfeit Breath.png",
     "bytes": 467,
-    "updatedAt": "2026-07-29T11:45:53.315Z"
+    "updatedAt": "2026-09-04T08:36:44.189Z"
   },
   "30825": {
     "path": "/icons/ge/30825.png",
-    "sourceIcon": "Contract of oathplate acquisition.png",
-    "mirrorIcon": "Contract of oathplate acquisition.png",
+    "sourceIcon": "Contract of Oathplate Acquisition.png",
+    "mirrorIcon": "Contract of Oathplate Acquisition.png",
     "bytes": 456,
-    "updatedAt": "2026-07-29T11:45:53.320Z"
+    "updatedAt": "2026-09-04T08:36:44.603Z"
   },
   "30828": {
     "path": "/icons/ge/30828.png",
-    "sourceIcon": "Contract of shard acquisition.png",
-    "mirrorIcon": "Contract of shard acquisition.png",
+    "sourceIcon": "Contract of Shard Acquisition.png",
+    "mirrorIcon": "Contract of Shard Acquisition.png",
     "bytes": 508,
-    "updatedAt": "2026-07-29T11:45:53.288Z"
+    "updatedAt": "2026-09-04T08:36:45.040Z"
   },
   "30831": {
     "path": "/icons/ge/30831.png",
-    "sourceIcon": "Contract of catalyst acquisition.png",
-    "mirrorIcon": "Contract of catalyst acquisition.png",
+    "sourceIcon": "Contract of Catalyst Acquisition.png",
+    "mirrorIcon": "Contract of Catalyst Acquisition.png",
     "bytes": 403,
-    "updatedAt": "2026-07-29T11:45:53.311Z"
+    "updatedAt": "2026-09-04T08:36:45.458Z"
   },
   "30834": {
     "path": "/icons/ge/30834.png",
-    "sourceIcon": "Contract of worm acquisition.png",
-    "mirrorIcon": "Contract of worm acquisition.png",
+    "sourceIcon": "Contract of Worm Acquisition.png",
+    "mirrorIcon": "Contract of Worm Acquisition.png",
     "bytes": 484,
-    "updatedAt": "2026-07-29T11:45:53.308Z"
+    "updatedAt": "2026-09-04T08:36:45.866Z"
   },
   "30837": {
     "path": "/icons/ge/30837.png",
-    "sourceIcon": "Contract of harmony acquisition.png",
-    "mirrorIcon": "Contract of harmony acquisition.png",
+    "sourceIcon": "Contract of Harmony Acquisition.png",
+    "mirrorIcon": "Contract of Harmony Acquisition.png",
     "bytes": 467,
-    "updatedAt": "2026-07-29T11:45:53.323Z"
+    "updatedAt": "2026-09-04T08:36:56.406Z"
   },
   "30840": {
     "path": "/icons/ge/30840.png",
-    "sourceIcon": "Contract of familiar acquisition.png",
-    "mirrorIcon": "Contract of familiar acquisition.png",
+    "sourceIcon": "Contract of Familiar Acquisition.png",
+    "mirrorIcon": "Contract of Familiar Acquisition.png",
     "bytes": 483,
-    "updatedAt": "2026-07-29T11:45:53.294Z"
+    "updatedAt": "2026-09-04T08:36:56.816Z"
   },
   "30843": {
     "path": "/icons/ge/30843.png",
@@ -30143,10 +30157,10 @@
   },
   "31115": {
     "path": "/icons/ge/31115.png",
-    "sourceIcon": "Eye of ayak (uncharged).png",
-    "mirrorIcon": "Eye of ayak (uncharged).png",
+    "sourceIcon": "Eye of Ayak (uncharged).png",
+    "mirrorIcon": "Eye of Ayak (uncharged).png",
     "bytes": 455,
-    "updatedAt": "2026-07-29T11:45:53.487Z"
+    "updatedAt": "2026-09-04T08:36:57.168Z"
   },
   "31136": {
     "path": "/icons/ge/31136.png",
@@ -30311,10 +30325,10 @@
   },
   "31243": {
     "path": "/icons/ge/31243.png",
-    "sourceIcon": "Horn of plenty (empty).png",
-    "mirrorIcon": "Horn of plenty (empty).png",
+    "sourceIcon": "Horn of Plenty (empty).png",
+    "mirrorIcon": "Horn of Plenty (empty).png",
     "bytes": 602,
-    "updatedAt": "2026-07-29T11:45:53.608Z"
+    "updatedAt": "2026-09-04T08:36:57.590Z"
   },
   "31245": {
     "path": "/icons/ge/31245.png",
@@ -32131,5 +32145,523 @@
     "mirrorIcon": "Raw impaler meat.png",
     "bytes": 718,
     "updatedAt": "2026-07-29T11:45:55.264Z"
+  },
+  "33836": {
+    "path": "/icons/ge/33836.png",
+    "sourceIcon": "Noble robe top (green).png",
+    "mirrorIcon": "Noble robe top (green).png",
+    "bytes": 548,
+    "updatedAt": "2026-09-04T08:36:58.043Z"
+  },
+  "33839": {
+    "path": "/icons/ge/33839.png",
+    "sourceIcon": "Noble robe top (blue).png",
+    "mirrorIcon": "Noble robe top (blue).png",
+    "bytes": 615,
+    "updatedAt": "2026-09-04T08:36:58.449Z"
+  },
+  "33842": {
+    "path": "/icons/ge/33842.png",
+    "sourceIcon": "Noble robe top (red).png",
+    "mirrorIcon": "Noble robe top (red).png",
+    "bytes": 615,
+    "updatedAt": "2026-09-04T08:36:58.854Z"
+  },
+  "33845": {
+    "path": "/icons/ge/33845.png",
+    "sourceIcon": "Noble robe top (yellow).png",
+    "mirrorIcon": "Noble robe top (yellow).png",
+    "bytes": 636,
+    "updatedAt": "2026-09-04T08:36:59.256Z"
+  },
+  "33848": {
+    "path": "/icons/ge/33848.png",
+    "sourceIcon": "Noble robe top (white).png",
+    "mirrorIcon": "Noble robe top (white).png",
+    "bytes": 766,
+    "updatedAt": "2026-09-04T08:36:59.664Z"
+  },
+  "33851": {
+    "path": "/icons/ge/33851.png",
+    "sourceIcon": "Noble robe top (black).png",
+    "mirrorIcon": "Noble robe top (black).png",
+    "bytes": 444,
+    "updatedAt": "2026-09-04T08:37:00.087Z"
+  },
+  "33854": {
+    "path": "/icons/ge/33854.png",
+    "sourceIcon": "Noble robe top (pink).png",
+    "mirrorIcon": "Noble robe top (pink).png",
+    "bytes": 558,
+    "updatedAt": "2026-09-04T08:37:00.493Z"
+  },
+  "33857": {
+    "path": "/icons/ge/33857.png",
+    "sourceIcon": "Wyrmscraig noble skirt (green).png",
+    "mirrorIcon": "Wyrmscraig noble skirt (green).png",
+    "bytes": 404,
+    "updatedAt": "2026-09-04T08:37:00.928Z"
+  },
+  "33860": {
+    "path": "/icons/ge/33860.png",
+    "sourceIcon": "Wyrmscraig noble skirt (blue).png",
+    "mirrorIcon": "Wyrmscraig noble skirt (blue).png",
+    "bytes": 552,
+    "updatedAt": "2026-09-04T08:37:01.383Z"
+  },
+  "33863": {
+    "path": "/icons/ge/33863.png",
+    "sourceIcon": "Wyrmscraig noble skirt (red).png",
+    "mirrorIcon": "Wyrmscraig noble skirt (red).png",
+    "bytes": 455,
+    "updatedAt": "2026-09-04T08:37:01.800Z"
+  },
+  "33866": {
+    "path": "/icons/ge/33866.png",
+    "sourceIcon": "Wyrmscraig noble skirt (yellow).png",
+    "mirrorIcon": "Wyrmscraig noble skirt (yellow).png",
+    "bytes": 439,
+    "updatedAt": "2026-09-04T08:37:02.215Z"
+  },
+  "33869": {
+    "path": "/icons/ge/33869.png",
+    "sourceIcon": "Wyrmscraig noble skirt (white).png",
+    "mirrorIcon": "Wyrmscraig noble skirt (white).png",
+    "bytes": 495,
+    "updatedAt": "2026-09-04T08:37:02.641Z"
+  },
+  "33872": {
+    "path": "/icons/ge/33872.png",
+    "sourceIcon": "Wyrmscraig noble skirt (black).png",
+    "mirrorIcon": "Wyrmscraig noble skirt (black).png",
+    "bytes": 396,
+    "updatedAt": "2026-09-04T08:37:03.064Z"
+  },
+  "33875": {
+    "path": "/icons/ge/33875.png",
+    "sourceIcon": "Wyrmscraig noble skirt (pink).png",
+    "mirrorIcon": "Wyrmscraig noble skirt (pink).png",
+    "bytes": 740,
+    "updatedAt": "2026-09-04T08:37:03.641Z"
+  },
+  "33878": {
+    "path": "/icons/ge/33878.png",
+    "sourceIcon": "Wyrmscraig shoes.png",
+    "mirrorIcon": "Wyrmscraig shoes.png",
+    "bytes": 397,
+    "updatedAt": "2026-09-04T08:37:04.066Z"
+  },
+  "33881": {
+    "path": "/icons/ge/33881.png",
+    "sourceIcon": "Wyrmscraig boots.png",
+    "mirrorIcon": "Wyrmscraig boots.png",
+    "bytes": 437,
+    "updatedAt": "2026-09-04T08:37:04.488Z"
+  },
+  "33884": {
+    "path": "/icons/ge/33884.png",
+    "sourceIcon": "Wyrmscraig villager robe top (A, green).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (A, green).png",
+    "bytes": 442,
+    "updatedAt": "2026-09-04T08:37:04.901Z"
+  },
+  "33887": {
+    "path": "/icons/ge/33887.png",
+    "sourceIcon": "Wyrmscraig villager robe top (A, blue).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (A, blue).png",
+    "bytes": 484,
+    "updatedAt": "2026-09-04T08:37:05.314Z"
+  },
+  "33890": {
+    "path": "/icons/ge/33890.png",
+    "sourceIcon": "Wyrmscraig villager robe top (A, red).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (A, red).png",
+    "bytes": 466,
+    "updatedAt": "2026-09-04T08:37:05.726Z"
+  },
+  "33893": {
+    "path": "/icons/ge/33893.png",
+    "sourceIcon": "Wyrmscraig villager robe top (A, yellow).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (A, yellow).png",
+    "bytes": 531,
+    "updatedAt": "2026-09-04T08:37:06.134Z"
+  },
+  "33896": {
+    "path": "/icons/ge/33896.png",
+    "sourceIcon": "Wyrmscraig villager robe top (A, white).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (A, white).png",
+    "bytes": 508,
+    "updatedAt": "2026-09-04T08:37:06.532Z"
+  },
+  "33899": {
+    "path": "/icons/ge/33899.png",
+    "sourceIcon": "Wyrmscraig villager robe top (A, black).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (A, black).png",
+    "bytes": 347,
+    "updatedAt": "2026-09-04T08:37:06.957Z"
+  },
+  "33902": {
+    "path": "/icons/ge/33902.png",
+    "sourceIcon": "Wyrmscraig villager robe top (A, pink).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (A, pink).png",
+    "bytes": 505,
+    "updatedAt": "2026-09-04T08:37:07.375Z"
+  },
+  "33905": {
+    "path": "/icons/ge/33905.png",
+    "sourceIcon": "Wyrmscraig villager robe top (A, beige).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (A, beige).png",
+    "bytes": 528,
+    "updatedAt": "2026-09-04T08:37:07.838Z"
+  },
+  "33908": {
+    "path": "/icons/ge/33908.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (A, green).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (A, green).png",
+    "bytes": 396,
+    "updatedAt": "2026-09-04T08:37:08.376Z"
+  },
+  "33911": {
+    "path": "/icons/ge/33911.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (A, blue).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (A, blue).png",
+    "bytes": 423,
+    "updatedAt": "2026-09-04T08:37:08.797Z"
+  },
+  "33914": {
+    "path": "/icons/ge/33914.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (A, red).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (A, red).png",
+    "bytes": 455,
+    "updatedAt": "2026-09-04T08:37:09.200Z"
+  },
+  "33917": {
+    "path": "/icons/ge/33917.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (A, yellow).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (A, yellow).png",
+    "bytes": 500,
+    "updatedAt": "2026-09-04T08:37:09.635Z"
+  },
+  "33920": {
+    "path": "/icons/ge/33920.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (A, white).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (A, white).png",
+    "bytes": 492,
+    "updatedAt": "2026-09-04T08:37:20.114Z"
+  },
+  "33923": {
+    "path": "/icons/ge/33923.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (A, black).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (A, black).png",
+    "bytes": 379,
+    "updatedAt": "2026-09-04T08:37:20.527Z"
+  },
+  "33926": {
+    "path": "/icons/ge/33926.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (A, pink).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (A, pink).png",
+    "bytes": 413,
+    "updatedAt": "2026-09-04T08:37:20.914Z"
+  },
+  "33929": {
+    "path": "/icons/ge/33929.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (B, green).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (B, green).png",
+    "bytes": 375,
+    "updatedAt": "2026-09-04T08:37:21.301Z"
+  },
+  "33932": {
+    "path": "/icons/ge/33932.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (B, blue).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (B, blue).png",
+    "bytes": 395,
+    "updatedAt": "2026-09-04T08:37:21.715Z"
+  },
+  "33935": {
+    "path": "/icons/ge/33935.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (B, red).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (B, red).png",
+    "bytes": 375,
+    "updatedAt": "2026-09-04T08:37:22.107Z"
+  },
+  "33938": {
+    "path": "/icons/ge/33938.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (B, yellow).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (B, yellow).png",
+    "bytes": 434,
+    "updatedAt": "2026-09-04T08:37:22.503Z"
+  },
+  "33941": {
+    "path": "/icons/ge/33941.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (B, white).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (B, white).png",
+    "bytes": 422,
+    "updatedAt": "2026-09-04T08:37:22.936Z"
+  },
+  "33944": {
+    "path": "/icons/ge/33944.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (B, black).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (B, black).png",
+    "bytes": 324,
+    "updatedAt": "2026-09-04T08:37:23.327Z"
+  },
+  "33947": {
+    "path": "/icons/ge/33947.png",
+    "sourceIcon": "Wyrmscraig villager robe bottom (B, pink).png",
+    "mirrorIcon": "Wyrmscraig villager robe bottom (B, pink).png",
+    "bytes": 411,
+    "updatedAt": "2026-09-04T08:37:23.718Z"
+  },
+  "33950": {
+    "path": "/icons/ge/33950.png",
+    "sourceIcon": "Wyrmscraig villager robe top (B, green).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (B, green).png",
+    "bytes": 500,
+    "updatedAt": "2026-09-04T08:37:24.152Z"
+  },
+  "33953": {
+    "path": "/icons/ge/33953.png",
+    "sourceIcon": "Wyrmscraig villager robe top (B, blue).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (B, blue).png",
+    "bytes": 586,
+    "updatedAt": "2026-09-04T08:37:24.586Z"
+  },
+  "33956": {
+    "path": "/icons/ge/33956.png",
+    "sourceIcon": "Wyrmscraig villager robe top (B, red).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (B, red).png",
+    "bytes": 554,
+    "updatedAt": "2026-09-04T08:37:25.001Z"
+  },
+  "33959": {
+    "path": "/icons/ge/33959.png",
+    "sourceIcon": "Wyrmscraig villager robe top (B, yellow).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (B, yellow).png",
+    "bytes": 578,
+    "updatedAt": "2026-09-04T08:37:25.430Z"
+  },
+  "33962": {
+    "path": "/icons/ge/33962.png",
+    "sourceIcon": "Wyrmscraig villager robe top (B, white).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (B, white).png",
+    "bytes": 693,
+    "updatedAt": "2026-09-04T08:37:25.821Z"
+  },
+  "33965": {
+    "path": "/icons/ge/33965.png",
+    "sourceIcon": "Wyrmscraig villager robe top (B, black).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (B, black).png",
+    "bytes": 335,
+    "updatedAt": "2026-09-04T08:37:26.222Z"
+  },
+  "33968": {
+    "path": "/icons/ge/33968.png",
+    "sourceIcon": "Wyrmscraig villager robe top (B, pink).png",
+    "mirrorIcon": "Wyrmscraig villager robe top (B, pink).png",
+    "bytes": 782,
+    "updatedAt": "2026-09-04T08:37:26.756Z"
+  },
+  "33971": {
+    "path": "/icons/ge/33971.png",
+    "sourceIcon": "Wyrmscraig villager skirt (green).png",
+    "mirrorIcon": "Wyrmscraig villager skirt (green).png",
+    "bytes": 447,
+    "updatedAt": "2026-09-04T08:37:27.156Z"
+  },
+  "33974": {
+    "path": "/icons/ge/33974.png",
+    "sourceIcon": "Wyrmscraig villager skirt (blue).png",
+    "mirrorIcon": "Wyrmscraig villager skirt (blue).png",
+    "bytes": 535,
+    "updatedAt": "2026-09-04T08:37:27.556Z"
+  },
+  "33977": {
+    "path": "/icons/ge/33977.png",
+    "sourceIcon": "Wyrmscraig villager skirt (red).png",
+    "mirrorIcon": "Wyrmscraig villager skirt (red).png",
+    "bytes": 450,
+    "updatedAt": "2026-09-04T08:37:27.953Z"
+  },
+  "33980": {
+    "path": "/icons/ge/33980.png",
+    "sourceIcon": "Wyrmscraig villager skirt (yellow).png",
+    "mirrorIcon": "Wyrmscraig villager skirt (yellow).png",
+    "bytes": 473,
+    "updatedAt": "2026-09-04T08:37:28.360Z"
+  },
+  "33983": {
+    "path": "/icons/ge/33983.png",
+    "sourceIcon": "Wyrmscraig villager skirt (white).png",
+    "mirrorIcon": "Wyrmscraig villager skirt (white).png",
+    "bytes": 519,
+    "updatedAt": "2026-09-04T08:37:28.764Z"
+  },
+  "33986": {
+    "path": "/icons/ge/33986.png",
+    "sourceIcon": "Wyrmscraig villager skirt (black).png",
+    "mirrorIcon": "Wyrmscraig villager skirt (black).png",
+    "bytes": 363,
+    "updatedAt": "2026-09-04T08:37:29.179Z"
+  },
+  "33989": {
+    "path": "/icons/ge/33989.png",
+    "sourceIcon": "Wyrmscraig villager skirt (pink).png",
+    "mirrorIcon": "Wyrmscraig villager skirt (pink).png",
+    "bytes": 531,
+    "updatedAt": "2026-09-04T08:37:29.618Z"
+  },
+  "33992": {
+    "path": "/icons/ge/33992.png",
+    "sourceIcon": "Wyrmscraig villager work skirt (green).png",
+    "mirrorIcon": "Wyrmscraig villager work skirt (green).png",
+    "bytes": 432,
+    "updatedAt": "2026-09-04T08:37:40.173Z"
+  },
+  "33995": {
+    "path": "/icons/ge/33995.png",
+    "sourceIcon": "Wyrmscraig villager work skirt (blue).png",
+    "mirrorIcon": "Wyrmscraig villager work skirt (blue).png",
+    "bytes": 452,
+    "updatedAt": "2026-09-04T08:37:40.586Z"
+  },
+  "33998": {
+    "path": "/icons/ge/33998.png",
+    "sourceIcon": "Wyrmscraig villager work skirt (red).png",
+    "mirrorIcon": "Wyrmscraig villager work skirt (red).png",
+    "bytes": 452,
+    "updatedAt": "2026-09-04T08:37:40.981Z"
+  },
+  "34001": {
+    "path": "/icons/ge/34001.png",
+    "sourceIcon": "Wyrmscraig villager work skirt (yellow).png",
+    "mirrorIcon": "Wyrmscraig villager work skirt (yellow).png",
+    "bytes": 456,
+    "updatedAt": "2026-09-04T08:37:41.377Z"
+  },
+  "34004": {
+    "path": "/icons/ge/34004.png",
+    "sourceIcon": "Wyrmscraig villager work skirt (white).png",
+    "mirrorIcon": "Wyrmscraig villager work skirt (white).png",
+    "bytes": 466,
+    "updatedAt": "2026-09-04T08:37:41.790Z"
+  },
+  "34007": {
+    "path": "/icons/ge/34007.png",
+    "sourceIcon": "Wyrmscraig villager work skirt (black).png",
+    "mirrorIcon": "Wyrmscraig villager work skirt (black).png",
+    "bytes": 424,
+    "updatedAt": "2026-09-04T08:37:42.218Z"
+  },
+  "34010": {
+    "path": "/icons/ge/34010.png",
+    "sourceIcon": "Wyrmscraig villager work skirt (pink).png",
+    "mirrorIcon": "Wyrmscraig villager work skirt (pink).png",
+    "bytes": 455,
+    "updatedAt": "2026-09-04T08:37:42.663Z"
+  },
+  "34013": {
+    "path": "/icons/ge/34013.png",
+    "sourceIcon": "Wyrmscraig villager work skirt (beige).png",
+    "mirrorIcon": "Wyrmscraig villager work skirt (beige).png",
+    "bytes": 459,
+    "updatedAt": "2026-09-04T08:37:43.084Z"
+  },
+  "34017": {
+    "path": "/icons/ge/34017.png",
+    "sourceIcon": "Wyrmscraig goat fur.png",
+    "mirrorIcon": "Wyrmscraig goat fur.png",
+    "bytes": 299,
+    "updatedAt": "2026-09-04T08:37:43.493Z"
+  },
+  "34027": {
+    "path": "/icons/ge/34027.png",
+    "sourceIcon": "Hallowfell.png",
+    "mirrorIcon": "Hallowfell.png",
+    "bytes": 508,
+    "updatedAt": "2026-09-04T08:37:43.881Z"
+  },
+  "34033": {
+    "path": "/icons/ge/34033.png",
+    "sourceIcon": "Ardeaglais teleport.png",
+    "mirrorIcon": "Ardeaglais teleport.png",
+    "bytes": 405,
+    "updatedAt": "2026-09-04T08:37:44.316Z"
+  },
+  "34035": {
+    "path": "/icons/ge/34035.png",
+    "sourceIcon": "Placeholder.png",
+    "mirrorIcon": "Placeholder.png",
+    "bytes": 83,
+    "updatedAt": "2026-09-04T08:37:44.748Z"
+  },
+  "34401": {
+    "path": "/icons/ge/34401.png",
+    "sourceIcon": "Necklace of fangs.png",
+    "mirrorIcon": "Necklace of fangs.png",
+    "bytes": 372,
+    "updatedAt": "2026-09-04T08:37:45.122Z"
+  },
+  "34404": {
+    "path": "/icons/ge/34404.png",
+    "sourceIcon": "Air diamond.png",
+    "mirrorIcon": "Air diamond.png",
+    "bytes": 781,
+    "updatedAt": "2026-09-04T08:37:45.487Z"
+  },
+  "34407": {
+    "path": "/icons/ge/34407.png",
+    "sourceIcon": "Amulet of air.png",
+    "mirrorIcon": "Amulet of air.png",
+    "bytes": 457,
+    "updatedAt": "2026-09-04T08:37:45.896Z"
+  },
+  "34410": {
+    "path": "/icons/ge/34410.png",
+    "sourceIcon": "Water sapphire.png",
+    "mirrorIcon": "Water sapphire.png",
+    "bytes": 387,
+    "updatedAt": "2026-09-04T08:37:46.272Z"
+  },
+  "34413": {
+    "path": "/icons/ge/34413.png",
+    "sourceIcon": "Amulet of water.png",
+    "mirrorIcon": "Amulet of water.png",
+    "bytes": 379,
+    "updatedAt": "2026-09-04T08:37:46.687Z"
+  },
+  "34416": {
+    "path": "/icons/ge/34416.png",
+    "sourceIcon": "Earth emerald.png",
+    "mirrorIcon": "Earth emerald.png",
+    "bytes": 384,
+    "updatedAt": "2026-09-04T08:37:47.073Z"
+  },
+  "34419": {
+    "path": "/icons/ge/34419.png",
+    "sourceIcon": "Amulet of earth.png",
+    "mirrorIcon": "Amulet of earth.png",
+    "bytes": 378,
+    "updatedAt": "2026-09-04T08:37:47.505Z"
+  },
+  "34422": {
+    "path": "/icons/ge/34422.png",
+    "sourceIcon": "Fire ruby.png",
+    "mirrorIcon": "Fire ruby.png",
+    "bytes": 393,
+    "updatedAt": "2026-09-04T08:37:47.872Z"
+  },
+  "34425": {
+    "path": "/icons/ge/34425.png",
+    "sourceIcon": "Amulet of fire.png",
+    "mirrorIcon": "Amulet of fire.png",
+    "bytes": 363,
+    "updatedAt": "2026-09-04T08:37:48.273Z"
+  },
+  "34428": {
+    "path": "/icons/ge/34428.png",
+    "sourceIcon": "Elemental amulet.png",
+    "mirrorIcon": "Elemental amulet.png",
+    "bytes": 283,
+    "updatedAt": "2026-09-04T08:37:48.721Z"
   }
 }
