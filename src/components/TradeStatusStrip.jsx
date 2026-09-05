@@ -25,14 +25,13 @@ export default function TradeStatusStrip({
   children,
 }) {
   const stats = useMemo(() => {
-    const activeStocks = stocks.filter(stock => !stock.archived);
-    const totalPortfolio = activeStocks.reduce((sum, stock) => sum + (stock.totalCost || 0), 0);
-    const totalProfit = activeStocks.reduce(
+    const totalPortfolio = stocks.reduce((sum, stock) => sum + (stock.totalCost || 0), 0);
+    const totalProfit = stocks.reduce(
       (sum, stock) => sum + ((stock.totalCostSold || 0) - (stock.totalCostBasisSold || 0)),
       0
     );
-    const totalQuantity = activeStocks.reduce((sum, stock) => sum + (stock.shares || 0), 0);
-    const unrealisedProfit = activeStocks.reduce((sum, stock) => {
+    const totalQuantity = stocks.reduce((sum, stock) => sum + (stock.shares || 0), 0);
+    const unrealisedProfit = stocks.reduce((sum, stock) => {
       const latestHigh = stock.itemId ? gePrices?.[stock.itemId]?.high : null;
       return sum + (calculateUnrealizedProfit(stock, latestHigh, stock.itemId) ?? 0);
     }, 0);

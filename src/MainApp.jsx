@@ -1664,7 +1664,7 @@ function MainAppInner({ session, onLogout }) {
             />
 
             <TradeStatusStrip
-              stocks={filteredStocks}
+              stocks={filteredAllStocks}
               gePrices={gePrices}
               numberFormat={numberFormat}
             >
