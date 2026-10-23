@@ -15,6 +15,7 @@ const CHECKPOINT_INTERVAL = 100;
 const ICON_NAME_OVERRIDES = {
   28220: 'Crystal felling axe.png',
   28223: 'Crystal felling axe (inactive).png',
+  28499: 'Sigil of The Well Fed.png',
   33320: 'Uncharged toxic trident (e).png',
   33428: 'Trinket of vengeance.png',
   33431: 'Trinket of vengeance.png',
