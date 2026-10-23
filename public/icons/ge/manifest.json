@@ -6238,10 +6238,10 @@
   },
   "2581": {
     "path": "/icons/ge/2581.png",
-    "sourceIcon": "Robin hood hat.png",
-    "mirrorIcon": "Robin hood hat.png",
+    "sourceIcon": "Robin Hood hat.png",
+    "mirrorIcon": "Robin Hood hat.png",
     "bytes": 369,
-    "updatedAt": "2026-07-29T11:45:30.398Z"
+    "updatedAt": "2026-10-23T13:05:28.360Z"
   },
   "2583": {
     "path": "/icons/ge/2583.png",
@@ -26636,374 +26636,374 @@
   },
   "25991": {
     "path": "/icons/ge/25991.png",
-    "sourceIcon": "Sigil of resilience.png",
-    "mirrorIcon": "Sigil of resilience.png",
-    "bytes": 859,
-    "updatedAt": "2026-07-29T11:45:50.017Z"
+    "sourceIcon": "Sigil of Resilience.png",
+    "mirrorIcon": "Sigil of Resilience.png",
+    "bytes": 734,
+    "updatedAt": "2026-10-23T13:05:29.110Z"
   },
   "25994": {
     "path": "/icons/ge/25994.png",
-    "sourceIcon": "Sigil of consistency.png",
-    "mirrorIcon": "Sigil of consistency.png",
-    "bytes": 826,
-    "updatedAt": "2026-07-29T11:45:50.019Z"
+    "sourceIcon": "Sigil of Consistency.png",
+    "mirrorIcon": "Sigil of Consistency.png",
+    "bytes": 792,
+    "updatedAt": "2026-10-23T13:05:29.775Z"
   },
   "25997": {
     "path": "/icons/ge/25997.png",
-    "sourceIcon": "Sigil of the formidable fighter.png",
-    "mirrorIcon": "Sigil of the formidable fighter.png",
-    "bytes": 621,
-    "updatedAt": "2026-07-29T11:45:50.017Z"
+    "sourceIcon": "Sigil of the Formidable Fighter.png",
+    "mirrorIcon": "Sigil of the Formidable Fighter.png",
+    "bytes": 598,
+    "updatedAt": "2026-10-23T13:05:30.214Z"
   },
   "26000": {
     "path": "/icons/ge/26000.png",
-    "sourceIcon": "Sigil of the rigorous ranger.png",
-    "mirrorIcon": "Sigil of the rigorous ranger.png",
-    "bytes": 826,
-    "updatedAt": "2026-07-29T11:45:50.041Z"
+    "sourceIcon": "Sigil of the Rigorous Ranger.png",
+    "mirrorIcon": "Sigil of the Rigorous Ranger.png",
+    "bytes": 792,
+    "updatedAt": "2026-10-23T13:05:30.650Z"
   },
   "26003": {
     "path": "/icons/ge/26003.png",
-    "sourceIcon": "Sigil of the meticulous mage.png",
-    "mirrorIcon": "Sigil of the meticulous mage.png",
-    "bytes": 767,
-    "updatedAt": "2026-07-29T11:45:50.048Z"
+    "sourceIcon": "Sigil of the Meticulous Mage.png",
+    "mirrorIcon": "Sigil of the Meticulous Mage.png",
+    "bytes": 739,
+    "updatedAt": "2026-10-23T13:05:31.100Z"
   },
   "26006": {
     "path": "/icons/ge/26006.png",
-    "sourceIcon": "Sigil of fortification.png",
-    "mirrorIcon": "Sigil of fortification.png",
-    "bytes": 573,
-    "updatedAt": "2026-07-29T11:45:50.151Z"
+    "sourceIcon": "Sigil of Fortification.png",
+    "mirrorIcon": "Sigil of Fortification.png",
+    "bytes": 575,
+    "updatedAt": "2026-10-23T13:05:31.556Z"
   },
   "26009": {
     "path": "/icons/ge/26009.png",
-    "sourceIcon": "Sigil of barrows.png",
-    "mirrorIcon": "Sigil of barrows.png",
+    "sourceIcon": "Sigil of Barrows.png",
+    "mirrorIcon": "Sigil of Barrows.png",
     "bytes": 580,
-    "updatedAt": "2026-07-29T11:45:50.149Z"
+    "updatedAt": "2026-10-23T13:05:32.017Z"
   },
   "26012": {
     "path": "/icons/ge/26012.png",
-    "sourceIcon": "Sigil of deft strikes.png",
-    "mirrorIcon": "Sigil of deft strikes.png",
-    "bytes": 817,
-    "updatedAt": "2026-07-29T11:45:50.149Z"
+    "sourceIcon": "Sigil of Deft Strikes.png",
+    "mirrorIcon": "Sigil of Deft Strikes.png",
+    "bytes": 800,
+    "updatedAt": "2026-10-23T13:05:32.456Z"
   },
   "26015": {
     "path": "/icons/ge/26015.png",
-    "sourceIcon": "Sigil of freedom.png",
-    "mirrorIcon": "Sigil of freedom.png",
-    "bytes": 817,
-    "updatedAt": "2026-07-29T11:45:50.152Z"
+    "sourceIcon": "Sigil of Freedom.png",
+    "mirrorIcon": "Sigil of Freedom.png",
+    "bytes": 800,
+    "updatedAt": "2026-10-23T13:05:32.879Z"
   },
   "26018": {
     "path": "/icons/ge/26018.png",
-    "sourceIcon": "Sigil of enhanced harvest.png",
-    "mirrorIcon": "Sigil of enhanced harvest.png",
-    "bytes": 639,
-    "updatedAt": "2026-07-29T11:45:50.142Z"
+    "sourceIcon": "Sigil of Enhanced Harvest.png",
+    "mirrorIcon": "Sigil of Enhanced Harvest.png",
+    "bytes": 633,
+    "updatedAt": "2026-10-23T13:05:33.330Z"
   },
   "26021": {
     "path": "/icons/ge/26021.png",
-    "sourceIcon": "Sigil of storage.png",
-    "mirrorIcon": "Sigil of storage.png",
-    "bytes": 760,
-    "updatedAt": "2026-07-29T11:45:50.143Z"
+    "sourceIcon": "Sigil of Storage.png",
+    "mirrorIcon": "Sigil of Storage.png",
+    "bytes": 746,
+    "updatedAt": "2026-10-23T13:05:33.761Z"
   },
   "26024": {
     "path": "/icons/ge/26024.png",
-    "sourceIcon": "Sigil of the smith.png",
-    "mirrorIcon": "Sigil of the smith.png",
-    "bytes": 757,
-    "updatedAt": "2026-07-29T11:45:50.160Z"
+    "sourceIcon": "Sigil of the Smith.png",
+    "mirrorIcon": "Sigil of the Smith.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:05:34.174Z"
   },
   "26027": {
     "path": "/icons/ge/26027.png",
-    "sourceIcon": "Sigil of the alchemist.png",
-    "mirrorIcon": "Sigil of the alchemist.png",
-    "bytes": 808,
-    "updatedAt": "2026-07-29T11:45:50.149Z"
+    "sourceIcon": "Sigil of the Alchemist.png",
+    "mirrorIcon": "Sigil of the Alchemist.png",
+    "bytes": 777,
+    "updatedAt": "2026-10-23T13:05:34.625Z"
   },
   "26030": {
     "path": "/icons/ge/26030.png",
-    "sourceIcon": "Sigil of the fletcher.png",
-    "mirrorIcon": "Sigil of the fletcher.png",
-    "bytes": 816,
-    "updatedAt": "2026-07-29T11:45:50.142Z"
+    "sourceIcon": "Sigil of the Fletcher.png",
+    "mirrorIcon": "Sigil of the Fletcher.png",
+    "bytes": 805,
+    "updatedAt": "2026-10-23T13:05:35.046Z"
   },
   "26033": {
     "path": "/icons/ge/26033.png",
-    "sourceIcon": "Sigil of the chef.png",
-    "mirrorIcon": "Sigil of the chef.png",
-    "bytes": 767,
-    "updatedAt": "2026-07-29T11:45:50.142Z"
+    "sourceIcon": "Sigil of the Chef.png",
+    "mirrorIcon": "Sigil of the Chef.png",
+    "bytes": 744,
+    "updatedAt": "2026-10-23T13:05:35.744Z"
   },
   "26036": {
     "path": "/icons/ge/26036.png",
-    "sourceIcon": "Sigil of the craftsman.png",
-    "mirrorIcon": "Sigil of the craftsman.png",
-    "bytes": 825,
-    "updatedAt": "2026-07-29T11:45:50.142Z"
+    "sourceIcon": "Sigil of the Craftsman.png",
+    "mirrorIcon": "Sigil of the Craftsman.png",
+    "bytes": 806,
+    "updatedAt": "2026-10-23T13:05:36.150Z"
   },
   "26039": {
     "path": "/icons/ge/26039.png",
-    "sourceIcon": "Sigil of the abyss.png",
-    "mirrorIcon": "Sigil of the abyss.png",
-    "bytes": 782,
-    "updatedAt": "2026-07-29T11:45:50.124Z"
+    "sourceIcon": "Sigil of the Abyss.png",
+    "mirrorIcon": "Sigil of the Abyss.png",
+    "bytes": 771,
+    "updatedAt": "2026-10-23T13:05:36.657Z"
   },
   "26042": {
     "path": "/icons/ge/26042.png",
-    "sourceIcon": "Sigil of stamina.png",
-    "mirrorIcon": "Sigil of stamina.png",
-    "bytes": 825,
-    "updatedAt": "2026-07-29T11:45:50.149Z"
+    "sourceIcon": "Sigil of Stamina.png",
+    "mirrorIcon": "Sigil of Stamina.png",
+    "bytes": 806,
+    "updatedAt": "2026-10-23T13:05:37.076Z"
   },
   "26045": {
     "path": "/icons/ge/26045.png",
-    "sourceIcon": "Sigil of the potion master.png",
-    "mirrorIcon": "Sigil of the potion master.png",
-    "bytes": 767,
-    "updatedAt": "2026-07-29T11:45:50.152Z"
+    "sourceIcon": "Sigil of the Potion Master.png",
+    "mirrorIcon": "Sigil of the Potion Master.png",
+    "bytes": 863,
+    "updatedAt": "2026-10-23T13:05:37.662Z"
   },
   "26048": {
     "path": "/icons/ge/26048.png",
-    "sourceIcon": "Sigil of the eternal jeweller.png",
-    "mirrorIcon": "Sigil of the eternal jeweller.png",
-    "bytes": 808,
-    "updatedAt": "2026-07-29T11:45:50.142Z"
+    "sourceIcon": "Sigil of the Eternal Jeweller.png",
+    "mirrorIcon": "Sigil of the Eternal Jeweller.png",
+    "bytes": 780,
+    "updatedAt": "2026-10-23T13:05:38.090Z"
   },
   "26051": {
     "path": "/icons/ge/26051.png",
-    "sourceIcon": "Sigil of the treasure hunter.png",
-    "mirrorIcon": "Sigil of the treasure hunter.png",
-    "bytes": 760,
-    "updatedAt": "2026-07-29T11:45:50.151Z"
+    "sourceIcon": "Sigil of the Treasure Hunter.png",
+    "mirrorIcon": "Sigil of the Treasure Hunter.png",
+    "bytes": 746,
+    "updatedAt": "2026-10-23T13:05:38.509Z"
   },
   "26054": {
     "path": "/icons/ge/26054.png",
-    "sourceIcon": "Sigil of mobility.png",
-    "mirrorIcon": "Sigil of mobility.png",
-    "bytes": 755,
-    "updatedAt": "2026-07-29T11:45:50.253Z"
+    "sourceIcon": "Sigil of Mobility.png",
+    "mirrorIcon": "Sigil of Mobility.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:05:38.958Z"
   },
   "26057": {
     "path": "/icons/ge/26057.png",
-    "sourceIcon": "Sigil of exaggeration.png",
-    "mirrorIcon": "Sigil of exaggeration.png",
-    "bytes": 782,
-    "updatedAt": "2026-07-29T11:45:50.258Z"
+    "sourceIcon": "Sigil of Exaggeration.png",
+    "mirrorIcon": "Sigil of Exaggeration.png",
+    "bytes": 771,
+    "updatedAt": "2026-10-23T13:05:39.503Z"
   },
   "26060": {
     "path": "/icons/ge/26060.png",
-    "sourceIcon": "Sigil of specialised strikes.png",
-    "mirrorIcon": "Sigil of specialised strikes.png",
-    "bytes": 639,
-    "updatedAt": "2026-07-29T11:45:50.264Z"
+    "sourceIcon": "Sigil of Specialised Strikes.png",
+    "mirrorIcon": "Sigil of Specialised Strikes.png",
+    "bytes": 627,
+    "updatedAt": "2026-10-23T13:05:39.934Z"
   },
   "26063": {
     "path": "/icons/ge/26063.png",
-    "sourceIcon": "Sigil of the porcupine.png",
-    "mirrorIcon": "Sigil of the porcupine.png",
-    "bytes": 598,
-    "updatedAt": "2026-07-29T11:45:50.262Z"
+    "sourceIcon": "Sigil of the Porcupine.png",
+    "mirrorIcon": "Sigil of the Porcupine.png",
+    "bytes": 582,
+    "updatedAt": "2026-10-23T13:05:40.349Z"
   },
   "26066": {
     "path": "/icons/ge/26066.png",
-    "sourceIcon": "Sigil of binding.png",
-    "mirrorIcon": "Sigil of binding.png",
-    "bytes": 782,
-    "updatedAt": "2026-07-29T11:45:50.249Z"
+    "sourceIcon": "Sigil of Binding.png",
+    "mirrorIcon": "Sigil of Binding.png",
+    "bytes": 769,
+    "updatedAt": "2026-10-23T13:05:40.788Z"
   },
   "26069": {
     "path": "/icons/ge/26069.png",
-    "sourceIcon": "Sigil of escaping.png",
-    "mirrorIcon": "Sigil of escaping.png",
-    "bytes": 573,
-    "updatedAt": "2026-07-29T11:45:50.249Z"
+    "sourceIcon": "Sigil of Escaping.png",
+    "mirrorIcon": "Sigil of Escaping.png",
+    "bytes": 575,
+    "updatedAt": "2026-10-23T13:05:41.219Z"
   },
   "26072": {
     "path": "/icons/ge/26072.png",
-    "sourceIcon": "Sigil of the ruthless ranger.png",
-    "mirrorIcon": "Sigil of the ruthless ranger.png",
-    "bytes": 639,
-    "updatedAt": "2026-07-29T11:45:50.249Z"
+    "sourceIcon": "Sigil of the Ruthless Ranger.png",
+    "mirrorIcon": "Sigil of the Ruthless Ranger.png",
+    "bytes": 627,
+    "updatedAt": "2026-10-23T13:05:41.671Z"
   },
   "26075": {
     "path": "/icons/ge/26075.png",
-    "sourceIcon": "Sigil of the feral fighter.png",
-    "mirrorIcon": "Sigil of the feral fighter.png",
-    "bytes": 621,
-    "updatedAt": "2026-07-29T11:45:50.249Z"
+    "sourceIcon": "Sigil of the Feral Fighter.png",
+    "mirrorIcon": "Sigil of the Feral Fighter.png",
+    "bytes": 598,
+    "updatedAt": "2026-10-23T13:05:42.098Z"
   },
   "26078": {
     "path": "/icons/ge/26078.png",
-    "sourceIcon": "Sigil of the menacing mage.png",
-    "mirrorIcon": "Sigil of the menacing mage.png",
+    "sourceIcon": "Sigil of the Menacing Mage.png",
+    "mirrorIcon": "Sigil of the Menacing Mage.png",
     "bytes": 580,
-    "updatedAt": "2026-07-29T11:45:50.249Z"
+    "updatedAt": "2026-10-23T13:05:42.535Z"
   },
   "26081": {
     "path": "/icons/ge/26081.png",
-    "sourceIcon": "Sigil of prosperity.png",
-    "mirrorIcon": "Sigil of prosperity.png",
-    "bytes": 580,
-    "updatedAt": "2026-07-29T11:45:50.257Z"
+    "sourceIcon": "Sigil of Prosperity.png",
+    "mirrorIcon": "Sigil of Prosperity.png",
+    "bytes": 581,
+    "updatedAt": "2026-10-23T13:05:42.973Z"
   },
   "26084": {
     "path": "/icons/ge/26084.png",
-    "sourceIcon": "Sigil of the dwarves.png",
-    "mirrorIcon": "Sigil of the dwarves.png",
-    "bytes": 570,
-    "updatedAt": "2026-07-29T11:45:50.256Z"
+    "sourceIcon": "Sigil of the Dwarves.png",
+    "mirrorIcon": "Sigil of the Dwarves.png",
+    "bytes": 565,
+    "updatedAt": "2026-10-23T13:05:43.386Z"
   },
   "26087": {
     "path": "/icons/ge/26087.png",
-    "sourceIcon": "Sigil of the elves.png",
-    "mirrorIcon": "Sigil of the elves.png",
-    "bytes": 594,
-    "updatedAt": "2026-07-29T11:45:50.256Z"
+    "sourceIcon": "Sigil of the Elves.png",
+    "mirrorIcon": "Sigil of the Elves.png",
+    "bytes": 595,
+    "updatedAt": "2026-10-23T13:05:43.809Z"
   },
   "26090": {
     "path": "/icons/ge/26090.png",
-    "sourceIcon": "Sigil of the barbarians.png",
-    "mirrorIcon": "Sigil of the barbarians.png",
-    "bytes": 617,
-    "updatedAt": "2026-07-29T11:45:50.261Z"
+    "sourceIcon": "Sigil of the Barbarians.png",
+    "mirrorIcon": "Sigil of the Barbarians.png",
+    "bytes": 593,
+    "updatedAt": "2026-10-23T13:05:44.328Z"
   },
   "26093": {
     "path": "/icons/ge/26093.png",
-    "sourceIcon": "Sigil of the gnomes.png",
-    "mirrorIcon": "Sigil of the gnomes.png",
-    "bytes": 580,
-    "updatedAt": "2026-07-29T11:45:50.249Z"
+    "sourceIcon": "Sigil of the Gnomes.png",
+    "mirrorIcon": "Sigil of the Gnomes.png",
+    "bytes": 581,
+    "updatedAt": "2026-10-23T13:05:44.736Z"
   },
   "26096": {
     "path": "/icons/ge/26096.png",
-    "sourceIcon": "Sigil of nature.png",
-    "mirrorIcon": "Sigil of nature.png",
-    "bytes": 564,
-    "updatedAt": "2026-07-29T11:45:50.256Z"
+    "sourceIcon": "Sigil of Nature.png",
+    "mirrorIcon": "Sigil of Nature.png",
+    "bytes": 563,
+    "updatedAt": "2026-10-23T13:05:55.408Z"
   },
   "26099": {
     "path": "/icons/ge/26099.png",
-    "sourceIcon": "Sigil of devotion.png",
-    "mirrorIcon": "Sigil of devotion.png",
+    "sourceIcon": "Sigil of Devotion.png",
+    "mirrorIcon": "Sigil of Devotion.png",
     "bytes": 598,
-    "updatedAt": "2026-07-29T11:45:50.249Z"
+    "updatedAt": "2026-10-23T13:05:55.848Z"
   },
   "26102": {
     "path": "/icons/ge/26102.png",
-    "sourceIcon": "Sigil of the forager.png",
-    "mirrorIcon": "Sigil of the forager.png",
-    "bytes": 825,
-    "updatedAt": "2026-07-29T11:45:50.338Z"
+    "sourceIcon": "Sigil of the Forager.png",
+    "mirrorIcon": "Sigil of the Forager.png",
+    "bytes": 806,
+    "updatedAt": "2026-10-23T13:05:56.280Z"
   },
   "26105": {
     "path": "/icons/ge/26105.png",
-    "sourceIcon": "Sigil of garments.png",
-    "mirrorIcon": "Sigil of garments.png",
-    "bytes": 639,
-    "updatedAt": "2026-07-29T11:45:50.366Z"
+    "sourceIcon": "Sigil of Garments.png",
+    "mirrorIcon": "Sigil of Garments.png",
+    "bytes": 633,
+    "updatedAt": "2026-10-23T13:05:56.740Z"
   },
   "26108": {
     "path": "/icons/ge/26108.png",
-    "sourceIcon": "Sigil of slaughter.png",
-    "mirrorIcon": "Sigil of slaughter.png",
-    "bytes": 816,
-    "updatedAt": "2026-07-29T11:45:50.373Z"
+    "sourceIcon": "Sigil of Slaughter.png",
+    "mirrorIcon": "Sigil of Slaughter.png",
+    "bytes": 801,
+    "updatedAt": "2026-10-23T13:05:57.172Z"
   },
   "26111": {
     "path": "/icons/ge/26111.png",
-    "sourceIcon": "Sigil of the fortune farmer.png",
-    "mirrorIcon": "Sigil of the fortune farmer.png",
-    "bytes": 564,
-    "updatedAt": "2026-07-29T11:45:50.360Z"
+    "sourceIcon": "Sigil of the Fortune Farmer.png",
+    "mirrorIcon": "Sigil of the Fortune Farmer.png",
+    "bytes": 563,
+    "updatedAt": "2026-10-23T13:05:57.614Z"
   },
   "26114": {
     "path": "/icons/ge/26114.png",
-    "sourceIcon": "Sigil of versatility.png",
-    "mirrorIcon": "Sigil of versatility.png",
-    "bytes": 580,
-    "updatedAt": "2026-07-29T11:45:50.342Z"
+    "sourceIcon": "Sigil of Versatility.png",
+    "mirrorIcon": "Sigil of Versatility.png",
+    "bytes": 581,
+    "updatedAt": "2026-10-23T13:05:58.162Z"
   },
   "26117": {
     "path": "/icons/ge/26117.png",
-    "sourceIcon": "Sigil of the serpent.png",
-    "mirrorIcon": "Sigil of the serpent.png",
-    "bytes": 755,
-    "updatedAt": "2026-07-29T11:45:50.366Z"
+    "sourceIcon": "Sigil of the Serpent.png",
+    "mirrorIcon": "Sigil of the Serpent.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:05:58.581Z"
   },
   "26120": {
     "path": "/icons/ge/26120.png",
-    "sourceIcon": "Sigil of supreme stamina.png",
-    "mirrorIcon": "Sigil of supreme stamina.png",
-    "bytes": 639,
-    "updatedAt": "2026-07-29T11:45:50.343Z"
+    "sourceIcon": "Sigil of Supreme Stamina.png",
+    "mirrorIcon": "Sigil of Supreme Stamina.png",
+    "bytes": 630,
+    "updatedAt": "2026-10-23T13:05:59.003Z"
   },
   "26123": {
     "path": "/icons/ge/26123.png",
-    "sourceIcon": "Sigil of preservation.png",
-    "mirrorIcon": "Sigil of preservation.png",
-    "bytes": 614,
-    "updatedAt": "2026-07-29T11:45:50.358Z"
+    "sourceIcon": "Sigil of Preservation.png",
+    "mirrorIcon": "Sigil of Preservation.png",
+    "bytes": 593,
+    "updatedAt": "2026-10-23T13:05:59.434Z"
   },
   "26126": {
     "path": "/icons/ge/26126.png",
-    "sourceIcon": "Sigil of finality.png",
-    "mirrorIcon": "Sigil of finality.png",
-    "bytes": 639,
-    "updatedAt": "2026-07-29T11:45:50.366Z"
+    "sourceIcon": "Sigil of Finality.png",
+    "mirrorIcon": "Sigil of Finality.png",
+    "bytes": 627,
+    "updatedAt": "2026-10-23T13:05:59.856Z"
   },
   "26129": {
     "path": "/icons/ge/26129.png",
-    "sourceIcon": "Sigil of pious protection.png",
-    "mirrorIcon": "Sigil of pious protection.png",
-    "bytes": 527,
-    "updatedAt": "2026-07-29T11:45:50.360Z"
+    "sourceIcon": "Sigil of Pious Protection.png",
+    "mirrorIcon": "Sigil of Pious Protection.png",
+    "bytes": 510,
+    "updatedAt": "2026-10-23T13:06:00.277Z"
   },
   "26132": {
     "path": "/icons/ge/26132.png",
-    "sourceIcon": "Sigil of aggression.png",
-    "mirrorIcon": "Sigil of aggression.png",
+    "sourceIcon": "Sigil of Aggression.png",
+    "mirrorIcon": "Sigil of Aggression.png",
     "bytes": 489,
-    "updatedAt": "2026-07-29T11:45:50.338Z"
+    "updatedAt": "2026-10-23T13:06:00.833Z"
   },
   "26135": {
     "path": "/icons/ge/26135.png",
-    "sourceIcon": "Sigil of rampage.png",
-    "mirrorIcon": "Sigil of rampage.png",
+    "sourceIcon": "Sigil of Rampage.png",
+    "mirrorIcon": "Sigil of Rampage.png",
     "bytes": 491,
-    "updatedAt": "2026-07-29T11:45:50.363Z"
+    "updatedAt": "2026-10-23T13:06:01.289Z"
   },
   "26138": {
     "path": "/icons/ge/26138.png",
-    "sourceIcon": "Sigil of the skiller.png",
-    "mirrorIcon": "Sigil of the skiller.png",
-    "bytes": 539,
-    "updatedAt": "2026-07-29T11:45:50.363Z"
+    "sourceIcon": "Sigil of the Skiller.png",
+    "mirrorIcon": "Sigil of the Skiller.png",
+    "bytes": 532,
+    "updatedAt": "2026-10-23T13:06:01.716Z"
   },
   "26141": {
     "path": "/icons/ge/26141.png",
-    "sourceIcon": "Sigil of remote storage.png",
-    "mirrorIcon": "Sigil of remote storage.png",
+    "sourceIcon": "Sigil of Remote Storage.png",
+    "mirrorIcon": "Sigil of Remote Storage.png",
     "bytes": 489,
-    "updatedAt": "2026-07-29T11:45:50.366Z"
+    "updatedAt": "2026-10-23T13:06:02.147Z"
   },
   "26144": {
     "path": "/icons/ge/26144.png",
-    "sourceIcon": "Sigil of last recall.png",
-    "mirrorIcon": "Sigil of last recall.png",
-    "bytes": 594,
-    "updatedAt": "2026-07-29T11:45:50.363Z"
+    "sourceIcon": "Sigil of Last Recall.png",
+    "mirrorIcon": "Sigil of Last Recall.png",
+    "bytes": 595,
+    "updatedAt": "2026-10-23T13:06:02.715Z"
   },
   "26147": {
     "path": "/icons/ge/26147.png",
-    "sourceIcon": "Sigil of the guardian angel.png",
-    "mirrorIcon": "Sigil of the guardian angel.png",
-    "bytes": 558,
-    "updatedAt": "2026-07-29T11:45:50.342Z"
+    "sourceIcon": "Sigil of the Guardian Angel.png",
+    "mirrorIcon": "Sigil of the Guardian Angel.png",
+    "bytes": 550,
+    "updatedAt": "2026-10-23T13:06:03.143Z"
   },
   "26219": {
     "path": "/icons/ge/26219.png",
@@ -27917,129 +27917,129 @@
   },
   "28478": {
     "path": "/icons/ge/28478.png",
-    "sourceIcon": "Sigil of sustenance.png",
-    "mirrorIcon": "Sigil of sustenance.png",
-    "bytes": 757,
-    "updatedAt": "2026-07-29T11:45:51.408Z"
+    "sourceIcon": "Sigil of Sustenance.png",
+    "mirrorIcon": "Sigil of Sustenance.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:06:03.572Z"
   },
   "28481": {
     "path": "/icons/ge/28481.png",
-    "sourceIcon": "Sigil of hoarding.png",
-    "mirrorIcon": "Sigil of hoarding.png",
-    "bytes": 757,
-    "updatedAt": "2026-07-29T11:45:51.421Z"
+    "sourceIcon": "Sigil of Hoarding.png",
+    "mirrorIcon": "Sigil of Hoarding.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:06:03.997Z"
   },
   "28484": {
     "path": "/icons/ge/28484.png",
-    "sourceIcon": "Sigil of the alchemaniac.png",
-    "mirrorIcon": "Sigil of the alchemaniac.png",
-    "bytes": 755,
-    "updatedAt": "2026-07-29T11:45:51.407Z"
+    "sourceIcon": "Sigil of the Alchemaniac.png",
+    "mirrorIcon": "Sigil of the Alchemaniac.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:06:04.419Z"
   },
   "28487": {
     "path": "/icons/ge/28487.png",
-    "sourceIcon": "Sigil of the hunter.png",
-    "mirrorIcon": "Sigil of the hunter.png",
-    "bytes": 757,
-    "updatedAt": "2026-07-29T11:45:51.433Z"
+    "sourceIcon": "Sigil of the Hunter.png",
+    "mirrorIcon": "Sigil of the Hunter.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:06:04.821Z"
   },
   "28490": {
     "path": "/icons/ge/28490.png",
-    "sourceIcon": "Sigil of resistance.png",
-    "mirrorIcon": "Sigil of resistance.png",
-    "bytes": 757,
-    "updatedAt": "2026-07-29T11:45:51.408Z"
+    "sourceIcon": "Sigil of Resistance.png",
+    "mirrorIcon": "Sigil of Resistance.png",
+    "bytes": 734,
+    "updatedAt": "2026-10-23T13:06:05.240Z"
   },
   "28493": {
     "path": "/icons/ge/28493.png",
-    "sourceIcon": "Sigil of agile fortune.png",
-    "mirrorIcon": "Sigil of agile fortune.png",
-    "bytes": 757,
-    "updatedAt": "2026-07-29T11:45:51.408Z"
+    "sourceIcon": "Sigil of Agile Fortune.png",
+    "mirrorIcon": "Sigil of Agile Fortune.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:06:05.666Z"
   },
   "28496": {
     "path": "/icons/ge/28496.png",
-    "sourceIcon": "Sigil of the food master.png",
-    "mirrorIcon": "Sigil of the food master.png",
-    "bytes": 782,
-    "updatedAt": "2026-07-29T11:45:51.432Z"
+    "sourceIcon": "Sigil of the Food Master.png",
+    "mirrorIcon": "Sigil of the Food Master.png",
+    "bytes": 766,
+    "updatedAt": "2026-10-23T13:06:06.119Z"
   },
   "28499": {
     "path": "/icons/ge/28499.png",
-    "sourceIcon": "Sigil of the well fed.png",
-    "mirrorIcon": "Sigil of the well fed.png",
-    "bytes": 755,
-    "updatedAt": "2026-09-04T08:36:38.240Z"
+    "sourceIcon": "Sigil of the Well Fed.png",
+    "mirrorIcon": "Sigil of The Well Fed.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:08:08.773Z"
   },
   "28502": {
     "path": "/icons/ge/28502.png",
-    "sourceIcon": "Sigil of the infernal chef.png",
-    "mirrorIcon": "Sigil of the infernal chef.png",
-    "bytes": 570,
-    "updatedAt": "2026-07-29T11:45:51.432Z"
+    "sourceIcon": "Sigil of the Infernal Chef.png",
+    "mirrorIcon": "Sigil of the Infernal Chef.png",
+    "bytes": 565,
+    "updatedAt": "2026-10-23T13:06:07.010Z"
   },
   "28505": {
     "path": "/icons/ge/28505.png",
-    "sourceIcon": "Sigil of the infernal smith.png",
-    "mirrorIcon": "Sigil of the infernal smith.png",
-    "bytes": 570,
-    "updatedAt": "2026-07-29T11:45:51.407Z"
+    "sourceIcon": "Sigil of the Infernal Smith.png",
+    "mirrorIcon": "Sigil of the Infernal Smith.png",
+    "bytes": 565,
+    "updatedAt": "2026-10-23T13:06:07.431Z"
   },
   "28508": {
     "path": "/icons/ge/28508.png",
-    "sourceIcon": "Sigil of the lightbearer.png",
-    "mirrorIcon": "Sigil of the lightbearer.png",
-    "bytes": 573,
-    "updatedAt": "2026-07-29T11:45:51.410Z"
+    "sourceIcon": "Sigil of the Lightbearer.png",
+    "mirrorIcon": "Sigil of the Lightbearer.png",
+    "bytes": 575,
+    "updatedAt": "2026-10-23T13:06:07.859Z"
   },
   "28511": {
     "path": "/icons/ge/28511.png",
-    "sourceIcon": "Sigil of the bloodhound.png",
-    "mirrorIcon": "Sigil of the bloodhound.png",
-    "bytes": 569,
-    "updatedAt": "2026-07-29T11:45:51.407Z"
+    "sourceIcon": "Sigil of the Bloodhound.png",
+    "mirrorIcon": "Sigil of the Bloodhound.png",
+    "bytes": 564,
+    "updatedAt": "2026-10-23T13:06:08.303Z"
   },
   "28514": {
     "path": "/icons/ge/28514.png",
-    "sourceIcon": "Sigil of precision.png",
-    "mirrorIcon": "Sigil of precision.png",
-    "bytes": 627,
-    "updatedAt": "2026-07-29T11:45:51.408Z"
+    "sourceIcon": "Sigil of Precision.png",
+    "mirrorIcon": "Sigil of Precision.png",
+    "bytes": 610,
+    "updatedAt": "2026-10-23T13:06:08.780Z"
   },
   "28517": {
     "path": "/icons/ge/28517.png",
-    "sourceIcon": "Sigil of the augmented thrall.png",
-    "mirrorIcon": "Sigil of the augmented thrall.png",
-    "bytes": 573,
-    "updatedAt": "2026-07-29T11:45:51.419Z"
+    "sourceIcon": "Sigil of the Augmented Thrall.png",
+    "mirrorIcon": "Sigil of the Augmented Thrall.png",
+    "bytes": 575,
+    "updatedAt": "2026-10-23T13:06:09.202Z"
   },
   "28520": {
     "path": "/icons/ge/28520.png",
-    "sourceIcon": "Sigil of faith.png",
-    "mirrorIcon": "Sigil of faith.png",
-    "bytes": 569,
-    "updatedAt": "2026-07-29T11:45:51.514Z"
+    "sourceIcon": "Sigil of Faith.png",
+    "mirrorIcon": "Sigil of Faith.png",
+    "bytes": 564,
+    "updatedAt": "2026-10-23T13:06:09.617Z"
   },
   "28523": {
     "path": "/icons/ge/28523.png",
-    "sourceIcon": "Sigil of titanium.png",
-    "mirrorIcon": "Sigil of titanium.png",
+    "sourceIcon": "Sigil of Titanium.png",
+    "mirrorIcon": "Sigil of Titanium.png",
     "bytes": 491,
-    "updatedAt": "2026-07-29T11:45:51.519Z"
+    "updatedAt": "2026-10-23T13:06:10.044Z"
   },
   "28526": {
     "path": "/icons/ge/28526.png",
-    "sourceIcon": "Sigil of the ninja.png",
-    "mirrorIcon": "Sigil of the ninja.png",
+    "sourceIcon": "Sigil of the Ninja.png",
+    "mirrorIcon": "Sigil of the Ninja.png",
     "bytes": 491,
-    "updatedAt": "2026-07-29T11:45:51.551Z"
+    "updatedAt": "2026-10-23T13:06:10.503Z"
   },
   "28529": {
     "path": "/icons/ge/28529.png",
-    "sourceIcon": "Sigil of woodcraft.png",
-    "mirrorIcon": "Sigil of woodcraft.png",
+    "sourceIcon": "Sigil of Woodcraft.png",
+    "mirrorIcon": "Sigil of Woodcraft.png",
     "bytes": 491,
-    "updatedAt": "2026-07-29T11:45:51.546Z"
+    "updatedAt": "2026-10-23T13:06:21.119Z"
   },
   "28531": {
     "path": "/icons/ge/28531.png",
@@ -28071,10 +28071,10 @@
   },
   "28545": {
     "path": "/icons/ge/28545.png",
-    "sourceIcon": "Corrupted scythe of vitur (uncharged).png",
-    "mirrorIcon": "Corrupted scythe of vitur (uncharged).png",
+    "sourceIcon": "Corrupted Scythe of Vitur (uncharged).png",
+    "mirrorIcon": "Corrupted Scythe of Vitur (uncharged).png",
     "bytes": 252,
-    "updatedAt": "2026-07-29T11:45:51.517Z"
+    "updatedAt": "2026-10-23T13:06:21.689Z"
   },
   "28549": {
     "path": "/icons/ge/28549.png",
@@ -28505,10 +28505,10 @@
   },
   "28988": {
     "path": "/icons/ge/28988.png",
-    "sourceIcon": "Blue moon spear.png",
-    "mirrorIcon": "Blue moon spear.png",
+    "sourceIcon": "Blue Moon spear.png",
+    "mirrorIcon": "Blue Moon spear.png",
     "bytes": 497,
-    "updatedAt": "2026-07-29T11:45:51.934Z"
+    "updatedAt": "2026-10-23T13:06:22.151Z"
   },
   "28991": {
     "path": "/icons/ge/28991.png",
@@ -28533,129 +28533,129 @@
   },
   "29004": {
     "path": "/icons/ge/29004.png",
-    "sourceIcon": "Eclipse moon chestplate.png",
-    "mirrorIcon": "Eclipse moon chestplate.png",
+    "sourceIcon": "Eclipse Moon chestplate.png",
+    "mirrorIcon": "Eclipse Moon chestplate.png",
     "bytes": 793,
-    "updatedAt": "2026-07-29T11:45:51.933Z"
+    "updatedAt": "2026-10-23T13:06:22.661Z"
   },
   "29007": {
     "path": "/icons/ge/29007.png",
-    "sourceIcon": "Eclipse moon tassets.png",
-    "mirrorIcon": "Eclipse moon tassets.png",
+    "sourceIcon": "Eclipse Moon tassets.png",
+    "mirrorIcon": "Eclipse Moon tassets.png",
     "bytes": 602,
-    "updatedAt": "2026-07-29T11:45:51.933Z"
+    "updatedAt": "2026-10-23T13:06:23.143Z"
   },
   "29010": {
     "path": "/icons/ge/29010.png",
-    "sourceIcon": "Eclipse moon helm.png",
-    "mirrorIcon": "Eclipse moon helm.png",
+    "sourceIcon": "Eclipse Moon helm.png",
+    "mirrorIcon": "Eclipse Moon helm.png",
     "bytes": 610,
-    "updatedAt": "2026-07-29T11:45:51.934Z"
+    "updatedAt": "2026-10-23T13:06:23.626Z"
   },
   "29013": {
     "path": "/icons/ge/29013.png",
-    "sourceIcon": "Blue moon chestplate.png",
-    "mirrorIcon": "Blue moon chestplate.png",
+    "sourceIcon": "Blue Moon chestplate.png",
+    "mirrorIcon": "Blue Moon chestplate.png",
     "bytes": 866,
-    "updatedAt": "2026-07-29T11:45:51.933Z"
+    "updatedAt": "2026-10-23T13:06:24.068Z"
   },
   "29016": {
     "path": "/icons/ge/29016.png",
-    "sourceIcon": "Blue moon tassets.png",
-    "mirrorIcon": "Blue moon tassets.png",
-    "bytes": 620,
-    "updatedAt": "2026-07-29T11:45:51.934Z"
+    "sourceIcon": "Blue Moon tassets.png",
+    "mirrorIcon": "Blue Moon tassets.png",
+    "bytes": 606,
+    "updatedAt": "2026-10-23T13:06:24.490Z"
   },
   "29019": {
     "path": "/icons/ge/29019.png",
-    "sourceIcon": "Blue moon helm.png",
-    "mirrorIcon": "Blue moon helm.png",
+    "sourceIcon": "Blue Moon helm.png",
+    "mirrorIcon": "Blue Moon helm.png",
     "bytes": 958,
-    "updatedAt": "2026-07-29T11:45:51.957Z"
+    "updatedAt": "2026-10-23T13:06:24.983Z"
   },
   "29022": {
     "path": "/icons/ge/29022.png",
-    "sourceIcon": "Blood moon chestplate.png",
-    "mirrorIcon": "Blood moon chestplate.png",
-    "bytes": 777,
-    "updatedAt": "2026-07-29T11:45:52.026Z"
+    "sourceIcon": "Blood Moon chestplate.png",
+    "mirrorIcon": "Blood Moon chestplate.png",
+    "bytes": 779,
+    "updatedAt": "2026-10-23T13:06:25.440Z"
   },
   "29025": {
     "path": "/icons/ge/29025.png",
-    "sourceIcon": "Blood moon tassets.png",
-    "mirrorIcon": "Blood moon tassets.png",
+    "sourceIcon": "Blood Moon tassets.png",
+    "mirrorIcon": "Blood Moon tassets.png",
     "bytes": 563,
-    "updatedAt": "2026-07-29T11:45:52.028Z"
+    "updatedAt": "2026-10-23T13:06:25.860Z"
   },
   "29028": {
     "path": "/icons/ge/29028.png",
-    "sourceIcon": "Blood moon helm.png",
-    "mirrorIcon": "Blood moon helm.png",
-    "bytes": 655,
-    "updatedAt": "2026-07-29T11:45:52.026Z"
+    "sourceIcon": "Blood Moon helm.png",
+    "mirrorIcon": "Blood Moon helm.png",
+    "bytes": 660,
+    "updatedAt": "2026-10-23T13:06:26.321Z"
   },
   "29049": {
     "path": "/icons/ge/29049.png",
-    "sourceIcon": "Eclipse moon chestplate (broken).png",
-    "mirrorIcon": "Eclipse moon chestplate (broken).png",
+    "sourceIcon": "Eclipse Moon chestplate (broken).png",
+    "mirrorIcon": "Eclipse Moon chestplate (broken).png",
     "bytes": 608,
-    "updatedAt": "2026-07-29T11:45:52.025Z"
+    "updatedAt": "2026-10-23T13:06:26.780Z"
   },
   "29052": {
     "path": "/icons/ge/29052.png",
-    "sourceIcon": "Eclipse moon tassets (broken).png",
-    "mirrorIcon": "Eclipse moon tassets (broken).png",
-    "bytes": 478,
-    "updatedAt": "2026-07-29T11:45:52.028Z"
+    "sourceIcon": "Eclipse Moon tassets (broken).png",
+    "mirrorIcon": "Eclipse Moon tassets (broken).png",
+    "bytes": 480,
+    "updatedAt": "2026-10-23T13:06:27.246Z"
   },
   "29055": {
     "path": "/icons/ge/29055.png",
-    "sourceIcon": "Eclipse moon helm (broken).png",
-    "mirrorIcon": "Eclipse moon helm (broken).png",
+    "sourceIcon": "Eclipse Moon helm (broken).png",
+    "mirrorIcon": "Eclipse Moon helm (broken).png",
     "bytes": 496,
-    "updatedAt": "2026-07-29T11:45:52.026Z"
+    "updatedAt": "2026-10-23T13:06:27.700Z"
   },
   "29058": {
     "path": "/icons/ge/29058.png",
-    "sourceIcon": "Blue moon chestplate (broken).png",
-    "mirrorIcon": "Blue moon chestplate (broken).png",
+    "sourceIcon": "Blue Moon chestplate (broken).png",
+    "mirrorIcon": "Blue Moon chestplate (broken).png",
     "bytes": 666,
-    "updatedAt": "2026-07-29T11:45:52.049Z"
+    "updatedAt": "2026-10-23T13:06:28.130Z"
   },
   "29061": {
     "path": "/icons/ge/29061.png",
-    "sourceIcon": "Blue moon tassets (broken).png",
-    "mirrorIcon": "Blue moon tassets (broken).png",
-    "bytes": 559,
-    "updatedAt": "2026-07-29T11:45:52.047Z"
+    "sourceIcon": "Blue Moon tassets (broken).png",
+    "mirrorIcon": "Blue Moon tassets (broken).png",
+    "bytes": 561,
+    "updatedAt": "2026-10-23T13:06:28.617Z"
   },
   "29064": {
     "path": "/icons/ge/29064.png",
-    "sourceIcon": "Blue moon helm (broken).png",
-    "mirrorIcon": "Blue moon helm (broken).png",
+    "sourceIcon": "Blue Moon helm (broken).png",
+    "mirrorIcon": "Blue Moon helm (broken).png",
     "bytes": 858,
-    "updatedAt": "2026-07-29T11:45:52.025Z"
+    "updatedAt": "2026-10-23T13:06:29.074Z"
   },
   "29067": {
     "path": "/icons/ge/29067.png",
-    "sourceIcon": "Blood moon chestplate (broken).png",
-    "mirrorIcon": "Blood moon chestplate (broken).png",
-    "bytes": 590,
-    "updatedAt": "2026-07-29T11:45:52.026Z"
+    "sourceIcon": "Blood Moon chestplate (broken).png",
+    "mirrorIcon": "Blood Moon chestplate (broken).png",
+    "bytes": 594,
+    "updatedAt": "2026-10-23T13:06:29.586Z"
   },
   "29070": {
     "path": "/icons/ge/29070.png",
-    "sourceIcon": "Blood moon tassets (broken).png",
-    "mirrorIcon": "Blood moon tassets (broken).png",
+    "sourceIcon": "Blood Moon tassets (broken).png",
+    "mirrorIcon": "Blood Moon tassets (broken).png",
     "bytes": 485,
-    "updatedAt": "2026-07-29T11:45:52.025Z"
+    "updatedAt": "2026-10-23T13:06:30.088Z"
   },
   "29073": {
     "path": "/icons/ge/29073.png",
-    "sourceIcon": "Blood moon helm (broken).png",
-    "mirrorIcon": "Blood moon helm (broken).png",
-    "bytes": 518,
-    "updatedAt": "2026-07-29T11:45:52.028Z"
+    "sourceIcon": "Blood Moon helm (broken).png",
+    "mirrorIcon": "Blood Moon helm (broken).png",
+    "bytes": 520,
+    "updatedAt": "2026-10-23T13:06:30.568Z"
   },
   "29084": {
     "path": "/icons/ge/29084.png",
@@ -29184,80 +29184,80 @@
   },
   "29649": {
     "path": "/icons/ge/29649.png",
-    "sourceIcon": "Sigil of meticulousness.png",
-    "mirrorIcon": "Sigil of meticulousness.png",
-    "bytes": 549,
-    "updatedAt": "2026-07-29T11:45:52.588Z"
+    "sourceIcon": "Sigil of Meticulousness.png",
+    "mirrorIcon": "Sigil of Meticulousness.png",
+    "bytes": 546,
+    "updatedAt": "2026-10-23T13:06:30.984Z"
   },
   "29652": {
     "path": "/icons/ge/29652.png",
-    "sourceIcon": "Sigil of revoked limitation.png",
-    "mirrorIcon": "Sigil of revoked limitation.png",
-    "bytes": 594,
-    "updatedAt": "2026-07-29T11:45:52.589Z"
+    "sourceIcon": "Sigil of Revoked Limitation.png",
+    "mirrorIcon": "Sigil of Revoked Limitation.png",
+    "bytes": 595,
+    "updatedAt": "2026-10-23T13:06:31.428Z"
   },
   "29655": {
     "path": "/icons/ge/29655.png",
-    "sourceIcon": "Sigil of the rampart.png",
-    "mirrorIcon": "Sigil of the rampart.png",
+    "sourceIcon": "Sigil of the Rampart.png",
+    "mirrorIcon": "Sigil of the Rampart.png",
     "bytes": 491,
-    "updatedAt": "2026-09-04T08:36:39.502Z"
+    "updatedAt": "2026-10-23T13:06:31.907Z"
   },
   "29658": {
     "path": "/icons/ge/29658.png",
-    "sourceIcon": "Sigil of deception.png",
-    "mirrorIcon": "Sigil of deception.png",
-    "bytes": 757,
-    "updatedAt": "2026-07-29T11:45:52.561Z"
+    "sourceIcon": "Sigil of Deception.png",
+    "mirrorIcon": "Sigil of Deception.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:06:32.355Z"
   },
   "29661": {
     "path": "/icons/ge/29661.png",
-    "sourceIcon": "Sigil of litheness.png",
-    "mirrorIcon": "Sigil of litheness.png",
-    "bytes": 757,
-    "updatedAt": "2026-09-04T08:36:39.917Z"
+    "sourceIcon": "Sigil of Litheness.png",
+    "mirrorIcon": "Sigil of Litheness.png",
+    "bytes": 740,
+    "updatedAt": "2026-10-23T13:06:32.783Z"
   },
   "29664": {
     "path": "/icons/ge/29664.png",
-    "sourceIcon": "Sigil of the adroit.png",
-    "mirrorIcon": "Sigil of the adroit.png",
-    "bytes": 617,
-    "updatedAt": "2026-09-04T08:36:40.326Z"
+    "sourceIcon": "Sigil of the Adroit.png",
+    "mirrorIcon": "Sigil of the Adroit.png",
+    "bytes": 619,
+    "updatedAt": "2026-10-23T13:06:33.235Z"
   },
   "29667": {
     "path": "/icons/ge/29667.png",
-    "sourceIcon": "Sigil of onslaught.png",
-    "mirrorIcon": "Sigil of onslaught.png",
-    "bytes": 594,
-    "updatedAt": "2026-07-29T11:45:52.589Z"
+    "sourceIcon": "Sigil of Onslaught.png",
+    "mirrorIcon": "Sigil of Onslaught.png",
+    "bytes": 587,
+    "updatedAt": "2026-10-23T13:06:33.659Z"
   },
   "29670": {
     "path": "/icons/ge/29670.png",
-    "sourceIcon": "Sigil of restoration.png",
-    "mirrorIcon": "Sigil of restoration.png",
-    "bytes": 639,
-    "updatedAt": "2026-07-29T11:45:52.594Z"
+    "sourceIcon": "Sigil of Restoration.png",
+    "mirrorIcon": "Sigil of Restoration.png",
+    "bytes": 627,
+    "updatedAt": "2026-10-23T13:07:38.168Z"
   },
   "29673": {
     "path": "/icons/ge/29673.png",
-    "sourceIcon": "Sigil of the swashbuckler.png",
-    "mirrorIcon": "Sigil of the swashbuckler.png",
-    "bytes": 573,
-    "updatedAt": "2026-09-04T08:36:40.760Z"
+    "sourceIcon": "Sigil of the Swashbuckler.png",
+    "mirrorIcon": "Sigil of the Swashbuckler.png",
+    "bytes": 575,
+    "updatedAt": "2026-10-23T13:07:38.589Z"
   },
   "29676": {
     "path": "/icons/ge/29676.png",
-    "sourceIcon": "Sigil of the gunslinger.png",
-    "mirrorIcon": "Sigil of the gunslinger.png",
-    "bytes": 639,
-    "updatedAt": "2026-09-04T08:36:41.183Z"
+    "sourceIcon": "Sigil of the Gunslinger.png",
+    "mirrorIcon": "Sigil of the Gunslinger.png",
+    "bytes": 627,
+    "updatedAt": "2026-10-23T13:07:39.058Z"
   },
   "29679": {
     "path": "/icons/ge/29679.png",
-    "sourceIcon": "Sigil of arcane swiftness.png",
-    "mirrorIcon": "Sigil of arcane swiftness.png",
-    "bytes": 594,
-    "updatedAt": "2026-07-29T11:45:52.680Z"
+    "sourceIcon": "Sigil of Arcane Swiftness.png",
+    "mirrorIcon": "Sigil of Arcane Swiftness.png",
+    "bytes": 587,
+    "updatedAt": "2026-10-23T13:07:39.501Z"
   },
   "29684": {
     "path": "/icons/ge/29684.png",
@@ -30164,24 +30164,24 @@
   },
   "31136": {
     "path": "/icons/ge/31136.png",
-    "sourceIcon": "Blood moon armour set.png",
-    "mirrorIcon": "Blood moon armour set.png",
-    "bytes": 623,
-    "updatedAt": "2026-07-29T11:45:53.486Z"
+    "sourceIcon": "Blood Moon armour set.png",
+    "mirrorIcon": "Blood Moon armour set.png",
+    "bytes": 580,
+    "updatedAt": "2026-10-23T13:07:39.983Z"
   },
   "31139": {
     "path": "/icons/ge/31139.png",
-    "sourceIcon": "Blue moon armour set.png",
-    "mirrorIcon": "Blue moon armour set.png",
-    "bytes": 594,
-    "updatedAt": "2026-07-29T11:45:53.528Z"
+    "sourceIcon": "Blue Moon armour set.png",
+    "mirrorIcon": "Blue Moon armour set.png",
+    "bytes": 582,
+    "updatedAt": "2026-10-23T13:07:40.460Z"
   },
   "31142": {
     "path": "/icons/ge/31142.png",
-    "sourceIcon": "Eclipse moon armour set.png",
-    "mirrorIcon": "Eclipse moon armour set.png",
-    "bytes": 611,
-    "updatedAt": "2026-07-29T11:45:53.486Z"
+    "sourceIcon": "Eclipse Moon armour set.png",
+    "mirrorIcon": "Eclipse Moon armour set.png",
+    "bytes": 630,
+    "updatedAt": "2026-10-23T13:07:40.898Z"
   },
   "31145": {
     "path": "/icons/ge/31145.png",
@@ -32596,10 +32596,10 @@
   },
   "34401": {
     "path": "/icons/ge/34401.png",
-    "sourceIcon": "Necklace of fangs.png",
-    "mirrorIcon": "Necklace of fangs.png",
-    "bytes": 372,
-    "updatedAt": "2026-09-04T08:37:45.122Z"
+    "sourceIcon": "Necklace of Fangs.png",
+    "mirrorIcon": "Necklace of Fangs.png",
+    "bytes": 371,
+    "updatedAt": "2026-10-23T13:07:41.361Z"
   },
   "34404": {
     "path": "/icons/ge/34404.png",
@@ -32663,5 +32663,89 @@
     "mirrorIcon": "Elemental amulet.png",
     "bytes": 283,
     "updatedAt": "2026-09-04T08:37:48.721Z"
+  },
+  "34631": {
+    "path": "/icons/ge/34631.png",
+    "sourceIcon": "Net trap (item).png",
+    "mirrorIcon": "Net trap (item).png",
+    "bytes": 498,
+    "updatedAt": "2026-10-23T13:07:41.828Z"
+  },
+  "34669": {
+    "path": "/icons/ge/34669.png",
+    "sourceIcon": "Ascension shards.png",
+    "mirrorIcon": "Ascension shards.png",
+    "bytes": 391,
+    "updatedAt": "2026-10-23T13:07:42.234Z"
+  },
+  "34679": {
+    "path": "/icons/ge/34679.png",
+    "sourceIcon": "Horn of Bran.png",
+    "mirrorIcon": "Horn of Bran.png",
+    "bytes": 551,
+    "updatedAt": "2026-10-23T13:07:42.668Z"
+  },
+  "34681": {
+    "path": "/icons/ge/34681.png",
+    "sourceIcon": "Ascension crossbows.png",
+    "mirrorIcon": "Ascension crossbows.png",
+    "bytes": 567,
+    "updatedAt": "2026-10-23T13:07:43.056Z"
+  },
+  "34684": {
+    "path": "/icons/ge/34684.png",
+    "sourceIcon": "Ascension bolts 5.png",
+    "mirrorIcon": "Ascension bolts 5.png",
+    "bytes": 505,
+    "updatedAt": "2026-10-23T13:07:43.440Z"
+  },
+  "34690": {
+    "path": "/icons/ge/34690.png",
+    "sourceIcon": "Diamond ascension bolts 5.png",
+    "mirrorIcon": "Diamond ascension bolts 5.png",
+    "bytes": 545,
+    "updatedAt": "2026-10-23T13:07:43.830Z"
+  },
+  "34696": {
+    "path": "/icons/ge/34696.png",
+    "sourceIcon": "Diamond ascension bolts (e) 5.png",
+    "mirrorIcon": "Diamond ascension bolts (e) 5.png",
+    "bytes": 551,
+    "updatedAt": "2026-10-23T13:07:44.224Z"
+  },
+  "34702": {
+    "path": "/icons/ge/34702.png",
+    "sourceIcon": "Onyx ascension bolts 5.png",
+    "mirrorIcon": "Onyx ascension bolts 5.png",
+    "bytes": 520,
+    "updatedAt": "2026-10-23T13:07:44.650Z"
+  },
+  "34708": {
+    "path": "/icons/ge/34708.png",
+    "sourceIcon": "Onyx ascension bolts (e) 5.png",
+    "mirrorIcon": "Onyx ascension bolts (e) 5.png",
+    "bytes": 528,
+    "updatedAt": "2026-10-23T13:07:45.092Z"
+  },
+  "34717": {
+    "path": "/icons/ge/34717.png",
+    "sourceIcon": "Obligator (uncharged).png",
+    "mirrorIcon": "Obligator (uncharged).png",
+    "bytes": 613,
+    "updatedAt": "2026-10-23T13:07:45.500Z"
+  },
+  "34719": {
+    "path": "/icons/ge/34719.png",
+    "sourceIcon": "Rondache.png",
+    "mirrorIcon": "Rondache.png",
+    "bytes": 1173,
+    "updatedAt": "2026-10-23T13:07:45.931Z"
+  },
+  "34727": {
+    "path": "/icons/ge/34727.png",
+    "sourceIcon": "Zorya's tome (uncharged).png",
+    "mirrorIcon": "Zorya's tome (uncharged).png",
+    "bytes": 570,
+    "updatedAt": "2026-10-23T13:07:46.364Z"
   }
 }
