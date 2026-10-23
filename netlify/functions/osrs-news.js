@@ -46,7 +46,7 @@ function parseArticles(html) {
   return items;
 }
 
-exports.handler = async () => {
+export const handler = async () => {
   try {
     const response = await fetch('https://secure.runescape.com/m=news/a=13/archive?oldschool=1');
     if (!response.ok) {

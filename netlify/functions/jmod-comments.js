@@ -84,7 +84,7 @@ async function fetchUserComments(username) {
   }
 }
 
-exports.handler = async () => {
+export const handler = async () => {
   try {
     const results = await Promise.all(
       JMOD_USERNAMES.map(username => fetchUserComments(username))
