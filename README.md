@@ -2,7 +2,7 @@
 
 A web-based tool for Old School RuneScape players to track investments, monitor profits, inspect GE prices, and manage their portfolio - no downloads required.
 
-**Live App:** [https://osrs-portfolio.fun/](https://osrs-portfolio.fun/)
+**Live App:** [https://osrsprofittracker.netlify.app/](https://osrsprofittracker.netlify.app/)
 
 **Current Version:** v4.0.0
 
